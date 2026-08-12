@@ -420,19 +420,24 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     <div class="currency-badge" id="hubCurrencyBadge" style="display:none;">🪙 <span id="hubCurrency">0</span> coins</div>
   </div>
 
-  <!-- PLAY SETUP -->
+  <!-- PLAY SETUP (Online Matchmaking) -->
   <div class="menu-screen hidden" id="screen-play">
-    <p class="blurb" style="text-align:center;">Outsmart your opponents in a brutal card economy. Match the call, use power cards to drain your rivals, or face forced buys that will leave you bankrupt.</p>
+    <div class="screen-title" style="margin-bottom:16px;">Online Match</div>
+    <p class="blurb" style="text-align:center;">Match up against other players online. Play smart or face bankruptcy.</p>
 
     <div class="section-label">Your card skin</div>
     <div class="swatchrow" id="swatchRow"></div>
     <div class="skin-note" style="text-align:center;">Own more skins in the Shop.</div>
 
     <div class="section-label" style="margin-top:20px; text-align:center;">Table size</div>
-    <div class="countrow" id="countRow"></div>
+    <div class="countrow" id="mpCountRow">
+      <button class="countbtn selected" onclick="pickMpCount(4, this)">4 players</button>
+      <button class="countbtn" onclick="pickMpCount(6, this)">6 players</button>
+      <button class="countbtn" onclick="pickMpCount(8, this)">8 players</button>
+    </div>
 
-    <button class="btn" style="margin-top:28px; width:100%; max-width:320px" onclick="enterGameWithLoading()">Start Game ↗</button>
-    <div style="text-align:center;"><label class="opt-row"><input type="checkbox" id="fastTest"> Fast test mode (2 min timer)</label></div>
+    <div id="matchmakingStatus" class="mono" style="margin-top:10px; color:var(--brass-bright); font-size:13px; display:none; text-align:center;">Searching...</div>
+    <button class="btn" id="searchMatchBtn" style="margin-top:28px; width:100%; max-width:320px" onclick="startOnlineMatchmaking()">Search Match ↗</button>
     <button class="btn ghost screen-back" onclick="showMenuScreen('hub')">← Back</button>
   </div>
 
@@ -455,7 +460,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
       <div style="margin-top:6px"><b>Elimination:</b> only when shop AND hand both hit zero. Broke but holding cards? You can still climb back.</div>
       <div style="margin-top:6px"><b>Wild Swap</b> matches anything for 2 coins. <b>Power 2/4/6</b> matches anything and drains a rival instead. <b>Peek</b> reveals the next player's hand before you call.</div>
     </div>
-    <button class="btn" style="margin-top:20px" onclick="showMenuScreen('play')">Practice vs Bots ↗</button>
+    
+    <div class="section-label" style="margin-top:20px; text-align:center;">Table size (Bots)</div>
+    <div class="countrow" id="countRow"></div>
+    <div style="text-align:center; margin-top:12px;"><label class="opt-row"><input type="checkbox" id="fastTest"> Fast test mode (2 min timer)</label></div>
+
+    <button class="btn" style="margin-top:20px; width:100%; max-width:320px" onclick="enterGameWithLoading()">Practice vs Bots ↗</button>
     <button class="btn ghost screen-back" onclick="showMenuScreen('hub')">← Back</button>
   </div>
 
@@ -481,18 +491,17 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
       <div id="partyMemberList" class="mono" style="font-size:12px; color:var(--paper); min-height:40px;">Not in a party.</div>
     </div>
 
-    <!-- Matchmaking Controls (Only visible to Party Leader or Solo) -->
-    <div id="lobbyMatchmakingControls" style="width:100%;">
-      <div class="section-label">Table size</div>
-      <div class="countrow" id="mpCountRow">
+    <!-- Party Leader Controls (Private Game) -->
+    <div id="partyLeaderControls" style="width:100%; display:none; text-align:center;">
+      <div class="section-label">Private Table Size</div>
+      <div class="countrow" id="partyCountRow">
         <button class="countbtn selected" onclick="pickMpCount(4, this)">4 players</button>
         <button class="countbtn" onclick="pickMpCount(6, this)">6 players</button>
         <button class="countbtn" onclick="pickMpCount(8, this)">8 players</button>
       </div>
-      <div id="matchmakingStatus" class="mono" style="margin-top:10px; color:var(--brass-bright); font-size:13px; display:none;">Searching...</div>
-      <button class="btn" id="searchMatchBtn" style="margin-top:14px; width:100%;" onclick="startOnlineMatchmaking()">Search Match ↗</button>
+      <button class="btn" style="margin-top:14px; width:100%; max-width:320px;" onclick="startPrivatePartyMatch()">Start Private Game ↗</button>
     </div>
-    <div id="lobbyWaitingText" class="mono" style="display:none; margin-top:20px; color:var(--brass-bright);">Waiting for Party Leader to start...</div>
+    <div id="lobbyWaitingText" class="mono" style="display:none; margin-top:20px; color:var(--brass-bright); text-align:center;">Waiting for Party Leader to start...</div>
 
     <!-- Friends List Section -->
     <div class="section-label" style="margin-top:24px;">Friends List</div>
@@ -506,6 +515,27 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
     <button class="btn ghost screen-back" onclick="showMenuScreen('hub')">← Back</button>
   </div>
+
+  <!-- MATCH LOBBY (NEW READY-UP SCREEN) -->
+  <div class="menu-screen hidden" id="screen-match-lobby">
+    <div class="screen-title">Match Lobby</div>
+    
+    <div style="width:100%; background:rgba(0,0,0,0.4); border:1px solid var(--brass); padding:16px; border-radius:8px; margin-top:16px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid rgba(201,162,39,0.2); padding-bottom:8px;">
+        <span style="color:var(--brass-bright); font-family:'Cinzel',serif; font-weight:700;">Table Roster</span>
+        <span id="matchLobbyCount" class="mono" style="font-size:12px; color:var(--paper-dark);">0/4</span>
+      </div>
+      <div id="matchLobbyPlayers" class="mono" style="font-size:13px; color:var(--paper); display:flex; flex-direction:column; gap:8px; min-height:80px;">
+        Loading players...
+      </div>
+    </div>
+
+    <div id="matchCountdown" class="mono" style="margin-top:20px; font-size:14px; color:var(--danger-bright); font-weight:bold; height:24px;"></div>
+
+    <button class="btn" id="btnReady" style="margin-top:24px; width:100%; max-width:320px;" onclick="toggleReady()">Ready Up</button>
+    <button class="btn ghost" style="margin-top:12px;" onclick="leaveMatchLobby()">Leave Match</button>
+  </div>
+
 </div>
 
 <div id="loadingScreen">
@@ -1943,7 +1973,8 @@ let friendsListenerUnsub = null;
 
 function pickMpCount(size, btnElement) {
     mpTableSize = size;
-    document.querySelectorAll('#mpCountRow .countbtn').forEach(b => b.classList.remove('selected'));
+    // Target the parent container and remove selected class from all sibling buttons
+    btnElement.parentElement.querySelectorAll('.countbtn').forEach(b => b.classList.remove('selected'));
     btnElement.classList.add('selected');
 }
 
@@ -2070,8 +2101,6 @@ async function leaveParty() {
 
     if (partyListenerUnsub) partyListenerUnsub();
     
-    // We won't handle complex leader-transfer logic here to keep it simple.
-    // If leader leaves, they should just disband, but for now we just remove ourselves.
     currentPartyId = null;
     isPartyLeader = true; 
     
@@ -2079,7 +2108,7 @@ async function leaveParty() {
     document.getElementById('btnLeaveParty').style.display = 'none';
     document.getElementById('partyMemberList').textContent = 'Not in a party.';
     
-    document.getElementById('lobbyMatchmakingControls').style.display = 'block';
+    document.getElementById('partyLeaderControls').style.display = 'none';
     document.getElementById('lobbyWaitingText').style.display = 'none';
     
     initFriendsList(); // Refresh UI
@@ -2102,12 +2131,14 @@ function listenToParty(partyId) {
         isPartyLeader = (data.leader === myUid);
         
         // Lock UI if not leader
-        if (!isPartyLeader) {
-            document.getElementById('lobbyMatchmakingControls').style.display = 'none';
-            document.getElementById('lobbyWaitingText').style.display = 'block';
-        } else {
-            document.getElementById('lobbyMatchmakingControls').style.display = 'block';
-            document.getElementById('lobbyWaitingText').style.display = 'none';
+        if (currentPartyId) {
+            if (!isPartyLeader) {
+                document.getElementById('partyLeaderControls').style.display = 'none';
+                document.getElementById('lobbyWaitingText').style.display = 'block';
+            } else {
+                document.getElementById('partyLeaderControls').style.display = 'block';
+                document.getElementById('lobbyWaitingText').style.display = 'none';
+            }
         }
         
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
@@ -2115,14 +2146,18 @@ function listenToParty(partyId) {
             currentMatchId = data.matchId;
             document.getElementById('lobbyWaitingText').textContent = "Match found! Preparing table...";
             setTimeout(() => {
-                alert(`Pulled into Match ID: ${currentMatchId} by Party Leader!`);
-                // Route to game UI here...
+                showMenuScreen('match-lobby');
+                listenToMatchLobby(currentMatchId);
             }, 1000);
         }
     });
 }
 
-// ---------------- 3. SQUAD MATCHMAKING ----------------
+// ---------------- 3. SQUAD MATCHMAKING & MATCH LOBBY ----------------
+let isReady = false;
+let matchLobbyUnsub = null;
+let countdownTimer = null;
+
 async function startOnlineMatchmaking() {
     const btn = document.getElementById('searchMatchBtn');
     const status = document.getElementById('matchmakingStatus');
@@ -2135,7 +2170,6 @@ async function startOnlineMatchmaking() {
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
     
-    // Determine who is joining (Solo or entire Squad)
     let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get();
@@ -2143,7 +2177,6 @@ async function startOnlineMatchmaking() {
     }
 
     try {
-        // Find a table that has enough empty seats for our whole squad
         const snapshot = await db.collection('matches')
             .where('status', '==', 'waiting')
             .where('tableSize', '==', mpTableSize)
@@ -2152,8 +2185,8 @@ async function startOnlineMatchmaking() {
         let matchRef = null;
         let matchDoc = null;
 
-        // Manually filter for enough room
         for (let doc of snapshot.docs) {
+            if (doc.data().isPrivate) continue; // Skip private party matches!
             if (doc.data().seats.length + joiningSquad.length <= mpTableSize) {
                 matchRef = doc.ref;
                 matchDoc = doc.data();
@@ -2162,7 +2195,7 @@ async function startOnlineMatchmaking() {
         }
 
         if (matchRef) {
-            // --- JOIN EXISTING TABLE ---
+            // JOIN EXISTING PUBLIC TABLE
             let currentSeats = matchDoc.seats;
             let currentPublic = matchDoc.publicSeats || {};
             
@@ -2172,47 +2205,127 @@ async function startOnlineMatchmaking() {
                 currentPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
             });
 
-            let newStatus = (currentSeats.length >= mpTableSize) ? 'active' : 'waiting';
-            await matchRef.update({ seats: currentSeats, publicSeats: currentPublic, status: newStatus });
-            
+            await matchRef.update({ seats: currentSeats, publicSeats: currentPublic });
             currentMatchId = matchRef.id;
-            status.textContent = "Joined a table! Waiting for remaining players...";
 
         } else {
-            // --- HOST NEW TABLE ---
+            // HOST NEW PUBLIC TABLE
             matchRef = db.collection('matches').doc();
             let newSeats = [];
             let newPublic = {};
+            let readyStatus = {}; 
             
             joiningSquad.forEach((member, i) => {
                 newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
                 newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
+                readyStatus[member.uid] = false;
             });
 
             await matchRef.set({
                 tableSize: mpTableSize,
                 status: 'waiting',
+                isPrivate: false, // Flag for public match
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 seats: newSeats,
                 turn: 0,
                 requiredValue: null,
-                publicSeats: newPublic
+                publicSeats: newPublic,
+                readyStatus: readyStatus
             });
             
             currentMatchId = matchRef.id;
-            status.textContent = "Created a table! Waiting for players (max 20s)...";
             
-            // AUTOMATIC BOT BACKFILL (If no one joins in 20 seconds)
             setTimeout(async () => {
                 const checkDoc = await matchRef.get();
                 if (checkDoc.exists && checkDoc.data().status === 'waiting') {
-                    status.textContent = "Filling empty seats with bots...";
                     const data = checkDoc.data();
                     let currentSeats = data.seats;
                     let pSeats = data.publicSeats;
                     const botNames = ["Bea", "Chen", "Deepa", "Farah", "Omar", "Priya", "Leo", "Sana"];
                     
-                    // Add a bot to every empty seat
+                    if (currentSeats.length < mpTableSize) {
+                        while (currentSeats.length < mpTableSize) {
+                            const idx = currentSeats.length;
+                            currentSeats.push({ 
+                                seat: idx, 
+                                uid: "bot_" + Math.random().toString(36).substr(2, 9), 
+                                displayName: botNames[idx % botNames.length], 
+                                isBot: true 
+                            });
+                            pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
+                        }
+                        await matchRef.update({ seats: currentSeats, publicSeats: pSeats });
+                    }
+                }
+            }, 15000); 
+        }
+
+        if (currentPartyId && isPartyLeader) {
+            await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
+        }
+
+        btn.disabled = false;
+        btn.textContent = "Search Match ↗";
+        status.style.display = 'none';
+        
+        showMenuScreen('match-lobby');
+        listenToMatchLobby(currentMatchId);
+
+    } catch (e) {
+        console.error(e);
+        status.textContent = "Error: " + e.message;
+        btn.disabled = false;
+        btn.textContent = "Search Match ↗";
+    }
+}
+
+async function startPrivatePartyMatch() {
+    const db = firebase.firestore();
+    const myProfile = DoDAuth.getProfile();
+    
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName }];
+    if (currentPartyId) {
+        const partyDoc = await db.collection('parties').doc(currentPartyId).get();
+        if (partyDoc.exists) joiningSquad = partyDoc.data().members;
+    }
+
+    try {
+        // ALWAYS CREATE A NEW PRIVATE TABLE
+        let matchRef = db.collection('matches').doc();
+        let newSeats = [];
+        let newPublic = {};
+        let readyStatus = {}; 
+        
+        joiningSquad.forEach((member, i) => {
+            newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
+            newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
+            readyStatus[member.uid] = false;
+        });
+
+        await matchRef.set({
+            tableSize: mpTableSize,
+            status: 'waiting',
+            isPrivate: true, // This ensures it stays off the public Matchmaking
+            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+            seats: newSeats,
+            turn: 0,
+            requiredValue: null,
+            publicSeats: newPublic,
+            readyStatus: readyStatus
+        });
+        
+        currentMatchId = matchRef.id;
+        
+        // Wait 10 seconds before filling empty private lobby spots with bots
+        setTimeout(async () => {
+            const checkDoc = await matchRef.get();
+            if (checkDoc.exists && checkDoc.data().status === 'waiting') {
+                const data = checkDoc.data();
+                let currentSeats = data.seats;
+                let pSeats = data.publicSeats;
+                const botNames = ["Bea", "Chen", "Deepa", "Farah", "Omar", "Priya", "Leo", "Sana"];
+                
+                if (currentSeats.length < mpTableSize) {
                     while (currentSeats.length < mpTableSize) {
                         const idx = currentSeats.length;
                         currentSeats.push({ 
@@ -2223,41 +2336,163 @@ async function startOnlineMatchmaking() {
                         });
                         pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
                     }
-                    
-                    // Force the match to start
-                    await matchRef.update({ seats: currentSeats, publicSeats: pSeats, status: 'active' });
+                    await matchRef.update({ seats: currentSeats, publicSeats: pSeats });
                 }
-            }, 20000); // 20 seconds
-        }
+            }
+        }, 10000); 
 
-        // Inform the rest of the party that we found a match
         if (currentPartyId && isPartyLeader) {
             await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
         }
 
-        // LISTEN FOR ACTIVE STATUS
-        const matchUnsub = matchRef.onSnapshot(doc => {
-            if (doc.exists && doc.data().status === 'active') {
-                matchUnsub(); 
-                status.textContent = "Table full! Starting game...";
-                setTimeout(() => {
-                    alert(`Match started! Match ID: ${currentMatchId}`);
-                    btn.disabled = false;
-                    btn.textContent = "Search Match ↗";
-                    status.style.display = 'none';
-                }, 1000);
-            }
-        });
+        showMenuScreen('match-lobby');
+        listenToMatchLobby(currentMatchId);
 
     } catch (e) {
         console.error(e);
-        status.textContent = "Error: " + e.message;
-        btn.disabled = false;
-        btn.textContent = "Search Match ↗";
+        alert("Error: " + e.message);
     }
 }
 
-// Hook into existing menu routing to load friends list when screen opens
+function listenToMatchLobby(matchId) {
+    const db = firebase.firestore();
+    const myUid = DoDAuth.getProfile().uid;
+
+    if (matchLobbyUnsub) matchLobbyUnsub();
+
+    matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
+        if (!doc.exists) { leaveMatchLobby(); return; }
+        const data = doc.data();
+        
+        const listEl = document.getElementById('matchLobbyPlayers');
+        document.getElementById('matchLobbyCount').textContent = `${data.seats.length}/${data.tableSize}`;
+        
+        let html = '';
+        let allReady = true;
+
+        data.seats.forEach(seat => {
+            const isPlayerReady = (data.readyStatus && data.readyStatus[seat.uid]) || false;
+            // Bots are automatically treated as "Ready"
+            if (!isPlayerReady && !seat.isBot) allReady = false; 
+            
+            const readyBadge = seat.isBot ? '<span style="color:var(--ok); font-weight:bold;">[BOT Ready]</span>' 
+                            : isPlayerReady ? '<span style="color:var(--ok); font-weight:bold;">[Ready]</span>' 
+                            : '<span style="color:var(--danger-bright);">[Waiting]</span>';
+                            
+            html += `<div style="display:flex; justify-content:space-between; background:rgba(0,0,0,0.3); padding:8px 12px; border:1px solid rgba(255,255,255,0.05); border-radius:4px;">
+                        <span>${seat.displayName}</span> ${readyBadge}
+                     </div>`;
+        });
+        
+        // Fill empty seats visually
+        for(let i=data.seats.length; i<data.tableSize; i++){
+            html += `<div style="display:flex; justify-content:space-between; background:rgba(0,0,0,0.1); padding:8px 12px; border:1px dashed rgba(255,255,255,0.1); border-radius:4px; opacity:0.5;">
+                        <span>Empty Seat...</span>
+                     </div>`;
+        }
+        listEl.innerHTML = html;
+
+        const isHost = data.seats[0].uid === myUid;
+        const statusEl = document.getElementById('matchCountdown');
+
+        // Countdown Logic Trigger: All players are ready
+        if (data.seats.length === data.tableSize && allReady) {
+            if (isHost && data.status === 'waiting') {
+                db.collection('matches').doc(matchId).update({
+                    status: 'starting',
+                    startAt: Date.now() + 10000 // EXACTLY 10 seconds from now
+                });
+            }
+        } else {
+            // INTERRUPTION LOGIC: Someone un-readied. Stop countdown, reset to waiting.
+            if (isHost && data.status === 'starting') {
+                db.collection('matches').doc(matchId).update({ status: 'waiting', startAt: null });
+            }
+        }
+
+        // Local Countdown Display & Action
+        if (data.status === 'starting' && data.startAt) {
+            statusEl.style.color = "var(--ok)"; // Turn text green when counting down
+            if (!countdownTimer) {
+                countdownTimer = setInterval(() => {
+                    const left = Math.ceil((data.startAt - Date.now()) / 1000);
+                    if (left > 0) {
+                        statusEl.textContent = `Match starting in: ${left}...`;
+                    } else {
+                        // COUNTDOWN HITS 0: Start the Game
+                        clearInterval(countdownTimer);
+                        countdownTimer = null;
+                        if (isHost && data.status !== 'active') {
+                            db.collection('matches').doc(matchId).update({ status: 'active' });
+                        }
+                    }
+                }, 100); // Check faster for UI snappiness
+            }
+        } else {
+            // STOP AND DISABLE COUNTDOWN
+            if (countdownTimer) { 
+                clearInterval(countdownTimer); 
+                countdownTimer = null; 
+            }
+            statusEl.style.color = "var(--danger-bright)"; // Revert to red warning color
+            statusEl.textContent = data.seats.length < data.tableSize ? "Waiting for more players..." : "Waiting for everyone to ready up...";
+        }
+
+        // TRANSITION TO GAME
+        if (data.status === 'active') {
+            if (matchLobbyUnsub) matchLobbyUnsub();
+            if (countdownTimer) clearInterval(countdownTimer);
+            
+            // Start game UI
+            document.getElementById('screen-match-lobby').classList.add('hidden');
+            enterGameWithLoading(); 
+        }
+    });
+}
+
+async function toggleReady() {
+    if (!currentMatchId) return;
+    const db = firebase.firestore();
+    const myUid = DoDAuth.getProfile().uid;
+    
+    // Toggle local state
+    isReady = !isReady;
+    
+    // Update UI Button
+    const btn = document.getElementById('btnReady');
+    btn.textContent = isReady ? 'Unready' : 'Ready Up';
+    btn.style.background = isReady ? 'var(--ok)' : 'var(--brass)';
+    btn.style.color = isReady ? '#fff' : 'var(--felt-dark)';
+    
+    // Push state to server (Triggers the snapshot and handles the countdown logic)
+    await db.collection('matches').doc(currentMatchId).update({
+        [`readyStatus.${myUid}`]: isReady
+    });
+}
+
+async function leaveMatchLobby() {
+    const db = firebase.firestore();
+    const myUid = DoDAuth.getProfile().uid;
+    
+    if (currentMatchId) {
+        await db.collection('matches').doc(currentMatchId).update({
+            [`readyStatus.${myUid}`]: false
+        });
+    }
+    
+    currentMatchId = null;
+    isReady = false;
+    const btn = document.getElementById('btnReady');
+    btn.textContent = 'Ready Up';
+    btn.style.background = 'var(--brass)';
+    
+    if (matchLobbyUnsub) matchLobbyUnsub();
+    if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    
+    showMenuScreen('social');
+}
+
+// Hook into existing menu routing
 const originalShowMenu = showMenuScreen;
 showMenuScreen = function(name) {
     originalShowMenu(name);
