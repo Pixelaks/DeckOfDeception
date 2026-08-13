@@ -981,7 +981,17 @@ function listenToGameState() {
 
         document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
 
-        // 3. MAP THE SERVER DATA
+        // 3. PRESERVE LOCAL UI STATE & MAP SERVER DATA
+        // We MUST save the buyLoop locally, otherwise the network sync wipes it out and breaks the retry button!
+        let preservedBuyLoop = null;
+        let preservedPeek = null;
+        if (typeof state !== 'undefined' && state !== null) {
+            if (state.turnUid === serverState.turnUid) {
+                preservedBuyLoop = state.buyLoop;
+                preservedPeek = state.peekResult;
+            }
+        }
+
         state = {
             players: orderedPlayers,
             deck: serverState.deck,
@@ -996,25 +1006,33 @@ function listenToGameState() {
             lastPlayedCardLabel: serverState.lastPlayedCardLabel,
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
             uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
-            buyLoop: null,
-            peekResult: null
+            buyLoop: preservedBuyLoop,
+            peekResult: preservedPeek
         };
 
         // 4. RENDER THE GAME
         layoutRing();
         renderAll();
         
-        // --- 5. THE CURVE ANIMATION FIX ---
-        // If the turn changed on the server, animate the yellow curve arrow!
-        if (localLastTurnUid && localLastTurnUid !== serverState.turnUid) {
+        // --- 5. THE CURVE ANIMATION & BOT WAKE-UP ---
+        if (localLastTurnUid !== serverState.turnUid) {
+            // Animate the yellow turn curve
             const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
             const toIdx = orderedPlayers.findIndex(p => p.uid === serverState.turnUid);
-            if (fromIdx !== -1 && toIdx !== -1) {
+            if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
                 animateTurnArc(fromIdx, toIdx, serverState.direction);
-                sfx.turn(); // Play the turn sound across the network
+                sfx.turn(); 
+            }
+            localLastTurnUid = serverState.turnUid;
+
+            // WAKE UP BOTS (HOST ONLY)
+            // If the new turn belongs to a bot, the Host calculates their move and pushes it to Firebase.
+            const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+            if (isHost && serverState.turnUid.startsWith('bot_')) {
+                // Give the bot a small delay so it feels like they are "thinking"
+                setTimeout(botTurn, 1800); 
             }
         }
-        localLastTurnUid = serverState.turnUid;
 
         // 6. TRIGGER CARD ANIMATIONS
         if (serverState.lastAction) {
@@ -2200,24 +2218,60 @@ function botBuyLoop(buyer,target){
   }
 }
 
-function botDeclare(bot){
-  const target=nextPlayerOf(bot.id);
-  let chosen;
-  const peekIdx=bot.hand.findIndex(c=>c.type==='peek' && (state.requiredValue===null || c.value===state.requiredValue));
-  if(peekIdx>=0 && Math.random()<0.5){
-    bot.hand.splice(peekIdx,1);
-    const theirValues=new Set(target.hand.map(c=>c.value));
-    const missing=[1,2,3,4,5,6,7,8,9].filter(v=>!theirValues.has(v));
-    chosen = missing.length>0 ? missing[Math.floor(Math.random()*missing.length)] : (1+Math.floor(Math.random()*9));
-    log(`${bot.name} uses Peek to study ${target.name}'s hand!`);
-  } else {
-    chosen=1+Math.floor(Math.random()*9);
-  }
-  state.requiredValue=chosen;
-  const totalTxt = state.lastEffectiveValue!==null ? ` Total: ${state.lastEffectiveValue+chosen}.` : '';
-  log(`${bot.name} calls it — ${target.name} needs a ${chosen}.${totalTxt}`);
-  renderAll(); // Final render for the callout UI
-  advanceTurn();
+async function botDeclare(bot) {
+    // 1. Existing AI Logic: Bot picks a number
+    const target = nextPlayerOf(bot.id); // Visual target for offline mode
+    let chosen;
+    const peekIdx = bot.hand.findIndex(c => c.type === 'peek' && (state.requiredValue === null || c.value === state.requiredValue));
+    
+    if (peekIdx >= 0 && Math.random() < 0.5) {
+        bot.hand.splice(peekIdx, 1);
+        const theirValues = new Set(target.hand.map(c => c.value));
+        const missing = [1,2,3,4,5,6,7,8,9].filter(v => !theirValues.has(v));
+        chosen = missing.length > 0 ? missing[Math.floor(Math.random() * missing.length)] : (1 + Math.floor(Math.random() * 9));
+    } else {
+        chosen = 1 + Math.floor(Math.random() * 9);
+    }
+    
+    const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue + chosen}.` : '';
+
+    if (currentMatchId) {
+        // --- ONLINE MODE (Host pushes the bot's entirely calculated turn to Firebase) ---
+        const db = firebase.firestore();
+        
+        // Calculate the exact UID of the next player to pass the turn to
+        let nextIndex = state.players.findIndex(p => p.uid === bot.uid);
+        do { 
+            nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
+        } while (state.players[nextIndex].out);
+        const nextPlayer = state.players[nextIndex];
+
+        const msg = `${bot.name} played their turn and calls it — ${nextPlayer.name} needs a ${chosen}.${totalTxt}`;
+
+        await db.collection('matches').doc(currentMatchId).update({
+            'gameState.players': state.players, // Uploads any coins/cards the bot stole or bought!
+            'gameState.deck': state.deck,
+            'gameState.requiredValue': chosen,
+            'gameState.turnUid': nextPlayer.uid,
+            'gameState.direction': state.direction,
+            'gameState.lastEffectiveValue': state.lastEffectiveValue,
+            'gameState.lastPlayedCardLabel': state.lastPlayedCardLabel,
+            'gameState.lastPlayedBy': bot.uid,
+            'gameState.lastAction': {
+                id: Date.now().toString(),
+                type: 'PLAY_NUMBER', // This tells other clients to animate the center card
+                uid: bot.uid,
+                cardValue: state.lastEffectiveValue || chosen, 
+                msg: msg
+            }
+        });
+    } else {
+        // --- OFFLINE MODE (Original Logic) ---
+        state.requiredValue = chosen;
+        log(`${bot.name} calls it — ${target.name} needs a ${chosen}.${totalTxt}`);
+        renderAll();
+        advanceTurn();
+    }
 }
 
 // ---------------- MODALS ----------------
