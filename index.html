@@ -757,6 +757,11 @@ if(window.DoDAuth){
     if(badge) badge.style.display='inline-block';
     const el = document.getElementById('hubCurrency');
     if(el) el.textContent = profile.currency;
+    
+    // Start listening for incoming party invites globally as soon as they log in
+    if (typeof listenForPartyInvites === 'function') {
+        listenForPartyInvites();
+    }
   });
 } else {
   // auth.js not loaded (e.g. Firebase config not filled in yet) — fall back
@@ -2080,18 +2085,61 @@ async function createParty() {
     document.getElementById('btnLeaveParty').style.display = 'inline-block';
     
     listenToParty(currentPartyId);
+    
+    // FIX 1: Instantly refresh the friends list so the "Invite" buttons appear immediately
+    initFriendsList(); 
 }
 
 async function inviteToParty(friendUid, friendName) {
-    // In a full game, you'd send a real-time notification here. 
-    // For this client-side prototype, we will forcefully pull the friend into the party for testing.
     if (!currentPartyId) return;
     const db = firebase.firestore();
     
+    // 1. Add friend to the party document
     await db.collection('parties').doc(currentPartyId).update({
         members: firebase.firestore.FieldValue.arrayUnion({ uid: friendUid, displayName: friendName })
     });
-    alert(`Added ${friendName} to the party! (Prototype auto-join)`);
+    
+    // 2. FIX 2: Ping the friend's user document so their game actually joins the party!
+    await db.collection('users').doc(friendUid).set({
+        activePartyInvite: currentPartyId
+    }, { merge: true });
+
+    alert(`Invited ${friendName}! (They are being pulled into your party)`);
+}
+
+// NEW FUNCTION: Listens for incoming invites in the background for the invited player
+let inviteListenerUnsub = null;
+function listenForPartyInvites() {
+    if (!window.DoDAuth || !DoDAuth.getProfile()) return;
+    const myUid = DoDAuth.getProfile().uid;
+    const db = firebase.firestore();
+    
+    if (inviteListenerUnsub) return; // Already listening
+    
+    inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(doc => {
+        if (doc.exists && doc.data().activePartyInvite) {
+            const partyId = doc.data().activePartyInvite;
+            
+            // We got an invite! Auto-join it locally.
+            currentPartyId = partyId;
+            isPartyLeader = false;
+            
+            // Clear the invite from Firestore so it doesn't trigger again
+            db.collection('users').doc(myUid).update({
+                activePartyInvite: firebase.firestore.FieldValue.delete()
+            });
+            
+            // Update UI to show we are in a party
+            document.getElementById('btnCreateParty').style.display = 'none';
+            document.getElementById('btnLeaveParty').style.display = 'inline-block';
+            
+            // Open the social screen automatically to see the lobby
+            showMenuScreen('social');
+            
+            // Connect to the party
+            listenToParty(partyId);
+        }
+    });
 }
 
 async function leaveParty() {
