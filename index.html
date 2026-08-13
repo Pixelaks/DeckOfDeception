@@ -983,7 +983,8 @@ function listenToGameState() {
         state = {
             players: orderedPlayers,
             deck: serverState.deck,
-            turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), // Local index of active player
+            turnUid: serverState.turnUid, // <--- THIS WAS MISSING!
+            turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), 
             direction: serverState.direction,
             over: serverState.over || false,
             timeLeft: 1200, 
@@ -991,10 +992,7 @@ function listenToGameState() {
             requiredValue: serverState.requiredValue,
             lastEffectiveValue: serverState.lastEffectiveValue,
             lastPlayedCardLabel: serverState.lastPlayedCardLabel,
-            
-            // Map the UID of who played last back to their local seat index
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
-            
             uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
             buyLoop: null,
             peekResult: null
@@ -1433,9 +1431,8 @@ function renderHand(){
 
 function isYourTurn() { 
     if (!state || state.over) return false;
-    const myUid = DoDAuth.getProfile().uid;
-    const myPlayer = state.players.find(p => p.uid === myUid);
-    return myPlayer && !myPlayer.out && state.turnUid === myUid; 
+    // Since you are ALWAYS seat 0 locally, if the turn is 0, it is your turn!
+    return state.turn === 0 && !state.players[0].out; 
 }
 
 function onSeatClick(id) {
