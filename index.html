@@ -1985,33 +1985,51 @@ let friendsListenerUnsub = null;
 let inviteListenerUnsub = null;
 
 // FULL FIX: Global Invite Listener
+// FULL FIX: Global Invite Listener
 function listenForPartyInvites() {
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
-    const myUid = DoDAuth.getProfile().uid;
+    
+    // Grab the full profile so we can use the displayName
+    const myProfile = DoDAuth.getProfile(); 
+    const myUid = myProfile.uid;
     const db = firebase.firestore();
 
     if (inviteListenerUnsub) return; // Prevent duplicate listeners
 
-    inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(doc => {
+    inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(async doc => {
         if (doc.exists && doc.data().activePartyInvite) {
             const partyId = doc.data().activePartyInvite;
 
-            currentPartyId = partyId;
-            isPartyLeader = false;
-
-            // Clear the invite from Firestore so it doesn't trigger again
-            db.collection('users').doc(myUid).update({
+            // 1. Clear the invite from Firestore so it doesn't trigger again
+            await db.collection('users').doc(myUid).update({
                 activePartyInvite: firebase.firestore.FieldValue.delete()
             }).catch(e => console.error("Error clearing invite: ", e));
 
-            // Update UI to show we are in a party
+            // 2. NEW FIX: The friend officially joins the party here!
+            try {
+                await db.collection('parties').doc(partyId).update({
+                    members: firebase.firestore.FieldValue.arrayUnion({ 
+                        uid: myProfile.uid, 
+                        displayName: myProfile.displayName 
+                    })
+                });
+            } catch(e) {
+                console.error("Error adding self to party members: ", e);
+                return; // Stop execution if they failed to join the party document
+            }
+
+            // 3. Update local state
+            currentPartyId = partyId;
+            isPartyLeader = false;
+
+            // 4. Update UI to show we are in a party
             document.getElementById('btnCreateParty').style.display = 'none';
             document.getElementById('btnLeaveParty').style.display = 'inline-block';
 
-            // Open the social screen automatically to see the lobby
+            // 5. Open the social screen automatically to see the lobby
             showMenuScreen('social');
             
-            // Connect to the party
+            // 6. Connect to the party UI stream
             listenToParty(partyId);
         }
     }, err => {
@@ -2138,15 +2156,14 @@ async function inviteToParty(friendUid, friendName) {
     const db = firebase.firestore();
 
     try {
-        // 1. Add friend to the party document
-        await db.collection('parties').doc(currentPartyId).update({
-            members: firebase.firestore.FieldValue.arrayUnion({ uid: friendUid, displayName: friendName })
-        });
-        
-        // 2. FULL FIX: Ping the friend's user document so their game actually joins the party!
+        // ONLY send the invite ping to the friend's user document.
+        // The friend's game will handle adding them to the actual party document once received.
         await db.collection('users').doc(friendUid).set({
             activePartyInvite: currentPartyId
         }, { merge: true });
+        
+        // Optional: Let the host know the invite was successfully sent
+        console.log(`Invite sent to ${friendName}`);
         
     } catch(e) {
         console.error("Invite Error: ", e);
