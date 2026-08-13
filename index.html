@@ -1978,12 +1978,32 @@ function playNetworkedAnimation(action) {
 
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
 // Restored for Offline/Bot Training mode
-function advanceTurn() {
-    // If online, stop! Firestore listeners handle turn passing.
-    if (currentMatchId) return; 
+async function advanceTurn() {
+    if (currentMatchId) { 
+        // ONLINE MODE - Ultimate safety net for when Bots skip their turn (empty deck, no targets, etc.)
+        const myUid = DoDAuth.getProfile().uid;
+        const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+        
+        if (isHost && state.turnUid && state.turnUid.startsWith('bot_')) {
+            let currentIndex = state.players.findIndex(p => p.uid === state.turnUid);
+            let nextIndex = currentIndex;
+            do { 
+                nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
+            } while (state.players[nextIndex].out);
+            
+            await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.players': state.players,
+                'gameState.deck': state.deck,
+                'gameState.turnUid': state.players[nextIndex].uid
+            });
+        }
+        return; 
+    }
 
+    // OFFLINE MODE
     state.uiState = 'IDLE'; 
-    state.peekResult = null; 
+    state.peekResult = null;
+ 
     
     if(state.over) return;
     sweepEliminations();
@@ -2153,14 +2173,28 @@ function botSingleDraw(buyer,target){
     sweepEliminations();
     setTimeout(()=>botDeclare(buyer), 600);
   } else {
-    buyer.hand.push(card);
-    log(`${buyer.name} draws a dud (${card.value}) — turn skips.`);
-    if(!target.out) protestFrom(target);
-    renderAll();
-    flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5);
-    setTimeout(() => advanceTurn(), 500);
-  }
-}
+        buyer.hand.push(card);
+        const msg = `${buyer.name} draws a dud (${card.value}) — turn skips.`;
+        if(!target.out) protestFrom(target);
+        
+        if (currentMatchId) {
+            let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+            
+            firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.players': state.players,
+                'gameState.deck': state.deck,
+                'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
+            });
+        } else {
+            log(msg, 'alert');
+            renderAll();
+            flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5);
+            setTimeout(() => advanceTurn(), 500);
+        }
+      }
+    }
 
 function botBuyLoop(buyer,target){
   let tries=0, success=false;
@@ -2209,14 +2243,27 @@ function botBuyLoop(buyer,target){
   sweepEliminations();
   
   if(success){
-    setTimeout(()=>botDeclare(buyer), 600);
-  } else { 
-    log(`${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`,'alert'); 
-    renderAll();
-    flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5);
-    setTimeout(() => advanceTurn(), 500); 
-  }
-}
+        setTimeout(()=>botDeclare(buyer), 600);
+      } else { 
+        const msg = `${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`;
+        if (currentMatchId) {
+            let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+            
+            firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.players': state.players,
+                'gameState.deck': state.deck,
+                'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
+            });
+        } else {
+            log(msg, 'alert'); 
+            renderAll();
+            flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5);
+            setTimeout(() => advanceTurn(), 500); 
+        }
+      }
+    }
 
 async function botDeclare(bot) {
     // 1. Existing AI Logic: Bot picks a number
