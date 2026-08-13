@@ -29,12 +29,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pulse-text { animation: slowPulse 2s infinite alternate; }
 @keyframes slowPulse { 0% { opacity: 0.3; transform:scale(0.98); } 100% { opacity: 1; transform:scale(1); } }
 
-/* CINEMATIC MAIN MENU REDESIGN */
+/* CINEMATIC MAIN MENU REDESIGN - FIXED CSS CUTOFF */
 #menu{
   position: absolute; inset: 0; z-index: 1000;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  background: var(--felt-dark); overflow: hidden; perspective: 1000px;
-  transition: opacity 0.8s ease; text-align: center; padding: 24px;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+  background: var(--felt-dark); overflow-y: auto; overflow-x: hidden; perspective: 1000px;
+  transition: opacity 0.8s ease; text-align: center; padding: 10vh 24px 40px;
   opacity: 0; /* Hidden until intro clicked */
 }
 .menu-visible { animation: sceneFadeIn 2.5s ease-out forwards; }
@@ -59,7 +59,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   position: relative; z-index: 2; backdrop-filter: none;
   opacity: 0; animation: fadeUp 2s cubic-bezier(0.2, 1, 0.3, 1) 1.5s forwards;
 }
-.menu-screen{ position:relative; z-index:2; width:100%; display:flex; flex-direction:column; align-items:center; padding:10px 20px 30px; max-width:640px; margin:0 auto; }
+.menu-screen{ position:relative; z-index:2; width:100%; display:flex; flex-direction:column; align-items:center; padding:10px 20px 30px; max-width:640px; margin:0 auto; margin-top:20px; }
 .menu-screen.hidden{ display:none; }
 .hub-buttons{ display:flex; flex-direction:column; gap:12px; width:100%; max-width:320px; margin-top:26px; }
 .hub-buttons .btn{ width:100%; }
@@ -316,10 +316,6 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;flex-shrink:0; position:relative; overflow:hidden;}
 .card:hover{transform:translateY(-4px)}
 .card.number{background:var(--paper);color:var(--ink);border:1px solid var(--paper-dark)}
-/* --- CARD SKIN ART (placeholder) ---
-   Original CSS/SVG pattern, no external or copyrighted imagery.
-   --myskin is set once in JS from the chosen skin color; swap this block
-   for real background-image art per skin once assets exist. */
 .card.number::before{
   content:''; position:absolute; inset:0; pointer-events:none; opacity:0.5;
   background:
@@ -381,7 +377,6 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   50% { transform: translate(calc(var(--tx)/2), calc(var(--ty)/2)) rotate(calc(var(--rot) + 20deg)) scaleY(1.5); opacity: 1; }
   100% { transform: translate(var(--tx), var(--ty)) rotate(calc(var(--rot) - 20deg)) scaleY(0.5); opacity: 0; }
 }
-
 </style>
 </head>
 <body>
@@ -394,6 +389,18 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 <!-- INTRO OVERLAY -->
 <div id="introOverlay">
     <span class="pulse-text">Tap anywhere to enter</span>
+</div>
+
+<!-- TUTORIAL MODAL -->
+<div class="modal-bg" id="tutorialOverlay">
+    <div class="finale" style="max-width: 400px; text-align: center;">
+        <h2 id="tutTitle" style="color:var(--danger); margin-bottom: 12px; font-family:'Cinzel Decorative',serif;">Welcome</h2>
+        <p id="tutText" style="font-family:'IBM Plex Mono',monospace; font-size:13px; line-height:1.6; color:var(--ink); min-height: 80px;"></p>
+        <div style="display:flex; justify-content:space-between; margin-top:20px;">
+            <button class="btn ghost small" style="color:var(--ink-soft); border-color:var(--paper-dark);" onclick="skipTutorial()">Skip</button>
+            <button class="btn small" id="tutNextBtn" onclick="nextTutorial()">Next ↗</button>
+        </div>
+    </div>
 </div>
 
 <div id="menu">
@@ -476,6 +483,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     <div class="screen-title">Settings</div>
     <div class="settings-row"><span>Ambient music</span><input type="range" id="musicVol" min="0" max="100" value="30" oninput="setMusicVolume(this.value)"></div>
     <div class="settings-row"><span>Sound effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
+    
+    <!-- Tutorial Replay Button -->
+    <div style="display:flex; justify-content:center; width:100%; margin-top: 35px;">
+        <button class="btn ghost small" onclick="showTutorial()">Replay "How to Play" Tour</button>
+    </div>
+
     <button class="btn ghost screen-back" onclick="showMenuScreen('hub')">← Back</button>
   </div>
 
@@ -554,7 +567,11 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
-    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span></div>
+    <div class="right">
+      <button class="btn ghost small" style="color:var(--danger-bright); border-color:var(--danger-bright); padding:4px 8px; font-size:10px; margin-right:8px;" onclick="leaveActiveGame()">Leave Game</button>
+      <span id="turnIndicator">—</span>
+      <span class="timer" id="timerDisplay">20:00</span>
+    </div>
   </div>
 
   <!-- ACTIVE PLAYER PANEL -->
@@ -601,7 +618,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   </div>
 </div>
 
-<!-- Firebase SDK (compat build, plain script tags, no bundler required) -->
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
@@ -637,11 +654,9 @@ const sfx = {
   win: () => { playTone(400,'sine',0.1); setTimeout(()=>playTone(500,'sine',0.1),100); setTimeout(()=>playTone(600,'sine',0.4),200); }
 };
 
-// --- PROCEDURAL AMBIENT PAD (original, generated in-browser — used whenever the
-//     referenced music file is missing, so there's always real audio instead of silence) ---
 let _ambientStarted = false;
 let ambientMasterGain = null;
-let musicVolumeSetting = 0.3; // 0..1, driven by the Settings slider (default 30%)
+let musicVolumeSetting = 0.3; 
 function startAmbientPad(){
   if(!audioCtx || _ambientStarted) return;
   _ambientStarted = true;
@@ -674,33 +689,63 @@ function startAmbientPad(){
   lfo.start();
 }
 
-// --- BACKGROUND MUSIC LOGIC ---
+// --- BACKGROUND MUSIC & TUTORIAL LOGIC ---
 const bgMusicElement = document.getElementById('bgMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
+const tutSteps = [
+    { t: "Welcome to Deck of Deception", d: "A game of bluffing, traps, and money. Your goal: Bankrupt your friends and be the last one standing." },
+    { t: "The Chain", d: "Play a number card, then call out the EXACT value the next player must drop. Set a trap." },
+    { t: "Forced Buys", d: "Don't have the required number? You MUST buy from another player. Steal 2 coins from their bank to draw a card." },
+    { t: "Action Cards", d: "Use Wild Swap, Power (Drain), Steal, and Reverse to sabotage the table. They cost coins or drain enemies." },
+    { t: "Winning", d: "Keep your coins high and your cards low. When the timer ends, cards left in your hand cost you massive points!" }
+];
+let tutIdx = 0;
+
+function showTutorial() {
+    tutIdx = 0;
+    document.getElementById('tutorialOverlay').classList.add('show');
+    renderTutorial();
+}
+function renderTutorial() {
+    document.getElementById('tutTitle').textContent = tutSteps[tutIdx].t;
+    document.getElementById('tutText').textContent = tutSteps[tutIdx].d;
+    document.getElementById('tutNextBtn').textContent = tutIdx === tutSteps.length-1 ? "Play ↗" : "Next ↗";
+}
+function nextTutorial() {
+    if(tutIdx < tutSteps.length - 1) { tutIdx++; renderTutorial(); }
+    else { skipTutorial(); }
+}
+function skipTutorial() {
+    document.getElementById('tutorialOverlay').classList.remove('show');
+    localStorage.setItem('dod_tutorial', 'done');
+    
+    if(menu.style.opacity === '0' || !menu.classList.contains('menu-visible')) {
+        menu.classList.add('menu-visible');
+        if(!audioCtx) audioCtx = new AudioContext();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(bgMusicElement) { 
+            bgMusicElement.volume = 0.7; 
+            bgMusicElement.play().catch(()=>startAmbientPad()); 
+        } else { startAmbientPad(); }
+    }
+}
+
 introOverlay.addEventListener('click', function() {
-    // Hide overlay
     this.style.opacity = '0';
     setTimeout(() => this.style.display = 'none', 800);
     
-    // Trigger Cinematic Menu Fade In
-    menu.classList.add('menu-visible');
-    
-    // Init Audio Context & Play Music
-    if(!audioCtx) audioCtx = new AudioContext();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    
-    if(bgMusicElement) {
-        bgMusicElement.volume = 0.7; // Initial menu volume
-        if(bgMusicElement.error){
-            startAmbientPad();
-        } else {
-            bgMusicElement.play().catch(() => startAmbientPad());
-            bgMusicElement.addEventListener('error', () => startAmbientPad(), {once:true});
-        }
+    if(localStorage.getItem('dod_tutorial') !== 'done') {
+        showTutorial();
     } else {
-        startAmbientPad();
+        menu.classList.add('menu-visible');
+        if(!audioCtx) audioCtx = new AudioContext();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(bgMusicElement) { 
+            bgMusicElement.volume = 0.7; 
+            bgMusicElement.play().catch(() => startAmbientPad()); 
+        } else { startAmbientPad(); }
     }
 });
 
@@ -805,7 +850,6 @@ if(window.DoDAuth){
     const el = document.getElementById('hubCurrency');
     if(el) el.textContent = profile.currency;
     
-    // FULL FIX: Start listening for incoming party invites globally as soon as they log in
     if (typeof listenForPartyInvites === 'function') {
         listenForPartyInvites();
     }
@@ -838,7 +882,6 @@ function showMenuScreen(name){
   }
 }
 
-// FULL FIX: Hook the invite listener when visiting the social screen to guarantee connection
 const originalShowMenu = showMenuScreen;
 showMenuScreen = function(name) {
     originalShowMenu(name);
@@ -879,7 +922,6 @@ function makeDeck(){
   const addAction = (type, count, tier) => {
     for(let i=0;i<count;i++) {
         let card = { type: type, value: Math.floor(Math.random()*9)+1 };
-        // NEW FIX: Only add the tier property if it actually exists!
         if (tier !== undefined) {
             card.tier = tier;
         }
@@ -947,7 +989,6 @@ function startGame() {
                         hand: hand,
                         shop: START_SHOP,
                         out: false,
-                        // Host assigns colors directly to the master state
                         color: index === 0 ? SKINS[menuState.skinIdx].color : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
                     });
                 });
@@ -964,7 +1005,8 @@ function startGame() {
                         lastPlayedCardLabel: null,
                         lastPlayedBy: null, 
                         uiState: 'IDLE',
-                        lastAction: null // Explicitly setting this to null instead of undefined!
+                        lastAction: null, // Explicitly setting this to null instead of undefined!
+                        gameStartTime: Date.now() // Save start time so the timer syncs exactly!
                     }
                 });
             }
@@ -973,8 +1015,8 @@ function startGame() {
             listenToGameState();
 
         } else {
-            // --- OFFLINE BOT MODE FALLBACK (Keeps your practice mode working) ---
-            const fast = document.getElementById('fastTest').checked;
+            // --- OFFLINE BOT MODE FALLBACK ---
+            const fast = document.getElementById('fastTest') ? document.getElementById('fastTest').checked : false;
             const count = menuState.count;
             PLAYER_COLORS = [SKINS[menuState.skinIdx].color];
             document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
@@ -982,8 +1024,7 @@ function startGame() {
             const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
             botNames.forEach((n,i) => PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]));
 
-            // Change this line inside the offline block of startGame():
-let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: DoDAuth.getProfile().uid}];
+            let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: window.DoDAuth ? DoDAuth.getProfile().uid : "local_human"}];
             botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false}));
 
             let deck = makeDeck();
@@ -1003,9 +1044,38 @@ let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:fa
     }, 800);
 }
 
+// ---------------- NEW: LEAVE GAME BUTTON ----------------
+async function leaveActiveGame() {
+    if(confirm("Are you sure you want to leave the table? You will be eliminated from this match.")) {
+        localStorage.removeItem('dod_active_match');
+        if(currentMatchId && state) {
+            try {
+                const myUid = DoDAuth.getProfile().uid;
+                const db = firebase.firestore();
+                let me = state.players.find(p => p.uid === myUid);
+                if(me && !me.out) {
+                    me.out = true;
+                    let nextUid = state.turnUid;
+                    // Pass turn automatically if it was our turn
+                    if(state.turnUid === myUid) {
+                        let n = state.players.findIndex(p => p.uid === myUid);
+                        do { n = (n + state.direction + state.players.length) % state.players.length; } while (state.players[n].out);
+                        nextUid = state.players[n].uid;
+                    }
+                    await db.collection('matches').doc(currentMatchId).update({
+                        'gameState.players': state.players,
+                        'gameState.turnUid': nextUid
+                    });
+                }
+            } catch(e) { console.error("Error leaving cleanly", e); }
+        }
+        location.reload();
+    }
+}
+
 let gameListenerUnsub = null;
 let initialDealDone = false;
-let localLastTurnUid = null; // Tracks the turn to trigger animations
+let localLastTurnUid = null; 
 
 function listenToGameState() {
     if (currentMatchId) localStorage.setItem('dod_active_match', currentMatchId);
@@ -1014,7 +1084,7 @@ function listenToGameState() {
 
     gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
         const data = doc.data();
-        if (!data.gameState) return; 
+        if (!data || !data.gameState) return; 
 
         const serverState = data.gameState;
 
@@ -1035,16 +1105,28 @@ function listenToGameState() {
 
         document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
 
-        // 3. PRESERVE LOCAL UI STATE & MAP SERVER DATA
-        // We MUST save the buyLoop locally, otherwise the network sync wipes it out and breaks the retry button!
+        // 3. PRESERVE LOCAL UI STATE & MAP SERVER DATA (CRITICAL FIX FOR BUY LOOP MEMORY LEAK)
         let preservedBuyLoop = null;
         let preservedPeek = null;
         if (typeof state !== 'undefined' && state !== null) {
             if (state.turnUid === serverState.turnUid) {
-                preservedBuyLoop = state.buyLoop;
                 preservedPeek = state.peekResult;
+                if (state.buyLoop) {
+                    // MUST map the buyer and target back to the new array references!
+                    preservedBuyLoop = {
+                        tries: state.buyLoop.tries,
+                        lastDrawnLabel: state.buyLoop.lastDrawnLabel,
+                        buyer: orderedPlayers.find(p => p.uid === state.buyLoop.buyer.uid),
+                        target: orderedPlayers.find(p => p.uid === state.buyLoop.target.uid)
+                    };
+                }
             }
         }
+
+        // TIMER SYNC FIX
+        const fast = document.getElementById('fastTest') ? document.getElementById('fastTest').checked : false;
+        const totalDuration = fast ? 120 : 1200;
+        const elapsed = serverState.gameStartTime ? Math.floor((Date.now() - serverState.gameStartTime) / 1000) : 0;
 
         state = {
             players: orderedPlayers,
@@ -1053,7 +1135,7 @@ function listenToGameState() {
             turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), 
             direction: serverState.direction,
             over: serverState.over || false,
-            timeLeft: 1200, 
+            timeLeft: Math.max(0, totalDuration - elapsed), 
             timeUp: false,
             requiredValue: serverState.requiredValue,
             lastEffectiveValue: serverState.lastEffectiveValue,
@@ -1070,7 +1152,6 @@ function listenToGameState() {
         
         // --- 5. THE CURVE ANIMATION & BOT WAKE-UP ---
         if (localLastTurnUid !== serverState.turnUid) {
-            // Animate the yellow turn curve
             const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
             const toIdx = orderedPlayers.findIndex(p => p.uid === serverState.turnUid);
             if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
@@ -1079,11 +1160,8 @@ function listenToGameState() {
             }
             localLastTurnUid = serverState.turnUid;
 
-            // WAKE UP BOTS (HOST ONLY)
-            // If the new turn belongs to a bot, the Host calculates their move and pushes it to Firebase.
             const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
             if (isHost && serverState.turnUid.startsWith('bot_')) {
-                // Give the bot a small delay so it feels like they are "thinking"
                 setTimeout(botTurn, 1800); 
             }
         }
@@ -1111,7 +1189,14 @@ function tick(){
   const disp=document.getElementById('timerDisplay');
   disp.textContent=`${m}:${s.toString().padStart(2,'0')}`;
   disp.classList.toggle('low', state.timeLeft<=60);
-  if(state.timeLeft<=0) clearInterval(timerInterval);
+  if(state.timeLeft<=0) {
+      clearInterval(timerInterval);
+      if(currentMatchId && window.onlineMatchSeats && window.onlineMatchSeats[0].uid === DoDAuth.getProfile().uid) {
+          // If time is up, host marks game over globally
+          firebase.firestore().collection('matches').doc(currentMatchId).update({'gameState.over': true});
+      }
+      if(!currentMatchId) finalizeGame(); // Offline fallback
+  }
 }
 
 function activePlayers(){ return state.players.filter(p=>!p.out); }
@@ -1137,6 +1222,7 @@ function log(msg,cls){
 const PROTESTS=["That's a rough one to hit.","You'll pay for that.","Ice cold.","Fine, watch yourself next round.","Not fair, but okay."];
 function protestFrom(p){ log(`${p.name}: "${PROTESTS[Math.floor(Math.random()*PROTESTS.length)]}"`,'quote'); }
 
+// SAFE INTEGER MATH COIN FIX
 function transferToBank(from, amount) { const t = Math.min(parseInt(amount)||0, parseInt(from.shop)||0); from.shop = (parseInt(from.shop)||0) - t; return t; }
 function transferToPlayer(from, to, amount) { const t = Math.min(parseInt(amount)||0, parseInt(from.shop)||0); from.shop = (parseInt(from.shop)||0) - t; to.shop = (parseInt(to.shop)||0) + t; return t; }
 function payFromOwn(p, amount) { const t = Math.min(parseInt(amount)||0, parseInt(p.shop)||0); p.shop = (parseInt(p.shop)||0) - t; return t; }
@@ -1148,7 +1234,7 @@ function eliminate(p, reason){
   const r=seatRect(p.id);
   burstParticles(r.left+r.width/2, r.top+r.height/2, '#b23c3c', 25, 'lightning');
   const left=activePlayers();
-  if(left.length===1) endGame(left[0]);
+  if(left.length===1) finalizeGame();
 }
 
 function sweepEliminations(){
@@ -1191,7 +1277,6 @@ function layoutRing(){
   });
 }
 
-// ---------------- ORIGIN TRACKING (FOR ANIMATIONS) ----------------
 function rectCenter(r){ return {x:r.left+r.width/2, y:r.top+r.height/2}; }
 function seatRect(playerId){
   const el=document.getElementById('seat-'+playerId);
@@ -1369,7 +1454,11 @@ function animateTurnArc(fromIdx, toIdx, dir) {
 // ---------------- RENDER ----------------
 function renderAll(){
   sweepEliminations();
-  if(state.over) return;
+  if(state.over) {
+      // Show final state if game is over
+      if(!document.getElementById('finaleModal').classList.contains('show')) finalizeGame();
+      return; 
+  }
   const cur=state.players[state.turn];
   document.getElementById('turnIndicator').textContent = cur.isHuman?'Your turn':`${cur.name} is playing…`;
   document.getElementById('deckCount').textContent = state.deck.length;
@@ -1403,7 +1492,7 @@ function renderAll(){
     }
   });
 
-  // Render Active Player Panel (Fanned Deck Representation)
+  // Render Active Player Panel
   const ap = document.getElementById('activePlayerPanel');
   if (ap) {
       if(!cur.out) {
@@ -1517,7 +1606,6 @@ function renderHand(){
 
 function isYourTurn() { 
     if (!state || state.over) return false;
-    // Since you are ALWAYS seat 0 locally, if the turn is 0, it is your turn!
     return state.turn === 0 && !state.players[0].out; 
 }
 
@@ -1625,7 +1713,7 @@ function renderActionBar(){
     return;
   }
 
-  // Only standard 'number' cards will hide the Forced Buy button now
+  // FORCED BUY BUTTON FIX: Only standard 'number' cards will hide the Forced Buy button now
   const hasMatch = state.requiredValue === null || you.hand.some(c => c.value === state.requiredValue && c.type === 'number');
   if(!hasMatch){
     const btn=document.createElement('button');
@@ -1656,12 +1744,10 @@ async function playNumberFromHand(idx, el) {
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
-    // 1. Apply local logic
     myPlayerObj.hand.splice(idx, 1);
     myPlayerObj.shop += PLAY_REWARD;
     
     if (currentMatchId) {
-        // ONLINE MODE (Firebase)
         const db = firebase.firestore();
         await db.collection('matches').doc(currentMatchId).update({
             'gameState.players': state.players,
@@ -1678,7 +1764,6 @@ async function playNumberFromHand(idx, el) {
             }
         });
     } else {
-        // OFFLINE MODE (Local Bots)
         log(`You played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok');
         state.lastEffectiveValue = card.value;
         state.lastPlayedCardLabel = card.value;
@@ -1689,7 +1774,6 @@ async function playNumberFromHand(idx, el) {
         const srcRect = el.getBoundingClientRect();
         flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
         flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-        
         triggerCalloutPhase();
     }
 }
@@ -1865,7 +1949,6 @@ async function doBuyDraw() {
             state.buyLoop = null;
 
             if (currentMatchId) {
-                // ONLINE: Push successful draw to Firebase
                 await firebase.firestore().collection('matches').doc(currentMatchId).update({
                     'gameState.deck': state.deck,
                     'gameState.players': state.players,
@@ -1876,7 +1959,6 @@ async function doBuyDraw() {
                     'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: bl.buyer.uid, cardValue: card.value, msg: actionMsg }
                 });
             } else {
-                // OFFLINE
                 state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.id;
                 log(actionMsg, 'ok'); flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[bl.buyer.id], 15, card.value); triggerCalloutPhase();
             }
@@ -1887,7 +1969,6 @@ async function doBuyDraw() {
             const actionMsg = `Try ${bl.tries}: drew ${label} (${card.value}) — no match.`;
 
             if (currentMatchId) {
-                // ONLINE: Push Miss to Firebase
                 await firebase.firestore().collection('matches').doc(currentMatchId).update({
                     'gameState.deck': state.deck,
                     'gameState.players': state.players,
@@ -1895,7 +1976,6 @@ async function doBuyDraw() {
                     'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: bl.buyer.uid, msg: actionMsg }
                 });
             } else {
-                // OFFLINE
                 log(actionMsg); flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
                 setTimeout(() => { state.uiState = 'RESOLVING_BUY'; renderAll(); }, 500);
             }
@@ -1949,7 +2029,7 @@ function resolveEmptySingleDraw(buyer, target){
   flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
   sweepEliminations();
   
-  setTimeout(() => {
+  setTimeout(async () => {
       if(buyer.out){ advanceTurn(); return; }
       const card=state.deck.pop();
       if(!card){ log('Market ran dry — turn skips.'); if(!target.out) protestFrom(target); advanceTurn(); return; }
@@ -1976,12 +2056,25 @@ function resolveEmptySingleDraw(buyer, target){
         triggerCalloutPhase();
       } else {
         buyer.hand.push(card);
-        const label = card.type==='number' ? card.value : card.type.toUpperCase();
-        log(`Drew ${label} (${card.value}) — still no match. Turn skips.`,'alert');
-        flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
+        const msg = `${buyer.name} draws a dud (${card.value}) — turn skips.`;
         if(!target.out) protestFrom(target);
         
-        setTimeout(() => advanceTurn(), 500);
+        if (currentMatchId) {
+            let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+            
+            await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.players': state.players,
+                'gameState.deck': state.deck,
+                'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
+            });
+        } else {
+            log(msg, 'alert');
+            renderAll();
+            flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5);
+            setTimeout(() => advanceTurn(), 500);
+        }
       }
   }, 300);
 }
@@ -1997,6 +2090,7 @@ function usePeek(playerId,targetId){
   state.peekResult = `${target.name}'s card values: ${nums.length?nums.join(', '):'Empty hand!'}`;
   renderAll();
 }
+
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
     
@@ -2073,10 +2167,9 @@ function playNetworkedAnimation(action) {
 }
 
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
-// Restored for Offline/Bot Training mode
 async function advanceTurn() {
     if (currentMatchId) { 
-        // ONLINE MODE - Ultimate safety net for when Bots skip their turn (empty deck, no targets, etc.)
+        // ONLINE MODE - Ultimate safety net for when Bots skip their turn
         const myUid = DoDAuth.getProfile().uid;
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
         
@@ -2098,9 +2191,8 @@ async function advanceTurn() {
 
     // OFFLINE MODE
     state.uiState = 'IDLE'; 
-    state.peekResult = null;
+    state.peekResult = null; 
  
-    
     if(state.over) return;
     sweepEliminations();
     if(state.over) return;
@@ -2128,7 +2220,6 @@ async function advanceTurn() {
     renderAll();
     if(state.over) return;
     
-    // Trigger the next bot's turn
     if(!cur.isHuman) setTimeout(botTurn, 1400);
 }
 
@@ -2362,8 +2453,7 @@ function botBuyLoop(buyer,target){
     }
 
 async function botDeclare(bot) {
-    // 1. Existing AI Logic: Bot picks a number
-    const target = nextPlayerOf(bot.id); // Visual target for offline mode
+    const target = nextPlayerOf(bot.id); 
     let chosen;
     const peekIdx = bot.hand.findIndex(c => c.type === 'peek' && (state.requiredValue === null || c.value === state.requiredValue));
     
@@ -2379,10 +2469,8 @@ async function botDeclare(bot) {
     const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue + chosen}.` : '';
 
     if (currentMatchId) {
-        // --- ONLINE MODE (Host pushes the bot's entirely calculated turn to Firebase) ---
         const db = firebase.firestore();
         
-        // Calculate the exact UID of the next player to pass the turn to
         let nextIndex = state.players.findIndex(p => p.uid === bot.uid);
         do { 
             nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
@@ -2392,7 +2480,7 @@ async function botDeclare(bot) {
         const msg = `${bot.name} played their turn and calls it — ${nextPlayer.name} needs a ${chosen}.${totalTxt}`;
 
         await db.collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players, // Uploads any coins/cards the bot stole or bought!
+            'gameState.players': state.players, 
             'gameState.deck': state.deck,
             'gameState.requiredValue': chosen,
             'gameState.turnUid': nextPlayer.uid,
@@ -2402,14 +2490,13 @@ async function botDeclare(bot) {
             'gameState.lastPlayedBy': bot.uid,
             'gameState.lastAction': {
                 id: Date.now().toString(),
-                type: 'PLAY_NUMBER', // This tells other clients to animate the center card
+                type: 'PLAY_NUMBER', 
                 uid: bot.uid,
                 cardValue: state.lastEffectiveValue || chosen, 
                 msg: msg
             }
         });
     } else {
-        // --- OFFLINE MODE (Original Logic) ---
         state.requiredValue = chosen;
         log(`${bot.name} calls it — ${target.name} needs a ${chosen}.${totalTxt}`);
         renderAll();
@@ -2417,10 +2504,8 @@ async function botDeclare(bot) {
     }
 }
 
-// ---------------- MODALS ----------------
 function openModal(id){ document.getElementById(id).classList.add('show'); }
 
-// ---------------- END GAME ----------------
 function finalizeGame(){
   const left=activePlayers();
   if(left.length===0){ endGame(null); return; }
@@ -2444,7 +2529,7 @@ function endGame(winner,byScore){
   rows.forEach(r=>{ const isWinner=winner && r.name===winner.name; html+=`<tr class="${isWinner?'winner':''}"><td>${r.name}${isWinner?' 🏆':''}</td><td>${r.status}</td><td>${r.detail}</td></tr>`; });
   const earnedTxt = window.DoDShop ? `<p class="mono" style="margin-top:6px;color:var(--brass-bright);font-size:12px">🪙 +${Math.max(0,score(state.players[0]))} coins earned this game</p>` : '';
   html+=`</table><p style="margin-top:14px">${winner?`<b>${winner.name}</b> wins.`:'No winner this round.'}</p>${earnedTxt}`;
-  html+=`<div class="row" style="margin-top:18px"><button class="btn" onclick="location.reload()">Play again ↗</button></div>`;
+  html+=`<div class="row" style="margin-top:18px"><button class="btn" onclick="location.reload()">Return to Hub ↗</button></div>`;
   document.getElementById('finaleContent').innerHTML=html;
   openModal('finaleModal');
   renderAll();
@@ -2462,28 +2547,23 @@ let partyListenerUnsub = null;
 let friendsListenerUnsub = null;
 let inviteListenerUnsub = null;
 
-// FULL FIX: Global Invite Listener
-// FULL FIX: Global Invite Listener
 function listenForPartyInvites() {
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
     
-    // Grab the full profile so we can use the displayName
     const myProfile = DoDAuth.getProfile(); 
     const myUid = myProfile.uid;
     const db = firebase.firestore();
 
-    if (inviteListenerUnsub) return; // Prevent duplicate listeners
+    if (inviteListenerUnsub) return; 
 
     inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(async doc => {
         if (doc.exists && doc.data().activePartyInvite) {
             const partyId = doc.data().activePartyInvite;
 
-            // 1. Clear the invite from Firestore so it doesn't trigger again
             await db.collection('users').doc(myUid).update({
                 activePartyInvite: firebase.firestore.FieldValue.delete()
             }).catch(e => console.error("Error clearing invite: ", e));
 
-            // 2. NEW FIX: The friend officially joins the party here!
             try {
                 await db.collection('parties').doc(partyId).update({
                     members: firebase.firestore.FieldValue.arrayUnion({ 
@@ -2493,21 +2573,16 @@ function listenForPartyInvites() {
                 });
             } catch(e) {
                 console.error("Error adding self to party members: ", e);
-                return; // Stop execution if they failed to join the party document
+                return; 
             }
 
-            // 3. Update local state
             currentPartyId = partyId;
             isPartyLeader = false;
 
-            // 4. Update UI to show we are in a party
             document.getElementById('btnCreateParty').style.display = 'none';
             document.getElementById('btnLeaveParty').style.display = 'inline-block';
 
-            // 5. Open the social screen automatically to see the lobby
             showMenuScreen('social');
-            
-            // 6. Connect to the party UI stream
             listenToParty(partyId);
         }
     }, err => {
@@ -2517,7 +2592,6 @@ function listenForPartyInvites() {
 
 function pickMpCount(size, btnElement) {
     mpTableSize = size;
-    // Target the parent container and remove selected class from all sibling buttons
     btnElement.parentElement.querySelectorAll('.countbtn').forEach(b => b.classList.remove('selected'));
     btnElement.classList.add('selected');
 }
@@ -2530,7 +2604,6 @@ async function initFriendsList() {
 
     if (friendsListenerUnsub) friendsListenerUnsub();
     
-    // Listen for friends and requests
     friendsListenerUnsub = db.collection('users').doc(uid).collection('friends').onSnapshot(snapshot => {
         const container = document.getElementById('friendsListContainer');
         container.innerHTML = '';
@@ -2569,7 +2642,6 @@ async function sendFriendRequest() {
     const myProfile = DoDAuth.getProfile();
 
     try {
-        // Find user by name (Note: in production, search by unique ID or ensure unique names)
         const snapshot = await db.collection('users').where('displayName', '==', targetName).limit(1).get();
         if (snapshot.empty) {
             alert("Player not found.");
@@ -2579,7 +2651,6 @@ async function sendFriendRequest() {
         const targetUser = snapshot.docs[0];
         if (targetUser.id === myProfile.uid) return;
 
-        // Write to their friends subcollection
         await targetUser.ref.collection('friends').doc(myProfile.uid).set({
             displayName: myProfile.displayName,
             status: 'pending'
@@ -2595,17 +2666,13 @@ async function acceptFriend(friendUid, friendName) {
     const myUid = DoDAuth.getProfile().uid;
     const myName = DoDAuth.getProfile().displayName;
 
-    // Set them as accepted in my list
     await db.collection('users').doc(myUid).collection('friends').doc(friendUid).update({ status: 'accepted' });
-    
-    // Add me to their list automatically
     await db.collection('users').doc(friendUid).collection('friends').doc(myUid).set({
         displayName: myName,
         status: 'accepted'
     });
 }
 
-// ---------------- 2. PARTY SYSTEM (PUBG LOBBY) ----------------
 async function createParty() {
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
@@ -2624,25 +2691,17 @@ async function createParty() {
     document.getElementById('btnLeaveParty').style.display = 'inline-block';
     
     listenToParty(currentPartyId);
-    
-    // FULL FIX: Instantly refresh the friends list so the "Invite" buttons appear immediately
     initFriendsList(); 
 }
 
 async function inviteToParty(friendUid, friendName) {
     if (!currentPartyId) return;
     const db = firebase.firestore();
-
     try {
-        // ONLY send the invite ping to the friend's user document.
-        // The friend's game will handle adding them to the actual party document once received.
         await db.collection('users').doc(friendUid).set({
             activePartyInvite: currentPartyId
         }, { merge: true });
-        
-        // Optional: Let the host know the invite was successfully sent
         console.log(`Invite sent to ${friendName}`);
-        
     } catch(e) {
         console.error("Invite Error: ", e);
     }
@@ -2671,7 +2730,7 @@ async function leaveParty() {
     document.getElementById('partyLeaderControls').style.display = 'none';
     document.getElementById('lobbyWaitingText').style.display = 'none';
     
-    initFriendsList(); // Refresh UI
+    initFriendsList(); 
 }
 
 function listenToParty(partyId) {
@@ -2684,13 +2743,11 @@ function listenToParty(partyId) {
         if (!doc.exists) { leaveParty(); return; }
         const data = doc.data();
         
-        // Update UI Squad List
         const listEl = document.getElementById('partyMemberList');
         listEl.innerHTML = data.members.map(m => `<div>${m.uid === data.leader ? '👑 ' : ''}${m.displayName}</div>`).join('');
 
         isPartyLeader = (data.leader === myUid);
         
-        // Lock UI if not leader
         if (currentPartyId) {
             if (!isPartyLeader) {
                 document.getElementById('partyLeaderControls').style.display = 'none';
@@ -2701,7 +2758,6 @@ function listenToParty(partyId) {
             }
         }
         
-        // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
         if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId) {
             currentMatchId = data.matchId;
             document.getElementById('lobbyWaitingText').textContent = "Match found! Preparing table...";
@@ -2712,11 +2768,6 @@ function listenToParty(partyId) {
         }
     });
 }
-
-// ---------------- 3. SQUAD MATCHMAKING & MATCH LOBBY ----------------
-let isReady = false;
-let matchLobbyUnsub = null;
-let countdownTimer = null;
 
 async function startOnlineMatchmaking() {
     const btn = document.getElementById('searchMatchBtn');
@@ -2746,7 +2797,7 @@ async function startOnlineMatchmaking() {
         let matchDoc = null;
 
         for (let doc of snapshot.docs) {
-            if (doc.data().isPrivate) continue; // Skip private party matches!
+            if (doc.data().isPrivate) continue; 
             if (doc.data().seats.length + joiningSquad.length <= mpTableSize) {
                 matchRef = doc.ref;
                 matchDoc = doc.data();
@@ -2755,7 +2806,6 @@ async function startOnlineMatchmaking() {
         }
 
         if (matchRef) {
-            // JOIN EXISTING PUBLIC TABLE
             let currentSeats = matchDoc.seats;
             let currentPublic = matchDoc.publicSeats || {};
             
@@ -2769,7 +2819,6 @@ async function startOnlineMatchmaking() {
             currentMatchId = matchRef.id;
 
         } else {
-            // HOST NEW PUBLIC TABLE
             matchRef = db.collection('matches').doc();
             let newSeats = [];
             let newPublic = {};
@@ -2784,7 +2833,7 @@ async function startOnlineMatchmaking() {
             await matchRef.set({
                 tableSize: mpTableSize,
                 status: 'waiting',
-                isPrivate: false, // Flag for public match
+                isPrivate: false, 
                 createdAt: firebase.firestore.FieldValue.serverTimestamp(),
                 seats: newSeats,
                 turn: 0,
@@ -2850,7 +2899,6 @@ async function startPrivatePartyMatch() {
     }
 
     try {
-        // ALWAYS CREATE A NEW PRIVATE TABLE
         let matchRef = db.collection('matches').doc();
         let newSeats = [];
         let newPublic = {};
@@ -2865,7 +2913,7 @@ async function startPrivatePartyMatch() {
         await matchRef.set({
             tableSize: mpTableSize,
             status: 'waiting',
-            isPrivate: true, // This ensures it stays off the public Matchmaking
+            isPrivate: true, 
             createdAt: firebase.firestore.FieldValue.serverTimestamp(),
             seats: newSeats,
             turn: 0,
@@ -2876,7 +2924,6 @@ async function startPrivatePartyMatch() {
         
         currentMatchId = matchRef.id;
         
-        // Wait 10 seconds before filling empty private lobby spots with bots
         setTimeout(async () => {
             const checkDoc = await matchRef.get();
             if (checkDoc.exists && checkDoc.data().status === 'waiting') {
@@ -2933,7 +2980,6 @@ function listenToMatchLobby(matchId) {
 
         data.seats.forEach(seat => {
             const isPlayerReady = (data.readyStatus && data.readyStatus[seat.uid]) || false;
-            // Bots are automatically treated as "Ready"
             if (!isPlayerReady && !seat.isBot) allReady = false; 
             
             const readyBadge = seat.isBot ? '<span style="color:var(--ok); font-weight:bold;">[BOT Ready]</span>' 
@@ -2945,7 +2991,6 @@ function listenToMatchLobby(matchId) {
                      </div>`;
         });
         
-        // Fill empty seats visually
         for(let i=data.seats.length; i<data.tableSize; i++){
             html += `<div style="display:flex; justify-content:space-between; background:rgba(0,0,0,0.1); padding:8px 12px; border:1px dashed rgba(255,255,255,0.1); border-radius:4px; opacity:0.5;">
                         <span>Empty Seat...</span>
@@ -2956,58 +3001,50 @@ function listenToMatchLobby(matchId) {
         const isHost = data.seats[0].uid === myUid;
         const statusEl = document.getElementById('matchCountdown');
 
-        // Countdown Logic Trigger: All players are ready
         if (data.seats.length === data.tableSize && allReady) {
             if (isHost && data.status === 'waiting') {
                 db.collection('matches').doc(matchId).update({
                     status: 'starting',
-                    startAt: Date.now() + 10000 // EXACTLY 10 seconds from now
+                    startAt: Date.now() + 10000 
                 });
             }
         } else {
-            // INTERRUPTION LOGIC: Someone un-readied. Stop countdown, reset to waiting.
             if (isHost && data.status === 'starting') {
                 db.collection('matches').doc(matchId).update({ status: 'waiting', startAt: null });
             }
         }
 
-        // Local Countdown Display & Action
         if (data.status === 'starting' && data.startAt) {
-            statusEl.style.color = "var(--ok)"; // Turn text green when counting down
+            statusEl.style.color = "var(--ok)"; 
             if (!countdownTimer) {
                 countdownTimer = setInterval(() => {
                     const left = Math.ceil((data.startAt - Date.now()) / 1000);
                     if (left > 0) {
                         statusEl.textContent = `Match starting in: ${left}...`;
                     } else {
-                        // COUNTDOWN HITS 0: Start the Game
                         clearInterval(countdownTimer);
                         countdownTimer = null;
                         if (isHost && data.status !== 'active') {
                             db.collection('matches').doc(matchId).update({ status: 'active' });
                         }
                     }
-                }, 100); // Check faster for UI snappiness
+                }, 100); 
             }
         } else {
-            // STOP AND DISABLE COUNTDOWN
             if (countdownTimer) { 
                 clearInterval(countdownTimer); 
                 countdownTimer = null; 
             }
-            statusEl.style.color = "var(--danger-bright)"; // Revert to red warning color
+            statusEl.style.color = "var(--danger-bright)"; 
             statusEl.textContent = data.seats.length < data.tableSize ? "Waiting for more players..." : "Waiting for everyone to ready up...";
         }
 
-        // TRANSITION TO GAME
         if (data.status === 'active') {
             if (matchLobbyUnsub) matchLobbyUnsub();
             if (countdownTimer) clearInterval(countdownTimer);
             
-            // NEW FIX: Save the online roster so the game scene can use it
             window.onlineMatchSeats = data.seats; 
             
-            // Start game UI
             document.getElementById('screen-match-lobby').classList.add('hidden');
             enterGameWithLoading(); 
         }
@@ -3019,16 +3056,13 @@ async function toggleReady() {
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
     
-    // Toggle local state
     isReady = !isReady;
     
-    // Update UI Button
     const btn = document.getElementById('btnReady');
     btn.textContent = isReady ? 'Unready' : 'Ready Up';
     btn.style.background = isReady ? 'var(--ok)' : 'var(--brass)';
     btn.style.color = isReady ? '#fff' : 'var(--felt-dark)';
     
-    // Push state to server (Triggers the snapshot and handles the countdown logic)
     await db.collection('matches').doc(currentMatchId).update({
         [`readyStatus.${myUid}`]: isReady
     });
