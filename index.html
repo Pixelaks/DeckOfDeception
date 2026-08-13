@@ -412,7 +412,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     <div id="accountLoading" class="mono" style="margin-top:20px; color:rgba(242,234,216,0.6); font-size:12px;">Signing you in…</div>
     <div class="hub-buttons" style="display:none;">
       <button class="btn" onclick="showMenuScreen('play')">Play ↗</button>
-      <button class="btn ghost" onclick="showMenuScreen('social')">Friends & Party</button> <!-- NEW BUTTON -->
+      <button class="btn ghost" onclick="showMenuScreen('social')">Friends & Party</button>
       <button class="btn ghost" onclick="showMenuScreen('shop')">Shop</button>
       <button class="btn ghost" onclick="showMenuScreen('training')">Training</button>
       <button class="btn ghost" onclick="showMenuScreen('settings')">Settings</button>
@@ -745,8 +745,7 @@ function pickSkin(i){ menuState.skinIdx=i; buildMenu(); }
 function pickCount(n){ menuState.count=n; buildMenu(); }
 buildMenu();
 
-// Gate the hub behind real sign-in instead of showing it immediately —
-// avoids a flash of buttons the player can tap before they have an identity.
+// Gate the hub behind real sign-in instead of showing it immediately
 if(window.DoDAuth){
   DoDAuth.onProfileReady(function(profile){
     const loading = document.getElementById('accountLoading');
@@ -758,14 +757,12 @@ if(window.DoDAuth){
     const el = document.getElementById('hubCurrency');
     if(el) el.textContent = profile.currency;
     
-    // Start listening for incoming party invites globally as soon as they log in
+    // FULL FIX: Start listening for incoming party invites globally as soon as they log in
     if (typeof listenForPartyInvites === 'function') {
         listenForPartyInvites();
     }
   });
 } else {
-  // auth.js not loaded (e.g. Firebase config not filled in yet) — fall back
-  // to showing the hub immediately so the game is still playable offline.
   const loading = document.getElementById('accountLoading');
   const buttons = document.querySelector('#screen-hub .hub-buttons');
   if(loading) loading.style.display='none';
@@ -792,6 +789,16 @@ function showMenuScreen(name){
     window.DoDShop.render();
   }
 }
+
+// FULL FIX: Hook the invite listener when visiting the social screen to guarantee connection
+const originalShowMenu = showMenuScreen;
+showMenuScreen = function(name) {
+    originalShowMenu(name);
+    if(name === 'social') {
+        initFriendsList();
+        if (typeof listenForPartyInvites === 'function') listenForPartyInvites();
+    }
+};
 
 // ---------------- CINEMATIC LOADING SCREEN ----------------
 const LOADING_LINES = ["Shuffling the deck…","Setting the table…","Counting the coins…","Dealing hands…","Almost ready…"];
@@ -1975,6 +1982,42 @@ let isPartyLeader = true;
 let mpTableSize = 4;
 let partyListenerUnsub = null;
 let friendsListenerUnsub = null;
+let inviteListenerUnsub = null;
+
+// FULL FIX: Global Invite Listener
+function listenForPartyInvites() {
+    if (!window.DoDAuth || !DoDAuth.getProfile()) return;
+    const myUid = DoDAuth.getProfile().uid;
+    const db = firebase.firestore();
+
+    if (inviteListenerUnsub) return; // Prevent duplicate listeners
+
+    inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(doc => {
+        if (doc.exists && doc.data().activePartyInvite) {
+            const partyId = doc.data().activePartyInvite;
+
+            currentPartyId = partyId;
+            isPartyLeader = false;
+
+            // Clear the invite from Firestore so it doesn't trigger again
+            db.collection('users').doc(myUid).update({
+                activePartyInvite: firebase.firestore.FieldValue.delete()
+            }).catch(e => console.error("Error clearing invite: ", e));
+
+            // Update UI to show we are in a party
+            document.getElementById('btnCreateParty').style.display = 'none';
+            document.getElementById('btnLeaveParty').style.display = 'inline-block';
+
+            // Open the social screen automatically to see the lobby
+            showMenuScreen('social');
+            
+            // Connect to the party
+            listenToParty(partyId);
+        }
+    }, err => {
+        console.error("Invite Listener Error:", err);
+    });
+}
 
 function pickMpCount(size, btnElement) {
     mpTableSize = size;
@@ -2086,66 +2129,40 @@ async function createParty() {
     
     listenToParty(currentPartyId);
     
-    // FIX 1: Instantly refresh the friends list so the "Invite" buttons appear immediately
+    // FULL FIX: Instantly refresh the friends list so the "Invite" buttons appear immediately
     initFriendsList(); 
 }
 
 async function inviteToParty(friendUid, friendName) {
     if (!currentPartyId) return;
     const db = firebase.firestore();
-    
-    // 1. Add friend to the party document
-    await db.collection('parties').doc(currentPartyId).update({
-        members: firebase.firestore.FieldValue.arrayUnion({ uid: friendUid, displayName: friendName })
-    });
-    
-    // 2. FIX 2: Ping the friend's user document so their game actually joins the party!
-    await db.collection('users').doc(friendUid).set({
-        activePartyInvite: currentPartyId
-    }, { merge: true });
 
-    alert(`Invited ${friendName}! (They are being pulled into your party)`);
-}
-
-// NEW FUNCTION: Listens for incoming invites in the background for the invited player
-let inviteListenerUnsub = null;
-function listenForPartyInvites() {
-    if (!window.DoDAuth || !DoDAuth.getProfile()) return;
-    const myUid = DoDAuth.getProfile().uid;
-    const db = firebase.firestore();
-    
-    if (inviteListenerUnsub) return; // Already listening
-    
-    inviteListenerUnsub = db.collection('users').doc(myUid).onSnapshot(doc => {
-        if (doc.exists && doc.data().activePartyInvite) {
-            const partyId = doc.data().activePartyInvite;
-            
-            // We got an invite! Auto-join it locally.
-            currentPartyId = partyId;
-            isPartyLeader = false;
-            
-            // Clear the invite from Firestore so it doesn't trigger again
-            db.collection('users').doc(myUid).update({
-                activePartyInvite: firebase.firestore.FieldValue.delete()
-            });
-            
-            // Update UI to show we are in a party
-            document.getElementById('btnCreateParty').style.display = 'none';
-            document.getElementById('btnLeaveParty').style.display = 'inline-block';
-            
-            // Open the social screen automatically to see the lobby
-            showMenuScreen('social');
-            
-            // Connect to the party
-            listenToParty(partyId);
-        }
-    });
+    try {
+        // 1. Add friend to the party document
+        await db.collection('parties').doc(currentPartyId).update({
+            members: firebase.firestore.FieldValue.arrayUnion({ uid: friendUid, displayName: friendName })
+        });
+        
+        // 2. FULL FIX: Ping the friend's user document so their game actually joins the party!
+        await db.collection('users').doc(friendUid).set({
+            activePartyInvite: currentPartyId
+        }, { merge: true });
+        
+    } catch(e) {
+        console.error("Invite Error: ", e);
+    }
 }
 
 async function leaveParty() {
     if (!currentPartyId) return;
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
+
+    try {
+        await db.collection('parties').doc(currentPartyId).update({
+            members: firebase.firestore.FieldValue.arrayRemove({ uid: myUid, displayName: DoDAuth.getProfile().displayName })
+        });
+    } catch (e) {}
 
     if (partyListenerUnsub) partyListenerUnsub();
     
@@ -2539,13 +2556,6 @@ async function leaveMatchLobby() {
     
     showMenuScreen('social');
 }
-
-// Hook into existing menu routing
-const originalShowMenu = showMenuScreen;
-showMenuScreen = function(name) {
-    originalShowMenu(name);
-    if(name === 'social') initFriendsList();
-};
 
 </script>
 <script src="shop.js"></script>
