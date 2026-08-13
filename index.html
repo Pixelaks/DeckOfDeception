@@ -431,6 +431,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
     <div class="section-label" style="margin-top:20px; text-align:center;">Table size</div>
     <div class="countrow" id="mpCountRow">
+      <button class="countbtn" onclick="pickMpCount(2, this)">2 players</button>
+      <button class="countbtn" onclick="pickMpCount(3, this)">3 players</button>
       <button class="countbtn selected" onclick="pickMpCount(4, this)">4 players</button>
       <button class="countbtn" onclick="pickMpCount(6, this)">6 players</button>
       <button class="countbtn" onclick="pickMpCount(8, this)">8 players</button>
@@ -495,6 +497,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     <div id="partyLeaderControls" style="width:100%; display:none; text-align:center;">
       <div class="section-label">Private Table Size</div>
       <div class="countrow" id="partyCountRow">
+        <button class="countbtn" onclick="pickMpCount(2, this)">2 players</button>
+        <button class="countbtn" onclick="pickMpCount(3, this)">3 players</button>
         <button class="countbtn selected" onclick="pickMpCount(4, this)">4 players</button>
         <button class="countbtn" onclick="pickMpCount(6, this)">6 players</button>
         <button class="countbtn" onclick="pickMpCount(8, this)">8 players</button>
@@ -739,7 +743,7 @@ function buildMenu(){
   const sw=document.getElementById('swatchRow');
   sw.innerHTML = SKINS.map((s,i)=>`<div class="swatch${i===menuState.skinIdx?' selected':''}" style="background:${s.color}" title="${s.name}" onclick="pickSkin(${i})"></div>`).join('');
   const cr=document.getElementById('countRow');
-  cr.innerHTML = [4,6,8,12].map(n=>`<button class="countbtn${n===menuState.count?' selected':''}" onclick="pickCount(${n})">${n} players</button>`).join('');
+  cr.innerHTML = [2,3,4,6,8,12].map(n=>`<button class="countbtn${n===menuState.count?' selected':''}" onclick="pickCount(${n})">${n} players</button>`).join('');
 }
 function pickSkin(i){ menuState.skinIdx=i; buildMenu(); }
 function pickCount(n){ menuState.count=n; buildMenu(); }
@@ -1641,34 +1645,48 @@ async function playNumberFromHand(idx, el) {
     }
 }
 
-function playWild(idx, el){
+async function playWild(idx, el){
   if(!isYourTurn()) return;
-  const you=state.players[0];
+  const myUid = DoDAuth.getProfile().uid;
+  const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card=you.hand[idx];
   const srcRect = el.getBoundingClientRect();
   
   you.hand.splice(idx,1);
   payFromOwn(you, WILD_COST);
-  flyCoin(getSeatOrPanelRect(0), bankRect(), 0);
   
   const effective = state.requiredValue===null?5:state.requiredValue;
   sweepEliminations();
+  
   if(!you.out){
     you.shop+=PLAY_REWARD;
-    log(`You played Wild Swap (matched ${card.value}). Cost ${WILD_COST}, +${PLAY_REWARD} for play.`,'ok');
-    state.lastEffectiveValue=effective; state.lastPlayedCardLabel='WILD'; state.lastPlayedBy=0;
+    const msg = `${you.name} played Wild Swap (matched ${card.value}). Cost ${WILD_COST}, +${PLAY_REWARD} for play.`;
     
-    state.uiState = 'ANIMATING';
-    renderAll();
-    flyCard(srcRect, centerRect(), 'W', PLAYER_COLORS[0], 22, card.value);
-    flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-    triggerCalloutPhase();
+    if (currentMatchId) {
+        await firebase.firestore().collection('matches').doc(currentMatchId).update({
+            'gameState.players': state.players,
+            'gameState.lastEffectiveValue': effective,
+            'gameState.lastPlayedCardLabel': 'W',
+            'gameState.lastPlayedBy': myUid,
+            'gameState.uiState': 'CHOOSE_CALL',
+            'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
+        });
+    } else {
+        log(msg,'ok');
+        state.lastEffectiveValue=effective; state.lastPlayedCardLabel='W'; state.lastPlayedBy=0;
+        state.uiState = 'ANIMATING';
+        renderAll();
+        flyCoin(getSeatOrPanelRect(0), bankRect(), 0);
+        flyCard(srcRect, centerRect(), 'W', PLAYER_COLORS[0], 22, card.value);
+        triggerCalloutPhase();
+    }
   } else renderAll();
 }
 
-function playReverse(idx, el){
+async function playReverse(idx, el){
   if(!isYourTurn()) return;
-  const you=state.players[0];
+  const myUid = DoDAuth.getProfile().uid;
+  const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card=you.hand[idx];
   const srcRect = el.getBoundingClientRect();
   
@@ -1676,16 +1694,27 @@ function playReverse(idx, el){
   state.direction *= -1; 
   you.shop+=PLAY_REWARD;
   const effective = state.requiredValue===null?5:state.requiredValue;
-  
-  log(`You played Reverse (matched ${card.value}). Direction changed! +${PLAY_REWARD} for play.`,'ok');
-  state.lastEffectiveValue=effective; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=0;
-  
-  state.uiState = 'ANIMATING';
-  renderAll();
-  
-  flyCard(srcRect, centerRect(), 'REV', '#d16b24', 25, card.value);
-  flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-  triggerCalloutPhase();
+  const msg = `${you.name} played Reverse (matched ${card.value}). Direction changed! +${PLAY_REWARD} for play.`;
+
+  if (currentMatchId) {
+      await firebase.firestore().collection('matches').doc(currentMatchId).update({
+          'gameState.players': state.players,
+          'gameState.direction': state.direction,
+          'gameState.lastEffectiveValue': effective,
+          'gameState.lastPlayedCardLabel': 'REV',
+          'gameState.lastPlayedBy': myUid,
+          'gameState.uiState': 'CHOOSE_CALL',
+          'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
+      });
+  } else {
+      log(msg,'ok');
+      state.lastEffectiveValue=effective; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=0;
+      state.uiState = 'ANIMATING';
+      renderAll();
+      flyCard(srcRect, centerRect(), 'REV', '#d16b24', 25, card.value);
+      flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
+      triggerCalloutPhase();
+  }
 }
 
 function openTargeting(idx, el, actionType){
@@ -1695,10 +1724,11 @@ function openTargeting(idx, el, actionType){
   renderAll();
 }
 
-function confirmActionTarget(target, actionType){
-  const you=state.players[0];
-  const idx=state._pendingActionIdx;
-  const card=you.hand[idx];
+async function confirmActionTarget(target, actionType){
+  const myUid = DoDAuth.getProfile().uid;
+  const you = state.players.find(p => p.uid === myUid) || state.players[0];
+  const idx = state._pendingActionIdx;
+  const card = you.hand[idx];
   const el = state._pendingActionEl;
   const srcRect = el ? el.getBoundingClientRect() : getSeatOrPanelRect(0);
   
@@ -1708,24 +1738,38 @@ function confirmActionTarget(target, actionType){
   state.uiState = 'ANIMATING';
   renderAll();
 
+  let msg = '';
+  let label = '';
   if(actionType === 'POWER') {
       const taken = transferToBank(target, card.tier); 
-      flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
-      log(`You played Power (matched ${card.value}) on ${target.name}, draining ${taken} coins.`,'ok');
-      state.lastPlayedCardLabel = 'PWR';
-      flyCard(srcRect, centerRect(), `PWR`, PLAYER_COLORS[0], 24, card.value);
+      msg = `${you.name} played Power (${card.value}) on ${target.name}, draining ${taken} coins.`;
+      label = 'PWR';
   } else if (actionType === 'STEAL') {
       const taken = transferToPlayer(target, you, card.tier); 
-      flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(0), 0);
-      log(`You played Steal (matched ${card.value}) on ${target.name}, stealing ${taken} coins to your account!`,'ok');
-      state.lastPlayedCardLabel = 'STL';
-      flyCard(srcRect, centerRect(), `STL`, '#b23c3c', 24, card.value);
+      msg = `${you.name} played Steal (${card.value}) on ${target.name}, stealing ${taken} coins!`;
+      label = 'STL';
   }
   
   you.shop+=PLAY_REWARD;
-  if(!target.out) protestFrom(target);
-  state.lastEffectiveValue=effective; state.lastPlayedBy=0;
-  triggerCalloutPhase();
+  
+  if (currentMatchId) {
+      await firebase.firestore().collection('matches').doc(currentMatchId).update({
+          'gameState.players': state.players,
+          'gameState.lastEffectiveValue': effective,
+          'gameState.lastPlayedCardLabel': label,
+          'gameState.lastPlayedBy': myUid,
+          'gameState.uiState': 'CHOOSE_CALL',
+          'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
+      });
+  } else {
+      log(msg,'ok');
+      if(actionType === 'POWER') flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+      if(actionType === 'STEAL') flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(0), 0);
+      flyCard(srcRect, centerRect(), label, actionType==='STEAL'?'#b23c3c':PLAYER_COLORS[0], 24, card.value);
+      if(!target.out) protestFrom(target);
+      state.lastPlayedCardLabel = label; state.lastEffectiveValue = effective; state.lastPlayedBy = 0;
+      triggerCalloutPhase();
+  }
 }
 
 // ---------------- ASYNC FORCED BUY (INLINE) ----------------
