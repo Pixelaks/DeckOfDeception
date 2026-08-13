@@ -751,10 +751,54 @@ buildMenu();
 
 // Gate the hub behind real sign-in instead of showing it immediately
 if(window.DoDAuth){
-  DoDAuth.onProfileReady(function(profile){
+  DoDAuth.onProfileReady(async function(profile){
     const loading = document.getElementById('accountLoading');
     const buttons = document.querySelector('#screen-hub .hub-buttons');
     const badge = document.getElementById('hubCurrencyBadge');
+    const db = firebase.firestore();
+
+    // --- RECONNECTION LOGIC ---
+    const savedMatchId = localStorage.getItem('dod_active_match');
+    
+    if (savedMatchId) {
+        try {
+            const matchDoc = await db.collection('matches').doc(savedMatchId).get();
+            if (matchDoc.exists) {
+                const data = matchDoc.data();
+                
+                // Ensure the player is actually in this match's seats array
+                const isSeated = data.seats.some(s => s.uid === profile.uid);
+                
+                if (isSeated && (data.status === 'waiting' || data.status === 'starting')) {
+                    // Reconnect to Lobby
+                    currentMatchId = savedMatchId;
+                    document.getElementById('introOverlay').style.display = 'none';
+                    menu.classList.add('menu-visible');
+                    showMenuScreen('match-lobby');
+                    listenToMatchLobby(savedMatchId);
+                    return; // Stop hub loading
+                } 
+                else if (isSeated && data.status === 'active') {
+                    // Reconnect to Active Game
+                    currentMatchId = savedMatchId;
+                    document.getElementById('introOverlay').style.display = 'none';
+                    menu.style.display = 'none';
+                    document.getElementById('game').style.display = 'flex';
+                    
+                    // Small delay to let the UI elements animate in cleanly
+                    setTimeout(() => listenToGameState(), 200); 
+                    return; // Stop hub loading
+                }
+            }
+            // If the match doesn't exist or is finished, clear the dead ID
+            localStorage.removeItem('dod_active_match');
+        } catch(e) {
+            console.error("Recovery failed:", e);
+            localStorage.removeItem('dod_active_match');
+        }
+    }
+
+    // --- NORMAL HUB LOADING ---
     if(loading) loading.style.display='none';
     if(buttons) buttons.style.display='flex';
     if(badge) badge.style.display='inline-block';
@@ -860,16 +904,21 @@ function startGame() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // Fade music for gameplay
+    // Mute music for gameplay
     if (bgMusicElement) {
-        if (bgMusicElement.paused) bgMusicElement.play().catch(e => {});
         let fadeAudio = setInterval(() => {
-            if (bgMusicElement.volume > 0.25) {
-                bgMusicElement.volume = Math.max(0.2, bgMusicElement.volume - 0.05);
+            if (bgMusicElement.volume > 0.05) {
+                bgMusicElement.volume = Math.max(0, bgMusicElement.volume - 0.05);
             } else {
+                bgMusicElement.volume = 0;
+                bgMusicElement.pause();
                 clearInterval(fadeAudio);
             }
         }, 100);
+    }
+    // Also silence the procedural ambient pad if it was running
+    if (ambientMasterGain && audioCtx) {
+        ambientMasterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
     }
 
     menu.style.opacity = '0'; // Cinematic fade out transition
@@ -959,6 +1008,7 @@ let initialDealDone = false;
 let localLastTurnUid = null; // Tracks the turn to trigger animations
 
 function listenToGameState() {
+    if (currentMatchId) localStorage.setItem('dod_active_match', currentMatchId);
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
@@ -1087,9 +1137,9 @@ function log(msg,cls){
 const PROTESTS=["That's a rough one to hit.","You'll pay for that.","Ice cold.","Fine, watch yourself next round.","Not fair, but okay."];
 function protestFrom(p){ log(`${p.name}: "${PROTESTS[Math.floor(Math.random()*PROTESTS.length)]}"`,'quote'); }
 
-function transferToBank(from,amount){ const t=Math.min(amount,from.shop); from.shop-=t; return t; }
-function transferToPlayer(from,to,amount){ const t=Math.min(amount,from.shop); from.shop-=t; to.shop+=t; return t; }
-function payFromOwn(p,amount){ const t=Math.min(amount,p.shop); p.shop-=t; return t; }
+function transferToBank(from, amount) { const t = Math.min(parseInt(amount)||0, parseInt(from.shop)||0); from.shop = (parseInt(from.shop)||0) - t; return t; }
+function transferToPlayer(from, to, amount) { const t = Math.min(parseInt(amount)||0, parseInt(from.shop)||0); from.shop = (parseInt(from.shop)||0) - t; to.shop = (parseInt(to.shop)||0) + t; return t; }
+function payFromOwn(p, amount) { const t = Math.min(parseInt(amount)||0, parseInt(p.shop)||0); p.shop = (parseInt(p.shop)||0) - t; return t; }
 
 function eliminate(p, reason){
   if(p.out) return;
@@ -1575,9 +1625,8 @@ function renderActionBar(){
     return;
   }
 
-  const hasMatch = state.requiredValue === null || you.hand.some(c => {
-      return c.value === state.requiredValue && c.type !== 'peek' && c.type !== 'insurance';
-  });
+  // Only standard 'number' cards will hide the Forced Buy button now
+  const hasMatch = state.requiredValue === null || you.hand.some(c => c.value === state.requiredValue && c.type === 'number');
   if(!hasMatch){
     const btn=document.createElement('button');
     btn.className='btn';
@@ -1740,12 +1789,15 @@ async function confirmActionTarget(target, actionType){
 
   let msg = '';
   let label = '';
+  // Ensure the card tier is safely parsed as an integer to prevent string concatenation bugs
+  const tier = parseInt(card.tier) || (actionType === 'STEAL' ? 3 : 2);
+  
   if(actionType === 'POWER') {
-      const taken = transferToBank(target, card.tier); 
+      const taken = transferToBank(target, tier); 
       msg = `${you.name} played Power (${card.value}) on ${target.name}, draining ${taken} coins.`;
       label = 'PWR';
   } else if (actionType === 'STEAL') {
-      const taken = transferToPlayer(target, you, card.tier); 
+      const taken = transferToPlayer(target, you, tier); 
       msg = `${you.name} played Steal (${card.value}) on ${target.name}, stealing ${taken} coins!`;
       label = 'STL';
   }
@@ -2373,6 +2425,7 @@ function finalizeGame(){
   const left=activePlayers();
   if(left.length===0){ endGame(null); return; }
   const winner=left.sort((a,b)=>score(b)-score(a))[0];
+  localStorage.removeItem('dod_active_match'); // Clear memory so they don't reconnect to a finished game
   endGame(winner,true);
 }
 function endGame(winner,byScore){
@@ -2862,6 +2915,7 @@ async function startPrivatePartyMatch() {
 }
 
 function listenToMatchLobby(matchId) {
+    localStorage.setItem('dod_active_match', matchId); // Auto-save for reconnects!
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
@@ -2981,6 +3035,7 @@ async function toggleReady() {
 }
 
 async function leaveMatchLobby() {
+    localStorage.removeItem('dod_active_match'); // Clear memory
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
     
