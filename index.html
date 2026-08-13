@@ -827,9 +827,18 @@ function enterGameWithLoading(){
 function makeDeck(){
   let deck=[];
   for(let v=1;v<=9;v++){ for(let i=0;i<8;i++) deck.push({type:'number',value:v}); }
+  
   const addAction = (type, count, tier) => {
-    for(let i=0;i<count;i++) deck.push({type, value: Math.floor(Math.random()*9)+1, tier});
+    for(let i=0;i<count;i++) {
+        let card = { type: type, value: Math.floor(Math.random()*9)+1 };
+        // NEW FIX: Only add the tier property if it actually exists!
+        if (tier !== undefined) {
+            card.tier = tier;
+        }
+        deck.push(card);
+    }
   }
+  
   addAction('peek', 6);
   addAction('wild', 6);
   addAction('insurance', 6);
@@ -900,8 +909,9 @@ function startGame() {
                         requiredValue: null,
                         lastEffectiveValue: null,
                         lastPlayedCardLabel: null,
-                        lastPlayedBy: null, // Stores UID of who played last
-                        uiState: 'IDLE'
+                        lastPlayedBy: null, 
+                        uiState: 'IDLE',
+                        lastAction: null // Explicitly setting this to null instead of undefined!
                     }
                 });
             }
