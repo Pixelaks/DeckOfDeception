@@ -1744,10 +1744,12 @@ async function playNumberFromHand(idx, el) {
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
+    // 1. Apply local logic
     myPlayerObj.hand.splice(idx, 1);
     myPlayerObj.shop += PLAY_REWARD;
     
     if (currentMatchId) {
+        // ONLINE MODE (Firebase)
         const db = firebase.firestore();
         await db.collection('matches').doc(currentMatchId).update({
             'gameState.players': state.players,
@@ -1764,6 +1766,7 @@ async function playNumberFromHand(idx, el) {
             }
         });
     } else {
+        // OFFLINE MODE (Local Bots)
         log(`You played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok');
         state.lastEffectiveValue = card.value;
         state.lastPlayedCardLabel = card.value;
@@ -1774,6 +1777,7 @@ async function playNumberFromHand(idx, el) {
         const srcRect = el.getBoundingClientRect();
         flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
         flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
+        
         triggerCalloutPhase();
     }
 }
@@ -1949,6 +1953,7 @@ async function doBuyDraw() {
             state.buyLoop = null;
 
             if (currentMatchId) {
+                // ONLINE: Push successful draw to Firebase
                 await firebase.firestore().collection('matches').doc(currentMatchId).update({
                     'gameState.deck': state.deck,
                     'gameState.players': state.players,
@@ -1959,6 +1964,7 @@ async function doBuyDraw() {
                     'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: bl.buyer.uid, cardValue: card.value, msg: actionMsg }
                 });
             } else {
+                // OFFLINE
                 state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.id;
                 log(actionMsg, 'ok'); flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[bl.buyer.id], 15, card.value); triggerCalloutPhase();
             }
@@ -1969,6 +1975,7 @@ async function doBuyDraw() {
             const actionMsg = `Try ${bl.tries}: drew ${label} (${card.value}) — no match.`;
 
             if (currentMatchId) {
+                // ONLINE: Push Miss to Firebase
                 await firebase.firestore().collection('matches').doc(currentMatchId).update({
                     'gameState.deck': state.deck,
                     'gameState.players': state.players,
@@ -1976,6 +1983,7 @@ async function doBuyDraw() {
                     'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: bl.buyer.uid, msg: actionMsg }
                 });
             } else {
+                // OFFLINE
                 log(actionMsg); flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
                 setTimeout(() => { state.uiState = 'RESOLVING_BUY'; renderAll(); }, 500);
             }
@@ -2167,9 +2175,10 @@ function playNetworkedAnimation(action) {
 }
 
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
+// Restored for Offline/Bot Training mode
 async function advanceTurn() {
     if (currentMatchId) { 
-        // ONLINE MODE - Ultimate safety net for when Bots skip their turn
+        // ONLINE MODE - Ultimate safety net for when Bots skip their turn (empty deck, no targets, etc.)
         const myUid = DoDAuth.getProfile().uid;
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
         
@@ -2220,6 +2229,7 @@ async function advanceTurn() {
     renderAll();
     if(state.over) return;
     
+    // Trigger the next bot's turn
     if(!cur.isHuman) setTimeout(botTurn, 1400);
 }
 
@@ -2546,6 +2556,9 @@ let mpTableSize = 4;
 let partyListenerUnsub = null;
 let friendsListenerUnsub = null;
 let inviteListenerUnsub = null;
+let matchLobbyUnsub = null;
+let isReady = false;
+let countdownTimer = null;
 
 function listenForPartyInvites() {
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
@@ -2962,7 +2975,7 @@ async function startPrivatePartyMatch() {
 }
 
 function listenToMatchLobby(matchId) {
-    localStorage.setItem('dod_active_match', matchId); // Auto-save for reconnects!
+    localStorage.setItem('dod_active_match', matchId); 
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
@@ -3069,7 +3082,7 @@ async function toggleReady() {
 }
 
 async function leaveMatchLobby() {
-    localStorage.removeItem('dod_active_match'); // Clear memory
+    localStorage.removeItem('dod_active_match'); 
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
     
@@ -3095,4 +3108,3 @@ async function leaveMatchLobby() {
 <script src="shop.js"></script>
 </body>
 </html>
-
