@@ -865,23 +865,48 @@ function startGame(){
       menu.style.display='none';
       document.getElementById('game').style.display='flex';
       const fast=document.getElementById('fastTest').checked;
-      const count=menuState.count;
-    
+
       PLAYER_COLORS=[SKINS[menuState.skinIdx].color];
       document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
-      // Future skin art hook: swap CARD_SKIN_ART[menuState.skinIdx] here once real assets exist.
-      const botNames = NAME_POOL.slice(0, count-1);
-      botNames.forEach((n,i)=>PLAYER_COLORS.push(BOT_COLOR_POOL[i%BOT_COLOR_POOL.length]));
-    
-      let players=[{id:0,name:"You",isHuman:true,hand:[],shop:START_SHOP,out:false}];
-      botNames.forEach((n,i)=>players.push({id:i+1,name:n,isHuman:false,hand:[],shop:START_SHOP,out:false}));
-    
+
+      let players = [];
+
+      // --- NEW LOGIC: CHECK FOR ONLINE MATCH ---
+      if (window.onlineMatchSeats && currentMatchId) {
+          const myUid = DoDAuth.getProfile().uid;
+          const seats = window.onlineMatchSeats;
+
+          // Reorder seats so YOU are always at the bottom (index 0 locally)
+          const myIndex = seats.findIndex(s => s.uid === myUid);
+          const orderedSeats = [...seats.slice(myIndex), ...seats.slice(0, myIndex)];
+
+          orderedSeats.forEach((seat, i) => {
+              if (i === 0) {
+                  players.push({id: 0, name: "You", isHuman: true, hand: [], shop: START_SHOP, out: false, realUid: seat.uid});
+              } else {
+                  // NOTE: We temporarily set isHuman to false for network players 
+                  // so the local AI takes over if you haven't built Firebase gameplay sync yet.
+                  players.push({id: i, name: seat.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, realUid: seat.uid});
+                  PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]);
+              }
+          });
+      } else {
+          // --- OLD LOGIC: OFFLINE PRACTICE MODE ---
+          const count = menuState.count;
+          const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
+          botNames.forEach((n,i)=>PLAYER_COLORS.push(BOT_COLOR_POOL[i%BOT_COLOR_POOL.length]));
+
+          players.push({id:0,name:"You",isHuman:true,hand:[],shop:START_SHOP,out:false});
+          botNames.forEach((n,i)=>players.push({id:i+1,name:n,isHuman:false,hand:[],shop:START_SHOP,out:false}));
+      }
+
       let deck=makeDeck();
       players.forEach(p=>{ for(let k=0;k<5;k++) p.hand.push(deck.pop()); });
     
       state={ players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
               requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
               buyLoop:null, uiState: 'IDLE', peekResult: null };
+              
       log('New game. Play a number, then call what the next player needs.','ok');
       layoutRing();
       renderAll();
@@ -2524,6 +2549,9 @@ function listenToMatchLobby(matchId) {
         if (data.status === 'active') {
             if (matchLobbyUnsub) matchLobbyUnsub();
             if (countdownTimer) clearInterval(countdownTimer);
+            
+            // NEW FIX: Save the online roster so the game scene can use it
+            window.onlineMatchSeats = data.seats; 
             
             // Start game UI
             document.getElementById('screen-match-lobby').classList.add('hidden');
