@@ -951,6 +951,7 @@ function startGame() {
 
 let gameListenerUnsub = null;
 let initialDealDone = false;
+let localLastTurnUid = null; // Tracks the turn to trigger animations
 
 function listenToGameState() {
     const db = firebase.firestore();
@@ -958,32 +959,32 @@ function listenToGameState() {
 
     gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
         const data = doc.data();
-        if (!data.gameState) return; // Wait for the host to finish uploading
+        if (!data.gameState) return; 
 
         const serverState = data.gameState;
 
-        // 1. REORDER PLAYERS SO 'YOU' ARE ALWAYS AT INDEX 0 VISUALLY
+        // 1. REORDER PLAYERS
         const myIndex = serverState.players.findIndex(p => p.uid === myUid);
         const orderedPlayers = [
             ...serverState.players.slice(myIndex),
             ...serverState.players.slice(0, myIndex)
         ];
 
-        // 2. SETUP COLORS AND IDs FOR YOUR EXISTING UI LOGIC
+        // 2. SETUP COLORS AND IDs
         PLAYER_COLORS = [];
         orderedPlayers.forEach((p, i) => {
             PLAYER_COLORS[i] = p.color;
-            p.id = i; // Assign local seat numbers (0 is bottom, 1 is left, etc.)
-            p.isHuman = (p.uid === myUid); // Only you can click your cards
+            p.id = i; 
+            p.isHuman = (p.uid === myUid); 
         });
 
         document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
 
-        // 3. MAP THE SERVER DATA TO YOUR LOCAL STATE VARIABLE
+        // 3. MAP THE SERVER DATA
         state = {
             players: orderedPlayers,
             deck: serverState.deck,
-            turnUid: serverState.turnUid, // <--- THIS WAS MISSING!
+            turnUid: serverState.turnUid,
             turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), 
             direction: serverState.direction,
             over: serverState.over || false,
@@ -1002,12 +1003,24 @@ function listenToGameState() {
         layoutRing();
         renderAll();
         
-        // Trigger animations across the network if a new action happened
+        // --- 5. THE CURVE ANIMATION FIX ---
+        // If the turn changed on the server, animate the yellow curve arrow!
+        if (localLastTurnUid && localLastTurnUid !== serverState.turnUid) {
+            const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
+            const toIdx = orderedPlayers.findIndex(p => p.uid === serverState.turnUid);
+            if (fromIdx !== -1 && toIdx !== -1) {
+                animateTurnArc(fromIdx, toIdx, serverState.direction);
+                sfx.turn(); // Play the turn sound across the network
+            }
+        }
+        localLastTurnUid = serverState.turnUid;
+
+        // 6. TRIGGER CARD ANIMATIONS
         if (serverState.lastAction) {
             playNetworkedAnimation(serverState.lastAction);
         }
         
-        // 5. FIRE DEAL ANIMATION ONLY ONCE
+        // 7. INITIAL DEAL
         if (!initialDealDone) {
             initialDealDone = true;
             log('Table is live! Play a number, then call what the next player needs.', 'ok');
@@ -1818,11 +1831,14 @@ function usePeek(playerId,targetId){
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
     
+    // Instantly lock the UI locally so you don't double-click
+    state.uiState = 'ANIMATING'; 
+    renderActionBar();
+    
     const myUid = DoDAuth.getProfile().uid;
-    const myPlayerObj = state.players.find(p => p.uid === myUid);
     const db = firebase.firestore();
     
-    // 1. Calculate whose turn is next based on the server's direction
+    // Calculate who sits next in the global rotation
     let currentIndex = state.players.findIndex(p => p.uid === myUid);
     let nextIndex = currentIndex;
     do { 
@@ -1830,22 +1846,31 @@ async function confirmGuess(v) {
     } while (state.players[nextIndex].out);
     
     const nextUid = state.players[nextIndex].uid;
+    const myPlayerObj = state.players[currentIndex];
     const nextPlayerObj = state.players[nextIndex];
     const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
 
-    // 2. Upload the final turn pass to Firebase
-    await db.collection('matches').doc(currentMatchId).update({
-        'gameState.requiredValue': v,
-        'gameState.uiState': 'IDLE',
-        'gameState.turnUid': nextUid, // THE TURN OFFICIALLY PASSES HERE
-        'gameState.lastAction': {
-            id: Date.now().toString(),
-            type: 'CALLOUT',
-            uid: myUid,
-            calledValue: v,
-            msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
-        }
-    });
+    try {
+        // Push the official turn pass to Firebase
+        await db.collection('matches').doc(currentMatchId).update({
+            'gameState.requiredValue': v,
+            'gameState.uiState': 'IDLE',
+            'gameState.turnUid': nextUid, // <-- This officially passes the turn to AKS
+            'gameState.lastAction': {
+                id: Date.now().toString(),
+                type: 'CALLOUT',
+                uid: myUid,
+                calledValue: v,
+                msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
+            }
+        });
+    } catch(error) {
+        console.error("Failed to pass turn:", error);
+        alert("Network error: Could not pass turn.");
+        // Unlock UI if it fails so you can try again
+        state.uiState = 'CHOOSE_CALL'; 
+        renderActionBar();
+    }
 }
 
 let localLastActionId = null;
