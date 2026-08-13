@@ -929,7 +929,8 @@ function startGame() {
             const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
             botNames.forEach((n,i) => PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]));
 
-            let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false}];
+            // Change this line inside the offline block of startGame():
+let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: DoDAuth.getProfile().uid}];
             botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false}));
 
             let deck = makeDeck();
@@ -1579,32 +1580,45 @@ async function playNumberFromHand(idx, el) {
     if(!isYourTurn()) return;
     
     const myUid = DoDAuth.getProfile().uid;
-    const db = firebase.firestore();
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
     // 1. Apply local logic
     myPlayerObj.hand.splice(idx, 1);
     myPlayerObj.shop += PLAY_REWARD;
-
-    // 2. Push the intermediate "Card Played" state to Firebase
-    // This updates the table center and opens the "CHOOSE_CALL" menu on your screen.
-    await db.collection('matches').doc(currentMatchId).update({
-        'gameState.players': state.players,
-        'gameState.lastEffectiveValue': card.value,
-        'gameState.lastPlayedCardLabel': card.value,
-        'gameState.lastPlayedBy': myUid,
-        'gameState.uiState': 'CHOOSE_CALL', 
+    
+    if (currentMatchId) {
+        // ONLINE MODE (Firebase)
+        const db = firebase.firestore();
+        await db.collection('matches').doc(currentMatchId).update({
+            'gameState.players': state.players,
+            'gameState.lastEffectiveValue': card.value,
+            'gameState.lastPlayedCardLabel': card.value,
+            'gameState.lastPlayedBy': myUid,
+            'gameState.uiState': 'CHOOSE_CALL', 
+            'gameState.lastAction': {
+                id: Date.now().toString(),
+                type: 'PLAY_NUMBER',
+                uid: myUid,
+                cardValue: card.value,
+                msg: `${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`
+            }
+        });
+    } else {
+        // OFFLINE MODE (Local Bots)
+        log(`You played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok');
+        state.lastEffectiveValue = card.value;
+        state.lastPlayedCardLabel = card.value;
+        state.lastPlayedBy = 0;
+        state.uiState = 'ANIMATING';
         
-        // We log this action so other players' screens know to play the animation
-        'gameState.lastAction': {
-            id: Date.now().toString(),
-            type: 'PLAY_NUMBER',
-            uid: myUid,
-            cardValue: card.value,
-            msg: `${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`
-        }
-    });
+        renderAll(); 
+        const srcRect = el.getBoundingClientRect();
+        flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
+        flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
+        
+        triggerCalloutPhase();
+    }
 }
 
 function playWild(idx, el){
@@ -1831,45 +1845,48 @@ function usePeek(playerId,targetId){
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
     
-    // Instantly lock the UI locally so you don't double-click
     state.uiState = 'ANIMATING'; 
     renderActionBar();
     
     const myUid = DoDAuth.getProfile().uid;
-    const db = firebase.firestore();
-    
-    // Calculate who sits next in the global rotation
     let currentIndex = state.players.findIndex(p => p.uid === myUid);
+    
+    // Calculate who sits next
     let nextIndex = currentIndex;
     do { 
         nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
     } while (state.players[nextIndex].out);
     
-    const nextUid = state.players[nextIndex].uid;
-    const myPlayerObj = state.players[currentIndex];
     const nextPlayerObj = state.players[nextIndex];
+    const myPlayerObj = state.players[currentIndex];
     const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
 
-    try {
-        // Push the official turn pass to Firebase
-        await db.collection('matches').doc(currentMatchId).update({
-            'gameState.requiredValue': v,
-            'gameState.uiState': 'IDLE',
-            'gameState.turnUid': nextUid, // <-- This officially passes the turn to AKS
-            'gameState.lastAction': {
-                id: Date.now().toString(),
-                type: 'CALLOUT',
-                uid: myUid,
-                calledValue: v,
-                msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
-            }
-        });
-    } catch(error) {
-        console.error("Failed to pass turn:", error);
-        alert("Network error: Could not pass turn.");
-        // Unlock UI if it fails so you can try again
-        state.uiState = 'CHOOSE_CALL'; 
-        renderActionBar();
+    if (currentMatchId) {
+        // ONLINE MODE (Firebase)
+        const db = firebase.firestore();
+        try {
+            await db.collection('matches').doc(currentMatchId).update({
+                'gameState.requiredValue': v,
+                'gameState.uiState': 'IDLE',
+                'gameState.turnUid': nextPlayerObj.uid, 
+                'gameState.lastAction': {
+                    id: Date.now().toString(),
+                    type: 'CALLOUT',
+                    uid: myUid,
+                    calledValue: v,
+                    msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
+                }
+            });
+        } catch(error) {
+            console.error("Failed to pass turn:", error);
+            state.uiState = 'CHOOSE_CALL'; 
+            renderActionBar();
+        }
+    } else {
+        // OFFLINE MODE (Local Bots)
+        state.requiredValue = v;
+        log(`You call out — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`);
+        advanceTurn(); // Pass the turn to the bots locally
     }
 }
 
@@ -1896,37 +1913,43 @@ function playNetworkedAnimation(action) {
 }
 
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
-function advanceTurn(){
-  state.uiState = 'IDLE'; 
-  state.peekResult = null; 
-  
-  if(state.over) return;
-  sweepEliminations();
-  if(state.over) return;
-  if(state.timeUp){ finalizeGame(); return; }
-  
-  state.previousTurn = state.turn;
-  
-  let next = nextPlayerOf(state.players[state.turn].id);
-  state.turn = next.id;
-  
-  const cur = state.players[state.turn];
-  const hasMatch = state.requiredValue === null || cur.hand.some(c => c.value === state.requiredValue);
-  
-  if (cur.shop <= 0 && !hasMatch) {
-      eliminate(cur, "Broke and no playable cards!");
-      advanceTurn(); 
-      return;
-  }
-  
-  sfx.turn();
-  const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
-  const toIdx = state.players.findIndex(p => p.id === state.players[state.turn].id);
-  animateTurnArc(fromIdx, toIdx, state.direction);
+// Restored for Offline/Bot Training mode
+function advanceTurn() {
+    // If online, stop! Firestore listeners handle turn passing.
+    if (currentMatchId) return; 
 
-  renderAll();
-  if(state.over) return;
-  if(!cur.isHuman) setTimeout(botTurn,1400);
+    state.uiState = 'IDLE'; 
+    state.peekResult = null; 
+    
+    if(state.over) return;
+    sweepEliminations();
+    if(state.over) return;
+    if(state.timeUp){ finalizeGame(); return; }
+    
+    state.previousTurn = state.turn;
+    
+    let next = nextPlayerOf(state.players[state.turn].id);
+    state.turn = next.id;
+    
+    const cur = state.players[state.turn];
+    const hasMatch = state.requiredValue === null || cur.hand.some(c => c.value === state.requiredValue);
+    
+    if (cur.shop <= 0 && !hasMatch) {
+        eliminate(cur, "Broke and no playable cards!");
+        advanceTurn(); 
+        return;
+    }
+    
+    sfx.turn();
+    const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
+    const toIdx = state.players.findIndex(p => p.id === state.players[state.turn].id);
+    animateTurnArc(fromIdx, toIdx, state.direction);
+
+    renderAll();
+    if(state.over) return;
+    
+    // Trigger the next bot's turn
+    if(!cur.isHuman) setTimeout(botTurn, 1400);
 }
 
 // ---------------- BOT AI ----------------
