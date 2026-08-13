@@ -843,77 +843,170 @@ function makeDeck(){
   return deck;
 }
 
-function startGame(){
-  if(!audioCtx) audioCtx = new AudioContext();
-  if(audioCtx.state === 'suspended') audioCtx.resume();
-  
-  // Fade music for gameplay
-  if(bgMusicElement) {
-      if(bgMusicElement.paused) bgMusicElement.play().catch(e => {});
-      let fadeAudio = setInterval(() => {
-          if(bgMusicElement.volume > 0.25) {
-              bgMusicElement.volume = Math.max(0.2, bgMusicElement.volume - 0.05);
-          } else {
-              clearInterval(fadeAudio);
-          }
-      }, 100);
-  }
+function startGame() {
+    if (!audioCtx) audioCtx = new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 
-  menu.style.opacity = '0'; // Cinematic fade out transition
-  
-  setTimeout(() => {
-      menu.style.display='none';
-      document.getElementById('game').style.display='flex';
-      const fast=document.getElementById('fastTest').checked;
+    // Fade music for gameplay
+    if (bgMusicElement) {
+        if (bgMusicElement.paused) bgMusicElement.play().catch(e => {});
+        let fadeAudio = setInterval(() => {
+            if (bgMusicElement.volume > 0.25) {
+                bgMusicElement.volume = Math.max(0.2, bgMusicElement.volume - 0.05);
+            } else {
+                clearInterval(fadeAudio);
+            }
+        }, 100);
+    }
 
-      PLAYER_COLORS=[SKINS[menuState.skinIdx].color];
-      document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
+    menu.style.opacity = '0'; // Cinematic fade out transition
 
-      let players = [];
+    setTimeout(async () => {
+        menu.style.display = 'none';
+        document.getElementById('game').style.display = 'flex';
+        
+        // CHECK IF THIS IS AN ONLINE MATCH
+        if (window.onlineMatchSeats && currentMatchId) {
+            const myUid = DoDAuth.getProfile().uid;
+            const isHost = window.onlineMatchSeats[0].uid === myUid;
 
-      // --- NEW LOGIC: CHECK FOR ONLINE MATCH ---
-      if (window.onlineMatchSeats && currentMatchId) {
-          const myUid = DoDAuth.getProfile().uid;
-          const seats = window.onlineMatchSeats;
+            // ONLY THE HOST CREATES THE GAME STATE
+            if (isHost) {
+                let masterDeck = makeDeck();
+                let masterPlayers = [];
 
-          // Reorder seats so YOU are always at the bottom (index 0 locally)
-          const myIndex = seats.findIndex(s => s.uid === myUid);
-          const orderedSeats = [...seats.slice(myIndex), ...seats.slice(0, myIndex)];
+                window.onlineMatchSeats.forEach((seat, index) => {
+                    let hand = [];
+                    for (let k = 0; k < 5; k++) hand.push(masterDeck.pop());
+                    
+                    masterPlayers.push({
+                        uid: seat.uid,
+                        name: seat.displayName,
+                        hand: hand,
+                        shop: START_SHOP,
+                        out: false,
+                        // Host assigns colors directly to the master state
+                        color: index === 0 ? SKINS[menuState.skinIdx].color : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
+                    });
+                });
 
-          orderedSeats.forEach((seat, i) => {
-              if (i === 0) {
-                  players.push({id: 0, name: "You", isHuman: true, hand: [], shop: START_SHOP, out: false, realUid: seat.uid});
-              } else {
-                  // NOTE: We temporarily set isHuman to false for network players 
-                  // so the local AI takes over if you haven't built Firebase gameplay sync yet.
-                  players.push({id: i, name: seat.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, realUid: seat.uid});
-                  PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]);
-              }
-          });
-      } else {
-          // --- OLD LOGIC: OFFLINE PRACTICE MODE ---
-          const count = menuState.count;
-          const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
-          botNames.forEach((n,i)=>PLAYER_COLORS.push(BOT_COLOR_POOL[i%BOT_COLOR_POOL.length]));
+                // Upload the fresh game to Firebase
+                await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                    gameState: {
+                        turnUid: window.onlineMatchSeats[0].uid,
+                        direction: 1,
+                        deck: masterDeck,
+                        players: masterPlayers,
+                        requiredValue: null,
+                        lastEffectiveValue: null,
+                        lastPlayedCardLabel: null,
+                        lastPlayedBy: null, // Stores UID of who played last
+                        uiState: 'IDLE'
+                    }
+                });
+            }
+            
+            // EVERYONE LISTENS TO THE FIREBASE STATE
+            listenToGameState();
 
-          players.push({id:0,name:"You",isHuman:true,hand:[],shop:START_SHOP,out:false});
-          botNames.forEach((n,i)=>players.push({id:i+1,name:n,isHuman:false,hand:[],shop:START_SHOP,out:false}));
-      }
+        } else {
+            // --- OFFLINE BOT MODE FALLBACK (Keeps your practice mode working) ---
+            const fast = document.getElementById('fastTest').checked;
+            const count = menuState.count;
+            PLAYER_COLORS = [SKINS[menuState.skinIdx].color];
+            document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
+            
+            const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
+            botNames.forEach((n,i) => PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]));
 
-      let deck=makeDeck();
-      players.forEach(p=>{ for(let k=0;k<5;k++) p.hand.push(deck.pop()); });
-    
-      state={ players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
-              requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
-              buyLoop:null, uiState: 'IDLE', peekResult: null };
-              
-      log('New game. Play a number, then call what the next player needs.','ok');
-      layoutRing();
-      renderAll();
-      dealAnimation();
-      timerInterval=setInterval(tick,1000);
-      if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
-  }, 800);
+            let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false}];
+            botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false}));
+
+            let deck = makeDeck();
+            players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
+
+            state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
+                      requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
+                      buyLoop:null, uiState: 'IDLE', peekResult: null };
+            
+            log('Offline Training. Play a number, then call what the next player needs.','ok');
+            layoutRing();
+            renderAll();
+            dealAnimation();
+            timerInterval = setInterval(tick,1000);
+            if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
+        }
+    }, 800);
+}
+
+let gameListenerUnsub = null;
+let initialDealDone = false;
+
+function listenToGameState() {
+    const db = firebase.firestore();
+    const myUid = DoDAuth.getProfile().uid;
+
+    gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
+        const data = doc.data();
+        if (!data.gameState) return; // Wait for the host to finish uploading
+
+        const serverState = data.gameState;
+
+        // 1. REORDER PLAYERS SO 'YOU' ARE ALWAYS AT INDEX 0 VISUALLY
+        const myIndex = serverState.players.findIndex(p => p.uid === myUid);
+        const orderedPlayers = [
+            ...serverState.players.slice(myIndex),
+            ...serverState.players.slice(0, myIndex)
+        ];
+
+        // 2. SETUP COLORS AND IDs FOR YOUR EXISTING UI LOGIC
+        PLAYER_COLORS = [];
+        orderedPlayers.forEach((p, i) => {
+            PLAYER_COLORS[i] = p.color;
+            p.id = i; // Assign local seat numbers (0 is bottom, 1 is left, etc.)
+            p.isHuman = (p.uid === myUid); // Only you can click your cards
+        });
+
+        document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
+
+        // 3. MAP THE SERVER DATA TO YOUR LOCAL STATE VARIABLE
+        state = {
+            players: orderedPlayers,
+            deck: serverState.deck,
+            turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), // Local index of active player
+            direction: serverState.direction,
+            over: serverState.over || false,
+            timeLeft: 1200, 
+            timeUp: false,
+            requiredValue: serverState.requiredValue,
+            lastEffectiveValue: serverState.lastEffectiveValue,
+            lastPlayedCardLabel: serverState.lastPlayedCardLabel,
+            
+            // Map the UID of who played last back to their local seat index
+            lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
+            
+            uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
+            buyLoop: null,
+            peekResult: null
+        };
+
+        // 4. RENDER THE GAME
+        layoutRing();
+        renderAll();
+        
+        // Trigger animations across the network if a new action happened
+        if (serverState.lastAction) {
+            playNetworkedAnimation(serverState.lastAction);
+        }
+        
+        // 5. FIRE DEAL ANIMATION ONLY ONCE
+        if (!initialDealDone) {
+            initialDealDone = true;
+            log('Table is live! Play a number, then call what the next player needs.', 'ok');
+            dealAnimation();
+            timerInterval = setInterval(tick, 1000);
+        }
+    });
 }
 
 function tick(){
@@ -1328,7 +1421,12 @@ function renderHand(){
   });
 }
 
-function isYourTurn(){ return !state.over && state.players[0].isHuman && state.turn===0 && !state.players[0].out; }
+function isYourTurn() { 
+    if (!state || state.over) return false;
+    const myUid = DoDAuth.getProfile().uid;
+    const myPlayer = state.players.find(p => p.uid === myUid);
+    return myPlayer && !myPlayer.out && state.turnUid === myUid; 
+}
 
 function onSeatClick(id) {
     if (!isYourTurn()) return;
@@ -1457,26 +1555,36 @@ function triggerCalloutPhase(delay = 500) {
     }, delay);
 }
 
-function playNumberFromHand(idx, el){
-  if(!isYourTurn()) return;
-  const you=state.players[0];
-  const card=you.hand[idx];
-  const srcRect = el.getBoundingClientRect();
-  
-  you.hand.splice(idx,1);
-  you.shop+=PLAY_REWARD;
-  log(`You played a ${card.value}. +${PLAY_REWARD} coin.`,'ok');
-  state.lastEffectiveValue=card.value;
-  state.lastPlayedCardLabel=card.value;
-  state.lastPlayedBy=0;
-  
-  state.uiState = 'ANIMATING';
-  renderAll(); // Collapses the hand fan immediately
+async function playNumberFromHand(idx, el) {
+    if(!isYourTurn()) return;
+    
+    const myUid = DoDAuth.getProfile().uid;
+    const db = firebase.firestore();
+    const myPlayerObj = state.players.find(p => p.uid === myUid);
+    const card = myPlayerObj.hand[idx];
+    
+    // 1. Apply local logic
+    myPlayerObj.hand.splice(idx, 1);
+    myPlayerObj.shop += PLAY_REWARD;
 
-  flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
-  flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-  
-  triggerCalloutPhase();
+    // 2. Push the intermediate "Card Played" state to Firebase
+    // This updates the table center and opens the "CHOOSE_CALL" menu on your screen.
+    await db.collection('matches').doc(currentMatchId).update({
+        'gameState.players': state.players,
+        'gameState.lastEffectiveValue': card.value,
+        'gameState.lastPlayedCardLabel': card.value,
+        'gameState.lastPlayedBy': myUid,
+        'gameState.uiState': 'CHOOSE_CALL', 
+        
+        // We log this action so other players' screens know to play the animation
+        'gameState.lastAction': {
+            id: Date.now().toString(),
+            type: 'PLAY_NUMBER',
+            uid: myUid,
+            cardValue: card.value,
+            msg: `${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`
+        }
+    });
 }
 
 function playWild(idx, el){
@@ -1700,13 +1808,59 @@ function usePeek(playerId,targetId){
   state.peekResult = `${target.name}'s card values: ${nums.length?nums.join(', '):'Empty hand!'}`;
   renderAll();
 }
-function confirmGuess(v){
-  const you=state.players[0];
-  state.requiredValue=v;
-  const target=nextPlayerOf(you.id);
-  const totalTxt = state.lastEffectiveValue!==null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
-  log(`You call out — ${target.name} needs a ${v}.${totalTxt}`);
-  advanceTurn();
+async function confirmGuess(v) {
+    if(!isYourTurn()) return;
+    
+    const myUid = DoDAuth.getProfile().uid;
+    const myPlayerObj = state.players.find(p => p.uid === myUid);
+    const db = firebase.firestore();
+    
+    // 1. Calculate whose turn is next based on the server's direction
+    let currentIndex = state.players.findIndex(p => p.uid === myUid);
+    let nextIndex = currentIndex;
+    do { 
+        nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
+    } while (state.players[nextIndex].out);
+    
+    const nextUid = state.players[nextIndex].uid;
+    const nextPlayerObj = state.players[nextIndex];
+    const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
+
+    // 2. Upload the final turn pass to Firebase
+    await db.collection('matches').doc(currentMatchId).update({
+        'gameState.requiredValue': v,
+        'gameState.uiState': 'IDLE',
+        'gameState.turnUid': nextUid, // THE TURN OFFICIALLY PASSES HERE
+        'gameState.lastAction': {
+            id: Date.now().toString(),
+            type: 'CALLOUT',
+            uid: myUid,
+            calledValue: v,
+            msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
+        }
+    });
+}
+
+let localLastActionId = null;
+
+function playNetworkedAnimation(action) {
+    // Prevent re-playing animations we've already seen
+    if (localLastActionId === action.id) return;
+    localLastActionId = action.id;
+
+    // Find the local visual seat index for the player who made the move
+    const actorSeatIndex = state.players.findIndex(p => p.uid === action.uid);
+    const actorColor = PLAYER_COLORS[actorSeatIndex] || 'var(--brass)';
+
+    if (action.type === 'PLAY_NUMBER') {
+        log(action.msg, 'ok');
+        // Animate the card from their visual seat to the center
+        flyCard(getSeatOrPanelRect(actorSeatIndex), centerRect(), action.cardValue, actorColor, 18, action.cardValue);
+        flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
+    } 
+    else if (action.type === 'CALLOUT') {
+        log(action.msg);
+    }
 }
 
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
