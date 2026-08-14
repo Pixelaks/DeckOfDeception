@@ -500,7 +500,37 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 @media screen and (max-width: 800px) and (orientation: portrait) {
   #rotate-device-overlay { display: flex; }
-  #menu, #game, #introOverlay, #loginChoiceOverlay, #nameSetupOverlay { display: none !important; }
+  /* Removed #introOverlay from the hide list so they can tap it to auto-rotate! */
+  #menu, #game, #loginChoiceOverlay, #nameSetupOverlay { display: none !important; }
+}
+
+/* Ensure the Intro screen is above the rotate overlay so it catches the tap */
+#introOverlay { z-index: 100000 !important; }
+
+/* Mobile Landscape UI Fixes - Scales elements based on short height */
+@media (max-height: 500px) {
+  /* Tighten menu padding */
+  #menu { padding-top: 10px; padding-bottom: 10px; }
+  
+  /* Scale main title dynamically based on height, not width */
+  #menu h1 { font-size: clamp(22px, 8vh, 40px); margin-bottom: 2px; }
+  .title-divider { margin: 4px auto 8px; }
+  
+  /* Shrink buttons and gaps */
+  .hub-buttons { margin-top: 8px; gap: 8px; }
+  .hub-buttons .btn { padding: 8px 16px; font-size: 13px; }
+  .btn { padding: 10px 20px; font-size: 13px; }
+  
+  /* Sub-menu scaling */
+  .screen-title { font-size: clamp(20px, 7vh, 28px); margin-bottom: 4px; }
+  .currency-badge { margin-top: 8px; padding: 4px 12px; }
+  .section-label { margin-top: 10px; font-size: 12px; }
+  .countrow { margin-top: 8px; }
+  .countbtn { padding: 6px 12px; font-size: 11px; }
+  .shop-grid { margin-top: 10px; gap: 8px; }
+  
+  /* Shrink the PUBG Profile Widget */
+  #pubgProfileWidget { top: 10px !important; left: 10px !important; transform: scale(0.8); transform-origin: top left; }
 }
 </style>
 </head>
