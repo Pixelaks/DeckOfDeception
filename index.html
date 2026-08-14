@@ -1511,11 +1511,17 @@ function animateTurnArc(fromIdx, toIdx, dir) {
   path.setAttribute("stroke-width", "2.5");
   path.setAttribute("stroke-linecap", "round");
   path.style.filter = "drop-shadow(0 0 4px var(--brass-bright))";
+
+  // ADD THIS LINE TO HIDE IT INITIALLY:
+  path.style.opacity = "0";
   
   svg.innerHTML = '';
   svg.appendChild(path);
   
   setTimeout(() => {
+  // ADD THIS LINE TO REVEAL IT WHEN THE ANIMATION STARTS:
+    path.style.opacity = "1";
+    
     const len = path.getTotalLength() || 300;
     path.style.strokeDasharray = len;
     
@@ -1780,26 +1786,22 @@ function renderActionBar(){
     return;
   }
 
-  // Only standard 'number' cards will hide the Forced Buy button now
   const hasMatch = computeHasMatch(you);
-  if(!hasMatch){
-    // FIX: Forced Buy is now self-funded (you pay BUY_COST from your own coins to draw),
-    // not a raid on another player. If you can't afford it, there's nothing left to do —
-    // auto-skip instead of leaving a dead-end button. The deceptionStrike flag (set in
-    // advanceTurn) is what escalates this into a Deception showdown if it happens to
-    // this same player again next time around.
-    if(you.shop >= BUY_COST){
-        const btn=document.createElement('button');
-        btn.className='btn';
-        btn.textContent=`No match — Forced Buy (${BUY_COST}c) ↗`;
-        btn.onclick=() => { startForcedBuySelf('BUY'); };
-        bar.appendChild(btn);
-    } else {
-        bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">No match, and you can\'t afford to force-buy. Turn skipped.</span>';
-        setTimeout(() => skipStuckHumanTurn(`${you.name} has no match and can't afford to force-buy. Turn skipped.`), 2000);
-        return;
-    }
+  
+  // ALWAYS show the draw button if they have money, but style it differently if it's optional
+  if(you.shop >= BUY_COST){
+      const btn=document.createElement('button');
+      btn.className = hasMatch ? 'btn ghost' : 'btn'; // Ghost style if optional, solid if forced
+      btn.textContent = hasMatch ? `Optional Draw (${BUY_COST}c) ↗` : `No match — Forced Buy (${BUY_COST}c) ↗`;
+      btn.onclick=() => { startForcedBuySelf('BUY'); };
+      bar.appendChild(btn);
+  } else if (!hasMatch) {
+      // Only skip their turn if they have NO match AND NO money
+      bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">No match, and you can\'t afford to force-buy. Turn skipped.</span>';
+      setTimeout(() => skipStuckHumanTurn(`${you.name} has no match and can't afford to force-buy. Turn skipped.`), 2000);
+      return;
   }
+  
   const hint=document.createElement('span');
   hint.className='hint';
   hint.textContent = state.requiredValue===null ? 'Click any card to open the chain.'
@@ -2039,7 +2041,9 @@ async function doBuyDraw() {
             let effective, label;
             if (card.type === 'number') { effective = card.value; label = card.value; }
             else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
-            else { effective = state.requiredValue; label = `P${card.tier}`; }
+            else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; }
+            else if (card.type === 'steal') { effective = state.requiredValue; label = 'STL'; }
+            else { effective = state.requiredValue; label = `PWR`; } // Fallback for power cards
 
             bl.buyer.shop += PLAY_REWARD;
             const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Paid ${taken}c out of pocket.`;
@@ -2157,18 +2161,23 @@ if (state && state.uiState === 'DECEPTION') return;
 // currently stuck has answered.
 function computeHasMatch(player){
   return player.hand.some(c => {
-     // Does the value match the chain? (Or is it the opening move?)
-     const valMatch = (state.requiredValue === null || c.value === state.requiredValue);
+     // 1. Strict value check (handles both numbers and strings safely)
+     const valMatch = (state.requiredValue === null || String(c.value) === String(state.requiredValue));
      if (!valMatch) return false;
 
-     // Is the card legally playable?
+     // 2. Can they legally play this specific card?
      if (c.type === 'number' || c.type === 'reverse') return true;
-     if (c.type === 'wild' && player.shop >= 2) return true; // Needs 2c to play
+     
+     // Bots/Players can only use Wilds if they can afford the 2c cost
+     if (c.type === 'wild' && player.shop >= BUY_COST) return true; 
+     
+     // Steal and Power cards can always be played if there is a valid target alive
      if (c.type === 'power' || c.type === 'steal') {
-         // Steal and Power require at least one other active player to target
          return state.players.some(p => !p.out && p.id !== player.id);
      }
-     return false; // Peek and Insurance fall through and return false
+     
+     // Peek and Insurance can NEVER be played into the chain
+     return false; 
   });
 }
 
@@ -3145,6 +3154,10 @@ function endGame(winner,byScore){
   if(state.over) return;
   state.over=true;
   clearInterval(timerInterval);
+
+  // ADD THIS LINE TO CLEAR THE DECEPTION OVERLAY:
+  document.getElementById('deceptionModal').classList.remove('show');
+
   if(window.DoDShop){
     const you = state.players[0];
     const earned = Math.max(0, score(you));
