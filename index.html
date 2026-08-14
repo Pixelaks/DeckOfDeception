@@ -2570,6 +2570,22 @@ async function leaveGame(){
     menu.classList.add('menu-visible');
     showMenuScreen('hub');
 
+    // FIX: if this session reconnected straight into an active game on load,
+    // the one-time DoDAuth.onProfileReady callback returned early and never
+    // hid #accountLoading / revealed .hub-buttons — leaving "Signing you in…"
+    // stuck forever once you leave the game. Force the hub into its
+    // signed-in state here as a safety net.
+    const accountLoadingEl = document.getElementById('accountLoading');
+    const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
+    const hubBadgeEl = document.getElementById('hubCurrencyBadge');
+    if (accountLoadingEl) accountLoadingEl.style.display = 'none';
+    if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
+    if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+    if (window.DoDAuth && DoDAuth.getProfile()) {
+        const hubCurrencyEl = document.getElementById('hubCurrency');
+        if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
+    }
+
     if (bgMusicElement) {
         bgMusicElement.volume = 0.7;
         bgMusicElement.play().catch(() => {});
