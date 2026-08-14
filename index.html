@@ -487,6 +487,21 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.6) !important;
   }
 }
+
+/* iOS Portrait Fallback Screen */
+#rotate-device-overlay {
+  display: none; position: fixed; inset: 0; background: var(--felt-dark);
+  z-index: 99999; color: var(--brass-bright); align-items: center; justify-content: center;
+  text-align: center;
+}
+.rotate-content { display: flex; flex-direction: column; gap: 16px; align-items: center; }
+.rotate-icon { font-size: 48px; animation: rotatePhone 2s infinite ease-in-out; }
+@keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
+
+@media screen and (max-width: 800px) and (orientation: portrait) {
+  #rotate-device-overlay { display: flex; }
+  #menu, #game, #introOverlay, #loginChoiceOverlay, #nameSetupOverlay { display: none !important; }
+}
 </style>
 </head>
 <body>
@@ -767,6 +782,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   </div>
 </div>
 
+<!-- iOS Rotate Fallback Overlay -->
+<div id="rotate-device-overlay">
+  <div class="rotate-content">
+    <div class="rotate-icon">🔄</div>
+    <h2 style="font-family:'Cinzel Decorative', serif;">Rotate Device</h2>
+    <p class="mono" style="font-size: 13px; color: rgba(242,234,216,0.7);">Deck of Deception requires landscape mode.</p>
+  </div>
+</div>
+
 <!-- Firebase SDK (compat build, plain script tags, no bundler required) -->
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
@@ -845,7 +869,23 @@ const bgMusicElement = document.getElementById('bgMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
+// The Screen Rotation Function
+async function lockLandscape() {
+  const doc = document.documentElement;
+  // Request Fullscreen (Required by Android to allow rotation locking)
+  if (doc.requestFullscreen) { await doc.requestFullscreen().catch(()=>{}); }
+  else if (doc.webkitRequestFullscreen) { await doc.webkitRequestFullscreen().catch(()=>{}); }
+  
+  // Lock to landscape
+  if (screen.orientation && screen.orientation.lock) {
+    try { await screen.orientation.lock('landscape'); } catch (error) {}
+  }
+}
+
 introOverlay.addEventListener('click', function() {
+    // Trigger rotation and fullscreen on tap
+    lockLandscape();
+
     // Hide overlay
     this.style.opacity = '0';
     setTimeout(() => this.style.display = 'none', 800);
