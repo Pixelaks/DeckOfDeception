@@ -33,7 +33,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 #menu{
   position: absolute; inset: 0; z-index: 1000;
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
-  background: var(--felt-dark); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; perspective: 1000px;
+  background: var(--felt-dark); overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch;
   transition: opacity 0.8s ease; text-align: center; padding: 24px;
   padding-top: max(24px, 4vh); padding-bottom: max(24px, 4vh);
   opacity: 0; /* Hidden until intro clicked */
@@ -49,7 +49,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 .menu-table {
   position: absolute; inset: 0;
-  background: radial-gradient(circle at center, #1c4438 0%, #081410 90%);
+  /* Layers a dark vignette spotlight over your AI texture */
+  background: radial-gradient(circle at center, rgba(28,68,56,0.6) 0%, rgba(8,20,16,0.95) 90%), url('Cards/Table.jpg');
+  background-size: cover;
+  background-position: center;
 }
 .menu-vignette {
   position: fixed; inset: 0;
@@ -120,9 +123,42 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .menu-box .sub { color: var(--paper); opacity: 0.85; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; }
 .menu-box p.blurb { color: rgba(242,234,216,0.75); line-height: 1.6; margin: 24px auto; font-size: 14px; max-width: 440px; }
 
-/* 3D Scene Elements */
-.menu-bg-card { position: absolute; width: 44px; height: 62px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.5); box-shadow: -4px 4px 12px rgba(0,0,0,0.6); }
-.menu-bg-coin { position: absolute; width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, var(--brass-bright), var(--brass) 70%); box-shadow: -2px 2px 6px rgba(0,0,0,0.7); }
+/* 3D Scene Elements (Rendered 5x larger for Ultra-HD 3D clarity) */
+.menu-bg-card { 
+  position: absolute; 
+  width: 220px; height: 330px; /* Perfect 2:3 ratio */
+  border-radius: 12px; 
+  border: 4px solid rgba(201,162,39,0.5); 
+  box-shadow: -15px 15px 40px rgba(0,0,0,0.6); 
+  background-size: contain; /* Prevents edge cropping */
+  background-position: center; 
+  background-repeat: no-repeat;
+  transform-style: preserve-3d;
+}
+
+/* Give the cards physical paper/cardstock thickness */
+.menu-bg-card::before {
+  content: ''; position: absolute; inset: -4px; border-radius: 14px;
+  background: #e4d8bd; transform: translateZ(-3px);
+  box-shadow: -10px 10px 30px rgba(0,0,0,0.8);
+}
+.menu-bg-coin { 
+  position: absolute; 
+  width: 80px; height: 80px; /* 5x larger */
+  border-radius: 50%; 
+  background-image: url('Cards/Coins.png'); 
+  background-size: contain; 
+  background-position: center; 
+  background-repeat: no-repeat;
+  transform-style: preserve-3d;
+}
+/* Adjusted translateZ to compensate for the 0.2 scale so they look heavy! */
+.menu-bg-coin::before, .menu-bg-coin::after {
+  content: ''; position: absolute; inset: 0; border-radius: 50%;
+  background-image: inherit; background-size: inherit; background-position: inherit; background-repeat: inherit;
+}
+.menu-bg-coin::before { transform: translateZ(-5px); filter: brightness(0.6); }
+.menu-bg-coin::after { transform: translateZ(-10px); filter: brightness(0.2); box-shadow: -10px 10px 30px rgba(0,0,0,0.8); }
 
 @keyframes sceneFadeIn {
   0% { opacity: 0; }
@@ -227,9 +263,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 
 .tablering{position:relative;}
-.tablefelt{position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;
-  background:radial-gradient(ellipse at 50% 36%, #1f4d40 0%, var(--felt) 55%, var(--felt-dark) 100%);
-  border:2px solid var(--brass);box-shadow:inset 0 0 40px rgba(0,0,0,0.55), 0 4px 16px rgba(0,0,0,0.4)}
+.tablefelt{
+  position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;
+  /* Layers the gameplay spotlight over your AI texture */
+  background: radial-gradient(ellipse at 50% 36%, rgba(31,77,64,0.7) 0%, rgba(43,26,36,0.85) 55%, rgba(21,12,18,0.98) 100%), url('Cards/Table.jpg');
+  background-size: cover;
+  background-position: center;
+  border:2px solid var(--brass);
+  box-shadow:inset 0 0 40px rgba(0,0,0,0.8), 0 4px 16px rgba(0,0,0,0.6);
+}
   
 #arrowLayer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
@@ -269,32 +311,32 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .stat-pill{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);
   border-radius:3px;padding:1px 4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(242,234,216,0.85)}
 .mini-skin{width:7px;height:10px;border-radius:1.5px;border:1px solid rgba(255,255,255,0.5);background-size:cover;background-position:center;}
-.mini-coin{width:8px;height:8px;border-radius:50%;background:radial-gradient(circle at 35% 35%, var(--brass-bright), var(--brass) 70%);box-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Cards/Coins.png');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
 
 /* ENLARGED CENTER CARDS */
 .ringcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:14px;z-index:2}
 .minicard{
-  width:52px;height:74px;border-radius:6px;background:var(--paper);color:var(--ink);border:2px solid var(--paper-dark);
-  display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:600;transition:transform .2s;position:relative
+  width:52px;height:74px;border-radius:6px;background-image:url('Cards/CardPhase.png');background-size:cover;background-position:center;color:var(--ink);border:2px solid var(--paper-dark);
+  display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:24px;font-weight:700;transition:transform .2s;position:relative;box-shadow:1px 2px 8px rgba(0,0,0,0.5);
 }
 @media(min-width: 840px) {
-  .minicard { width:68px; height:96px; font-size:28px; border-width:3px; }
+  .minicard { width:68px; height:96px; font-size:32px; border-width:3px; }
   .ringcenter { gap: 24px; }
 }
 
 .minicard.pulse{animation:pulseIn .35s ease}
 @keyframes pulseIn{0%{transform:scale(0.6);opacity:0}60%{transform:scale(1.08)}100%{transform:scale(1);opacity:1}}
-.minicard.empty{background:rgba(0,0,0,0.3);border:1.5px dashed rgba(242,234,216,0.4);color:rgba(242,234,216,0.6);font-size:18px}
+.minicard.empty{background:rgba(0,0,0,0.3);background-image:none;border:1.5px dashed rgba(242,234,216,0.4);color:rgba(242,234,216,0.6);font-size:18px;font-family:'IBM Plex Mono',monospace;}
 .miniarrow{font-size:18px;color:var(--brass-bright); transition: transform 0.3s; }
 .miniarrow.reverse { transform: scaleX(-1); }
 
 .deckpile{width:110px;flex-shrink:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
   background:rgba(0,0,0,0.18);border-radius:6px;border:1px solid var(--felt-line);gap:6px;padding:4px}
 .deck-3d{position:relative;width:40px;height:56px}
-.deck-3d .stack{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:4px;background:linear-gradient(135deg,var(--felt),#0a1c17);border:1px solid var(--brass)}
+.deck-3d .stack{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:4px;background-image:url('Cards/Decks.png');background-size:cover;background-position:center;border:1px solid var(--brass)}
 .deck-3d .layer-3{transform:translate(-3px, -3px);opacity:0.6}
 .deck-3d .layer-2{transform:translate(-1.5px, -1.5px);opacity:0.8}
-.deck-3d .layer-1{transform:translate(0, 0);z-index:2;display:flex;align-items:center;justify-content:center;color:var(--brass-bright);font-family:'Cinzel',serif;font-size:18px; font-weight:700;box-shadow:1px 1px 6px rgba(0,0,0,0.4)}
+.deck-3d .layer-1{transform:translate(0, 0);z-index:2;display:flex;align-items:center;justify-content:center;color:transparent;font-family:'Cinzel',serif;font-size:18px; font-weight:700;box-shadow:1px 1px 6px rgba(0,0,0,0.4)}
 .deckpile .label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.5px;color:rgba(242,234,216,0.55);text-transform:uppercase;text-align:center}
 
 .log{flex:1;background:var(--paper);color:var(--ink);border-radius:6px;padding:6px 10px;overflow-y:auto;
@@ -315,42 +357,28 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .hand-wrap{flex-shrink:0;background:rgba(0,0,0,0.2);border-radius:8px;padding:8px 10px;border:1px solid var(--felt-line);overflow-y:auto;max-height:30vh}
 .hand-label{font-family:'Cinzel',serif;font-weight:700;font-size:11px;color:var(--brass);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px}
 .hand{display:flex;gap:6px;flex-wrap:wrap;min-height:65px}
+/* --- NEW AI CARD BACKGROUNDS --- */
 .card{width:46px;height:66px;border-radius:5px;cursor:pointer;user-select:none;transition:transform .12s;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;flex-shrink:0; position:relative; overflow:hidden;}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0; position:relative; overflow:hidden;
+  background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.5);
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+}
 .card:hover{transform:translateY(-4px)}
-.card.number{background:var(--paper);color:var(--ink);border:1px solid var(--paper-dark)}
-/* --- CARD SKIN ART (placeholder) ---
-   Original CSS/SVG pattern, no external or copyrighted imagery.
-   --myskin is set once in JS from the chosen skin color; swap this block
-   for real background-image art per skin once assets exist. */
-.card.number::before{
-  content:''; position:absolute; inset:0; pointer-events:none; opacity:0.5;
-  background:
-    radial-gradient(circle at 15% 15%, var(--myskin, var(--brass)) 0%, transparent 35%),
-    radial-gradient(circle at 85% 85%, var(--myskin, var(--brass)) 0%, transparent 35%);
-  mix-blend-mode:multiply;
-}
-.card.number::after{
-  content:'♠'; position:absolute; bottom:1px; right:3px; font-size:9px; opacity:0.16; color:var(--ink-soft); pointer-events:none;
-}
-.card.number:nth-child(4n+2)::after{ content:'♥'; }
-.card.number:nth-child(4n+3)::after{ content:'♦'; }
-.card.number:nth-child(4n+4)::after{ content:'♣'; }
-.card.number{ border-top:3px solid var(--myskin, var(--brass)); }
-.card.number .val{font-size:17px;font-weight:600}
-.card.number .cur{font-size:7px;color:var(--ink-soft);margin-top:1px}
-.card.wild{background:var(--paper);color:var(--blue-bright);border:1px dashed var(--blue-bright)}
-.card.insurance{background:var(--paper);color:var(--ok);border:1px dashed var(--ok)}
-.card.peek{background:var(--paper);color:var(--ink-soft);border:1px dashed var(--ink-soft);cursor:default}
-.card.power{background:var(--paper);color:var(--purple);border:1px dashed var(--purple)}
-.card.reverse{background:var(--paper);color:#d16b24;border:1px dashed #d16b24}
-.card.steal{background:var(--paper);color:#b23c3c;border:1px dashed #b23c3c}
 .card.disabled{opacity:0.35;cursor:not-allowed}
 .card.disabled:hover{transform:none}
-.card .name{font-family:'Cinzel',serif;font-size:10px;font-weight:700;text-align:center;transform:rotate(-5deg)}
-.card .sub{font-size:6px;color:var(--ink-soft);margin-top:2px;text-align:center;padding:0 2px}
-.card .act-val { position:absolute; top:3px; left:4px; font-size:10px; font-weight:600; }
-.card .act-val-right { position:absolute; bottom:3px; right:4px; font-size:10px; font-weight:600; transform:rotate(180deg); }
+
+.card.number    { background-image: url('Cards/CardPhase.png'); border: 1.5px solid var(--myskin, var(--brass)); }
+.card.wild      { background-image: url('Cards/SwapCard.png'); }
+.card.insurance { background-image: url('Cards/InsuranceCard.png'); }
+.card.peek      { background-image: url('Cards/PeekCard.png'); }
+.card.power     { background-image: url('Cards/PowerCard.png'); }
+.card.reverse   { background-image: url('Cards/ReverseCard.png'); }
+.card.steal     { background-image: url('Cards/SteelCard.png'); }
+
+.card .val { font-family: 'Cinzel Decorative', serif; font-size: 24px; font-weight: 700; color: var(--ink); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
+.card .act-val { position: absolute; top: 3px; left: 4px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); }
+.card .act-val-right { position: absolute; bottom: 3px; right: 4px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); transform: rotate(180deg); }
+.card .tier-badge { position: absolute; top: 16px; left: 4px; font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700; color: var(--danger); background: rgba(242,234,216,0.8); border-radius: 2px; padding: 0 2px; border: 1px solid var(--danger); }
 
 .actionbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center}
 .actionbar .hint{font-size:9.5px;color:rgba(242,234,216,0.55);font-family:'IBM Plex Mono',monospace}
@@ -394,11 +422,14 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .dec-status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(242,234,216,0.6);margin-top:12px}
 
 .ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;pointer-events:none;
-  transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;background:var(--paper)}
+  font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
+  transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
+  background-image:url('Cards/CardPhase.png');background-size:cover;background-position:center;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.5);}
 .ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
   transition:left .48s ease, top .48s ease, opacity .48s;
-  background:radial-gradient(circle at 35% 35%, var(--brass-bright), var(--brass) 70%)}
+  background-image:url('Cards/Coins.png');background-size:cover;background-position:center;
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.5);}
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
 .particle.spark { border-radius:50%; animation:particleBurst .7s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
@@ -442,6 +473,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 </div>
 
 <div id="menu">
+  <!-- PUBG TOP-LEFT PROFILE WIDGET -->
+  <div id="pubgProfileWidget" onclick="openProfileCustomization()" style="position:absolute; top:20px; left:20px; display:none; align-items:center; gap:10px; background:rgba(0,0,0,0.6); border:1px solid var(--brass); padding:6px 14px; border-radius:30px; cursor:pointer; z-index:100; transition:transform 0.2s; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+    <div id="widgetAvatarFrame" style="width:38px; height:38px; border-radius:50%; background:var(--brass); display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-weight:700; color:#fff; border:2px solid var(--brass-bright);">👤</div>
+    <div style="text-align:left; display:flex; flex-direction:column;">
+      <span id="widgetPlayerName" style="font-family:'Cinzel',serif; font-size:13px; font-weight:700; color:var(--paper);">Loading...</span>
+      <span id="widgetPlayerTier" class="mono" style="font-size:9.5px; color:var(--brass-bright);">Bronze Lvl 1</span>
+    </div>
+  </div>
+
   <!-- Cinematic 3D Background -->
   <div class="menu-camera">
     <div class="menu-table" id="menuTable"></div>
@@ -638,13 +678,50 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 <div class="modal-bg" id="finaleModal"><div class="finale" id="finaleContent"></div></div>
 <div class="modal-bg" id="deceptionModal"><div class="deception" id="deceptionContent"></div></div>
 
-<div class="modal-bg" id="nameSetupOverlay">
-  <div class="modal" style="text-align:center;">
+<!-- LOGIN CHOICE MODAL (Solid background for clean UI) -->
+<div class="modal-bg" id="loginChoiceOverlay" style="background: var(--felt-dark); z-index: 6000;">
+  <div class="modal" style="text-align:center; background:rgba(0,0,0,0.4); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%;">
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Welcome To Deception</h3>
+    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
+    <button class="btn" style="width:100%; margin-bottom:14px; background:#e8c454; color:#150c12; font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0;" onclick="DoDAuth.signInWithGoogle()">Sign in with Google</button>
+    <button class="btn ghost" style="width:100%; font-family:'Inter', sans-serif; font-size:14px; letter-spacing:0;" onclick="DoDAuth.signInAnonymously()">Play as Guest</button>
+  </div>
+</div>
+
+<!-- NAME SETUP MODAL (Solid background for clean UI) -->
+<div class="modal-bg" id="nameSetupOverlay" style="background: var(--felt-dark); z-index: 6000;">
+  <div class="modal" style="text-align:center; max-width:400px; width:90%;">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright);">Choose your name</h3>
-    <p class="note">This is how other players will see you at the table.</p>
+    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:20px;">This is permanent. It's how others will see you.</p>
     <input type="text" id="nameSetupInput" maxlength="18" placeholder="Your name"
-      style="width:100%; padding:10px 12px; border-radius:5px; border:1px solid var(--paper-dark); font-family:'IBM Plex Mono',monospace; font-size:15px; text-align:center;">
-    <div class="row" style="justify-content:center;"><button class="btn" onclick="dodSubmitName()">Confirm ↗</button></div>
+      style="width:100%; padding:12px; border-radius:5px; border:1px solid var(--brass); background:rgba(0,0,0,0.3); color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:15px; text-align:center; margin-bottom:20px;">
+    <div style="display:flex; justify-content:center;"><button class="btn" style="width:100%;" onclick="DoDAuth.submitName()">Confirm ↗</button></div>
+  </div>
+</div>
+
+<!-- PROFILE CUSTOMIZATION & PROGRESSION MODAL -->
+<div class="modal-bg" id="profileModal" style="z-index: 6000;">
+  <div class="deception" style="max-width:520px; text-align:left;">
+    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(201,162,39,0.3); padding-bottom:8px; margin-bottom:14px;">
+      <h2 style="font-size:20px; margin:0;">Player Dossier</h2>
+      <button class="btn ghost small" onclick="document.getElementById('profileModal').classList.remove('show')">✕ Close</button>
+    </div>
+    <div style="display:flex; gap:16px; align-items:center; margin-bottom:20px;">
+      <div id="modalAvatarBox" style="width:64px; height:64px; border-radius:50%; background:var(--brass); display:flex; align-items:center; justify-content:center; font-size:28px; border:2px solid var(--brass-bright); color:#fff;">👤</div>
+      <div>
+        <h3 id="modalProfileName" style="font-family:'Cinzel',serif; font-size:18px; color:var(--brass-bright);">Player Name</h3>
+        <div id="modalProfileTier" class="mono" style="font-size:12px; color:var(--paper);">Tier: Bronze | Level 1</div>
+        <div class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); margin-top:4px;">Name is permanent.</div>
+      </div>
+    </div>
+    <div class="section-label">Level Progress (Points to Next Level)</div>
+    <div class="loading-bar-track" style="width:100%; margin:8px 0 16px; background:rgba(0,0,0,0.5); border:1px solid rgba(201,162,39,0.3);">
+      <div class="loading-bar-fill" id="modalLevelBar" style="width:0%; background:var(--brass-bright);"></div>
+    </div>
+    <div class="section-label">Select Avatar</div>
+    <div style="display:flex; gap:8px; margin:8px 0 16px; flex-wrap:wrap;" id="avatarSelectorRow"></div>
+    <div class="section-label">Select Frame</div>
+    <div style="display:flex; gap:8px; margin:8px 0; flex-wrap:wrap;" id="frameSelectorRow"></div>
   </div>
 </div>
 
@@ -771,20 +848,44 @@ let menuState={ skinIdx:0, count:4 };
 function initMenuBackground() {
   const table = document.getElementById('menuTable');
   if(!table) return;
+  
+  const cardImages = [
+    'Cards/Decks.png', 'Cards/CardPhase.png', 'Cards/SwapCard.png',
+    'Cards/InsuranceCard.png', 'Cards/PeekCard.png', 'Cards/PowerCard.png',
+    'Cards/ReverseCard.png', 'Cards/SteelCard.png'
+  ];
+
   for(let i=0; i<60; i++) {
     const card = document.createElement('div');
     card.className = 'menu-bg-card';
     card.style.left = (Math.random() * 90 + 5) + '%';
     card.style.top = (Math.random() * 90 + 5) + '%';
-    card.style.transform = `rotateZ(${Math.random() * 360}deg)`;
-    card.style.backgroundColor = SKINS[Math.floor(Math.random()*SKINS.length)].color;
+    
+    // Random 3D tilt and elevation for extreme realism
+    const rotZ = Math.random() * 360;
+    const rotX = (Math.random() - 0.5) * 15; // Slight physical tilt
+    const rotY = (Math.random() - 0.5) * 15; // Slight physical tilt
+    const posZ = Math.random() * 40; // Floating slightly off the table
+    
+    // Apply the 0.2 scale to pack all those 4K pixels into a small card!
+    card.style.transform = `translateZ(${posZ}px) scale(0.2) rotateZ(${rotZ}deg) rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+    
+    const randomImg = cardImages[Math.floor(Math.random() * cardImages.length)];
+    card.style.backgroundImage = `url('${randomImg}')`;
+    
     table.appendChild(card);
   }
+  
   for(let i=0; i<40; i++) {
     const coin = document.createElement('div');
     coin.className = 'menu-bg-coin';
     coin.style.left = (Math.random() * 90 + 5) + '%';
     coin.style.top = (Math.random() * 90 + 5) + '%';
+    
+    const rotZ = Math.random() * 360;
+    const posZ = Math.random() * 20;
+    
+    coin.style.transform = `translateZ(${posZ}px) scale(0.2) rotateZ(${rotZ}deg)`;
     table.appendChild(coin);
   }
 }
@@ -1521,7 +1622,7 @@ function animateTurnArc(fromIdx, toIdx, dir) {
   setTimeout(() => {
   // ADD THIS LINE TO REVEAL IT WHEN THE ANIMATION STARTS:
     path.style.opacity = "1";
-    
+
     const len = path.getTotalLength() || 300;
     path.style.strokeDasharray = len;
     
@@ -1618,7 +1719,8 @@ function renderAll(){
     if(state.lastPlayedCardLabel) {
        let displayLabel = state.lastPlayedCardLabel;
        let tinyVal = state.lastEffectiveValue !== null && String(state.lastPlayedCardLabel) !== String(state.lastEffectiveValue) ? `<div class="act-val" style="font-size:10px; opacity:0.8">${state.lastEffectiveValue}</div>` : '';
-       lastHtml = `<div class="minicard pulse" style="border-color:${lastColor}">${tinyVal}${displayLabel}</div>`;
+       // The 'pulse' class has been removed so it only sits still!
+       lastHtml = `<div class="minicard" style="border-color:${lastColor}">${tinyVal}${displayLabel}</div>`;
     }
     
     const nextHtml = state.requiredValue===null
@@ -1653,35 +1755,36 @@ function renderHand(){
     const isNumMatch = state.requiredValue===null || c.value===state.requiredValue;
     const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isNumMatch;
     
-    let html = `<div class="act-val">${c.type !== 'number' ? c.value : ''}</div><div class="act-val-right">${c.type !== 'number' ? c.value : ''}</div>`;
+    // Put the number values in the corners for EVERY card type
+    let html = `<div class="act-val">${c.value}</div><div class="act-val-right">${c.value}</div>`;
     
     if(c.type==='number'){
       el.className='card number'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="val">${c.value}</div><div class="cur">number</div>`;
+      el.innerHTML= html + `<div class="val">${c.value}</div>`;
       if(playable) el.onclick=()=>playNumberFromHand(idx, el);
     } else if(c.type==='wild'){
       const canPay = you.shop>=WILD_COST;
       el.className='card wild'+(playable && canPay ?'':' disabled');
-      el.innerHTML= html + `<div class="name">Wild Swap</div><div class="sub">costs ${WILD_COST}</div>`;
+      el.innerHTML= html; // Empty center
       if(playable && canPay) el.onclick=()=>playWild(idx, el);
     } else if(c.type==='power'){
       el.className='card power'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="name">Power</div><div class="sub">drain ${c.tier}</div>`;
+      el.innerHTML= html + `<div class="tier-badge">-${c.tier}</div>`;
       if(playable) el.onclick=()=>openTargeting(idx, el, 'POWER');
     } else if(c.type==='steal'){
       el.className='card steal'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="name">Steal</div><div class="sub">take ${c.tier}</div>`;
+      el.innerHTML= html + `<div class="tier-badge">+${c.tier}</div>`;
       if(playable) el.onclick=()=>openTargeting(idx, el, 'STEAL');
     } else if(c.type==='reverse'){
       el.className='card reverse'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="name">Reverse</div><div class="sub">flip turns</div>`;
+      el.innerHTML= html; // Empty center
       if(playable) el.onclick=()=>playReverse(idx, el);
     } else if(c.type==='insurance'){
       el.className='card insurance disabled';
-      el.innerHTML= html + `<div class="name">Insurance</div><div class="sub">discard failed</div>`;
+      el.innerHTML= html; // Empty center
     } else if(c.type==='peek'){
       el.className='card peek';
-      el.innerHTML= html + `<div class="name">Peek</div><div class="sub">look ahead</div>`;
+      el.innerHTML= html; // Empty center
     }
     wrap.appendChild(el);
   });
@@ -3163,6 +3266,12 @@ function endGame(winner,byScore){
     const earned = Math.max(0, score(you));
     window.DoDShop.addCurrency(earned);
   }
+
+  // PUBG Progression: Award points based on performance
+  if(window.DoDAuth && state.players[0]) {
+      const gamePoints = Math.max(10, score(state.players[0]) * 2); 
+      DoDAuth.addGamePoints(gamePoints);
+  }
   const headline=byScore?"Time's up":"Last one standing";
   log(byScore?'Time is up. Scoring the table.':`${winner?winner.name+' is the last one standing.':'Everyone went bankrupt.'}`,'alert');
   let rows=state.players.map(p=> p.out ? {name:p.name,status:'Out',detail:'—'} : {name:p.name,status:`${p.shop} coins, ${p.hand.length} cards`,detail:`score ${score(p)}`});
@@ -3781,6 +3890,83 @@ async function leaveMatchLobby() {
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     
     showMenuScreen('social');
+}
+
+// --- PUBG PROFILE & PROGRESSION UI LOGIC ---
+function updateProfileWidget(profile) {
+    if (!profile) return;
+    
+    // Show widget now that profile is loaded
+    const pubgWidget = document.getElementById('pubgProfileWidget');
+    if(pubgWidget) pubgWidget.style.display = 'flex';
+    
+    // Top-left widget updates
+    const nameEl = document.getElementById('widgetPlayerName');
+    const tierEl = document.getElementById('widgetPlayerTier');
+    if (nameEl) nameEl.textContent = profile.displayName || "Agent";
+    if (tierEl) tierEl.textContent = `${profile.tier || 'Bronze'} • Lvl ${profile.level || 1}`;
+
+    // Modal data updates
+    const modalName = document.getElementById('modalProfileName');
+    const modalTier = document.getElementById('modalProfileTier');
+    const modalBar = document.getElementById('modalLevelBar');
+    
+    if (modalName) modalName.textContent = profile.displayName;
+    if (modalTier) modalTier.textContent = `Rank: ${profile.tier || 'Bronze'} | Level ${profile.level || 1}`;
+    
+    // Calculate level bar percentage (60 points max per level)
+    const pts = profile.points || 0;
+    const pct = Math.min(100, Math.floor((pts / 60) * 100));
+    if (modalBar) modalBar.style.width = pct + '%';
+
+    // Render Avatars & Frames
+    renderUnlockSelectors(profile);
+}
+
+function openProfileCustomization() {
+    const profile = DoDAuth.getProfile();
+    if (!profile) return;
+    updateProfileWidget(profile);
+    document.getElementById('profileModal').classList.add('show');
+}
+
+function renderUnlockSelectors(profile) {
+    // Placeholder system for avatars & frames
+    const avRow = document.getElementById('avatarSelectorRow');
+    const frRow = document.getElementById('frameSelectorRow');
+    if (!avRow || !frRow) return;
+
+    const availableAvatars = ['👤', '🦊', '💀', '👑', '⚡'];
+    avRow.innerHTML = availableAvatars.map((av) => `
+        <div onclick="selectAvatarPlaceholder('${av}')" style="width:40px; height:40px; border-radius:50%; background:rgba(0,0,0,0.5); border:1px solid var(--brass); display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;">
+            ${av}
+        </div>
+    `).join('');
+
+    const availableFrames = ['Standard', 'Gilded', 'Neon'];
+    frRow.innerHTML = availableFrames.map(fr => `
+        <div onclick="selectFramePlaceholder('${fr}')" class="countbtn small" style="padding:6px 12px; cursor:pointer;">
+            ${fr}
+        </div>
+    `).join('');
+}
+
+function selectAvatarPlaceholder(avSymbol) {
+    const box = document.getElementById('modalAvatarBox');
+    const widget = document.getElementById('widgetAvatarFrame');
+    if (box) box.textContent = avSymbol;
+    if (widget) widget.textContent = avSymbol;
+}
+
+function selectFramePlaceholder(frameName) {
+    console.log("Selected frame:", frameName);
+}
+
+// Hook into DoDAuth profile ready event to automatically update UI on load
+if (window.DoDAuth) {
+    DoDAuth.onProfileReady(profile => {
+        updateProfileWidget(profile);
+    });
 }
 
 </script>
