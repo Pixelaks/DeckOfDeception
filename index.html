@@ -383,6 +383,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .finale td,.finale th{padding:5px 4px;border-bottom:1px solid var(--paper-dark);text-align:left}
 .finale .winner{color:var(--ok);font-weight:600}
 
+/* DECEPTION SHOWDOWN */
+.deception{background:var(--felt-dark);border:1px solid rgba(201,162,39,0.4);color:var(--paper);border-radius:12px;padding:26px 24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
+.deception h2{font-family:'Cinzel Decorative',serif;color:var(--danger-bright);font-size:22px;margin-bottom:8px}
+.deception .dec-sub{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(242,234,216,0.75);margin-bottom:18px;line-height:1.5}
+.dec-numgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:16px 0}
+.dec-num{background:rgba(242,234,216,0.08);border:1px solid rgba(201,162,39,0.35);color:var(--paper);border-radius:8px;padding:10px 0;font-family:'IBM Plex Mono',monospace;font-size:16px;font-weight:600;cursor:pointer;transition:background .15s,transform .1s}
+.dec-num:hover{background:rgba(201,162,39,0.25);transform:translateY(-1px)}
+.dec-row{display:flex;gap:10px;justify-content:center;margin-top:14px}
+.dec-status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:rgba(242,234,216,0.6);margin-top:12px}
+
 .ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'IBM Plex Mono',monospace;font-weight:600;font-size:14px;pointer-events:none;
   transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;background:var(--paper)}
@@ -626,6 +636,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 </div>
 
 <div class="modal-bg" id="finaleModal"><div class="finale" id="finaleContent"></div></div>
+<div class="modal-bg" id="deceptionModal"><div class="deception" id="deceptionContent"></div></div>
 
 <div class="modal-bg" id="nameSetupOverlay">
   <div class="modal" style="text-align:center;">
@@ -1036,6 +1047,7 @@ function startGame() {
                         hand: hand,
                         shop: START_SHOP,
                         out: false,
+                        deceptionStrike: false,
                         // Host assigns colors directly to the master state
                         color: index === 0 ? SKINS[menuState.skinIdx].color : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
                     });
@@ -1053,6 +1065,7 @@ function startGame() {
                         lastPlayedCardLabel: null,
                         lastPlayedBy: null, 
                         uiState: 'IDLE',
+                        deception: null,
                         lastAction: null, // Explicitly setting this to null instead of undefined!
                         // FIX: real wall-clock anchor so the timer survives refreshes/reconnects
                         // instead of resetting to the full duration every time.
@@ -1076,15 +1089,15 @@ function startGame() {
             botNames.forEach((n,i) => PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]));
 
             // Change this line inside the offline block of startGame():
-let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: DoDAuth.getProfile().uid}];
-            botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false}));
+let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: DoDAuth.getProfile().uid, deceptionStrike:false}];
+            botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false, uid:'bot_'+i, deceptionStrike:false}));
 
             let deck = makeDeck();
             players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
 
             state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
-                      buyLoop:null, uiState: 'IDLE', peekResult: null };
+                      buyLoop:null, uiState: 'IDLE', peekResult: null, deception: null };
             
             log('Offline Training. Play a number, then call what the next player needs.','ok');
             layoutRing();
@@ -1137,17 +1150,15 @@ function listenToGameState() {
             if (state.turnUid === serverState.turnUid) {
                 preservedBuyLoop = state.buyLoop;
                 preservedPeek = state.peekResult;
-                // FIX: buyLoop.buyer/target were captured from the PREVIOUS state.players
-                // array. orderedPlayers below is a brand new set of objects rebuilt from
-                // this snapshot, so without re-pointing these references, any further
-                // coin deductions or card draws during retry #2/#3 land on orphaned
-                // objects that never get pushed back to Firestore (coins look frozen,
-                // drawn cards vanish). Re-link them to the fresh objects by uid.
+                // FIX: buyLoop.buyer was captured from the PREVIOUS state.players array.
+                // orderedPlayers below is a brand new set of objects rebuilt from this
+                // snapshot, so without re-pointing this reference, any further coin
+                // deductions or card draws during retry #2/#3 land on an orphaned object
+                // that never gets pushed back to Firestore (coins look frozen, drawn
+                // cards vanish). Re-link it to the fresh object by uid.
                 if (preservedBuyLoop) {
                     const freshBuyer = orderedPlayers.find(p => p.uid === preservedBuyLoop.buyer.uid);
-                    const freshTarget = orderedPlayers.find(p => p.uid === preservedBuyLoop.target.uid);
                     if (freshBuyer) preservedBuyLoop.buyer = freshBuyer;
-                    if (freshTarget) preservedBuyLoop.target = freshTarget;
                 }
             }
         }
@@ -1173,13 +1184,30 @@ function listenToGameState() {
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
             uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
             buyLoop: preservedBuyLoop,
-            peekResult: preservedPeek
+            peekResult: preservedPeek,
+            // DECEPTION: always mirrored straight from the server — this is a shared,
+            // multi-player mini-phase, not per-client UI state, so (unlike buyLoop) it's
+            // never "preserved" locally, just taken fresh every snapshot.
+            deception: serverState.deception || null
         };
 
         // 4. RENDER THE GAME
         layoutRing();
         renderAll();
-        
+
+        // SAFETY NET: a Deception loss (or any other path that marks a player `out`
+        // directly rather than through the local eliminate() call) can leave only one
+        // player standing without ever running the local win-check. Every client catches
+        // that here so the finale modal + coin payout still fire for everyone individually.
+        if (!state.over) {
+            const alive = state.players.filter(p => !p.out);
+            if (state.players.length > 1 && alive.length <= 1) {
+                endGame(alive[0] || null, false);
+            }
+        }
+
+        const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+
         // --- 5. THE CURVE ANIMATION & BOT WAKE-UP ---
         if (localLastTurnUid !== serverState.turnUid) {
             // Animate the yellow turn curve
@@ -1191,13 +1219,37 @@ function listenToGameState() {
             }
             localLastTurnUid = serverState.turnUid;
 
-            // WAKE UP BOTS (HOST ONLY)
+            // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
             // If the new turn belongs to a bot, the Host calculates their move and pushes it to Firebase.
-            const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
-            if (isHost && serverState.turnUid.startsWith('bot_')) {
-                // Give the bot a small delay so it feels like they are "thinking"
-                setTimeout(botTurn, 1800); 
+            // A Deception showdown is only ever kicked off here, never mid-turn, so we skip all of
+            // this while one is already active (serverState.deception is truthy).
+            if (isHost && !serverState.deception) {
+                const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
+                const stuck = curPlayer && !curPlayer.out && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
+                if (curPlayer && stuck) {
+                    if (curPlayer.deceptionStrike) {
+                        startDeceptionPhaseOnline(curPlayer);
+                    } else {
+                        curPlayer.deceptionStrike = true;
+                        firebase.firestore().collection('matches').doc(currentMatchId).update({
+                            'gameState.players': state.players,
+                            'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
+                        });
+                        if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 1800);
+                    }
+                } else {
+                    if (curPlayer && curPlayer.deceptionStrike) {
+                        curPlayer.deceptionStrike = false;
+                        firebase.firestore().collection('matches').doc(currentMatchId).update({ 'gameState.players': state.players });
+                    }
+                    if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 1800);
+                }
             }
+        }
+
+        // --- DECEPTION: HOST DRIVES BOT MOVES & PHASE RESOLUTION ---
+        if (isHost && serverState.deception) {
+            handleOnlineDeceptionHostLogic(serverState);
         }
 
         // 6. TRIGGER CARD ANIMATIONS
@@ -1483,11 +1535,12 @@ function animateTurnArc(fromIdx, toIdx, dir) {
 function renderAll(){
   sweepEliminations();
   if(state.over) return;
+  renderDeceptionOverlay();
   const cur=state.players[state.turn];
   document.getElementById('turnIndicator').textContent = cur.isHuman?'Your turn':`${cur.name} is playing…`;
   document.getElementById('deckCount').textContent = state.deck.length;
 
-  const isTargeting = ['CHOOSE_TARGET_POWER', 'CHOOSE_TARGET_STEAL', 'CHOOSE_TARGET_BUY', 'CHOOSE_TARGET_EMPTY'].includes(state.uiState);
+  const isTargeting = ['CHOOSE_TARGET_POWER', 'CHOOSE_TARGET_STEAL'].includes(state.uiState);
 
   // Render Seats
   state.players.forEach(p=>{
@@ -1497,7 +1550,7 @@ function renderAll(){
     const isDense = state.players.length > 8;
     let classes = 'ringseat' + (isDense ? ' dense' : '') + (p.id===state.turn?' active':'') + (p.out?' out':'');
     
-    const validTarget = isTargeting && p.id !== 0 && !p.out && (state.uiState.includes('POWER') || p.shop >= BUY_COST);
+    const validTarget = isTargeting && p.id !== 0 && !p.out;
     if(validTarget) classes += ' targetable';
     
     seat.className = classes;
@@ -1643,11 +1696,6 @@ function onSeatClick(id) {
         confirmActionTarget(target, 'POWER');
     } else if (state.uiState === 'CHOOSE_TARGET_STEAL') {
         confirmActionTarget(target, 'STEAL');
-    } else if (state.uiState === 'CHOOSE_TARGET_BUY' && target.shop >= BUY_COST) {
-        state.buyLoop = { buyer: state.players[0], target: target, tries: 0 };
-        doBuyDraw();
-    } else if (state.uiState === 'CHOOSE_TARGET_EMPTY' && target.shop >= BUY_COST) {
-        resolveEmptySingleDraw(state.players[0], target);
     }
 }
 
@@ -1685,17 +1733,12 @@ function renderActionBar(){
   }
 
   // 2. INLINE TARGETING PROMPTS
-  if (['CHOOSE_TARGET_POWER', 'CHOOSE_TARGET_STEAL', 'CHOOSE_TARGET_BUY', 'CHOOSE_TARGET_EMPTY'].includes(state.uiState)) {
+  if (['CHOOSE_TARGET_POWER', 'CHOOSE_TARGET_STEAL'].includes(state.uiState)) {
       const msg = state.uiState === 'CHOOSE_TARGET_POWER' ? 'Click a player above to drain their coins!' 
-                : state.uiState === 'CHOOSE_TARGET_STEAL' ? 'Click a player above to steal coins to your account!' 
-                : state.uiState === 'CHOOSE_TARGET_EMPTY' ? 'Click a player above to raid! (Mandatory)' 
-                : 'Click a player above to raid for 2 coins!';
+                : 'Click a player above to steal coins to your account!';
       
       let html = `<span style="color:var(--brass-bright); font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; display:flex; align-items:center; gap:6px;">➤ ${msg}</span>`;
-      
-      if (state.uiState !== 'CHOOSE_TARGET_EMPTY') {
-         html += `<button class="btn ghost small" onclick="cancelTargeting()">Cancel</button>`;
-      }
+      html += `<button class="btn ghost small" onclick="cancelTargeting()">Cancel</button>`;
       bar.innerHTML = html;
       return;
   }
@@ -1705,7 +1748,7 @@ function renderActionBar(){
       const bl = state.buyLoop;
       let html = `<span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(242,234,216,0.85);">Try ${bl.tries}: Drew <b>${bl.lastDrawnLabel}</b> — no match. </span>`;
       
-      if (bl.tries < MAX_TRIES && state.deck.length > 0 && bl.target.shop >= BUY_COST && !bl.target.out) {
+      if (bl.tries < MAX_TRIES && state.deck.length > 0 && bl.buyer.shop >= BUY_COST && !bl.buyer.out) {
           html += `<button class="btn small" onclick="doBuyDraw()">Try again (${bl.tries+1}/${MAX_TRIES}) ↗</button>`;
       }
       html += `<button class="btn ghost small" onclick="finishBuyLoopFailure()">Stop here</button>`;
@@ -1717,35 +1760,45 @@ function renderActionBar(){
       return;
   }
   
-  if (state.uiState === 'ANIMATING') {
-      bar.innerHTML = `<span class="hint">Resolving action...</span>`;
+  if (state.uiState === 'ANIMATING' || state.uiState === 'DECEPTION') {
+      bar.innerHTML = `<span class="hint">${state.uiState === 'DECEPTION' ? 'Deception showdown...' : 'Resolving action...'}</span>`;
       return;
   }
 
   // 4. DEFAULT IDLE ACTION BAR
   if(you.hand.length===0){
-    const validTargets = activePlayers().some(p => p.id !== 0 && p.shop >= BUY_COST);
-    if(validTargets) {
+    if(you.shop >= BUY_COST) {
         const btn=document.createElement('button');
         btn.className='btn';
-        btn.textContent='Hand is empty — Forced Draw ↗';
-        btn.onclick=() => { state.uiState = 'CHOOSE_TARGET_EMPTY'; renderAll(); };
+        btn.textContent=`Hand is empty — Draw for ${BUY_COST}c ↗`;
+        btn.onclick=() => { startForcedBuySelf('EMPTY'); };
         bar.appendChild(btn);
     } else {
-        bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">Hand is empty, but no one has enough coins to raid. Turn skipped.</span>';
-        setTimeout(() => advanceTurn(), 2000);
+        bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">Hand is empty and you can\'t afford to draw. Turn skipped.</span>';
+        setTimeout(() => skipStuckHumanTurn(`${you.name}'s hand is empty and they're out of coins to draw. Turn skipped.`), 2000);
     }
     return;
   }
 
   // Only standard 'number' cards will hide the Forced Buy button now
-  const hasMatch = state.requiredValue === null || you.hand.some(c => c.value === state.requiredValue && c.type === 'number');
+  const hasMatch = computeHasMatch(you);
   if(!hasMatch){
-    const btn=document.createElement('button');
-    btn.className='btn';
-    btn.textContent='No match — Forced Buy ↗';
-    btn.onclick=() => { state.uiState = 'CHOOSE_TARGET_BUY'; renderAll(); };
-    bar.appendChild(btn);
+    // FIX: Forced Buy is now self-funded (you pay BUY_COST from your own coins to draw),
+    // not a raid on another player. If you can't afford it, there's nothing left to do —
+    // auto-skip instead of leaving a dead-end button. The deceptionStrike flag (set in
+    // advanceTurn) is what escalates this into a Deception showdown if it happens to
+    // this same player again next time around.
+    if(you.shop >= BUY_COST){
+        const btn=document.createElement('button');
+        btn.className='btn';
+        btn.textContent=`No match — Forced Buy (${BUY_COST}c) ↗`;
+        btn.onclick=() => { startForcedBuySelf('BUY'); };
+        bar.appendChild(btn);
+    } else {
+        bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">No match, and you can\'t afford to force-buy. Turn skipped.</span>';
+        setTimeout(() => skipStuckHumanTurn(`${you.name} has no match and can't afford to force-buy. Turn skipped.`), 2000);
+        return;
+    }
   }
   const hint=document.createElement('span');
   hint.className='hint';
@@ -1938,11 +1991,24 @@ async function confirmActionTarget(target, actionType){
 }
 
 // ---------------- ASYNC FORCED BUY (INLINE) ----------------
+function startForcedBuySelf(mode){
+    const you = state.players[0];
+    if(mode === 'BUY'){
+        state.buyLoop = { buyer: you, tries: 0 };
+        doBuyDraw();
+    } else {
+        resolveEmptySingleDraw(you);
+    }
+}
+
 async function doBuyDraw() {
     const bl = state.buyLoop;
     if (!bl) { console.warn('doBuyDraw called with no active buyLoop — ignoring.'); return; } // FIX: defensive guard
-    if (bl.target.shop < BUY_COST) {
-        log(`${bl.target.name} doesn't have enough coins left! Forced buy interrupted.`, 'alert');
+    // FIX: Forced Buy is now self-funded — you pay BUY_COST out of your OWN coins to
+    // draw, instead of raiding a target's coins. This is what makes the mechanic work
+    // even when nobody else in the game has any coins to be raided from.
+    if (bl.buyer.shop < BUY_COST) {
+        log(`Not enough coins left to keep drawing! Forced buy interrupted.`, 'alert');
         finishBuyLoopFailure();
         return;
     }
@@ -1951,8 +2017,8 @@ async function doBuyDraw() {
     state.uiState = 'ANIMATING';
     renderAll();
 
-    const taken = transferToBank(bl.target, BUY_COST);
-    flyCoin(getSeatOrPanelRect(bl.target.id), bankRect(), 0);
+    const taken = payFromOwn(bl.buyer, BUY_COST);
+    flyCoin(getSeatOrPanelRect(bl.buyer.id), bankRect(), 0);
     sweepEliminations();
     renderAll(); // FIX: reflect the coin deduction on-screen immediately, not just after the draw resolves
 
@@ -1973,10 +2039,10 @@ async function doBuyDraw() {
             let effective, label;
             if (card.type === 'number') { effective = card.value; label = card.value; }
             else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
-            else { effective = state.requiredValue; label = `P${card.tier}`; transferToPlayer(bl.target, bl.buyer, card.tier); }
+            else { effective = state.requiredValue; label = `P${card.tier}`; }
 
             bl.buyer.shop += PLAY_REWARD;
-            const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Took ${taken}c from ${bl.target.name}.`;
+            const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Paid ${taken}c out of pocket.`;
             state.buyLoop = null;
 
             if (currentMatchId) {
@@ -2053,40 +2119,514 @@ async function finishBuyLoopFailure() {
     }
 }
 
+// FIX: a human player who is stuck (no match / empty hand, and no valid raid target)
+// has no other action available, so their turn has to end itself. advanceTurn()'s
+// online branch is host-only, so a non-host human calling it directly here was a
+// dead end — this pushes the turn forward themselves, same as a normal call-out does.
+async function skipStuckHumanTurn(reasonMsg){
+
+if (state && state.uiState === 'DECEPTION') return;
+  const myUid = DoDAuth.getProfile().uid;
+  if(currentMatchId){
+    if(!isYourTurn()) return;
+    let idx = state.players.findIndex(p=>p.uid===myUid);
+    let nextIdx = idx;
+    do { nextIdx = (nextIdx + state.direction + state.players.length) % state.players.length; } while(state.players[nextIdx].out);
+    await firebase.firestore().collection('matches').doc(currentMatchId).update({
+      'gameState.players': state.players,
+      'gameState.turnUid': state.players[nextIdx].uid,
+      'gameState.uiState': 'IDLE',
+      'gameState.lastAction': { id: Date.now().toString(), type:'CALLOUT', uid: myUid, msg: reasonMsg }
+    });
+  } else {
+    log(reasonMsg, 'alert');
+    advanceTurn();
+  }
+}
+
+// ---------------- DECEPTION SHOWDOWN ----------------
+// Fires when a player is broke (can't afford Forced Buy) with no playable card, and
+// was ALREADY in that state on their previous turn (see the deceptionStrike flag).
+// Every currently-broke player gets swept into a guessing game against every
+// currently-rich player, who negotiate in TWO rounds:
+//   1) agree on a REAL secret number (kept hidden from the broke players)
+//   2) agree on a CLAIM number to tell the broke players — which may be a lie
+// Each broke player is told the claim and must decide whether to believe it (betting
+// it matches the real number) or distrust it and pick their own guess instead. Every
+// broke player answers independently, and results are only revealed once everyone
+// currently stuck has answered.
+function computeHasMatch(player){
+  return player.hand.some(c => {
+     // Does the value match the chain? (Or is it the opening move?)
+     const valMatch = (state.requiredValue === null || c.value === state.requiredValue);
+     if (!valMatch) return false;
+
+     // Is the card legally playable?
+     if (c.type === 'number' || c.type === 'reverse') return true;
+     if (c.type === 'wild' && player.shop >= 2) return true; // Needs 2c to play
+     if (c.type === 'power' || c.type === 'steal') {
+         // Steal and Power require at least one other active player to target
+         return state.players.some(p => !p.out && p.id !== player.id);
+     }
+     return false; // Peek and Insurance fall through and return false
+  });
+}
+
+function myDeceptionUid(){ return DoDAuth.getProfile().uid; }
+function decStancesField(phase){ return phase === 'VOTE_CLAIM' ? 'claimStances' : 'realStances'; }
+function decNumberField(phase){ return phase === 'VOTE_CLAIM' ? 'claimNumber' : 'realNumber'; }
+
+function renderDeceptionOverlay(){
+  const modal = document.getElementById('deceptionModal');
+  const content = document.getElementById('deceptionContent');
+  const dec = state.deception;
+  if(!dec){ modal.classList.remove('show'); return; }
+  modal.classList.add('show');
+
+  const myUid = myDeceptionUid();
+  const nameOf = uid => { const p = state.players.find(pp=>pp.uid===uid); return p ? p.name : '???'; };
+  const numGrid = (onclickFn) => {
+    let h = '<div class="dec-numgrid">';
+    for(let n=1;n<=9;n++) h += `<button class="dec-num" onclick="${onclickFn}(${n})">${n}</button>`;
+    return h + '</div>';
+  };
+
+  let html = `<h2>💀 Deception</h2>`;
+
+  if(dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM'){
+    const isClaimRound = dec.phase === 'VOTE_CLAIM';
+    const stancesField = decStancesField(dec.phase);
+    const stances = dec[stancesField];
+    const proposerName = dec.proposerUid ? nameOf(dec.proposerUid) : 'The table';
+    const iAmProposer = dec.proposerUid === myUid;
+    const iAmRichVoter = dec.richUids.includes(myUid) && !iAmProposer;
+    const iHaveResponded = (myUid in stances);
+
+    if(iAmProposer && !iHaveResponded){
+      html += isClaimRound
+        ? `<div class="dec-sub">The real number is locked in. Now pick a number to <b>tell</b> the broke players — you can be honest, or you can bluff.</div>`
+        : `<div class="dec-sub">Everyone's broke and stuck. Pick a secret number (1–9) — the other players with coins will vote to accept it or counter with their own. This number stays hidden from the broke players.</div>`;
+      html += numGrid('submitDeceptionProposal');
+    } else if(iAmRichVoter && !iHaveResponded && stances[dec.proposerUid] !== undefined){
+      html += isClaimRound
+        ? `<div class="dec-sub"><b>${proposerName}</b> wants to tell the broke players <b>${stances[dec.proposerUid]}</b>. Go along with it, or propose a different number to claim.</div>`
+        : `<div class="dec-sub"><b>${proposerName}</b> proposes <b>${stances[dec.proposerUid]}</b> as the real secret number. Accept it, or propose your own instead.</div>`;
+      html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionAccept()">Accept ${stances[dec.proposerUid]}</button><button class="btn ghost" onclick="showDeceptionCounterPicker()">Propose my own</button></div>`;
+      html += `<div id="decCounterGrid"></div>`;
+    } else {
+      const waitingOn = dec.richUids.filter(u => !(u in stances));
+      html += `<div class="dec-sub">Waiting on ${waitingOn.map(nameOf).join(', ') || 'the table'} to lock in ${isClaimRound ? 'what to tell the broke players' : 'the real number'}…</div>`;
+      html += `<div class="dec-status">${Object.keys(stances).length}/${dec.richUids.length} responded</div>`;
+    }
+  } else if(dec.phase === 'ANSWER'){
+    const iAmBroke = dec.brokeUids.includes(myUid);
+    const myResponse = dec.responses[myUid];
+
+    if(iAmBroke && !myResponse){
+      html += `<div class="dec-sub">The table says the Deception card is <b>${dec.claimNumber}</b>. Do you believe that's true?</div>`;
+      html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionBelieve(true)">Believe it</button><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't buy it</button></div>`;
+      html += `<div id="decAnswerGrid"></div>`;
+      html += `<div class="dec-sub" style="margin-top:10px">Right either way and you're back in with <b>+15 coins</b>. Wrong and you're <b>eliminated</b>.</div>`;
+    } else if(iAmBroke){
+      html += `<div class="dec-sub">Answer locked in. Waiting on the others…</div>`;
+      html += `<div class="dec-status">${Object.keys(dec.responses).length}/${dec.brokeUids.length} answered</div>`;
+    } else {
+      html += `<div class="dec-sub">${dec.brokeUids.map(nameOf).join(', ')} ${dec.brokeUids.length>1?'are':'is'} deciding whether to trust the claim…</div>`;
+      html += `<div class="dec-status">${Object.keys(dec.responses).length}/${dec.brokeUids.length} answered</div>`;
+    }
+  }
+
+  content.innerHTML = html;
+}
+
+function showDeceptionCounterPicker(){
+  const dec = state.deception; if(!dec) return;
+  const grid = document.getElementById('decCounterGrid');
+  if(!grid) return;
+  let h = '<div class="dec-numgrid">';
+  for(let n=1;n<=9;n++) h += `<button class="dec-num" onclick="submitDeceptionCounter(${n})">${n}</button>`;
+  grid.innerHTML = h + '</div>';
+}
+
+// Broke player chose "I don't buy it" — reveal the number grid so they can pick
+// their own guess before we actually submit their answer.
+function showDeceptionAnswerGrid(){
+  const grid = document.getElementById('decAnswerGrid');
+  if(!grid) return;
+  let h = '<div class="dec-numgrid">';
+  for(let n=1;n<=9;n++) h += `<button class="dec-num" onclick="submitDeceptionGuess(${n})">${n}</button>`;
+  grid.innerHTML = h + '</div>';
+}
+
+// ---- Human-facing actions (both offline & online; branch internally) ----
+async function writeDeceptionField(path, value){
+  if(currentMatchId){
+    await firebase.firestore().collection('matches').doc(currentMatchId).update({ [path]: value });
+  } else {
+    const dec = state.deception; if(!dec) return;
+    // path looks like "gameState.deception.realStances.<uid>" — walk it onto local state.deception
+    const parts = path.split('.').slice(2); // drop "gameState.deception"
+    let obj = dec;
+    for(let i=0;i<parts.length-1;i++) obj = obj[parts[i]];
+    obj[parts[parts.length-1]] = value;
+    renderAll();
+    offlineDeceptionStep();
+  }
+}
+
+async function submitDeceptionProposal(n){
+  const dec = state.deception; if(!dec) return;
+  const myUid = myDeceptionUid();
+  await writeDeceptionField(`gameState.deception.${decStancesField(dec.phase)}.${myUid}`, n);
+}
+async function submitDeceptionAccept(){
+  const dec = state.deception; if(!dec) return;
+  const myUid = myDeceptionUid();
+  const field = decStancesField(dec.phase);
+  const n = dec[field][dec.proposerUid];
+  await writeDeceptionField(`gameState.deception.${field}.${myUid}`, n);
+}
+async function submitDeceptionCounter(n){
+  const dec = state.deception; if(!dec) return;
+  const myUid = myDeceptionUid();
+  await writeDeceptionField(`gameState.deception.${decStancesField(dec.phase)}.${myUid}`, n);
+}
+async function submitDeceptionBelieve(believe){
+  if(believe){
+    const dec = state.deception; if(!dec) return;
+    const myUid = myDeceptionUid();
+    await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe: true, guess: null });
+  } else {
+    showDeceptionAnswerGrid();
+  }
+}
+async function submitDeceptionGuess(n){
+  const dec = state.deception; if(!dec) return;
+  const myUid = myDeceptionUid();
+  await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe: false, guess: n });
+}
+
+// ---- OFFLINE (training / bots) driver ----
+function startDeceptionPhaseOffline(triggerPlayer){
+  const broke = activePlayers().filter(p=>p.shop < BUY_COST);
+  const rich = activePlayers().filter(p=>p.shop >= BUY_COST);
+  log(`💀 Deception! ${broke.map(p=>p.name).join(', ')} ${broke.length>1?'are':'is'} out of coins with nothing to play.`, 'hi');
+
+  if(rich.length === 0){
+    // Nobody has coins to negotiate — the table draws a real number at random and
+    // there's no one to lie about it, so the claim is just the truth.
+    const realNumber = 1 + Math.floor(Math.random()*9);
+    state.deception = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: realNumber, phase:'ANSWER', responses:{} };
+    state.uiState = 'DECEPTION';
+    renderAll();
+    offlineDeceptionStep();
+    return;
+  }
+
+  const proposer = rich[Math.floor(Math.random()*rich.length)];
+  state.deception = { brokeUids: broke.map(p=>p.uid), richUids: [proposer.uid], proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
+  state.uiState = 'DECEPTION';
+
+  if(!proposer.isHuman){
+    setTimeout(()=>{
+      if(!state.deception) return;
+      state.deception.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
+      renderAll();
+      offlineDeceptionStep();
+    }, 900);
+  }
+  renderAll();
+}
+
+function offlineDeceptionStep(){
+  const dec = state.deception;
+  if(!dec) return;
+
+  if(dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM'){
+    const stancesField = decStancesField(dec.phase);
+    const stances = dec[stancesField];
+    if(Object.keys(stances).length >= dec.richUids.length){
+      resolveDeceptionVoteOffline();
+      return;
+    }
+    const nextUid = dec.richUids.find(uid => !(uid in stances));
+    if(!nextUid) return;
+    const player = state.players.find(p=>p.uid===nextUid);
+    if(player && !player.isHuman){
+      setTimeout(()=>{
+        if(!state.deception) return;
+        const accept = Math.random() < 0.55;
+        stances[nextUid] = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        renderAll();
+        offlineDeceptionStep();
+      }, 2000);
+    }
+  } else if(dec.phase === 'ANSWER'){
+    if(Object.keys(dec.responses).length >= dec.brokeUids.length){
+      resolveDeceptionAnswersOffline();
+      return;
+    }
+    const nextUid = dec.brokeUids.find(uid => !(uid in dec.responses));
+    if(!nextUid) return;
+    const player = state.players.find(p=>p.uid===nextUid);
+    if(player && !player.isHuman){
+      setTimeout(()=>{
+        if(!state.deception) return;
+        const believe = Math.random() < 0.5;
+        dec.responses[nextUid] = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
+        renderAll();
+        offlineDeceptionStep();
+      }, 2500);
+    }
+  }
+}
+
+function resolveDeceptionVoteOffline(){
+  const dec = state.deception;
+  const stancesField = decStancesField(dec.phase);
+  const stances = dec[stancesField];
+  const tally = {};
+  Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
+  let best=[], bestCount=0;
+  Object.entries(tally).forEach(([n,c])=>{ const num=parseInt(n); if(c>bestCount){best=[num]; bestCount=c;} else if(c===bestCount){best.push(num);} });
+  const resolved = best[Math.floor(Math.random()*best.length)];
+  dec[decNumberField(dec.phase)] = resolved;
+
+  if(dec.phase === 'VOTE_REAL'){
+    log(`The table settles on a real secret number (kept hidden).`, 'hi');
+    dec.phase = 'VOTE_CLAIM';
+    renderAll();
+    if(!state.players.find(p=>p.uid===dec.proposerUid).isHuman){
+      setTimeout(()=>{
+        if(!state.deception) return;
+        dec.claimStances[dec.proposerUid] = 1 + Math.floor(Math.random()*9);
+        renderAll();
+        offlineDeceptionStep();
+      }, 900);
+    }
+  } else {
+    log(`The table agrees to tell the broke players ${resolved}.`, 'hi');
+    dec.phase = 'ANSWER';
+    renderAll();
+    offlineDeceptionStep();
+  }
+}
+
+function resolveDeceptionAnswersOffline(){
+  const dec = state.deception;
+  let correctCount = 0;
+  let toEliminate = []; // Array to safely hold losers
+
+  dec.brokeUids.forEach(uid=>{
+    const p = state.players.find(pp=>pp.uid===uid);
+    if(!p || p.out) return;
+    const r = dec.responses[uid];
+    const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
+    const correct = effectiveGuess === dec.realNumber;
+
+    if(correct){
+      p.shop += 15;
+      correctCount++;
+      log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
+    } else {
+      log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — wrong! The real number was ${dec.realNumber}.`, 'hi');
+      toEliminate.push(p); // Store them to be eliminated properly!
+    }
+    p.deceptionStrike = false;
+  });
+
+  // SUDDEN DEATH CHECK (Everyone was broke)
+  if (dec.richUids.length === 0) {
+      if (correctCount === 0) {
+          log("Everyone guessed wrong! Game over, calculating scores...", 'hi');
+          state.deception = null;
+          finalizeGame();
+          return;
+      } else if (correctCount === 1) {
+          const winner = state.players.find(p => p.shop > 0);
+          log(`${winner.name} was the only one to guess correctly and wins immediately!`, 'ok');
+          state.deception = null;
+          finalizeGame();
+          return;
+      }
+  }
+
+  // Normal progression: let eliminate() handle marking them out so it triggers endGame()!
+  toEliminate.forEach(p => eliminate(p, `Lost the Deception showdown.`));
+
+  state.deception = null;
+  state.uiState = 'IDLE';
+  sweepEliminations();
+  renderAll();
+  
+  if(state.over) return;
+  
+  // Increased from 1200ms to 2500ms so humans can read the aftermath!
+  setTimeout(()=> advanceTurn(), 2500); 
+}
+
+// ---- ONLINE (Firestore) driver — host resolves phase transitions & bot moves ----
+async function startDeceptionPhaseOnline(curPlayer){
+  const broke = state.players.filter(p=>!p.out && p.shop < BUY_COST);
+  const rich = state.players.filter(p=>!p.out && p.shop >= BUY_COST);
+  const db = firebase.firestore();
+  let dec;
+  if(rich.length === 0){
+    const realNumber = 1 + Math.floor(Math.random()*9);
+    const claimNumber = 1 + Math.floor(Math.random()*9);
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{} };
+  } else {
+    const proposer = rich[Math.floor(Math.random()*rich.length)];
+  dec = { brokeUids: broke.map(p=>p.uid), richUids: [proposer.uid], proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
+    if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
+  }
+  await db.collection('matches').doc(currentMatchId).update({
+    'gameState.deception': dec,
+    'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_START', uid:'system', msg: `💀 Deception! ${broke.map(p=>p.name).join(', ')} ${broke.length>1?'are':'is'} out of coins with nothing to play.` }
+  });
+}
+
+let deceptionHostBusy = false;
+async function handleOnlineDeceptionHostLogic(serverState){
+  if(deceptionHostBusy) return;
+  const dec = serverState.deception;
+  if(!dec) return;
+  const db = firebase.firestore();
+
+  if(dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM'){
+    const stancesField = decStancesField(dec.phase);
+    const stances = dec[stancesField] || {};
+    if(Object.keys(stances).length >= dec.richUids.length){
+      deceptionHostBusy = true;
+      const tally = {};
+      Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
+      let best=[], bestCount=0;
+      Object.entries(tally).forEach(([n,c])=>{ const num=parseInt(n); if(c>bestCount){best=[num]; bestCount=c;} else if(c===bestCount){best.push(num);} });
+      const resolved = best[Math.floor(Math.random()*best.length)];
+
+      if(dec.phase === 'VOTE_REAL'){
+        const proposerIsBot = dec.proposerUid && dec.proposerUid.startsWith('bot_');
+        const update = {
+          'gameState.deception.realNumber': resolved,
+          'gameState.deception.phase': 'VOTE_CLAIM',
+          'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table settles on a real secret number (kept hidden).` }
+        };
+        if(proposerIsBot) update['gameState.deception.claimStances.' + dec.proposerUid] = 1 + Math.floor(Math.random()*9);
+        await db.collection('matches').doc(currentMatchId).update(update);
+      } else {
+        await db.collection('matches').doc(currentMatchId).update({
+          'gameState.deception.claimNumber': resolved,
+          'gameState.deception.phase': 'ANSWER',
+          'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved}.` }
+        });
+      }
+      deceptionHostBusy = false;
+      return;
+    }
+    const nextUid = dec.richUids.find(uid => !(uid in stances));
+    if(nextUid && nextUid.startsWith('bot_')){
+      deceptionHostBusy = true;
+      setTimeout(async ()=>{
+        const accept = Math.random() < 0.55;
+        const n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        try {
+          await db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.${stancesField}.${nextUid}`]: n });
+        } finally { deceptionHostBusy = false; }
+      }, 1200);
+    }
+  } else if(dec.phase === 'ANSWER'){
+    const responses = dec.responses || {};
+    if(Object.keys(responses).length >= dec.brokeUids.length){
+      deceptionHostBusy = true;
+      let correctCount = 0;
+      
+      dec.brokeUids.forEach(uid=>{
+        const p = state.players.find(pp=>pp.uid===uid);
+        if(!p || p.out) return;
+        const r = responses[uid];
+        const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
+        const correct = effectiveGuess === dec.realNumber;
+        if(correct){ p.shop += 15; correctCount++; } else { p.out = true; }
+        p.deceptionStrike = false;
+      });
+
+      // SUDDEN DEATH CHECK (Everyone was broke)
+      if (dec.richUids.length === 0) {
+          if (correctCount === 0) {
+              state.players.forEach(p => p.out = false); // Un-eliminate to score
+              serverState.over = true; // Triggers endgame
+          } else if (correctCount === 1) {
+              const winner = state.players.find(p => p.shop > 0);
+              state.players.forEach(p => { if (p.uid !== winner.uid) p.out = true; });
+              serverState.over = true;
+          }
+      }
+
+      const survivors = state.players.filter(p=>!p.out);
+      let nextTurnUid = serverState.turnUid;
+      if(survivors.length > 1 && !serverState.over){
+        let idx = state.players.findIndex(p=>p.uid===serverState.turnUid);
+        do { idx = (idx + serverState.direction + state.players.length) % state.players.length; } while(state.players[idx].out);
+        nextTurnUid = state.players[idx].uid;
+      }
+      
+      await db.collection('matches').doc(currentMatchId).update({
+        'gameState.players': state.players,
+        'gameState.deception': firebase.firestore.FieldValue.delete(),
+        'gameState.turnUid': nextTurnUid,
+        'gameState.uiState': 'IDLE',
+        'gameState.over': survivors.length <= 1 || serverState.over,
+        'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_RESULT', uid:'system', msg: `Deception resolved. The real number was ${dec.realNumber}.` }
+      });
+      deceptionHostBusy = false;
+      return;
+    }
+    const nextUid = dec.brokeUids.find(uid => !(uid in responses));
+    if(nextUid && nextUid.startsWith('bot_')){
+      deceptionHostBusy = true;
+      setTimeout(async ()=>{
+        const believe = Math.random() < 0.5;
+        const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
+        try {
+          await db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.responses.${nextUid}`]: r });
+        } finally { deceptionHostBusy = false; }
+      }, 1200);
+    }
+  }
+}
+
 // ---------------- ASYNC EMPTY HAND SINGLE DRAW ----------------
-function resolveEmptySingleDraw(buyer, target){
-  if (target.shop < BUY_COST) { cancelTargeting(); return; }
+function resolveEmptySingleDraw(buyer){
+  // FIX: self-funded now — you pay BUY_COST out of your own coins, no target needed.
+  if (buyer.shop < BUY_COST) { cancelTargeting(); return; }
   
   state.uiState = 'ANIMATING';
   renderAll();
 
-  const taken=transferToBank(target, BUY_COST);
-  flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+  const taken=payFromOwn(buyer, BUY_COST);
+  flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
   sweepEliminations();
   renderAll(); // FIX: reflect the coin deduction on-screen immediately
 
   setTimeout(() => {
       if(buyer.out){ advanceTurn(); return; }
       const card=state.deck.pop();
-      if(!card){ log('Market ran dry — turn skips.'); if(!target.out) protestFrom(target); advanceTurn(); return; }
+      if(!card){ log('Market ran dry — turn skips.'); advanceTurn(); return; }
       
       const isMatch = (card.value===state.requiredValue) || (state.requiredValue===null);
       if(isMatch){
         let effective,label;
-        if(card.type==='number'){ effective=card.value; label=card.value; log(`Drew a matching ${card.value}! Took ${taken} from ${target.name}.`,'ok'); }
+        if(card.type==='number'){ effective=card.value; label=card.value; log(`Drew a matching ${card.value}! Paid ${taken}c out of pocket.`,'ok'); }
         else { 
             effective=state.requiredValue; 
             label= card.type==='wild' ? 'W' : card.type==='reverse' ? 'REV' : card.type==='steal' ? 'STL' : 'PWR'; 
             log(`Drew Action (${card.value}) match! Played instantly.`,'ok');
-            if(card.type==='steal') { transferToPlayer(target, buyer, card.tier); flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(buyer.id), 150); }
-            else if(card.type==='power') { transferToBank(target, card.tier); flyCoin(getSeatOrPanelRect(target.id), bankRect(), 150); }
-            else if(card.type==='reverse') { state.direction *= -1; }
+            if(card.type==='reverse') { state.direction *= -1; }
         }
         
         buyer.shop+=PLAY_REWARD;
         state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
         flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
-        if(!target.out) protestFrom(target);
         sweepEliminations();
         
         triggerCalloutPhase();
@@ -2095,7 +2635,6 @@ function resolveEmptySingleDraw(buyer, target){
         const label = card.type==='number' ? card.value : card.type.toUpperCase();
         log(`Drew ${label} (${card.value}) — still no match. Turn skips.`,'alert');
         flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
-        if(!target.out) protestFrom(target);
         
         setTimeout(() => advanceTurn(), 500);
       }
@@ -2228,12 +2767,22 @@ async function advanceTurn() {
     state.turn = next.id;
     
     const cur = state.players[state.turn];
-    const hasMatch = state.requiredValue === null || cur.hand.some(c => c.value === state.requiredValue);
+    const hasMatch = computeHasMatch(cur);
     
-    if (cur.shop <= 0 && !hasMatch) {
-        eliminate(cur, "Broke and no playable cards!");
-        advanceTurn(); 
-        return;
+    if (cur.shop < BUY_COST && !hasMatch) {
+        // DECEPTION: a broke player with nothing to play used to get eliminated on the
+        // spot, which is exactly what deadlocked the table once every player was broke
+        // (nobody left to raid, nobody could ever draw). Now they get one warning turn;
+        // if they're STILL stuck the next time it's their turn, a Deception showdown
+        // kicks off and sweeps in anyone else currently broke too.
+        if (cur.deceptionStrike) {
+            startDeceptionPhaseOffline(cur);
+            return;
+        }
+        cur.deceptionStrike = true;
+        log(`${cur.name} is broke with no playable card. One more stuck turn triggers a Deception showdown!`, 'alert');
+    } else {
+        cur.deceptionStrike = false;
     }
     
     sfx.turn();
@@ -2256,10 +2805,8 @@ function botTurn(){
     
     if(bot.hand.length===0){
       if(state.deck.length===0){ log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
-      const opts=activePlayers().filter(p=>p.id!==bot.id && p.shop >= BUY_COST);
-      if(opts.length===0){ log(`${bot.name} hand is empty but no valid raid targets. Turn skips.`); advanceTurn(); return; }
-      const target=opts.sort((a,b)=>b.shop-a.shop)[0];
-      botSingleDraw(bot, target);
+      if(bot.shop < BUY_COST){ log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
+      botSingleDraw(bot);
       return;
     }
     
@@ -2279,7 +2826,7 @@ function botTurn(){
     const actCheck = (type) => bot.hand.findIndex(c=>c.type===type && (state.requiredValue===null || c.value===state.requiredValue));
     
     let playIdx = actCheck('steal');
-    if(playIdx>=0 && Math.random()<0.7){
+    if(playIdx>=0 && (Math.random()<0.7 || bot.shop < BUY_COST)){
         const card=bot.hand[playIdx];
         const opts=activePlayers().filter(p=>p.id!==bot.id);
         if(opts.length>0){
@@ -2299,7 +2846,7 @@ function botTurn(){
     }
     
     playIdx = actCheck('power');
-    if(playIdx>=0 && Math.random()<0.6){
+    if(playIdx>=0 && (Math.random()<0.6 || bot.shop < BUY_COST)){
         const card=bot.hand[playIdx];
         const opts=activePlayers().filter(p=>p.id!==bot.id);
         if(opts.length>0){
@@ -2319,7 +2866,7 @@ function botTurn(){
     }
     
     playIdx = actCheck('reverse');
-    if(playIdx>=0 && Math.random()<0.8){
+    if(playIdx>=0 && (Math.random()<0.8 || bot.shop < BUY_COST)){
         const card=bot.hand[playIdx];
         bot.hand.splice(playIdx,1);
         state.direction *= -1;
@@ -2349,17 +2896,15 @@ function botTurn(){
     
     if(state.deck.length===0){ log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
     
-    const opts=activePlayers().filter(p=>p.id!==bot.id && p.shop >= BUY_COST);
-    if(opts.length===0){ log(`${bot.name} needs to buy but no one has enough coins. Turn passes.`); advanceTurn(); return; }
-    const target=opts.sort((a,b)=>b.shop-a.shop)[0];
-    botBuyLoop(bot,target);
+    if(bot.shop < BUY_COST){ log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
+    botBuyLoop(bot);
     
   },650);
 }
 
-function botSingleDraw(buyer,target){
-  const taken=transferToBank(target,BUY_COST);
-  flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+function botSingleDraw(buyer){
+  const taken=payFromOwn(buyer,BUY_COST);
+  flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
   sweepEliminations();
   if(buyer.out){ renderAll(); return; }
   const card=state.deck.pop();
@@ -2371,23 +2916,19 @@ function botSingleDraw(buyer,target){
     if(card.type==='number'){ effective=card.value; label=card.value; }
     else { 
         effective=state.requiredValue; label=card.type.toUpperCase(); 
-        if(card.type==='steal') { transferToPlayer(target,buyer,card.tier); flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(buyer.id), 150); }
-        else if(card.type==='power') { transferToBank(target, card.tier); flyCoin(getSeatOrPanelRect(target.id), bankRect(), 150); }
-        else if(card.type==='reverse') { state.direction *= -1; }
+        if(card.type==='reverse') { state.direction *= -1; }
     }
     buyer.shop+=PLAY_REWARD;
-    log(`${buyer.name} draws and instantly plays a match (${card.value}).`,'ok');
+    log(`${buyer.name} draws and instantly plays a match (${card.value}). Paid ${taken}c out of pocket.`,'ok');
     state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
     
     renderAll();
     flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
-    if(!target.out) protestFrom(target);
     sweepEliminations();
     setTimeout(()=>botDeclare(buyer), 600);
   } else {
         buyer.hand.push(card);
         const msg = `${buyer.name} draws a dud (${card.value}) — turn skips.`;
-        if(!target.out) protestFrom(target);
         
         if (currentMatchId) {
             let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
@@ -2408,14 +2949,14 @@ function botSingleDraw(buyer,target){
       }
     }
 
-function botBuyLoop(buyer,target){
+function botBuyLoop(buyer){
   let tries=0, success=false;
-  while(tries<MAX_TRIES && state.deck.length>0 && !target.out && !buyer.out){
-    if (target.shop < BUY_COST) { log(`${target.name} ran out of coins. Loop interrupted.`); break; }
+  while(tries<MAX_TRIES && state.deck.length>0 && !buyer.out){
+    if (buyer.shop < BUY_COST) { log(`${buyer.name} ran out of coins mid-loop.`); break; }
     
     tries++;
-    const taken=transferToBank(target,BUY_COST);
-    flyCoin(getSeatOrPanelRect(target.id), bankRect(), tries*110);
+    const taken=payFromOwn(buyer,BUY_COST);
+    flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), tries*110);
     sweepEliminations();
     if(buyer.out) break;
     const card=state.deck.pop();
@@ -2428,9 +2969,7 @@ function botBuyLoop(buyer,target){
       else { 
           effective=state.requiredValue; label=card.type.toUpperCase(); 
           log(`${buyer.name} draws Action match on try ${tries} (${card.value}).`,'ok');
-          if(card.type==='steal') { transferToPlayer(target,buyer,card.tier); flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(buyer.id), 150); }
-          else if(card.type==='power') { transferToBank(target, card.tier); flyCoin(getSeatOrPanelRect(target.id), bankRect(), 150); }
-          else if(card.type==='reverse') { state.direction *= -1; }
+          if(card.type==='reverse') { state.direction *= -1; }
       }
       buyer.shop+=PLAY_REWARD;
       state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
@@ -2451,7 +2990,6 @@ function botBuyLoop(buyer,target){
       log(`${buyer.name} tries and misses on try ${tries} (${card.value}).`);
     }
   }
-  if(!target.out) protestFrom(target);
   sweepEliminations();
   
   if(success){
