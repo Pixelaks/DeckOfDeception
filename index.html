@@ -1137,6 +1137,18 @@ function listenToGameState() {
             if (state.turnUid === serverState.turnUid) {
                 preservedBuyLoop = state.buyLoop;
                 preservedPeek = state.peekResult;
+                // FIX: buyLoop.buyer/target were captured from the PREVIOUS state.players
+                // array. orderedPlayers below is a brand new set of objects rebuilt from
+                // this snapshot, so without re-pointing these references, any further
+                // coin deductions or card draws during retry #2/#3 land on orphaned
+                // objects that never get pushed back to Firestore (coins look frozen,
+                // drawn cards vanish). Re-link them to the fresh objects by uid.
+                if (preservedBuyLoop) {
+                    const freshBuyer = orderedPlayers.find(p => p.uid === preservedBuyLoop.buyer.uid);
+                    const freshTarget = orderedPlayers.find(p => p.uid === preservedBuyLoop.target.uid);
+                    if (freshBuyer) preservedBuyLoop.buyer = freshBuyer;
+                    if (freshTarget) preservedBuyLoop.target = freshTarget;
+                }
             }
         }
 
