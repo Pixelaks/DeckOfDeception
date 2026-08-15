@@ -10,6 +10,12 @@
 <link rel="preload" as="image" href="Cards/CardPhase.png">
 <link rel="preload" as="image" href="Cards/Decks.png">
 <link rel="preload" as="image" href="Cards/Coins.png">
+<!-- Preload the animation textures so they don't glitch on mobile -->
+<link rel="preload" as="image" href="Cards/SwapCard.png">
+<link rel="preload" as="image" href="Cards/PowerCard.png">
+<link rel="preload" as="image" href="Cards/SteelCard.png">
+<link rel="preload" as="image" href="Cards/ReverseCard.png">
+<link rel="preload" as="image" href="Cards/PeekCard.png">
 <style>
 :root{
   --felt:#2b1a24; --felt-dark:#150c12; --felt-line:rgba(255,255,255,0.07);
@@ -910,6 +916,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   position: absolute; inset: 0; border-radius: 4px;
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
   background-size: cover; background-position: center;
+  background-color: var(--paper-dark); /* Prevents the card from turning invisible if network is slow */
 }
 .b-front { 
   background-image: url('Cards/Decks.png'); 
