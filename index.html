@@ -6,16 +6,22 @@
 <title>Deck Of Deception</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<!-- Bootstrap-critical images: load these FIRST with high priority -->
+<link rel="preload" as="image" href="Cards/Decks.png" fetchpriority="high">
+<link rel="preload" as="image" href="Cards/SwapCard.png" fetchpriority="high">
+<link rel="preload" as="image" href="Cards/PowerCard.png" fetchpriority="high">
+<!-- Secondary game images -->
 <link rel="preload" as="image" href="Cards/Table.jpg">
 <link rel="preload" as="image" href="Cards/CardPhase.png">
-<link rel="preload" as="image" href="Cards/Decks.png">
 <link rel="preload" as="image" href="Cards/Coins.png">
-<!-- Preload the animation textures so they don't glitch on mobile -->
-<link rel="preload" as="image" href="Cards/SwapCard.png">
-<link rel="preload" as="image" href="Cards/PowerCard.png">
 <link rel="preload" as="image" href="Cards/SteelCard.png">
 <link rel="preload" as="image" href="Cards/ReverseCard.png">
 <link rel="preload" as="image" href="Cards/PeekCard.png">
+<link rel="preload" as="image" href="Cards/InsuranceCard.png">
+<!-- Preload Firebase so it starts downloading during HTML parse -->
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js">
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js">
+<link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js">
 <style>
 :root{
   --felt:#2b1a24; --felt-dark:#150c12; --felt-line:rgba(255,255,255,0.07);
@@ -143,6 +149,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   filter: drop-shadow(0 4px 16px rgba(224,189,74,0.35));
   opacity: 0; animation: titleReveal 3s cubic-bezier(0.2, 1, 0.3, 1) 0.5s forwards, shimmerSweep 5s linear 3.5s infinite;
 }
+/* shimmerSweep animates background-position which triggers repaint. Disabled on mobile via media query below. */
 @keyframes shimmerSweep{ 0%{ background-position:200% center; } 100%{ background-position:-20% center; } }
 .menu-box .sub { color: var(--paper); opacity: 0.85; font-family: 'Cinzel', serif; font-size: 15px; letter-spacing: 3px; text-transform: uppercase; }
 .menu-box p.blurb { color: rgba(242,234,216,0.75); line-height: 1.6; margin: 24px auto; font-size: 14px; max-width: 440px; }
@@ -196,6 +203,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   0% { opacity: 0; transform: scale(1.1) translateY(-10px); filter: blur(8px); letter-spacing: 0px; }
   100% { opacity: 1; transform: scale(1) translateY(0); filter: blur(0); letter-spacing: 2px; }
 }
+/* Mobile: no filter:blur (extremely expensive on Android GPU) */
+@media (max-width: 768px) {
+  @keyframes titleReveal {
+    0%   { opacity: 0; transform: scale(1.1) translateY(-10px); letter-spacing: 0px; }
+    100% { opacity: 1; transform: scale(1) translateY(0); letter-spacing: 2px; }
+  }
+}
 @keyframes fadeUp {
   0% { opacity: 0; transform: translateY(20px); }
   100% { opacity: 1; transform: translateY(0); }
@@ -205,13 +219,22 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   font-family: 'Cinzel', serif; background: var(--brass); color: var(--felt-dark); border: 1px solid var(--brass-bright);
   padding: 14px 28px; font-size: 15px; letter-spacing: 1px; text-transform: uppercase; cursor: pointer; 
   border-radius: 2px; font-weight: 700; transition: all .2s; box-shadow: inset 0 0 8px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.4);
+  position: relative; /* Needed for ::before glow layer */
 }
 .btn:hover{ background: var(--brass-bright); box-shadow: inset 0 0 12px rgba(255,255,255,0.5), 0 6px 16px rgba(0,0,0,0.5); transform:translateY(-2px); }
-#menu .btn{ animation: ctaPulse 2.6s ease-in-out infinite; }
-#menu .btn:hover{ animation: none; }
+
+/* GPU-composited pulse: only animates opacity (no repaint). The glow itself is a
+   static box-shadow on ::before — only its opacity changes each frame. */
+#menu .btn::before {
+  content: ''; position: absolute; inset: 0; border-radius: 2px;
+  box-shadow: 0 0 18px 4px rgba(232,196,84,0.65);
+  opacity: 0; pointer-events: none;
+  animation: ctaPulse 2.6s ease-in-out infinite;
+}
+#menu .btn:hover::before { animation: none; opacity: 0; }
 @keyframes ctaPulse{
-  0%,100%{ box-shadow: inset 0 0 8px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.4), 0 0 0 rgba(232,196,84,0); }
-  50%{ box-shadow: inset 0 0 8px rgba(255,255,255,0.3), 0 4px 12px rgba(0,0,0,0.4), 0 0 18px rgba(232,196,84,0.55); }
+  0%, 100% { opacity: 0; }
+  50%       { opacity: 1; }
 }
 .btn:active{ transform:scale(0.97) translateY(0); }
 .btn:disabled{ opacity:0.35; cursor:not-allowed; transform:none; }
@@ -528,6 +551,39 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   
   /* Optimize table rendering */
   .tablefelt { box-shadow: none !important; }
+
+  /* === ANDROID PERFORMANCE FIXES === */
+
+  /* Disable shimmerSweep (background-position animation → CPU repaint every frame) */
+  #menu h1 {
+    animation: titleReveal 3s cubic-bezier(0.2, 1, 0.3, 1) 0.5s forwards !important;
+    background-size: 100% auto !important; /* No sweep needed; static gradient still looks great */
+  }
+
+  /* backdrop-filter:blur is VERY expensive on mid-range Android — kills compositing budget */
+  #matchIntroOverlay, #deceptionIntroOverlay {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    background: rgba(0, 0, 0, 0.85) !important;
+  }
+
+  /* Reduce the 3D menu scene container — 200vw×200vh creates a massive GPU texture upload */
+  .menu-camera {
+    width: 140vw !important;
+    height: 140vh !important;
+    left: -20vw !important;
+    top: -20vh !important;
+  }
+
+  /* Simpler cinematic pan range on mobile = smaller GPU transform budget */
+  @keyframes cinematicPan {
+    0%   { transform: perspective(800px) rotateX(52deg) rotateZ(0deg) translateZ(-50px); }
+    100% { transform: perspective(800px) rotateX(46deg) rotateZ(12deg) translateZ(80px); }
+  }
+
+  /* Add layout containment to game sections so browser knows what to skip */
+  #game { contain: layout style; }
+  .hand-wrap, .deckpile, .log, .chainbox { contain: layout style; }
 }
 
 /* ====================================================
@@ -605,9 +661,17 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   letter-spacing: 2px; text-transform: uppercase; cursor: pointer;
   border-radius: 3px; font-weight: 700; transition: all 0.2s;
   box-shadow: inset 0 0 10px rgba(255,255,255,0.25), 0 4px 14px rgba(0,0,0,0.5);
+  position: relative; /* For ::before glow layer */
+  animation: ctaPulse 2.6s ease-in-out infinite;
+}
+.pubg-play-btn::before {
+  content: ''; position: absolute; inset: 0; border-radius: 3px;
+  box-shadow: 0 0 18px 4px rgba(232,196,84,0.65);
+  opacity: 0; pointer-events: none;
   animation: ctaPulse 2.6s ease-in-out infinite;
 }
 .pubg-play-btn:hover { background: var(--brass-bright); animation: none; }
+.pubg-play-btn:hover::before { animation: none; opacity: 0; }
 .pubg-play-btn.searching {
   background: var(--ok) !important; color: #fff !important;
   border-color: #5faa82 !important; animation: none !important; cursor: default;
@@ -934,10 +998,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   background-color: var(--paper-dark); /* Prevents the card from turning invisible if network is slow */
 }
 .b-front { 
-  background-image: url('Cards/Decks.png'); 
+  background-image: url('Cards/Decks.png');
+  will-change: transform; /* Promote to own compositor layer so flip is immediate */
 }
 .b-back { 
-  transform: rotateY(180deg); 
+  transform: rotateY(180deg);
+  will-change: transform;
   /* Cycles through 5 textures (12.5s) exactly every time the 2.5s flip finishes */
   animation: wildCycle 12.5s infinite step-end;
 }
@@ -1024,9 +1090,42 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   85% { opacity: 1; transform: scale(1.05); filter: blur(0); letter-spacing: 6px; }
   100% { opacity: 0; transform: scale(1.15); filter: blur(8px); letter-spacing: 8px; }
 }
+@media (max-width: 768px) {
+  @keyframes matchTitleReveal {
+    0%   { opacity: 0; transform: scale(0.7); letter-spacing: 0px; }
+    15%  { opacity: 1; transform: scale(1); letter-spacing: 4px; }
+    85%  { opacity: 1; transform: scale(1.05); letter-spacing: 6px; }
+    100% { opacity: 0; transform: scale(1.15); letter-spacing: 8px; }
+  }
+}
 </style>
 </head>
 <body>
+
+<!-- CRITICAL: JS image preloader fires before Firebase scripts.
+     Android browsers don't always honor <link rel=preload> for CSS background-image.
+     This guarantees all card textures are in the HTTP cache before they're needed. -->
+<script>
+(function dodPreloadImages() {
+  var srcs = [
+    'Cards/Decks.png',
+    'Cards/SwapCard.png',
+    'Cards/PowerCard.png',
+    'Cards/SteelCard.png',
+    'Cards/ReverseCard.png',
+    'Cards/PeekCard.png',
+    'Cards/CardPhase.png',
+    'Cards/InsuranceCard.png',
+    'Cards/Coins.png',
+    'Cards/Table.jpg'
+  ];
+  // Use Image() objects — guaranteed to hit the network/cache immediately
+  for (var i = 0; i < srcs.length; i++) {
+    var img = new Image();
+    img.src = srcs[i];
+  }
+})();
+</script>
 
 <!-- BOOTSTRAP LOADING SCENE -->
 <div id="bootstrapOverlay">
@@ -1611,9 +1710,9 @@ function initMenuBackground() {
 
   const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
   
-  // Render fewer objects on mobile to prevent lag, but don't hide them completely!
-  const cardCount = isMobile ? 15 : 50;
-  const coinCount = isMobile ? 10 : 35;
+  // Mobile: fewer objects = fewer GPU compositing layers = much less jank
+  const cardCount = isMobile ? 8 : 50;
+  const coinCount = isMobile ? 4 : 35;
 
   const cardImages = [
     'Cards/Decks.png', 'Cards/CardPhase.png', 'Cards/SwapCard.png',
@@ -1653,8 +1752,9 @@ function initMenuBackground() {
     table.appendChild(coin);
   }
 }
-// Defer building the heavy 3D background until AFTER the bootstrap loader renders so it doesn't freeze the screen
-setTimeout(initMenuBackground, 100);
+// Defer the heavy 3D background: 400ms gives the browser time to decode card images
+// (which are preloading) before we create 8-50 new composited DOM nodes.
+setTimeout(initMenuBackground, 400);
 
 function buildMenu(){
   const sw=document.getElementById('swatchRow');
@@ -2094,9 +2194,16 @@ function listenToGameState() {
             deception: serverState.deception || null
         };
 
-        // 4. RENDER THE GAME
-        layoutRing();
-        renderAll();
+        // 4. RENDER THE GAME — rAF-batched so rapid Firestore snapshots never
+        //    trigger back-to-back synchronous layout+paint on the main thread.
+        if (!window._dodRenderQueued) {
+            window._dodRenderQueued = true;
+            requestAnimationFrame(function() {
+                window._dodRenderQueued = false;
+                layoutRing();
+                renderAll();
+            });
+        }
 
         // SAFETY NET: a Deception loss (or any other path that marks a player `out`
         // directly rather than through the local eliminate() call) can leave only one
