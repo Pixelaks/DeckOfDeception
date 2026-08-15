@@ -4363,7 +4363,9 @@ async function leaveParty() {
     
     document.getElementById('partyLeaderControls').style.display = 'none';
     document.getElementById('lobbyWaitingText').style.display = 'none';
-    
+
+    if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
+
     initFriendsList(); // Refresh UI
 }
 
@@ -4393,15 +4395,24 @@ function listenToParty(partyId) {
                 document.getElementById('lobbyWaitingText').style.display = 'none';
             }
         }
+
+        // Show the cinematic seat-ring lobby for EVERY party member (leader AND
+        // whoever just accepted an invite) and keep it live-synced as people join,
+        // right up until a match actually gets created for this squad.
+        if (!currentMatchId) {
+            showPartyLobbyCinematic();
+            updateLobbyView(data.members, pubgTableSize);
+        }
         
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
         if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId) {
             currentMatchId = data.matchId;
-            document.getElementById('lobbyWaitingText').textContent = "Match found! Preparing table...";
-            setTimeout(() => {
-                showMenuScreen('match-lobby');
-                listenToMatchLobby(currentMatchId);
-            }, 1000);
+            listenToPubgMatchFilling(
+                currentMatchId,
+                document.getElementById('pubgMmTimer'),
+                document.getElementById('pubgMmStatus'),
+                document.getElementById('pubgMatchmakingOverlay')
+            );
         }
     });
 }
@@ -4894,6 +4905,26 @@ function revertCamera() {
     }
 }
 
+// --- Party lobby cinematic (triggered for ANY party member as soon as the squad forms/changes) ---
+let partyLobbyCinematicActive = false;
+function showPartyLobbyCinematic() {
+    if (partyLobbyCinematicActive) return; // already panned in — just let updateLobbyView() refresh seats
+    partyLobbyCinematicActive = true;
+
+    document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
+
+    clearTimeout(pubgCinematicTimer1);
+    pubgCinematicTimer1 = setTimeout(() => {
+        transitionToTopdown();
+    }, DOD_HUD_FADE_MS);
+
+    clearTimeout(pubgCinematicTimer2);
+    pubgCinematicTimer2 = setTimeout(() => {
+        const lobbyView = document.getElementById('pubgLobbyView');
+        if (lobbyView) lobbyView.classList.add('show');
+    }, DOD_HUD_FADE_MS + DOD_CAMERA_MOVE_MS);
+}
+
 // --- Lobby seat ring ---
 function updateLobbyView(seats, tableSize) {
     const ring = document.getElementById('pubgLobbyRing');
@@ -4990,6 +5021,42 @@ async function startMatchmakingPubg() {
     }
 
     try {
+        if (currentPartyId) {
+            // Private squad — never join the public queue. Fill any remaining seats
+            // with bots immediately (or none, if the squad already fills the table)
+            // and start the game right away with just this party.
+            if (statusEl) statusEl.textContent = 'Starting private table...';
+
+            const matchRef = db.collection('matches').doc();
+            let newSeats = [], newPublic = {}, readyStatus = {};
+            joiningSquad.forEach((member, i) => {
+                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
+                newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
+                readyStatus[member.uid] = true;
+            });
+            const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"];
+            while (newSeats.length < mpTableSize) {
+                const idx = newSeats.length;
+                newSeats.push({ seat: idx, uid: 'bot_'+Math.random().toString(36).substr(2,9), displayName: botNames[idx % botNames.length], isBot: true });
+                newPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
+            }
+            await matchRef.set({
+                tableSize: mpTableSize, status: 'active', isPrivate: true,
+                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                seats: newSeats, turn: 0, requiredValue: null,
+                publicSeats: newPublic, readyStatus: readyStatus
+            });
+            currentMatchId = matchRef.id;
+
+            if (isPartyLeader) {
+                await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
+            }
+
+            if (statusEl) statusEl.textContent = 'Table full! Starting...';
+            listenToPubgMatchFilling(currentMatchId, timerEl, statusEl, overlay);
+            return;
+        }
+
         if (statusEl) statusEl.textContent = 'Looking for an open table...';
 
         const snapshot = await db.collection('matches')
@@ -5030,10 +5097,6 @@ async function startMatchmakingPubg() {
                 publicSeats: newPublic, readyStatus: readyStatus
             });
             currentMatchId = matchRef.id;
-        }
-
-        if (currentPartyId && isPartyLeader) {
-            await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
         }
 
         if (statusEl) statusEl.textContent = 'Table found! Waiting for players...';
@@ -5104,6 +5167,7 @@ function dodResetCinematicMenu() {
     clearTimeout(pubgCinematicTimer1);
     clearTimeout(pubgCinematicTimer2);
     clearTimeout(pubgRevertTimer);
+    partyLobbyCinematicActive = false;
 
     const overlay = document.getElementById('pubgMatchmakingOverlay');
     if (overlay) overlay.classList.remove('show');
