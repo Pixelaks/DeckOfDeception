@@ -486,12 +486,27 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .minicard,
 .card,
 .btn,
-.countbtn {
+.countbtn,
+.pubg-play-btn,
+.pubg-icon-btn,
+.pubg-mode-select,
+.pubg-friends-panel,
+.pubg-play-zone {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
   -webkit-transform-style: preserve-3d;
   transform-style: preserve-3d;
   outline: 1px solid transparent; /* Smoothes edges during rotation */
+}
+
+.pubg-play-btn,
+.pubg-icon-btn,
+.pubg-mode-select,
+.pubg-friends-panel,
+.pubg-play-zone,
+#pubgLeaveLobbyBtn {
+  transform: translateZ(0);
+  will-change: transform;
 }
 
 /* Force hardware rasterization for panning scene */
@@ -655,8 +670,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 .lobby-table-view.show { opacity: 1; pointer-events: auto; }
 .lobby-seat-ring {
-  width: 400px; height: 400px; position: relative; border-radius: 50%;
+  width: min(400px, 82vw, 62vh); height: min(400px, 82vw, 62vh); position: relative; border-radius: 50%;
   border: 2px dashed rgba(201,162,39,0.22);
+}
+@media (max-width: 480px), (max-height: 480px) {
+  .lobby-seat .ls-avatar { width: 36px; height: 36px; font-size: 14px; }
+  .lobby-seat .ls-name { font-size: 8px; padding: 1px 5px; }
 }
 .lobby-seat {
   position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -1108,7 +1127,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     <!-- Bottom-left: Play button + mode selector -->
     <div class="pubg-play-zone show" style="pointer-events:all; width: 180px;">
       <button class="pubg-play-btn" id="pubgPlayBtn" onclick="startMatchmakingPubg()" style="width: 100%; padding: 14px 0;">PLAY ↗</button>
-      <select class="pubg-mode-select" onchange="pickPubgMode(parseInt(this.value))" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none; cursor: pointer;">
+      <select class="pubg-mode-select" id="pubgModeSelect" onchange="pickPubgMode(parseInt(this.value))" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none; cursor: pointer;">
         <option value="2">2 Players</option>
         <option value="4" selected>4 Players</option>
         <option value="6">6 Players</option>
@@ -1131,6 +1150,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     </div>
     <!-- Lobby seat ring -->
     <div id="pubgLobbyView" class="lobby-table-view">
+      <button id="pubgLeaveLobbyBtn" class="btn ghost small" style="position:absolute; top:16px; left:50%; transform:translateX(-50%); pointer-events:all; z-index:6; padding:8px 18px; font-size:11px;" onclick="leavePartyLobby()">Leave Lobby</button>
       <div class="lobby-seat-ring" id="pubgLobbyRing"></div>
     </div>
   </div>
@@ -4364,9 +4384,26 @@ async function leaveParty() {
     document.getElementById('partyLeaderControls').style.display = 'none';
     document.getElementById('lobbyWaitingText').style.display = 'none';
 
+    // Re-enable PLAY + mode select — they may have been locked while we were a
+    // non-host member of the squad.
+    const playBtn = document.getElementById('pubgPlayBtn');
+    const modeSelect = document.getElementById('pubgModeSelect');
+    if (playBtn) playBtn.disabled = false;
+    if (modeSelect) modeSelect.disabled = false;
+
     if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
 
     initFriendsList(); // Refresh UI
+}
+
+// Leave Lobby button inside the seat ring — works whether we're just waiting in
+// the pre-match party lobby, or already sitting at a filling table.
+async function leavePartyLobby() {
+    if (currentMatchId) {
+        cancelMatchmakingPubg(); // already matched/filling a table — same cleanup as Cancel
+        return;
+    }
+    await leaveParty();
 }
 
 function listenToParty(partyId) {
@@ -4396,10 +4433,18 @@ function listenToParty(partyId) {
             }
         }
 
-        // Show the cinematic seat-ring lobby for EVERY party member (leader AND
-        // whoever just accepted an invite) and keep it live-synced as people join,
-        // right up until a match actually gets created for this squad.
-        if (!currentMatchId) {
+        // Only the host can start the match. Everyone else gets a disabled
+        // PLAY button + mode dropdown and just waits for the host to start.
+        const playBtn = document.getElementById('pubgPlayBtn');
+        const modeSelect = document.getElementById('pubgModeSelect');
+        if (playBtn) playBtn.disabled = !isPartyLeader;
+        if (modeSelect) modeSelect.disabled = !isPartyLeader;
+
+        // Don't touch the camera just because a party exists — sending an invite
+        // (party of 1) should stay on the normal menu. Only once someone actually
+        // ACCEPTS (2+ real members) does the lobby cinematic load for everyone,
+        // and it stays live-synced as further players join.
+        if (!currentMatchId && data.members.length > 1) {
             showPartyLobbyCinematic();
             updateLobbyView(data.members, pubgTableSize);
         }
@@ -4933,7 +4978,9 @@ function updateLobbyView(seats, tableSize) {
     // Visibility is now controlled by the matchmaking flow itself (see startMatchmakingPubg),
     // so this can be called repeatedly on every snapshot update without popping the ring in early.
     ring.innerHTML = '';
-    const radius = 165, cx = 200, cy = 200;
+    const size = ring.clientWidth || 300;
+    const cx = size / 2, cy = size / 2;
+    const radius = Math.max(size / 2 - 38, 40);
     for (let i = 0; i < tableSize; i++) {
         const angle = (i / tableSize) * Math.PI * 2 - Math.PI / 2;
         const x = cx + radius * Math.cos(angle);
@@ -4967,8 +5014,9 @@ const DOD_CAMERA_MOVE_MS = 2400;
 // --- Main PUBG matchmaking flow ---
 async function startMatchmakingPubg() {
     const btn = document.getElementById('pubgPlayBtn');
-    if (!btn || btn.classList.contains('searching')) return;
+    if (!btn || btn.classList.contains('searching') || btn.disabled) return;
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
+    if (currentPartyId && !isPartyLeader) return; // only the host can start the match for the squad
 
     btn.classList.add('searching');
     btn.textContent = 'SEARCHING...';
