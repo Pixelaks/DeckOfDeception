@@ -25,6 +25,13 @@ function dodOnProfileReady(cb){
   else { _dodProfileReadyCallbacks.push(cb); }
 }
 function _dodFireReady(){
+  // Wait for the 2.5 second intro animation to finish before proceeding
+  if (typeof window !== 'undefined' && window.minimumBootTimePassed === false) {
+     setTimeout(_dodFireReady, 100);
+     return;
+  }
+  
+  dodHideBootstrap(); // Returning player detected! Hide loader and go straight to game.
   _dodProfileReadyCallbacks.forEach(cb=>cb(_dodProfile));
   _dodProfileReadyCallbacks = [];
 }
@@ -101,7 +108,23 @@ function dodSignInAnonymously(){
   });
 }
 
+// Function to clear the 3D Bootstrap Scene once Firebase connects
+function dodHideBootstrap(){
+  const boot = document.getElementById('bootstrapOverlay');
+  if(boot) {
+    boot.style.opacity = '0';
+    setTimeout(() => { boot.style.display = 'none'; }, 800);
+  }
+}
+
 function dodShowLoginModal(){
+  // Wait for the 2.5 second intro animation to finish before showing login
+  if (typeof window !== 'undefined' && window.minimumBootTimePassed === false) {
+     setTimeout(dodShowLoginModal, 100);
+     return;
+  }
+  
+  dodHideBootstrap(); // Show login only AFTER hiding the loading screen
   const overlay = document.getElementById('loginChoiceOverlay');
   if(overlay) overlay.classList.add('show');
 }
