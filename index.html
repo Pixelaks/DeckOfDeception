@@ -516,8 +516,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* Mobile-specific GPU optimizations */
 @media (max-width: 768px) {
-  /* Kill the heavy cinematic pan entirely to save massive GPU overhead */
-  .menu-camera { animation: none !important; transform: perspective(1000px) rotateX(10deg) translateZ(0px) !important; }
+  /* Restore cinematic pan on mobile, but keep shadows/thickness simplified to save GPU */
   
   /* Simplify pseudo-element 3D thickness on mobile to stop render thrashing */
   .menu-bg-card::before { display: none !important; }
@@ -1244,7 +1243,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
       <div id="partyLeaderControls" style="width:100%; display:none; text-align:center;">
         <div class="section-label">Private Table Size</div>
         <div id="partyCountRow" style="width:100%; max-width:240px; margin:14px auto 0;">
-          <select class="pubg-mode-select" onchange="pickMpCount(parseInt(this.value))" style="width:100%; padding:10px; background:rgba(0,0,0,0.6); color:var(--paper); border:1px solid rgba(255,255,255,0.2); border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; cursor:pointer;">
+          <select id="privateModeSelect" class="pubg-mode-select" onchange="pickMpCount(parseInt(this.value))" style="width:100%; padding:10px; background:rgba(0,0,0,0.6); color:var(--paper); border:1px solid rgba(255,255,255,0.2); border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; cursor:pointer;">
             <option value="2">2 players</option>
             <option value="3">3 players</option>
             <option value="4" selected>4 players</option>
@@ -1612,11 +1611,9 @@ function initMenuBackground() {
 
   const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
   
-  // Complete bypass of 3D objects for mobile to fix massive Android lag and texture loading delays
-  if (isMobile) return; 
-  
-  const cardCount = 50;
-  const coinCount = 35;
+  // Render fewer objects on mobile to prevent lag, but don't hide them completely!
+  const cardCount = isMobile ? 15 : 50;
+  const coinCount = isMobile ? 10 : 35;
 
   const cardImages = [
     'Cards/Decks.png', 'Cards/CardPhase.png', 'Cards/SwapCard.png',
@@ -1656,7 +1653,8 @@ function initMenuBackground() {
     table.appendChild(coin);
   }
 }
-initMenuBackground();
+// Defer building the heavy 3D background until AFTER the bootstrap loader renders so it doesn't freeze the screen
+setTimeout(initMenuBackground, 100);
 
 function buildMenu(){
   const sw=document.getElementById('swatchRow');
@@ -2106,8 +2104,12 @@ function listenToGameState() {
         // that here so the finale modal + coin payout still fire for everyone individually.
         if (!state.over) {
             const alive = state.players.filter(p => !p.out);
-            if (state.players.length > 1 && alive.length <= 1) {
-                endGame(alive[0] || null, false);
+            if (serverState.over || (state.players.length > 1 && alive.length <= 1)) {
+                if (serverState.over && alive.length > 1) {
+                    finalizeGame(); // Time-up or Host triggered sudden-death finale
+                } else {
+                    endGame(alive[0] || null, false); // Last man standing
+                }
             }
         }
 
@@ -2181,7 +2183,10 @@ function tick(){
   const disp=document.getElementById('timerDisplay');
   disp.textContent=`${m}:${s.toString().padStart(2,'0')}`;
   disp.classList.toggle('low', state.timeLeft<=60);
-  if(state.timeLeft<=0) clearInterval(timerInterval);
+  if(state.timeLeft<=0) {
+    clearInterval(timerInterval);
+    finalizeGame(); // Force the game to end immediately when time is up!
+  }
 }
 
 function activePlayers(){ return state.players.filter(p=>!p.out); }
@@ -3451,7 +3456,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
     const stancesField = decStancesField(dec.phase);
     const stances = dec[stancesField] || {};
     if(Object.keys(stances).length >= dec.richUids.length){
-      deceptionHostBusy = true;
+      // DO NOT set deceptionHostBusy here, it blocks synchronous Firebase local snapshots!
       const tally = {};
       Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
       let best=[], bestCount=0;
@@ -3474,7 +3479,6 @@ async function handleOnlineDeceptionHostLogic(serverState){
           'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved}.` }
         });
       }
-      deceptionHostBusy = false;
       return;
     }
     const nextUid = dec.richUids.find(uid => !(uid in stances));
@@ -3491,7 +3495,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
   } else if(dec.phase === 'ANSWER'){
     const responses = dec.responses || {};
     if(Object.keys(responses).length >= dec.brokeUids.length){
-      deceptionHostBusy = true;
+      // DO NOT set deceptionHostBusy here to prevent blocking synchronous snapshots
       let correctCount = 0;
       
       dec.brokeUids.forEach(uid=>{
@@ -3532,7 +3536,6 @@ async function handleOnlineDeceptionHostLogic(serverState){
         'gameState.over': survivors.length <= 1 || serverState.over,
         'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_RESULT', uid:'system', msg: `Deception resolved. The real number was ${dec.realNumber}.` }
       });
-      deceptionHostBusy = false;
       return;
     }
     const nextUid = dec.brokeUids.find(uid => !(uid in responses));
@@ -4201,6 +4204,9 @@ function listenForPartyInvites() {
 
                 // 6. Connect to the party UI stream
                 listenToParty(partyId);
+                
+                // 7. Refresh friends list to disable 'Invite' buttons for non-hosts
+                initFriendsList();
             });
         }
     }, err => {
@@ -4260,7 +4266,11 @@ async function initFriendsList() {
                     if (data.status === 'pending') {
                         actionHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${doc.id}','${data.displayName}')">Accept</button>`;
                     } else {
-                        actionHtml = `<button class="pubg-friend-action invite" onclick="pubgInviteFriend('${doc.id}','${data.displayName}')">Invite</button>`;
+                        if (currentPartyId && !isPartyLeader) {
+                            actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Invite</button>`;
+                        } else {
+                            actionHtml = `<button class="pubg-friend-action invite" onclick="pubgInviteFriend('${doc.id}','${data.displayName}')">Invite</button>`;
+                        }
                     }
                     pubgList.innerHTML += `<div class="pubg-friend-row">
                         <span class="fname">${data.displayName}${data.status==='pending'?' <span style="color:var(--brass-bright);font-size:8px;">(req)</span>':''}</span>
@@ -4387,8 +4397,15 @@ async function leaveParty() {
     // non-host member of the squad.
     const playBtn = document.getElementById('pubgPlayBtn');
     const modeSelect = document.getElementById('pubgModeSelect');
+    const privateSelect = document.getElementById('privateModeSelect');
     if (playBtn) { playBtn.disabled = false; playBtn.style.opacity = '1'; playBtn.style.pointerEvents = 'all'; }
-    if (modeSelect) { modeSelect.disabled = false; modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; }
+    if (modeSelect) { 
+        modeSelect.disabled = false; modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; 
+        Array.from(modeSelect.options).forEach(opt => opt.disabled = false);
+    }
+    if (privateSelect) {
+        Array.from(privateSelect.options).forEach(opt => opt.disabled = false);
+    }
 
     if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
 
@@ -4446,6 +4463,26 @@ function listenToParty(partyId) {
             modeSelect.style.opacity = isPartyLeader ? '1' : '0.35';
             modeSelect.style.pointerEvents = isPartyLeader ? 'all' : 'none';
         }
+
+        // Lock dropdown options so host can't set table size smaller than current squad
+        const currentCount = data.members.length;
+        [document.getElementById('pubgModeSelect'), document.getElementById('privateModeSelect')].forEach(select => {
+            if (!select) return;
+            Array.from(select.options).forEach(opt => {
+                const val = parseInt(opt.value);
+                opt.disabled = val < currentCount;
+            });
+            
+            // If currently selected value is now disabled (e.g. was 2, but 3 players joined), bump it up
+            if (parseInt(select.value) < currentCount) {
+                const firstValid = Array.from(select.options).find(o => !o.disabled);
+                if (firstValid) {
+                    select.value = firstValid.value;
+                    if (select.id === 'pubgModeSelect') pickPubgMode(parseInt(select.value));
+                    else pickMpCount(parseInt(select.value));
+                }
+            }
+        });
 
         // Don't touch the camera just because a party exists — sending an invite
         // (party of 1) should stay on the normal menu. Only once someone actually
