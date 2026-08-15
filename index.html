@@ -394,7 +394,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .card{width:46px;height:66px;border-radius:5px;cursor:pointer;user-select:none;transition:transform .12s;
   display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0; position:relative; overflow:hidden;
   background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.5);
-  box-shadow: 1px 2px 6px rgba(0,0,0,0.4);
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.4); will-change: transform; transform: translateZ(0);
 }
 .card:hover{transform:translateY(-4px)}
 .card.disabled{opacity:0.35;cursor:not-allowed}
@@ -516,22 +516,19 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* Mobile-specific GPU optimizations */
 @media (max-width: 768px) {
+  /* Kill the heavy cinematic pan entirely to save massive GPU overhead */
+  .menu-camera { animation: none !important; transform: perspective(1000px) rotateX(10deg) translateZ(0px) !important; }
+  
   /* Simplify pseudo-element 3D thickness on mobile to stop render thrashing */
-  .menu-bg-card::before {
-    display: none !important;
-  }
-  .menu-bg-coin::before,
-  .menu-bg-coin::after {
-    display: none !important;
-  }
+  .menu-bg-card::before { display: none !important; }
+  .menu-bg-coin::before, .menu-bg-coin::after { display: none !important; }
   
   /* Use simpler single box-shadow on mobile */
-  .menu-bg-card {
-    box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6) !important;
-  }
-  .menu-bg-coin {
-    box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.6) !important;
-  }
+  .menu-bg-card { box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6) !important; }
+  .menu-bg-coin { box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.6) !important; }
+  
+  /* Optimize table rendering */
+  .tablefelt { box-shadow: none !important; }
 }
 
 /* ====================================================
@@ -1125,7 +1122,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
       </div>
     </div>
     <!-- Bottom-left: Play button + mode selector -->
-    <div class="pubg-play-zone show" style="pointer-events:all; width: 180px;">
+    <div class="pubg-play-zone show" style="pointer-events:all; width: 180px; z-index: 20;">
       <button class="pubg-play-btn" id="pubgPlayBtn" onclick="startMatchmakingPubg()" style="width: 100%; padding: 14px 0;">PLAY ↗</button>
       <select class="pubg-mode-select" id="pubgModeSelect" onchange="pickPubgMode(parseInt(this.value))" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none; cursor: pointer;">
         <option value="2">2 Players</option>
@@ -1150,7 +1147,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     </div>
     <!-- Lobby seat ring -->
     <div id="pubgLobbyView" class="lobby-table-view">
-      <button id="pubgLeaveLobbyBtn" class="btn ghost small" style="position:absolute; top:16px; left:50%; transform:translateX(-50%); pointer-events:all; z-index:6; padding:8px 18px; font-size:11px;" onclick="leavePartyLobby()">Leave Lobby</button>
+      <button id="pubgLeaveLobbyBtn" class="btn ghost small" style="position:absolute; bottom:28px; left:50%; transform:translateX(-50%); pointer-events:all; z-index:6; padding:8px 18px; font-size:11px;" onclick="leavePartyLobby()">Leave Lobby</button>
       <div class="lobby-seat-ring" id="pubgLobbyRing"></div>
     </div>
   </div>
@@ -1615,9 +1612,11 @@ function initMenuBackground() {
 
   const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
   
-  // 15 cards & 10 coins on mobile is visually indistinguishable from 60/40, but uses 75% less GPU power
-  const cardCount = isMobile ? 16 : 50;
-  const coinCount = isMobile ? 12 : 35;
+  // Complete bypass of 3D objects for mobile to fix massive Android lag and texture loading delays
+  if (isMobile) return; 
+  
+  const cardCount = 50;
+  const coinCount = 35;
 
   const cardImages = [
     'Cards/Decks.png', 'Cards/CardPhase.png', 'Cards/SwapCard.png',
@@ -4388,8 +4387,8 @@ async function leaveParty() {
     // non-host member of the squad.
     const playBtn = document.getElementById('pubgPlayBtn');
     const modeSelect = document.getElementById('pubgModeSelect');
-    if (playBtn) playBtn.disabled = false;
-    if (modeSelect) modeSelect.disabled = false;
+    if (playBtn) { playBtn.disabled = false; playBtn.style.opacity = '1'; playBtn.style.pointerEvents = 'all'; }
+    if (modeSelect) { modeSelect.disabled = false; modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; }
 
     if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
 
@@ -4437,8 +4436,16 @@ function listenToParty(partyId) {
         // PLAY button + mode dropdown and just waits for the host to start.
         const playBtn = document.getElementById('pubgPlayBtn');
         const modeSelect = document.getElementById('pubgModeSelect');
-        if (playBtn) playBtn.disabled = !isPartyLeader;
-        if (modeSelect) modeSelect.disabled = !isPartyLeader;
+        if (playBtn) { 
+            playBtn.disabled = !isPartyLeader; 
+            playBtn.style.opacity = isPartyLeader ? '1' : '0.35';
+            playBtn.style.pointerEvents = isPartyLeader ? 'all' : 'none';
+        }
+        if (modeSelect) { 
+            modeSelect.disabled = !isPartyLeader;
+            modeSelect.style.opacity = isPartyLeader ? '1' : '0.35';
+            modeSelect.style.pointerEvents = isPartyLeader ? 'all' : 'none';
+        }
 
         // Don't touch the camera just because a party exists — sending an invite
         // (party of 1) should stay on the normal menu. Only once someone actually
