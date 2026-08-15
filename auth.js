@@ -166,7 +166,7 @@ function dodAddGamePoints(earnedPoints){
   while(_dodProfile.points >= 60){
     _dodProfile.points -= 60;
     _dodProfile.level = (_dodProfile.level || 1) + 1;
-    checkTierAndUnlocks();
+    checkTierAndUpgrades(); // was: checkTierAndUnlocks (typo — function is named checkTierAndUpgrades)
   }
 
   dodDb.collection('users').doc(_dodProfile.uid).update({
