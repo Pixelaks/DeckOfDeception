@@ -662,7 +662,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   border-radius: 3px; font-weight: 700; transition: all 0.2s;
   box-shadow: inset 0 0 10px rgba(255,255,255,0.25), 0 4px 14px rgba(0,0,0,0.5);
   position: relative; /* For ::before glow layer */
-  animation: ctaPulse 2.6s ease-in-out infinite;
+  /* no animation — blinking/dimming not needed */
 }
 .pubg-play-btn::before {
   content: ''; position: absolute; inset: 0; border-radius: 3px;
@@ -4448,6 +4448,7 @@ async function createParty() {
     await partyRef.set({
         leader: myProfile.uid,
         matchId: null,
+        tableSize: pubgTableSize,
         members: [{ uid: myProfile.uid, displayName: myProfile.displayName }]
     });
 
@@ -4615,8 +4616,21 @@ function listenToParty(partyId) {
         // ACCEPTS (2+ real members) does the lobby cinematic load for everyone,
         // and it stays live-synced as further players join.
         if (!currentMatchId && data.members.length > 1) {
+            // Use tableSize from the party doc (host's chosen value) so every device
+            // renders the same number of placeholder slots — fixes the host-4 / client-6 mismatch.
+            const sharedTableSize = data.tableSize || pubgTableSize;
+
+            // Non-leaders: sync their local variable to the host's current choice so
+            // if they later become host they start from the right value.
+            if (!isPartyLeader) {
+                pubgTableSize = sharedTableSize;
+                mpTableSize = sharedTableSize;
+                const sel = document.getElementById('pubgModeSelect');
+                if (sel) sel.value = sharedTableSize;
+            }
+
             showPartyLobbyCinematic();
-            updateLobbyView(data.members, pubgTableSize);
+            updateLobbyView(data.members, sharedTableSize);
         }
         
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
@@ -4992,8 +5006,13 @@ function pickPubgMode(size) {
     pubgTableSize = size;
     mpTableSize = size; // keep in sync with existing matchmaking variable
 
-    // If we already created a match doc and it's still waiting, push the new
-    // tableSize so all clients (and updateLobbyView) see the change immediately.
+    // Pre-match party lobby: push new tableSize so every device re-renders immediately
+    if (currentPartyId && isPartyLeader) {
+        firebase.firestore().collection('parties').doc(currentPartyId)
+            .update({ tableSize: size }).catch(() => {});
+    }
+
+    // Post-PLAY match-filling stage: update the match doc tableSize
     if (currentMatchId && !pubgCancelFlag && window.DoDAuth && DoDAuth.getProfile()) {
         const db = firebase.firestore();
         db.collection('matches').doc(currentMatchId).get().then(doc => {
