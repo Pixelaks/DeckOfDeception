@@ -229,7 +229,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   content: ''; position: absolute; inset: 0; border-radius: 2px;
   box-shadow: 0 0 18px 4px rgba(232,196,84,0.65);
   opacity: 0; pointer-events: none;
-  animation: ctaPulse 2.6s ease-in-out infinite;
+  /* animation removed — no dimming/brightening needed */
 }
 #menu .btn:hover::before { animation: none; opacity: 0; }
 @keyframes ctaPulse{
@@ -668,7 +668,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   content: ''; position: absolute; inset: 0; border-radius: 3px;
   box-shadow: 0 0 18px 4px rgba(232,196,84,0.65);
   opacity: 0; pointer-events: none;
-  animation: ctaPulse 2.6s ease-in-out infinite;
+  /* animation removed — no dimming/brightening needed */
 }
 .pubg-play-btn:hover { background: var(--brass-bright); animation: none; }
 .pubg-play-btn:hover::before { animation: none; opacity: 0; }
@@ -1228,6 +1228,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
         <option value="6">6 Players</option>
         <option value="8">8 Players</option>
       </select>
+      <!-- Cancel button: hidden until searching starts, replaces the old overlay cancel -->
+      <button id="pubgCancelBtn" onclick="cancelMatchmakingPubg()" style="display:none; width:100%; margin-top:5px; background:none; border:1px solid rgba(242,234,216,0.25); color:rgba(242,234,216,0.7); font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1px; padding:7px 0; cursor:pointer; border-radius:3px; transition: border-color .2s, color .2s;">✕ CANCEL</button>
     </div>
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
@@ -1711,8 +1713,8 @@ function initMenuBackground() {
   const isMobile = window.innerWidth <= 768 || /Android|iPhone|iPad/i.test(navigator.userAgent);
   
   // Mobile: fewer objects = fewer GPU compositing layers = much less jank
-  const cardCount = isMobile ? 8 : 50;
-  const coinCount = isMobile ? 4 : 35;
+  const cardCount = isMobile ? 12 : 50;
+  const coinCount = isMobile ? 6 : 35;
 
   const cardImages = [
     'Cards/Decks.png', 'Cards/CardPhase.png', 'Cards/SwapCard.png',
@@ -4483,9 +4485,26 @@ async function leaveParty() {
     const myUid = DoDAuth.getProfile().uid;
 
     try {
-        await db.collection('parties').doc(currentPartyId).update({
-            members: firebase.firestore.FieldValue.arrayRemove({ uid: myUid, displayName: DoDAuth.getProfile().displayName })
-        });
+        const partyDoc = await db.collection('parties').doc(currentPartyId).get();
+        if (partyDoc.exists) {
+            const data = partyDoc.data();
+            if (data.leader === myUid) {
+                // Fix 4 (party): host/leader leaves → delete entire party doc so every
+                // other member's onSnapshot gets !doc.exists and is kicked back to menu.
+                await partyDoc.ref.delete();
+            } else {
+                // Non-host leaves: just remove themselves; other members stay.
+                const remaining = (data.members || []).filter(m => m.uid !== myUid);
+                if (remaining.length === 0) {
+                    // Fix 3 (party): last member out → delete the doc cleanly
+                    await partyDoc.ref.delete();
+                } else {
+                    await partyDoc.ref.update({
+                        members: firebase.firestore.FieldValue.arrayRemove({ uid: myUid, displayName: DoDAuth.getProfile().displayName })
+                    });
+                }
+            }
+        }
     } catch (e) {}
 
     if (partyListenerUnsub) partyListenerUnsub();
@@ -4972,6 +4991,20 @@ let pubgRevertTimer = null;
 function pickPubgMode(size) {
     pubgTableSize = size;
     mpTableSize = size; // keep in sync with existing matchmaking variable
+
+    // If we already created a match doc and it's still waiting, push the new
+    // tableSize so all clients (and updateLobbyView) see the change immediately.
+    if (currentMatchId && !pubgCancelFlag && window.DoDAuth && DoDAuth.getProfile()) {
+        const db = firebase.firestore();
+        db.collection('matches').doc(currentMatchId).get().then(doc => {
+            if (!doc.exists || doc.data().status !== 'waiting') return;
+            const seats = doc.data().seats || [];
+            // Only the host (seat 0) can change table size
+            if (seats.length > 0 && seats[0].uid === DoDAuth.getProfile().uid) {
+                doc.ref.update({ tableSize: size }).catch(() => {});
+            }
+        }).catch(() => {});
+    }
 }
 
 // --- Search panel ---
@@ -5154,7 +5187,12 @@ function hideLobbyView() {
 
 function resetPubgPlayBtn() {
     const btn = document.getElementById('pubgPlayBtn');
-    if (btn) { btn.classList.remove('searching'); btn.textContent = 'PLAY ↗'; }
+    const cancelBtn = document.getElementById('pubgCancelBtn');
+    const modeSelectEl = document.getElementById('pubgModeSelect');
+    if (btn) { btn.classList.remove('searching'); btn.innerHTML = 'PLAY ↗'; }
+    if (cancelBtn) cancelBtn.style.display = 'none';
+    if (modeSelectEl) modeSelectEl.style.display = '';
+    window._pubgLobbyCount = 0;
 }
 
 // Timing constants for the cinematic Play sequence (kept in sync with the CSS
@@ -5170,9 +5208,15 @@ async function startMatchmakingPubg() {
     if (currentPartyId && !isPartyLeader) return; // only the host can start the match for the squad
 
     btn.classList.add('searching');
-    btn.textContent = 'SEARCHING...';
+    btn.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">0:00 &nbsp;·&nbsp; 1/' + pubgTableSize + '</span>';
     pubgCancelFlag = false;
     mpTableSize = pubgTableSize;
+
+    // Show cancel button, hide mode select while searching
+    const cancelBtn = document.getElementById('pubgCancelBtn');
+    const modeSelectEl = document.getElementById('pubgModeSelect');
+    if (cancelBtn) cancelBtn.style.display = 'block';
+    if (modeSelectEl) modeSelectEl.style.display = 'none';
 
     // 1) Fade out the main-menu chrome (title, friends panel, play zone, icon bar, profile widget)
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
@@ -5193,11 +5237,12 @@ async function startMatchmakingPubg() {
         transitionToTopdown();
     }, DOD_HUD_FADE_MS);
 
-    // 3) Once the camera has settled, fade in the matchmaking HUD (timer, status, seat ring)
+    // 3) Once the camera has settled, fade in the seat ring only (no big overlay box —
+    //    timer + player count now run on the play button itself).
     clearTimeout(pubgCinematicTimer2);
     pubgCinematicTimer2 = setTimeout(() => {
         if (pubgCancelFlag) return;
-        if (overlay) overlay.classList.add('show');
+        // overlay intentionally NOT shown — info is on the play button
         if (lobbyView) lobbyView.classList.add('show');
 
         pubgMmSeconds = 0;
@@ -5207,7 +5252,14 @@ async function startMatchmakingPubg() {
             pubgMmSeconds++;
             const m = Math.floor(pubgMmSeconds / 60);
             const s = (pubgMmSeconds % 60).toString().padStart(2, '0');
+            // Update the hidden overlay elements (kept for compatibility)
             if (timerEl) timerEl.textContent = m + ':' + s;
+            // Also update the play button text with timer + current seat count
+            const playBtn = document.getElementById('pubgPlayBtn');
+            const cnt = window._pubgLobbyCount || 1;
+            if (playBtn && playBtn.classList.contains('searching')) {
+                playBtn.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">' + m + ':' + s + ' &nbsp;·&nbsp; ' + cnt + '/' + pubgTableSize + '</span>';
+            }
         }, 1000);
     }, DOD_HUD_FADE_MS + DOD_CAMERA_MOVE_MS);
 
@@ -5319,6 +5371,32 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
         updateLobbyView(data.seats, data.tableSize);
         if (statusEl) statusEl.textContent = `Players: ${data.seats.length} / ${data.tableSize}`;
 
+        // Fix 6: push updated count to the play button immediately (between timer ticks)
+        window._pubgLobbyCount = data.seats.length;
+        const playBtnEl = document.getElementById('pubgPlayBtn');
+        if (playBtnEl && playBtnEl.classList.contains('searching')) {
+            const mm = Math.floor(pubgMmSeconds / 60);
+            const ss = (pubgMmSeconds % 60).toString().padStart(2, '0');
+            playBtnEl.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">' + mm + ':' + ss + ' &nbsp;·&nbsp; ' + data.seats.length + '/' + data.tableSize + '</span>';
+        }
+
+        // Fix 5: lock dropdown options that can't accommodate the current seated count
+        const humanCount = data.seats.filter(s => !s.isBot).length;
+        const modeSelEl = document.getElementById('pubgModeSelect');
+        if (modeSelEl) {
+            Array.from(modeSelEl.options).forEach(opt => {
+                opt.disabled = parseInt(opt.value) < humanCount;
+            });
+            // Auto-bump selected value up if it's now below the seated count
+            if (parseInt(modeSelEl.value) < humanCount) {
+                const firstValid = Array.from(modeSelEl.options).find(o => !o.disabled);
+                if (firstValid) {
+                    modeSelEl.value = firstValid.value;
+                    pickPubgMode(parseInt(firstValid.value));
+                }
+            }
+        }
+
         const startGame = () => {
             clearInterval(pubgMmIntervalId);
             if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
@@ -5389,9 +5467,18 @@ function cancelMatchmakingPubg() {
         const myUid = DoDAuth.getProfile().uid;
         db.collection('matches').doc(currentMatchId).get().then(doc => {
             if (!doc.exists || doc.data().status !== 'waiting') return;
-            const seats = doc.data().seats.filter(s => s.uid !== myUid);
-            if (seats.length === 0) { doc.ref.delete(); }
-            else { doc.ref.update({ seats }); }
+            const allSeats = doc.data().seats;
+            const remainingSeats = allSeats.filter(s => s.uid !== myUid);
+            const remainingHumans = remainingSeats.filter(s => !s.isBot);
+            const iAmHost = allSeats.length > 0 && allSeats[0].uid === myUid;
+
+            // Fix 4: host leaves → delete entire doc so every client is forced out.
+            // Fix 3: last human leaves → delete doc so the single remaining client goes back.
+            if (iAmHost || remainingHumans.length === 0) {
+                doc.ref.delete();
+            } else {
+                doc.ref.update({ seats: remainingSeats });
+            }
         }).catch(() => {});
         currentMatchId = null;
     }
