@@ -5501,7 +5501,29 @@ function cancelMatchmakingPubg() {
     pubgCancelFlag = true;
     clearInterval(pubgMmIntervalId);
     if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
-    dodResetCinematicMenu();
+    
+    // FIX: If we are in an active party, do NOT drop the camera back to the main menu.
+    // Just hide the searching overlay so we remain at the table as a squad.
+    if (currentPartyId && partyLobbyCinematicActive) {
+        const overlay = document.getElementById('pubgMatchmakingOverlay');
+        if (overlay) overlay.classList.remove('show');
+        resetPubgPlayBtn();
+        
+        // Ensure the Party doc clears the dead match ID so squadmates don't get stuck in a dead loop!
+        if (isPartyLeader && window.firebase) {
+            firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
+        }
+        
+        // Manually restore the avatars to show your Squad, rather than random players/bots from matchmaking
+        if (window.firebase) {
+             firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
+                 if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
+             }).catch(()=>{});
+        }
+    } else {
+        dodResetCinematicMenu();
+    }
+    
     if (currentMatchId && window.DoDAuth && DoDAuth.getProfile()) {
         const db = firebase.firestore();
         const myUid = DoDAuth.getProfile().uid;
@@ -5512,8 +5534,6 @@ function cancelMatchmakingPubg() {
             const remainingHumans = remainingSeats.filter(s => !s.isBot);
             const iAmHost = allSeats.length > 0 && allSeats[0].uid === myUid;
 
-            // Fix 4: host leaves → delete entire doc so every client is forced out.
-            // Fix 3: last human leaves → delete doc so the single remaining client goes back.
             if (iAmHost || remainingHumans.length <= 1) {
                 doc.ref.delete();
             } else {
