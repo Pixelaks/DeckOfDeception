@@ -5337,6 +5337,7 @@ async function startMatchmakingPubg() {
     }
 
     try {
+        clearTimeout(pubgRevertTimer); // Prevent visual glitches if clicking play quickly
         if (statusEl) statusEl.textContent = 'Looking for an open table...';
 
         const snapshot = await db.collection('matches')
@@ -5347,6 +5348,7 @@ async function startMatchmakingPubg() {
         let matchRef = null, matchDoc = null;
         for (let doc of snapshot.docs) {
             if (doc.data().isPrivate) continue;
+            if (doc.id === window._lastCancelledMatchId) continue; // Prevent joining the match we just left
             if (doc.data().seats.length + joiningSquad.length <= mpTableSize) {
                 matchRef = doc.ref; matchDoc = doc.data(); break;
             }
@@ -5399,7 +5401,7 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
     if (matchLobbyUnsub) matchLobbyUnsub();
 
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
-        if (pubgCancelFlag || !doc.exists) { cancelMatchmakingPubg(); return; }
+        if (pubgCancelFlag || !doc.exists || doc.data().status === 'cancelled') { cancelMatchmakingPubg(); return; }
         const data = doc.data();
 
         updateLobbyView(data.seats, data.tableSize);
@@ -5525,11 +5527,18 @@ function cancelMatchmakingPubg() {
     }
     
     if (currentMatchId && window.DoDAuth && DoDAuth.getProfile()) {
+        window._lastCancelledMatchId = currentMatchId; // Remember this ID
         const db = firebase.firestore();
         const myUid = DoDAuth.getProfile().uid;
-        db.collection('matches').doc(currentMatchId).get().then(doc => {
-            if (!doc.exists || doc.data().status !== 'waiting') return;
-            const allSeats = doc.data().seats;
+        const matchToCancel = currentMatchId;
+        currentMatchId = null; // Clear immediately
+
+        // Immediately update status to prevent race conditions when searching again quickly
+        db.collection('matches').doc(matchToCancel).update({ status: 'cancelled' }).catch(()=>{});
+
+        db.collection('matches').doc(matchToCancel).get().then(doc => {
+            if (!doc.exists) return;
+            const allSeats = doc.data().seats || [];
             const remainingSeats = allSeats.filter(s => s.uid !== myUid);
             const remainingHumans = remainingSeats.filter(s => !s.isBot);
             const iAmHost = allSeats.length > 0 && allSeats[0].uid === myUid;
@@ -5537,10 +5546,10 @@ function cancelMatchmakingPubg() {
             if (iAmHost || remainingHumans.length <= 1) {
                 doc.ref.delete();
             } else {
-                doc.ref.update({ seats: remainingSeats });
+                // If not deleting, revert status back to waiting so others can join
+                doc.ref.update({ seats: remainingSeats, status: 'waiting' });
             }
         }).catch(() => {});
-        currentMatchId = null;
     }
 }
 
