@@ -280,7 +280,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     min-width: 0;
     flex-shrink:0;
 }
-.active-player-panel .ap-avatar { width:42px; height:42px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:#fff; border:2px solid rgba(255,255,255,0.4); }
+.active-player-panel .ap-avatar { width:42px; height:42px; border-radius:4px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel',serif; font-size:18px; font-weight:700; color:#fff; border:none; background:transparent !important; }
 .active-player-panel .ap-details { display:flex; flex-direction:column; gap:4px; }
 .active-player-panel .ap-name { font-family:'Cinzel',serif; font-size:15px; font-weight:700; color:var(--paper); }
 .active-player-panel .ap-stats { display:flex; align-items:center; gap:8px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass-bright); }
@@ -331,9 +331,9 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* SEATS & DENSITY SYSTEM */
 .ringseat{position:absolute;transform:translate(-50%,-50%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;transition:opacity .3s;z-index:10;}
-.ringseat .avatar{border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:#fff;
-  box-shadow:0 2px 6px rgba(0,0,0,0.5);border:2px solid rgba(255,255,255,0.28); transition:all 0.2s; width:44px; height:44px; font-size:18px;}
-.ringseat.active .avatar{box-shadow:0 0 0 4px var(--brass-bright), 0 2px 12px rgba(201,162,39,0.5)}
+.ringseat .avatar{border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:#fff;
+  box-shadow:0 2px 6px rgba(0,0,0,0.5); border:none; background:transparent !important; transition:all 0.2s; width:44px; height:44px; font-size:18px;}
+.ringseat.active .avatar{box-shadow:0 0 0 2px var(--brass-bright), 0 4px 16px rgba(201,162,39,0.6); transform: scale(1.15);}
 .ringseat.out{opacity:0.32; pointer-events:none;}
 .ringseat .rname{font-family:'Cinzel',serif;font-weight:600;color:var(--paper);white-space:nowrap;margin-top:1px;font-size:12px; letter-spacing:0.5px}
 
@@ -800,12 +800,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   transform: translate(-50%, -50%);
 }
 .lobby-seat .ls-avatar {
-  width: 50px; height: 50px; border-radius: 50%;
-  background: rgba(0,0,0,0.6); border: 2px solid var(--brass);
+  width: 50px; height: 50px; border-radius: 4px;
+  background: transparent; border: none;
   display: flex; align-items: center; justify-content: center; font-size: 18px;
 }
 .lobby-seat .ls-avatar.filled { animation: seatPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-.lobby-seat .ls-avatar.empty { border-color: rgba(255,255,255,0.15); opacity: 0.45; }
+.lobby-seat .ls-avatar.empty { border: 1px dashed rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); opacity: 0.45; }
 .lobby-seat .ls-name {
   font-family: 'IBM Plex Mono', monospace; font-size: 9px;
   color: var(--paper); text-align: center; white-space: nowrap;
@@ -2577,8 +2577,16 @@ function layoutRing(){
     seat.style.left=left+'%'; seat.style.top=top+'%';
     seat.onclick = () => onSeatClick(p.id);
     
+    const av = p.avatar || 'Apprentice';
+    const fr = p.frame || 'Apprentice';
+    
     seat.innerHTML=`
-      <div class="avatar" style="background:${PLAYER_COLORS[p.id]};">${p.name[0]}</div>
+      <div class="avatar" style="overflow:hidden; padding:0;">
+        <div class="avatar-frame-wrap" style="width:100%; height:100%;">
+          <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+          <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+        </div>
+      </div>
       <div class="rname">${p.name}</div>
       <div class="seat-stats" id="rmeta-${p.id}"></div>
     `;
@@ -2838,8 +2846,16 @@ function renderAll(){
           
           const dynHeight = cardH + Math.ceil(maxY);
 
+          const cAv = cur.avatar || 'Apprentice';
+          const cFr = cur.frame || 'Apprentice';
+
           ap.innerHTML = `
-              <div class="ap-avatar" style="background:${PLAYER_COLORS[cur.id]}">${cur.name[0]}</div>
+              <div class="ap-avatar" style="overflow:hidden; padding:0;">
+                <div class="avatar-frame-wrap" style="width:100%; height:100%;">
+                  <img src="Avatars/${cAv}.png" class="af-avatar" alt="Avatar">
+                  <img src="Frames/${cFr}.png" class="af-frame" alt="Frame">
+                </div>
+              </div>
               <div class="ap-details">
                   <div class="ap-name">${cur.name} <span style="color:var(--brass-bright);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-left:4px">${cur.shop}c</span></div>
                   <div class="ap-cards" style="width:${dynWidth}px; height:${dynHeight}px; min-height:0; display:block;">${deckFanHtml}</div>
@@ -3885,7 +3901,6 @@ async function handleOnlineDeceptionHostLogic(serverState){
 
 // ---------------- ASYNC EMPTY HAND SINGLE DRAW ----------------
 function resolveEmptySingleDraw(buyer){
-  // FIX: self-funded now — you pay BUY_COST out of your own coins, no target needed.
   if (buyer.shop < BUY_COST) { cancelTargeting(); return; }
   
   state.uiState = 'ANIMATING';
@@ -3894,37 +3909,86 @@ function resolveEmptySingleDraw(buyer){
   const taken=payFromOwn(buyer, BUY_COST);
   flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
   sweepEliminations();
-  renderAll(); // FIX: reflect the coin deduction on-screen immediately
+  renderAll();
 
-  setTimeout(() => {
+  // Added async here so we can await Firebase uploads
+  setTimeout(async () => {
       if(buyer.out){ advanceTurn(); return; }
       const card=state.deck.pop();
-      if(!card){ log('Market ran dry — turn skips.'); advanceTurn(); return; }
+      
+      if(!card){ 
+          const msg = 'Market ran dry — turn skips.';
+          if (currentMatchId) {
+              let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+              do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+              await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                  'gameState.players': state.players,
+                  'gameState.uiState': 'IDLE',
+                  'gameState.turnUid': state.players[nextIndex].uid,
+                  'gameState.lastAction': { id: Date.now().toString(), type: 'CALLOUT', uid: buyer.uid, msg: msg }
+              });
+          } else {
+              log(msg); advanceTurn(); 
+          }
+          return; 
+      }
       
       const isMatch = (card.value===state.requiredValue) || (state.requiredValue===null);
       if(isMatch){
         let effective,label;
-        if(card.type==='number'){ effective=card.value; label=card.value; log(`Drew a matching ${card.value}! Paid ${taken}c out of pocket.`,'ok'); }
+        if(card.type==='number'){ effective=card.value; label=card.value; }
         else { 
             effective=state.requiredValue; 
             label= card.type==='wild' ? 'W' : card.type==='reverse' ? 'REV' : card.type==='steal' ? 'STL' : 'PWR'; 
-            log(`Drew Action (${card.value}) match! Played instantly.`,'ok');
             if(card.type==='reverse') { state.direction *= -1; }
         }
         
         buyer.shop+=PLAY_REWARD;
-        state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
-        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
-        sweepEliminations();
+        const actionMsg = `Drew a matching ${label}! Paid ${taken}c out of pocket.`;
         
-        triggerCalloutPhase();
+        if (currentMatchId) {
+            // ONLINE: Push successful draw and update Callout Phase
+            await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.deck': state.deck,
+                'gameState.players': state.players,
+                'gameState.direction': state.direction,
+                'gameState.lastEffectiveValue': effective,
+                'gameState.lastPlayedCardLabel': label,
+                'gameState.lastPlayedBy': buyer.uid,
+                'gameState.uiState': 'CHOOSE_CALL',
+                'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: buyer.uid, cardValue: card.value, msg: actionMsg }
+            });
+        } else {
+            // OFFLINE
+            log(actionMsg,'ok');
+            state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
+            flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+            sweepEliminations();
+            triggerCalloutPhase();
+        }
       } else {
         buyer.hand.push(card);
         const label = card.type==='number' ? card.value : card.type.toUpperCase();
-        log(`Drew ${label} (${card.value}) — still no match. Turn skips.`,'alert');
-        flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
+        const actionMsg = `Drew ${label} (${card.value}) — still no match. Turn skips.`;
         
-        setTimeout(() => advanceTurn(), 500);
+        if (currentMatchId) {
+            // ONLINE: Push Missed draw and Pass Turn
+            let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+
+            await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                'gameState.deck': state.deck,
+                'gameState.players': state.players,
+                'gameState.uiState': 'IDLE',
+                'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: actionMsg }
+            });
+        } else {
+            // OFFLINE
+            log(actionMsg,'alert');
+            flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
+            setTimeout(() => advanceTurn(), 500);
+        }
       }
   }, 300);
 }
