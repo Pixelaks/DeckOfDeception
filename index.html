@@ -4496,7 +4496,7 @@ async function leaveParty() {
             } else {
                 // Non-host leaves: just remove themselves; other members stay.
                 const remaining = (data.members || []).filter(m => m.uid !== myUid);
-                if (remaining.length === 0) {
+                if (remaining.length <= 1) {
                     // Fix 3 (party): last member out → delete the doc cleanly
                     await partyDoc.ref.delete();
                 } else {
@@ -5493,7 +5493,7 @@ function cancelMatchmakingPubg() {
 
             // Fix 4: host leaves → delete entire doc so every client is forced out.
             // Fix 3: last human leaves → delete doc so the single remaining client goes back.
-            if (iAmHost || remainingHumans.length === 0) {
+            if (iAmHost || remainingHumans.length <= 1) {
                 doc.ref.delete();
             } else {
                 doc.ref.update({ seats: remainingSeats });
