@@ -1105,6 +1105,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 <!-- CRITICAL: JS image preloader fires before Firebase scripts.
      Android browsers don't always honor <link rel=preload> for CSS background-image.
      This guarantees all card textures are in the HTTP cache before they're needed. -->
+<div id="hiddenPreloader" style="width:0; height:0; overflow:hidden; position:absolute; z-index:-1; opacity:0; pointer-events:none;"></div>
 <script>
 window.dodImagesLoaded = false;
 (function dodPreloadImages() {
@@ -1123,40 +1124,45 @@ window.dodImagesLoaded = false;
   var loaded = 0;
   var total = srcs.length;
 
-  // Disable clicking on the intro screen until everything is ready
-  document.addEventListener('DOMContentLoaded', function() {
-      var introOverlay = document.getElementById('introOverlay');
-      var introText = introOverlay ? introOverlay.querySelector('.pulse-text') : null;
-      if (introOverlay && introText && !window.dodImagesLoaded) {
-          introOverlay.style.pointerEvents = 'none';
-          introText.textContent = 'Loading Assets... (0/' + total + ')';
+  function updateLoaderUI() {
+      var overlay = document.getElementById('introOverlay');
+      var textEl = overlay ? overlay.querySelector('.pulse-text') : null;
+      if (!overlay || !textEl) return;
+      
+      if (loaded < total) {
+          overlay.style.pointerEvents = 'none';
+          textEl.textContent = 'Loading Assets... (' + loaded + '/' + total + ')';
+      } else {
+          window.dodImagesLoaded = true;
+          overlay.style.pointerEvents = 'auto';
+          textEl.textContent = "Tap anywhere to enter";
       }
-  });
+  }
 
-  function onAssetLoaded() {
-    loaded++;
-    var introOverlay = document.getElementById('introOverlay');
-    var introText = introOverlay ? introOverlay.querySelector('.pulse-text') : null;
-    
-    // Update the loading progress text
-    if (introText && !window.dodImagesLoaded) {
-        introText.textContent = 'Loading Assets... (' + loaded + '/' + total + ')';
-    }
-    
-    // Once everything is fully downloaded, unlock the screen
-    if (loaded >= total) {
-      window.dodImagesLoaded = true;
-      if (introOverlay && introText) {
-          introOverlay.style.pointerEvents = 'auto'; // Re-enable clicking
-          introText.textContent = "Tap anywhere to enter";
+  // Bind to DOM ready, and also check continuously in case of timing issues
+  document.addEventListener('DOMContentLoaded', updateLoaderUI);
+  var checkUI = setInterval(function() {
+      if (document.getElementById('introOverlay')) {
+          updateLoaderUI();
+          if (loaded >= total) clearInterval(checkUI);
       }
-    }
+  }, 100);
+
+  function markLoaded(img) {
+      loaded++;
+      // Append directly to DOM to force the GPU to decode and hold the texture for the CSS backgrounds
+      var hiddenDiv = document.getElementById('hiddenPreloader');
+      if (hiddenDiv) hiddenDiv.appendChild(img);
+      updateLoaderUI();
   }
 
   for (var i = 0; i < srcs.length; i++) {
     var img = new Image();
-    img.onload = onAssetLoaded;
-    img.onerror = onAssetLoaded; // Proceed even if a file is missing to prevent infinite loading lock
+    // Force dimensions so the browser doesn't ignore the hidden render
+    img.style.width = "1px"; 
+    img.style.height = "1px";
+    img.onload = function() { markLoaded(this); };
+    img.onerror = function() { markLoaded(this); }; // Proceed even if a file fails so it doesn't freeze
     img.src = srcs[i];
   }
 })();
