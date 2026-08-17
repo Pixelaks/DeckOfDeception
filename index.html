@@ -1062,7 +1062,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* CINEMATIC MATCH START OVERLAY */
 #matchIntroOverlay {
-  position: absolute; inset: 0; z-index: 4000;
+  position: fixed; inset: 0; z-index: 4000;
   background: radial-gradient(circle at center, rgba(21,12,18,0.4) 0%, rgba(0,0,0,0.9) 100%);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -1070,7 +1070,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 /* CINEMATIC DECEPTION OVERLAY */
 #deceptionIntroOverlay {
-  position: absolute; inset: 0; z-index: 8000; /* Highest priority to cover modals */
+  position: fixed; inset: 0; z-index: 8000; /* Highest priority to cover modals */
   background: radial-gradient(circle at center, rgba(122,31,46,0.4) 0%, rgba(0,0,0,0.9) 100%);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
@@ -1442,16 +1442,16 @@ window.dodImagesLoaded = false;
   <div class="loading-text" id="loadingText">Shuffling the deck…</div>
 </div>
 
-<div id="game">
-  <!-- CINEMATIC MATCH START TITLE -->
-  <div id="matchIntroOverlay">
-    <h1 class="match-intro-title">DECK OF DECEPTION</h1>
-  </div>
-  <!-- CINEMATIC DECEPTION TITLE -->
-  <div id="deceptionIntroOverlay">
-    <h1 class="match-intro-title" style="color: var(--danger-bright); text-shadow: 0 4px 24px rgba(194,59,74,0.7);">DECEPTION TIME</h1>
-  </div>
+<!-- CINEMATIC MATCH START TITLE -->
+<div id="matchIntroOverlay">
+  <h1 class="match-intro-title">DECK OF DECEPTION</h1>
+</div>
+<!-- CINEMATIC DECEPTION TITLE -->
+<div id="deceptionIntroOverlay">
+  <h1 class="match-intro-title" style="color: var(--danger-bright); text-shadow: 0 4px 24px rgba(194,59,74,0.7);">DECEPTION TIME</h1>
+</div>
 
+<div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
     <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="lockLandscape()" title="Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
@@ -3595,9 +3595,9 @@ async function startDeceptionPhaseOnline(curPlayer){
   });
 }
 
-let deceptionHostBusy = false;
+window.activeBotTimers = window.activeBotTimers || {};
+
 async function handleOnlineDeceptionHostLogic(serverState){
-  if(deceptionHostBusy) return;
   const dec = serverState.deception;
   if(!dec) return;
   const db = firebase.firestore();
@@ -3606,7 +3606,9 @@ async function handleOnlineDeceptionHostLogic(serverState){
     const stancesField = decStancesField(dec.phase);
     const stances = dec[stancesField] || {};
     if(Object.keys(stances).length >= dec.richUids.length){
-      // DO NOT set deceptionHostBusy here, it blocks synchronous Firebase local snapshots!
+      if (window.activeBotTimers['transition']) return;
+      window.activeBotTimers['transition'] = true;
+      
       const tally = {};
       Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
       let best=[], bestCount=0;
@@ -3621,31 +3623,34 @@ async function handleOnlineDeceptionHostLogic(serverState){
           'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table settles on a real secret number (kept hidden).` }
         };
         if(proposerIsBot) update['gameState.deception.claimStances.' + dec.proposerUid] = 1 + Math.floor(Math.random()*9);
-        await db.collection('matches').doc(currentMatchId).update(update);
+        db.collection('matches').doc(currentMatchId).update(update).finally(() => delete window.activeBotTimers['transition']);
       } else {
-        await db.collection('matches').doc(currentMatchId).update({
+        db.collection('matches').doc(currentMatchId).update({
           'gameState.deception.claimNumber': resolved,
           'gameState.deception.phase': 'ANSWER',
           'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved}.` }
-        });
+        }).finally(() => delete window.activeBotTimers['transition']);
       }
       return;
     }
     const nextUid = dec.richUids.find(uid => !(uid in stances));
     if(nextUid && nextUid.startsWith('bot_')){
-      deceptionHostBusy = true;
-      setTimeout(async ()=>{
+      if (window.activeBotTimers[nextUid]) return;
+      window.activeBotTimers[nextUid] = true;
+      
+      setTimeout(()=>{
         const accept = Math.random() < 0.55;
         const n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
-        try {
-          await db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.${stancesField}.${nextUid}`]: n });
-        } finally { deceptionHostBusy = false; }
+        db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.${stancesField}.${nextUid}`]: n })
+        .finally(() => delete window.activeBotTimers[nextUid]);
       }, 1200);
     }
   } else if(dec.phase === 'ANSWER'){
     const responses = dec.responses || {};
     if(Object.keys(responses).length >= dec.brokeUids.length){
-      // DO NOT set deceptionHostBusy here to prevent blocking synchronous snapshots
+      if (window.activeBotTimers['transition']) return;
+      window.activeBotTimers['transition'] = true;
+      
       let correctCount = 0;
       
       dec.brokeUids.forEach(uid=>{
@@ -3658,11 +3663,10 @@ async function handleOnlineDeceptionHostLogic(serverState){
         p.deceptionStrike = false;
       });
 
-      // SUDDEN DEATH CHECK (Everyone was broke)
       if (dec.richUids.length === 0) {
           if (correctCount === 0) {
-              state.players.forEach(p => p.out = false); // Un-eliminate to score
-              serverState.over = true; // Triggers endgame
+              state.players.forEach(p => p.out = false);
+              serverState.over = true;
           } else if (correctCount === 1) {
               const winner = state.players.find(p => p.shop > 0);
               state.players.forEach(p => { if (p.uid !== winner.uid) p.out = true; });
@@ -3678,25 +3682,26 @@ async function handleOnlineDeceptionHostLogic(serverState){
         nextTurnUid = state.players[idx].uid;
       }
       
-      await db.collection('matches').doc(currentMatchId).update({
+      db.collection('matches').doc(currentMatchId).update({
         'gameState.players': state.players,
         'gameState.deception': firebase.firestore.FieldValue.delete(),
         'gameState.turnUid': nextTurnUid,
         'gameState.uiState': 'IDLE',
         'gameState.over': survivors.length <= 1 || serverState.over,
         'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_RESULT', uid:'system', msg: `Deception resolved. The real number was ${dec.realNumber}.` }
-      });
+      }).finally(() => delete window.activeBotTimers['transition']);
       return;
     }
     const nextUid = dec.brokeUids.find(uid => !(uid in responses));
     if(nextUid && nextUid.startsWith('bot_')){
-      deceptionHostBusy = true;
-      setTimeout(async ()=>{
+      if (window.activeBotTimers[nextUid]) return;
+      window.activeBotTimers[nextUid] = true;
+      
+      setTimeout(()=>{
         const believe = Math.random() < 0.5;
         const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
-        try {
-          await db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.responses.${nextUid}`]: r });
-        } finally { deceptionHostBusy = false; }
+        db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.responses.${nextUid}`]: r })
+        .finally(() => delete window.activeBotTimers[nextUid]);
       }, 1200);
     }
   }
@@ -5332,42 +5337,6 @@ async function startMatchmakingPubg() {
     }
 
     try {
-        if (currentPartyId) {
-            // Private squad — never join the public queue. Fill any remaining seats
-            // with bots immediately (or none, if the squad already fills the table)
-            // and start the game right away with just this party.
-            if (statusEl) statusEl.textContent = 'Starting private table...';
-
-            const matchRef = db.collection('matches').doc();
-            let newSeats = [], newPublic = {}, readyStatus = {};
-            joiningSquad.forEach((member, i) => {
-                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
-                newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
-                readyStatus[member.uid] = true;
-            });
-            const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"];
-            while (newSeats.length < mpTableSize) {
-                const idx = newSeats.length;
-                newSeats.push({ seat: idx, uid: 'bot_'+Math.random().toString(36).substr(2,9), displayName: botNames[idx % botNames.length], isBot: true });
-                newPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
-            }
-            await matchRef.set({
-                tableSize: mpTableSize, status: 'active', isPrivate: true,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                seats: newSeats, turn: 0, requiredValue: null,
-                publicSeats: newPublic, readyStatus: readyStatus
-            });
-            currentMatchId = matchRef.id;
-
-            if (isPartyLeader) {
-                await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
-            }
-
-            if (statusEl) statusEl.textContent = 'Table full! Starting...';
-            listenToPubgMatchFilling(currentMatchId, timerEl, statusEl, overlay);
-            return;
-        }
-
         if (statusEl) statusEl.textContent = 'Looking for an open table...';
 
         const snapshot = await db.collection('matches')
@@ -5408,6 +5377,11 @@ async function startMatchmakingPubg() {
                 publicSeats: newPublic, readyStatus: readyStatus
             });
             currentMatchId = matchRef.id;
+        }
+
+        // Tell the party which match we joined so they follow!
+        if (currentPartyId && isPartyLeader) {
+            await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
         }
 
         if (statusEl) statusEl.textContent = 'Table found! Waiting for players...';
@@ -5486,6 +5460,12 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
             if (!checkDoc.exists || checkDoc.data().status !== 'waiting') return;
             const data = checkDoc.data();
             if (data.seats.length >= data.tableSize) return;
+            
+            // FIX: Only the Host of the match should inject bots, to avoid duplicate injections by squad members
+            if (!window.DoDAuth) return;
+            const myUid = DoDAuth.getProfile().uid;
+            if (data.seats.length > 0 && data.seats[0].uid !== myUid) return;
+
             let seats = data.seats, pSeats = data.publicSeats;
             const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"];
             while (seats.length < data.tableSize) {
