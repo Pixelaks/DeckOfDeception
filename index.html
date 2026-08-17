@@ -3687,7 +3687,8 @@ async function handleOnlineDeceptionHostLogic(serverState){
         'gameState.deception': firebase.firestore.FieldValue.delete(),
         'gameState.turnUid': nextTurnUid,
         'gameState.uiState': 'IDLE',
-        'gameState.over': survivors.length <= 1 || serverState.over,
+        // FIX: The line below now safely forces a boolean to prevent Firebase crashes
+        'gameState.over': survivors.length <= 1 || !!serverState.over,
         'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_RESULT', uid:'system', msg: `Deception resolved. The real number was ${dec.realNumber}.` }
       }).finally(() => delete window.activeBotTimers['transition']);
       return;
