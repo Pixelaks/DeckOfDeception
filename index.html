@@ -461,11 +461,28 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .tut-dot.active{background:var(--brass-bright);transform:scale(1.25)}
 .tut-nav{display:flex;gap:10px;margin-top:18px;justify-content:center}
 .tut-nav .btn{flex:1;max-width:160px}
-.finale{background:var(--paper);color:var(--ink);border-radius:10px;padding:24px 28px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto}
-.finale h2{font-family:'Cinzel Decorative',serif; color:var(--danger)}
-.finale table{width:100%;border-collapse:collapse;margin:14px 0;font-family:'IBM Plex Mono',monospace;font-size:12.5px}
-.finale td,.finale th{padding:5px 4px;border-bottom:1px solid var(--paper-dark);text-align:left}
-.finale .winner{color:var(--ok);font-weight:600}
+/* FULL-SCREEN FINALE (PUBG STYLE) */
+#finaleModal {
+  background: rgba(6, 7, 9, 0.95);
+  backdrop-filter: blur(10px);
+  z-index: 8500;
+}
+.finale {
+  background: transparent; box-shadow: none; width: 100%; max-width: 700px;
+  padding: 0; color: #fff; overflow-y: visible;
+}
+.finale-header { text-align: center; margin-bottom: 30px; }
+.finale-status { font-family: 'Inter', sans-serif; font-size: 48px; font-weight: 900; letter-spacing: 4px; text-transform: uppercase; margin: 0; text-shadow: 0 4px 16px rgba(0,0,0,0.8); }
+.finale-status.win { color: var(--brass-bright); filter: drop-shadow(0 0 12px rgba(226,189,74,0.4)); }
+.finale-status.loss { color: #d64554; }
+.finale-list { display: flex; flex-direction: column; gap: 8px; }
+.finale-row { display: flex; align-items: center; justify-content: space-between; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 12px 20px; border-radius: 6px; }
+.finale-row.is-me { background: rgba(226,189,74,0.1); border-color: var(--brass); }
+.finale-rank { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; width: 50px; color: rgba(255,255,255,0.5); }
+.finale-row.is-winner .finale-rank { color: var(--brass-bright); }
+.finale-name { flex: 1; font-family: 'Inter', sans-serif; font-size: 16px; font-weight: 600; text-align: left; }
+.finale-stats { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.6); text-align: right; padding-right: 15px; }
+.finale-score { font-family: 'IBM Plex Mono', monospace; font-size: 18px; font-weight: bold; color: var(--ok); width: 60px; text-align: right; }
 
 /* PROGRESSION SCREEN (PUBG-STYLE) */
 #progressionModal {
@@ -4690,9 +4707,25 @@ function returnToMenuFromEndgame() {
     menu.style.display = 'flex';
     menu.style.opacity = '1';
     menu.classList.add('menu-visible');
-    showMenuScreen('hub');
-    if (typeof revertCamera === 'function') revertCamera();
-    document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+    
+    // If in a party, restore the party lobby view directly instead of standard hub
+    if (currentPartyId) {
+        showMenuScreen('hub');
+        showPartyLobbyCinematic();
+        if (window.firebase) {
+            // Tell server the match is over so we can queue again
+            firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
+            // Re-render squad avatars around the table
+            firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
+                if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
+            }).catch(()=>{});
+        }
+    } else {
+        // Solo players revert normally
+        showMenuScreen('hub');
+        if (typeof revertCamera === 'function') revertCamera();
+        document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+    }
 
     // Restore HUB ui
     const accountLoadingEl = document.getElementById('accountLoading');
@@ -4718,33 +4751,58 @@ function endGame(winner,byScore){
   
   state.over=true;
   clearInterval(timerInterval);
-
   document.getElementById('deceptionModal').classList.remove('show');
 
-  // NEW PROGRESSION LOGIC CALL
   window._latestProgression = computeMatchProgression();
 
+  const you = state.players[0]; // Local player is always seat 0 locally
   if(window.DoDShop){
-    const you = state.players[0];
     const earned = Math.max(0, score(you));
     window.DoDShop.addCurrency(earned);
   }
 
-  const headline=byScore?"Time's up":"Last one standing";
-  log(byScore?'Time is up. Scoring the table.':`${winner?winner.name+' is the last one standing.':'Everyone went bankrupt.'}`,'alert');
-  let rows=state.players.map(p=> p.out ? {name:p.name,status:'Out',detail:'—'} : {name:p.name,status:`${p.shop} coins, ${p.hand.length} cards`,detail:`score ${score(p)}`});
-  let html=`<h2>${headline}</h2><table><tr><th>Player</th><th>Status</th><th>Score</th></tr>`;
-  rows.forEach(r=>{ const isWinner=winner && r.name===winner.name; html+=`<tr class="${isWinner?'winner':''}"><td>${r.name}${isWinner?' 🏆':''}</td><td>${r.status}</td><td>${r.detail}</td></tr>`; });
-  const earnedTxt = window.DoDShop ? `<p class="mono" style="margin-top:6px;color:var(--brass-bright);font-size:12px">🪙 +${Math.max(0,score(state.players[0]))} coins earned this game</p>` : '';
-  html+=`</table><p style="margin-top:14px">${winner?`<b>${winner.name}</b> wins.`:'No winner this round.'}</p>${earnedTxt}`;
+  // Sort players to determine absolute placements
+  const sorted = [...state.players].sort((a,b) => {
+      if(a.out !== b.out) return a.out ? 1 : -1;
+      return score(b) - score(a);
+  });
   
-  // REPLACE "PLAY AGAIN" BUTTON WITH CONTINUE TO PROGRESSION
-  html+=`<div class="row" style="margin-top:18px"><button class="btn" onclick="showProgressionScreen()">Continue ↗</button></div>`;
+  const myRank = sorted.findIndex(p => p.id === you.id) + 1;
+  const isMyWin = myRank === 1;
+
+  let headerHtml = `<div class="finale-header">
+      <h1 class="finale-status ${isMyWin ? 'win' : 'loss'}">${isMyWin ? 'WINNER!' : `LOSS #${myRank}`}</h1>
+      <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${byScore ? 'Time Limit Reached' : 'Match Concluded'}</div>
+  </div>`;
+
+  let listHtml = `<div class="finale-list">`;
+  sorted.forEach((p, idx) => {
+      const rank = idx + 1;
+      const isMe = p.id === you.id;
+      const isWinner = rank === 1;
+      const sc = score(p);
+      const stats = p.out ? 'Eliminated' : `${p.shop} Coins / ${p.hand.length} Cards`;
+      
+      listHtml += `
+        <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
+          <div class="finale-rank">#${rank}</div>
+          <div class="finale-name">${p.name} ${isMe ? '(You)' : ''}</div>
+          <div class="finale-stats">${stats}</div>
+          <div class="finale-score">${sc}</div>
+        </div>
+      `;
+  });
+  listHtml += `</div>`;
+
+  const earnedTxt = window.DoDShop ? `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${Math.max(0,score(you))} Coins Earned</div>` : '';
+  
+  let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
   document.getElementById('finaleContent').innerHTML=html;
   openModal('finaleModal');
   renderAll();
-  if(winner) celebrateWin();
+  
+  if(isMyWin) celebrateWin();
 }
 
 // ============================================================
