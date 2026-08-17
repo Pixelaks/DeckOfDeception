@@ -467,17 +467,50 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .finale td,.finale th{padding:5px 4px;border-bottom:1px solid var(--paper-dark);text-align:left}
 .finale .winner{color:var(--ok);font-weight:600}
 
-/* PROGRESSION SCREEN */
-#progressionModal .prog-card {
-  background: rgba(12,14,16,0.98); border: 1px solid var(--brass);
-  border-radius: 12px; padding: 40px; text-align: center; max-width: 400px; width: 90%;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.9);
+/* PROGRESSION SCREEN (PUBG-STYLE) */
+#progressionModal {
+  background: radial-gradient(circle at center, #1a1e24 0%, #060709 100%);
+  z-index: 9000; /* Over everything */
+  display: none; flex-direction: column; align-items: center; justify-content: center;
+  position: fixed; inset: 0;
 }
-.prog-tier-icon { font-size: 72px; margin: 10px 0; text-shadow: 0 0 24px rgba(226,189,74,0.4); line-height: 1; }
-.prog-tier-name { font-family: 'Cinzel Decorative', serif; color: var(--paper); font-size: 26px; transition: all 0.3s ease; margin: 0 0 24px 0; letter-spacing: 1px; }
-.prog-bar-container { width: 100%; height: 10px; background: rgba(0,0,0,0.6); border-radius: 5px; overflow: hidden; margin: 20px 0 10px; border: 1px solid rgba(255,255,255,0.15); box-shadow: inset 0 2px 6px rgba(0,0,0,0.8); }
-.prog-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--brass), var(--brass-bright)); transition: width 1s cubic-bezier(0.2, 1, 0.3, 1); }
-#prog-delta-text { font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: bold; margin-bottom: 30px; letter-spacing: 1px; transition: color 0.3s; }
+#progressionModal.show { display: flex; }
+
+.prog-center-wrap {
+  display: flex; flex-direction: column; align-items: center;
+  animation: fadeUp 1s ease-out forwards;
+}
+.prog-tier-icon { 
+  font-size: 140px; line-height: 1; filter: drop-shadow(0 0 30px rgba(226,189,74,0.25));
+  margin-bottom: 10px;
+}
+.prog-tier-name { 
+  font-family: 'Inter', sans-serif; font-weight: 700; color: #fff; font-size: 20px; 
+  margin: 0 0 4px 0; letter-spacing: 1px; text-transform: uppercase; transition: all 0.3s ease;
+}
+.prog-points-text {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: rgba(255,255,255,0.6);
+  margin-bottom: 12px;
+}
+.prog-score-text {
+  font-family: 'Inter', sans-serif; font-weight: 700; font-size: 34px;
+  margin-bottom: 30px; transition: color 0.3s;
+}
+.prog-bar-container { 
+  width: 280px; height: 6px; background: rgba(255,255,255,0.1); 
+  border-radius: 3px; overflow: hidden; margin-bottom: 40px; 
+}
+.prog-bar-fill { 
+  height: 100%; width: 0%; background: var(--brass-bright); 
+  transition: width 1.2s cubic-bezier(0.2, 1, 0.3, 1); 
+}
+.prog-continue-btn {
+  position: absolute; bottom: 30px; right: 40px;
+  background: transparent; border: 1px solid rgba(255,255,255,0.5); color: #fff;
+  font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 600;
+  padding: 10px 30px; border-radius: 4px; cursor: pointer; transition: all 0.2s;
+}
+.prog-continue-btn:hover { background: rgba(255,255,255,0.1); border-color: #fff; }
 
 /* DECEPTION SHOWDOWN */
 .deception{background:var(--felt-dark);border:1px solid rgba(201,162,39,0.4);color:var(--paper);border-radius:12px;padding:26px 24px;max-width:440px;width:100%;max-height:88vh;overflow-y:auto;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.6)}
@@ -1505,19 +1538,20 @@ window.dodImagesLoaded = false;
 <div class="modal-bg" id="deceptionModal"><div class="deception" id="deceptionContent"></div></div>
 
 <!-- PUBG-STYLE POST-MATCH RATING SCREEN -->
-<div class="modal-bg" id="progressionModal" style="z-index: 6000;">
-  <div class="prog-card">
-    <h3 style="font-family:'IBM Plex Mono',monospace; color:rgba(242,234,216,0.6); font-size:12px; letter-spacing:2px; text-transform:uppercase; margin-bottom:20px;">Match Rating</h3>
+<div id="progressionModal">
+  <div class="prog-center-wrap">
     <div class="prog-tier-icon" id="prog-tier-icon">🎭</div>
     <h2 class="prog-tier-name" id="prog-tier-name">Trickster 1</h2>
+    <div class="prog-points-text" id="prog-points-text">0/100</div>
     
+    <div class="prog-score-text" id="prog-delta-text">Score +0</div>
+
     <div class="prog-bar-container">
       <div class="prog-bar-fill" id="prog-bar-fill"></div>
     </div>
-    <div id="prog-delta-text">Calculating...</div>
-    
-    <button class="btn" style="width:100%;" onclick="leaveGame()">Continue to Menu ↗</button>
   </div>
+  
+  <button class="prog-continue-btn" onclick="returnToMenuFromEndgame()">Continue <span style="font-family:serif;">➦</span></button>
 </div>
 
 <!-- LEAVE GAME CONFIRMATION MODAL -->
@@ -4314,15 +4348,15 @@ function computeMatchProgression() {
   const rank = sorted.findIndex(p => p.uid === profile.uid) + 1;
   const n = state.players.length;
   
-  // PUBG-style base placement points
+  // Adjusted PUBG-style base placement points (Much lower!)
   let baseDelta = 0;
-  if (rank === 1) baseDelta = 35;
-  else if (rank === 2 && n >= 3) baseDelta = 10;
-  else if (rank === n) baseDelta = -20;
-  else baseDelta = -10;
+  if (rank === 1) baseDelta = 20;
+  else if (rank === 2 && n >= 3) baseDelta = 5;
+  else if (rank === n) baseDelta = -10;
+  else baseDelta = -5;
   
-  // Add bonus points based on how rich you were
-  const scoreBonus = Math.floor(score(me) / 2);
+  // Add bonus points based on how rich you were (Lowered scaling)
+  const scoreBonus = Math.floor(score(me) / 4);
   const finalDelta = baseDelta + scoreBonus;
   
   // Current Profile Stats
@@ -4382,6 +4416,19 @@ function getTierIcon(tierStr) {
   return map[tierStr] || '🎭';
 }
 
+// Helper to smoothly count the numbers up or down
+function animateCounter(el, start, end, duration) {
+    let startTime = null;
+    const step = (timestamp) => {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const current = Math.floor(progress * (end - start) + start);
+        el.textContent = `${current}/100`;
+        if (progress < 1) window.requestAnimationFrame(step);
+    };
+    window.requestAnimationFrame(step);
+}
+
 function showProgressionScreen() {
   document.getElementById('finaleModal').classList.remove('show');
   document.getElementById('progressionModal').classList.add('show');
@@ -4389,34 +4436,38 @@ function showProgressionScreen() {
   let pData = window._latestProgression; 
   if(!pData) {
       document.getElementById('prog-tier-name').textContent = "Unranked";
-      document.getElementById('prog-delta-text').textContent = "Sign in to rank up";
-      document.getElementById('prog-delta-text').style.color = "rgba(242,234,216,0.5)";
+      document.getElementById('prog-points-text').textContent = "-/100";
+      document.getElementById('prog-delta-text').textContent = "Score 0";
+      document.getElementById('prog-delta-text').style.color = "rgba(255,255,255,0.5)";
       return;
   }
 
   let fill = document.getElementById('prog-bar-fill');
   let title = document.getElementById('prog-tier-name');
+  let pointsTxt = document.getElementById('prog-points-text');
   let deltaTxt = document.getElementById('prog-delta-text');
   let icon = document.getElementById('prog-tier-icon');
   
   // Set Initial State
   icon.textContent = getTierIcon(pData.old.tier);
   title.textContent = `${pData.old.tier} ${pData.old.level}`;
+  pointsTxt.textContent = `${pData.old.points}/100`;
   fill.style.transition = "none";
   fill.style.width = `${pData.old.points}%`;
-  deltaTxt.textContent = `Calculating...`;
-  deltaTxt.style.color = "rgba(242,234,216,0.5)";
+  deltaTxt.textContent = `Score...`;
+  deltaTxt.style.color = "rgba(255,255,255,0.5)";
 
   // Start Animation Sequence
   setTimeout(() => {
       let isPos = pData.delta >= 0;
-      deltaTxt.textContent = isPos ? `+${pData.delta} Rating` : `${pData.delta} Rating`;
-      deltaTxt.style.color = isPos ? "var(--ok)" : "var(--danger-bright)";
+      deltaTxt.textContent = isPos ? `Score +${pData.delta}` : `Score ${pData.delta}`;
+      deltaTxt.style.color = isPos ? "var(--brass-bright)" : "#d64554";
       fill.style.transition = "width 1.2s cubic-bezier(0.2, 1, 0.3, 1)";
 
       if (pData.new.level !== pData.old.level || pData.new.tier !== pData.old.tier) {
-          // If we cross a level boundary, fill to 100% or drain to 0% first
+          // Cross a level boundary: fill to 100% or drain to 0% first
           fill.style.width = isPos ? "100%" : "0%";
+          animateCounter(pointsTxt, pData.old.points, isPos ? 100 : 0, 1000);
           
           setTimeout(() => {
               // Pop the text to announce the new level
@@ -4427,7 +4478,7 @@ function showProgressionScreen() {
               try{ sfx.alert(); } catch(e){} // Optional sound ping
               
               setTimeout(() => {
-                  title.style.color = "var(--paper)";
+                  title.style.color = "#fff";
                   title.style.transform = "scale(1)";
               }, 400);
               
@@ -4439,13 +4490,56 @@ function showProgressionScreen() {
               setTimeout(() => {
                   fill.style.transition = "width 0.8s cubic-bezier(0.2, 1, 0.3, 1)";
                   fill.style.width = `${pData.new.points}%`;
+                  animateCounter(pointsTxt, isPos ? 0 : 100, pData.new.points, 800);
               }, 50);
           }, 1200);
       } else {
           // Normal fill/drain
           fill.style.width = `${pData.new.points}%`;
+          animateCounter(pointsTxt, pData.old.points, pData.new.points, 1200);
       }
   }, 800);
+}
+
+// Bypasses the "Forfeit" check and properly clears the game state when the match is officially over
+function returnToMenuFromEndgame() {
+    document.getElementById('progressionModal').classList.remove('show');
+    
+    if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+    if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
+
+    localStorage.removeItem('dod_active_match');
+    currentMatchId = null;
+    state = null;
+    initialDealDone = false;
+    localLastTurnUid = null;
+    localLastActionId = null;
+
+    document.getElementById('game').style.display = 'none';
+    const menu = document.getElementById('menu');
+    menu.style.display = 'flex';
+    menu.style.opacity = '1';
+    menu.classList.add('menu-visible');
+    showMenuScreen('hub');
+    if (typeof revertCamera === 'function') revertCamera();
+    document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+
+    // Restore HUB ui
+    const accountLoadingEl = document.getElementById('accountLoading');
+    const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
+    const hubBadgeEl = document.getElementById('hubCurrencyBadge');
+    if (accountLoadingEl) accountLoadingEl.style.display = 'none';
+    if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
+    if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+    if (window.DoDAuth && DoDAuth.getProfile()) {
+        const hubCurrencyEl = document.getElementById('hubCurrency');
+        if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
+    }
+
+    if (bgMusicElement) {
+        bgMusicElement.volume = 0.7;
+        bgMusicElement.play().catch(() => {});
+    }
 }
 
 function endGame(winner,byScore){
