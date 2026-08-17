@@ -2252,7 +2252,8 @@ function listenToGameState() {
         // directly rather than through the local eliminate() call) can leave only one
         // player standing without ever running the local win-check. Every client catches
         // that here so the finale modal + coin payout still fire for everyone individually.
-        if (!state.over) {
+        const finaleModal = document.getElementById('finaleModal');
+        if (finaleModal && !finaleModal.classList.contains('show')) {
             const alive = state.players.filter(p => !p.out);
             if (serverState.over || (state.players.length > 1 && alive.length <= 1)) {
                 if (serverState.over && alive.length > 1) {
@@ -2791,6 +2792,11 @@ function renderActionBar(){
   if(you.out){ bar.innerHTML='<span class="hint">You are out of the game.</span>'; return; }
   if(!isYourTurn()){ bar.innerHTML='<span class="hint">Waiting for your turn…</span>'; return; }
 
+  if (state.deception) {
+      bar.innerHTML = `<span class="hint">Deception showdown...</span>`;
+      return;
+  }
+
   // 1. INLINE CALLOUT PAD
   if (state.uiState === 'CHOOSE_CALL') {
       let html = `<div style="display:flex; flex-direction:column; gap:8px; width:100%;">`;
@@ -3202,8 +3208,8 @@ async function finishBuyLoopFailure() {
 // online branch is host-only, so a non-host human calling it directly here was a
 // dead end — this pushes the turn forward themselves, same as a normal call-out does.
 async function skipStuckHumanTurn(reasonMsg){
-
-if (state && state.uiState === 'DECEPTION') return;
+  if (state && state.deception) return;
+  if (state && state.uiState === 'DECEPTION') return;
   const myUid = DoDAuth.getProfile().uid;
   if(currentMatchId){
     if(!isYourTurn()) return;
@@ -3915,6 +3921,7 @@ function botTurn(){
   const bot=state.players[state.turn];
   if(bot.isHuman||state.over||bot.out) return;
   setTimeout(()=>{
+    if(state && state.deception) return;
     
     if(bot.hand.length===0){
       if(state.deck.length===0){ log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
@@ -4261,7 +4268,9 @@ function finalizeGame(){
   endGame(winner,true);
 }
 function endGame(winner,byScore){
-  if(state.over) return;
+  const modal = document.getElementById('finaleModal');
+  if(modal && modal.classList.contains('show')) return;
+  
   state.over=true;
   clearInterval(timerInterval);
 
