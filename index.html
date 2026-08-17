@@ -1106,6 +1106,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
      Android browsers don't always honor <link rel=preload> for CSS background-image.
      This guarantees all card textures are in the HTTP cache before they're needed. -->
 <script>
+window.dodImagesLoaded = false;
 (function dodPreloadImages() {
   var srcs = [
     'Cards/Decks.png',
@@ -1119,9 +1120,43 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     'Cards/Coins.png',
     'Cards/Table.jpg'
   ];
-  // Use Image() objects — guaranteed to hit the network/cache immediately
+  var loaded = 0;
+  var total = srcs.length;
+
+  // Disable clicking on the intro screen until everything is ready
+  document.addEventListener('DOMContentLoaded', function() {
+      var introOverlay = document.getElementById('introOverlay');
+      var introText = introOverlay ? introOverlay.querySelector('.pulse-text') : null;
+      if (introOverlay && introText && !window.dodImagesLoaded) {
+          introOverlay.style.pointerEvents = 'none';
+          introText.textContent = 'Loading Assets... (0/' + total + ')';
+      }
+  });
+
+  function onAssetLoaded() {
+    loaded++;
+    var introOverlay = document.getElementById('introOverlay');
+    var introText = introOverlay ? introOverlay.querySelector('.pulse-text') : null;
+    
+    // Update the loading progress text
+    if (introText && !window.dodImagesLoaded) {
+        introText.textContent = 'Loading Assets... (' + loaded + '/' + total + ')';
+    }
+    
+    // Once everything is fully downloaded, unlock the screen
+    if (loaded >= total) {
+      window.dodImagesLoaded = true;
+      if (introOverlay && introText) {
+          introOverlay.style.pointerEvents = 'auto'; // Re-enable clicking
+          introText.textContent = "Tap anywhere to enter";
+      }
+    }
+  }
+
   for (var i = 0; i < srcs.length; i++) {
     var img = new Image();
+    img.onload = onAssetLoaded;
+    img.onerror = onAssetLoaded; // Proceed even if a file is missing to prevent infinite loading lock
     img.src = srcs[i];
   }
 })();
