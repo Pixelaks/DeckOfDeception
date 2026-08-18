@@ -951,6 +951,29 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .pubg-grid-item { font-size: 20px !important; border-radius: 3px; }
 }
 
+/* --- TITLE BANNERS --- */
+.player-title { display:inline-flex; align-items:center; height:22px; padding:0 16px 0 6px; color:#fff; font-family:'Inter',sans-serif; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:0.5px; clip-path:polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); box-shadow:0 2px 4px rgba(0,0,0,0.5); white-space:nowrap; }
+.player-title.large { height:26px; padding:0 20px 0 8px; font-size:12px; clip-path:polygon(0 0, 100% 0, calc(100% - 12px) 100%, 0 100%); }
+.title-mythic { background:linear-gradient(90deg, #8b3dff 0%, #4a148c 100%); border-left:2px solid #d094ff; }
+.title-legendary { background:linear-gradient(90deg, #c9a227 0%, #8a6a1c 100%); border-left:2px solid #f5dd8a; }
+.title-rare { background:linear-gradient(90deg, #3c7fb2 0%, #1a4b70 100%); border-left:2px solid #82c4f5; }
+.title-common { background:linear-gradient(90deg, #5a5140 0%, #20190f 100%); border-left:2px solid #e4d8bd; }
+
+/* Customization List Styles */
+.title-row { display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.4); border:1px solid rgba(255,255,255,0.05); padding:10px 14px; border-radius:4px; margin-bottom:8px; cursor:pointer; transition:all 0.2s; }
+.title-row:hover { background:rgba(255,255,255,0.05); }
+.title-row.active { border-color:var(--brass-bright); background:rgba(232,196,84,0.1); }
+.title-row.locked { opacity:0.4; filter:grayscale(0.8); cursor:not-allowed; }
+.title-desc { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); margin-top:4px; }
+
+/* --- NOTIFICATIONS & RED DOTS --- */
+.red-dot { position:absolute; top:-4px; right:-4px; width:12px; height:12px; background:var(--danger-bright); border-radius:50%; border:2px solid var(--felt-dark); display:none; pointer-events:none; z-index:10; box-shadow:0 0 6px rgba(194,59,74,0.8); }
+.red-dot.show { display:block; animation: dotPulse 1.5s infinite; }
+@keyframes dotPulse { 0% { transform:scale(1); } 50% { transform:scale(1.2); } 100% { transform:scale(1); } }
+
+#achievementPopup { position:fixed; top:50%; left:50%; transform:translate(-50%, -50%) scale(0.8); background:rgba(6,7,9,0.98); border:1px solid var(--brass-bright); border-radius:8px; padding:24px 32px; z-index:100000; display:flex; flex-direction:column; align-items:center; box-shadow:0 12px 60px rgba(0,0,0,0.9); opacity:0; pointer-events:none; transition:all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align:center; min-width:300px; }
+#achievementPopup.show { transform:translate(-50%, -50%) scale(1); opacity:1; pointer-events:auto; }
+
 /* iOS Portrait Fallback Screen */
 #rotate-device-overlay {
   display: none; position: fixed; inset: 0; background: var(--felt-dark);
@@ -1316,12 +1339,22 @@ window.dodImagesLoaded = false;
   </div>
 </div>
 
+<!-- ACHIEVEMENT POPUP -->
+<div id="achievementPopup">
+   <div style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:16px; margin-bottom:4px;">Achievement Unlocked!</div>
+   <div id="achPopupTitle" style="margin:10px 0;"></div>
+   <div style="display:flex; gap:10px; margin-top:8px;">
+       <button class="btn small" id="achPopupEquipBtn">Equip Now</button>
+       <button class="btn ghost small" onclick="closeAchievementPopup()">Dismiss</button>
+   </div>
+</div>
+
 <div id="menu">
   <!-- GLOBAL BACK BUTTON -->
   <button class="btn ghost small dod-hud-el" id="globalBackBtn" onclick="showMenuScreen('hub')" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
   <!-- FULLSCREEN TOGGLE BUTTON -->
-  <button class="btn ghost small" onclick="lockLandscape()" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Fullscreen">⛶</button>
+  <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen()" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
 
   <!-- TOP-RIGHT CURRENCY CHIP -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:6px;">
@@ -1330,7 +1363,7 @@ window.dodImagesLoaded = false;
 
   <!-- PUBG TOP-LEFT PROFILE WIDGET -->
   <div id="pubgProfileWidget" class="dod-hud-el" onclick="openProfileCustomization()" style="position:absolute; top:20px; left:20px; display:none; align-items:center; gap:10px; background:transparent; padding:0; cursor:pointer; z-index:100; transition:transform 0.2s, opacity .5s ease; text-shadow: 1px 1px 4px rgba(0,0,0,0.9);">
-    <div id="widgetAvatarFrame" style="width:44px; height:44px; border-radius:4px; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.6);">👤</div>
+    <div id="widgetAvatarFrame" style="position:relative; width:44px; height:44px; border-radius:4px; background:rgba(0,0,0,0.7); display:flex; align-items:center; justify-content:center; font-size:24px; color:#fff; border:none; box-shadow: 0 4px 10px rgba(0,0,0,0.6);">👤<div class="red-dot" id="widgetRedDot"></div></div>
     <div style="text-align:left; display:flex; flex-direction:column; gap:2px;">
       <span id="widgetPlayerName" style="font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:#fff;">Loading...</span>
       <span id="widgetPlayerTier" style="font-family:'Inter',sans-serif; font-size:11px; color:var(--brass-bright); font-weight:600;">Bronze Lvl 1</span>
@@ -1488,6 +1521,10 @@ window.dodImagesLoaded = false;
     <div class="screen-content">
       <div class="settings-row"><span>Ambient music</span><input type="range" id="musicVol" min="0" max="100" value="30" oninput="setMusicVolume(this.value)"></div>
       <div class="settings-row"><span>Sound effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
+      
+      <div class="section-label" style="margin-top:30px;">Account Management</div>
+      <div id="settingsAccountArea" style="width:100%; max-width:340px; margin-top:14px; display:flex; flex-direction:column; gap:10px;">
+          </div>
     </div>
     <div class="screen-footer">
       <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play</button>
@@ -1582,7 +1619,7 @@ window.dodImagesLoaded = false;
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
-    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="lockLandscape()" title="Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
+    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
   </div>
 
   <!-- ACTIVE PLAYER PANEL -->
@@ -1663,12 +1700,73 @@ window.dodImagesLoaded = false;
 <div class="modal-bg" id="nameSetupOverlay" style="background: var(--felt-dark); z-index: 6000;">
   <div class="modal" style="text-align:center; max-width:400px; width:90%;">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright);">Choose your name</h3>
-    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:20px;">This is permanent. It's how others will see you.</p>
-    <input type="text" id="nameSetupInput" maxlength="18" placeholder="Your name"
+    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:10px;">This is permanent. It's how others will see you.</p>
+    <div id="nameSetupError" class="mono" style="color:var(--danger-bright); font-size:11px; margin-bottom:10px; display:none;"></div>
+    <input type="text" id="nameSetupInput" maxlength="14" placeholder="Your name"
       style="width:100%; padding:12px; border-radius:5px; border:1px solid var(--brass); background:rgba(0,0,0,0.3); color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:15px; text-align:center; margin-bottom:20px;">
-    <div style="display:flex; justify-content:center;"><button class="btn" style="width:100%;" onclick="DoDAuth.submitName()">Confirm ↗</button></div>
+    <div style="display:flex; justify-content:center;"><button class="btn" id="btnSubmitUniqueName" style="width:100%;" onclick="submitUniqueNameWithId()">Confirm ↗</button></div>
   </div>
 </div>
+
+<script>
+async function submitUniqueNameWithId() {
+    const input = document.getElementById('nameSetupInput');
+    const errorEl = document.getElementById('nameSetupError');
+    const btn = document.getElementById('btnSubmitUniqueName');
+    const rawName = (input.value || '').trim();
+    
+    if (!rawName || rawName.length < 3) {
+        errorEl.textContent = "Name must be at least 3 characters long.";
+        errorEl.style.display = "block";
+        return;
+    }
+    
+    if (!/^[a-zA-Z0-9_\s]+$/.test(rawName)) {
+        errorEl.textContent = "Special characters are not allowed.";
+        errorEl.style.display = "block";
+        return;
+    }
+
+    btn.disabled = true;
+    errorEl.style.display = "none";
+
+    try {
+        const db = firebase.firestore();
+        // Check if username is already taken globally
+        const snapshot = await db.collection('users').where('displayName', '==', rawName).limit(1).get();
+        
+        if (!snapshot.empty) {
+            errorEl.textContent = "This name is already taken! Try another.";
+            errorEl.style.display = "block";
+            btn.disabled = false;
+            return;
+        }
+
+        const myUid = firebase.auth().currentUser.uid;
+        // Generate a clean numeric short visible user ID tracker loop 
+        const numericId = Math.floor(100000 + Math.random() * 900000).toString();
+
+        await db.collection('users').doc(myUid).update({
+            displayName: rawName,
+            gameId: numericId
+        });
+
+        document.getElementById('nameSetupOverlay').classList.remove('show');
+        
+        // Let the state flow naturally refresh widgets
+        if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
+            await DoDAuth.refreshProfile();
+        } else {
+            window.location.reload();
+        }
+    } catch (e) {
+        console.error(e);
+        errorEl.textContent = "Error saving name. Try again.";
+        errorEl.style.display = "block";
+        btn.disabled = false;
+    }
+}
+</script>
 
 <!-- PROFILE CUSTOMIZATION & PROGRESSION MODAL -->
 <div class="modal-bg" id="profileModal" style="z-index: 6000;">
@@ -1676,10 +1774,10 @@ window.dodImagesLoaded = false;
     
     <!-- LEFT SIDEBAR -->
     <div class="pubg-sidebar">
-      <button class="pubg-tab-btn">Basic Info</button>
-      <button class="pubg-tab-btn">Statistics</button>
-      <button class="pubg-tab-btn">Honor</button>
-      <button class="pubg-tab-btn active">Custom</button>
+      <button class="pubg-tab-btn" onclick="switchMainTab('basic', this)">Basic Info</button>
+      <button class="pubg-tab-btn" onclick="switchMainTab('stats', this)">Statistics</button>
+      <button class="pubg-tab-btn" onclick="switchMainTab('honor', this)">Honor</button>
+      <button class="pubg-tab-btn active" onclick="switchMainTab('custom', this)">Custom</button>
     </div>
 
     <!-- RIGHT CONTENT -->
@@ -1702,8 +1800,9 @@ window.dodImagesLoaded = false;
           <!-- Equip Action Button -->
           <button id="btnEquipCustom" class="btn small" style="margin-top:14px; width:100%; font-size:11px; padding:8px 0;" onclick="equipSelectedCustomization()">EQUIP</button>
           
-          <h3 id="modalProfileName" style="font-family:'Inter',sans-serif; font-size:16px; color:#fff; margin:14px 0 4px 0; text-align:center;">Player Name</h3>
-          <div style="display:flex; align-items:center; gap:6px;">
+          <div id="modalProfileTitleBox" style="margin-top:14px; min-height:26px; display:flex; justify-content:center;"></div>
+          <h3 id="modalProfileName" style="font-family:'Inter',sans-serif; font-size:16px; color:#fff; margin:8px 0 4px 0; text-align:center;">Player Name</h3>
+          <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
             <span id="modalProfileTier" style="font-family:'Inter',sans-serif; font-size:11px; color:var(--brass-bright); font-weight:600;">Apprentice • Lvl 1</span>
           </div>
           
@@ -1716,12 +1815,66 @@ window.dodImagesLoaded = false;
           </div>
         </div>
 
-        <!-- SELECTION GRID -->
-        <div class="pubg-grid-pane">
+        <!-- NEW: BASIC INFO TAB -->
+        <div id="pane-basic" class="pubg-main-pane" style="display:none; flex:1; flex-direction:column; min-height:0; padding-right:10px;">
+           <h3 style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-top:0;">Basic Profile</h3>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:16px; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Player ID</div>
+                   <div id="infoPlayerId" style="color:#fff; font-size:14px;">---</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Account Status</div>
+                   <div id="infoAccountStatus" style="color:var(--ok); font-size:14px;">Verified</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total Coins</div>
+                   <div id="infoTotalCoins" style="color:var(--brass-bright); font-size:14px;">---</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Current Rank</div>
+                   <div id="infoCurrentRank" style="color:#fff; font-size:14px;">---</div>
+               </div>
+           </div>
+        </div>
+
+        <!-- NEW: STATISTICS TAB -->
+        <div id="pane-stats" class="pubg-main-pane" style="display:none; flex:1; flex-direction:column; min-height:0; padding-right:10px;">
+           <h3 style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-top:0;">Career Statistics</h3>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:16px; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Matches Played</div>
+                   <div id="statMatches" style="color:#fff; font-size:24px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Victories</div>
+                   <div id="statWins" style="color:var(--ok); font-size:24px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Win Rate</div>
+                   <div id="statWinRate" style="color:#fff; font-size:24px; font-weight:bold;">0%</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total Score</div>
+                   <div id="statTotalScore" style="color:var(--brass-bright); font-size:24px; font-weight:bold;">0</div>
+               </div>
+           </div>
+        </div>
+
+        <!-- NEW: HONOR TAB -->
+        <div id="pane-honor" class="pubg-main-pane" style="display:none; flex:1; flex-direction:column; min-height:0; padding-right:10px; align-items:center; justify-content:center;">
+            <div style="font-size:40px; margin-bottom:10px;">🎖️</div>
+            <h3 style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin:0;">Honor System</h3>
+            <p style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(255,255,255,0.5); text-align:center; margin-top:10px;">Coming in Season 2.</p>
+        </div>
+
+        <!-- SELECTION GRID (Custom Tab) -->
+        <div id="pane-custom" class="pubg-grid-pane pubg-main-pane" style="display:flex;">
           <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:16px;">
             <div style="display:flex; gap:20px;">
               <button class="pubg-subtab-btn active" onclick="switchCustomTab('avatars', this)">Avatars</button>
               <button class="pubg-subtab-btn" onclick="switchCustomTab('frames', this)">Frames</button>
+              <button class="pubg-subtab-btn" style="position:relative;" onclick="switchCustomTab('titles', this)">Titles<div class="red-dot" id="titlesTabRedDot" style="top:-2px; right:-10px;"></div></button>
             </div>
             <label style="font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:6px; cursor:pointer; padding-top:2px;"><input type="checkbox"> Owned</label>
           </div>
@@ -1735,6 +1888,11 @@ window.dodImagesLoaded = false;
             <!-- Frames Tab -->
             <div id="framesGridContainer" style="display:none;">
               <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(70px, 1fr)); gap:12px;" id="frameSelectorRow"></div>
+            </div>
+            
+            <!-- Titles Tab -->
+            <div id="titlesGridContainer" style="display:none; flex-direction:column;">
+              <div id="titleSelectorRow" style="display:flex; flex-direction:column;"></div>
             </div>
           </div>
         </div>
@@ -1785,7 +1943,10 @@ const sfx = {
   coin: () => { playTone(1200, 'sine', 0.1, 0.05); setTimeout(()=>playTone(1600, 'sine', 0.2, 0.05), 50); },
   turn: () => playTone(300, 'sine', 0.3, 0.05),
   alert: () => playTone(250, 'square', 0.2, 0.04),
-  win: () => { playTone(400,'sine',0.1); setTimeout(()=>playTone(500,'sine',0.1),100); setTimeout(()=>playTone(600,'sine',0.4),200); }
+  win: () => { playTone(400,'sine',0.1); setTimeout(()=>playTone(500,'sine',0.1),100); setTimeout(()=>playTone(600,'sine',0.4),200); },
+  uiClick: () => playTone(580, 'sine', 0.08, 0.04),
+  uiBack: () => playTone(420, 'sine', 0.12, 0.04),
+  uiEquip: () => { playTone(880, 'sine', 0.06, 0.03); setTimeout(()=>playTone(1100, 'sine', 0.15, 0.03), 40); }
 };
 
 // --- PROCEDURAL AMBIENT PAD (original, generated in-browser — used whenever the
@@ -1830,24 +1991,45 @@ const bgMusicElement = document.getElementById('bgMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
-// The Screen Rotation Function
-async function lockLandscape() {
+// The Screen Rotation Function (Forced on initial tap)
+async function forceEnterFullscreen() {
   const doc = document.documentElement;
-  // Request Fullscreen (Required by Android to allow rotation locking)
-  if (doc.requestFullscreen) { await doc.requestFullscreen().catch(()=>{}); }
-  else if (doc.webkitRequestFullscreen) { await doc.webkitRequestFullscreen().catch(()=>{}); }
-  
-  // Lock to landscape
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (doc.requestFullscreen) { await doc.requestFullscreen().catch(()=>{}); }
+      else if (doc.webkitRequestFullscreen) { await doc.webkitRequestFullscreen().catch(()=>{}); }
+  }
   if (screen.orientation && screen.orientation.lock) {
     try { await screen.orientation.lock('landscape'); } catch (error) {}
   }
+}
+
+// Toggle function for the UI buttons
+async function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      await forceEnterFullscreen();
+  } else {
+      if (document.exitFullscreen) { await document.exitFullscreen().catch(()=>{}); }
+      else if (document.webkitExitFullscreen) { await document.webkitExitFullscreen().catch(()=>{}); }
+      if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
+  }
+}
+
+// Update icons automatically if player uses ESC key
+document.addEventListener('fullscreenchange', updateFullscreenIcons);
+document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+
+function updateFullscreenIcons() {
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+    document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
+        btn.textContent = isFs ? '✖' : '⛶'; // Changes to X when in fullscreen
+    });
 }
 
 window.minimumBootTimePassed = false;
 
 introOverlay.addEventListener('click', function() {
     // Trigger rotation and fullscreen on tap
-    lockLandscape();
+    forceEnterFullscreen();
 
     // Hide the "Tap to start" overlay so we can see the 3D animation
     this.style.opacity = '0';
@@ -1882,6 +2064,19 @@ introOverlay.addEventListener('click', function() {
 });
 
 const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
+const BOT_NAME_POOL = ["Shadow","Ghost","Apex","Nova","Vortex","Pulse","Echo","Jester","Maverick","Rogue","Gambit","Cipher","Onyx","Zenith","Kraken","Viper","Neon","Drifter","Kael","Sila","Ronin","Myth","Forge","Silas","Nyx","Raven"];
+const BOT_TIERS = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+
+function generateBotProfile() {
+    const nameStr = BOT_NAME_POOL[Math.floor(Math.random() * BOT_NAME_POOL.length)] + (Math.random() > 0.5 ? Math.floor(Math.random() * 999) : '');
+    const tierIdx = Math.floor(Math.random() * 4); // Bots spawn up to Mastermind rank
+    const tier = BOT_TIERS[tierIdx];
+    const level = Math.floor(Math.random() * 5) + 1;
+    const avatar = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
+    const frame = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
+    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame };
+}
+
 const SKINS=[
   {name:"Gold Leaf", color:"#c9a227"},
   {name:"Crimson", color:"#b2455e"},
@@ -2037,6 +2232,11 @@ if(window.DoDAuth){
                     // Reconnect to Lobby
                     currentMatchId = savedMatchId;
                     document.getElementById('introOverlay').style.display = 'none';
+                    
+                    // Initialize social features so they are ready if you leave
+                    if (typeof initFriendsList === 'function') initFriendsList();
+                    if (typeof listenForPartyInvites === 'function') listenForPartyInvites();
+
                     menu.classList.add('menu-visible');
                     showMenuScreen('match-lobby');
                     listenToMatchLobby(savedMatchId);
@@ -2048,6 +2248,19 @@ if(window.DoDAuth){
                     document.getElementById('introOverlay').style.display = 'none';
                     menu.style.display = 'none';
                     document.getElementById('game').style.display = 'flex';
+                    
+                    // Initialize social features so they are ready if you leave
+                    if (typeof initFriendsList === 'function') initFriendsList();
+                    if (typeof listenForPartyInvites === 'function') listenForPartyInvites();
+
+                    // Force mute music in case the intro screen was tapped right before auth resolved!
+                    if (bgMusicElement) {
+                        bgMusicElement.volume = 0;
+                        bgMusicElement.pause();
+                    }
+                    if (typeof ambientMasterGain !== 'undefined' && ambientMasterGain && audioCtx) {
+                        ambientMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+                    }
                     
                     // Small delay to let the UI elements animate in cleanly
                     setTimeout(() => listenToGameState(), 200); 
@@ -2127,6 +2340,7 @@ function buildRanksScreen() {
 
 // ---------------- MENU HUB / SCREEN SWITCHING ----------------
 function showMenuScreen(name){
+  if(name==='hub') { sfx.uiBack(); } else { sfx.uiClick(); }
   if(name==='ranks') buildRanksScreen();
   document.querySelectorAll('.menu-screen').forEach(el=>el.classList.add('hidden'));
   const target = document.getElementById('screen-'+name);
@@ -2158,7 +2372,8 @@ function showMenuScreen(name){
 const originalShowMenu = showMenuScreen;
 showMenuScreen = function(name) {
     originalShowMenu(name);
-    if(name === 'social') {
+    // Fetch friends list for BOTH the legacy social screen and the new PUBG Hub
+    if(name === 'social' || name === 'hub') {
         initFriendsList();
         if (typeof listenForPartyInvites === 'function') listenForPartyInvites();
     }
@@ -2223,22 +2438,17 @@ function startGame() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // Mute music for gameplay
+    // Absolute mute music and soundscapes for deep gameplay focus
     if (bgMusicElement) {
-        let fadeAudio = setInterval(() => {
-            if (bgMusicElement.volume > 0.05) {
-                bgMusicElement.volume = Math.max(0, bgMusicElement.volume - 0.05);
-            } else {
-                bgMusicElement.volume = 0;
-                bgMusicElement.pause();
-                clearInterval(fadeAudio);
-            }
-        }, 100);
+        bgMusicElement.volume = 0;
+        bgMusicElement.pause();
     }
-    // Also silence the procedural ambient pad if it was running
     if (ambientMasterGain && audioCtx) {
-        ambientMasterGain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+        ambientMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
+
+    // Initialize temporary match stat tracker for unlocking action-based titles
+    window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, peeks:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
 
     menu.style.opacity = '0'; // Cinematic fade out transition
 
@@ -2272,6 +2482,10 @@ function startGame() {
                     let hand = [];
                     for (let k = 0; k < 5; k++) hand.push(masterDeck.pop());
                     
+                    // Host fetches real player data if human, or uses the bot's generated data
+                    let pAv = seat.avatar || 'Apprentice';
+                    let pFr = seat.frame || 'Apprentice';
+                    
                     masterPlayers.push({
                         uid: seat.uid,
                         name: seat.displayName,
@@ -2279,6 +2493,8 @@ function startGame() {
                         shop: START_SHOP,
                         out: false,
                         deceptionStrike: false,
+                        avatar: pAv,
+                        frame: pFr,
                         // Host assigns colors directly to the master state
                         color: index === 0 ? SKINS[menuState.skinIdx].color : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
                     });
@@ -2316,12 +2532,21 @@ function startGame() {
             PLAYER_COLORS = [SKINS[menuState.skinIdx].color];
             document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
             
-            const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"].slice(0, count-1);
-            botNames.forEach((n,i) => PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]));
-
-            // Change this line inside the offline block of startGame():
-let players = [{id:0, name:"You", isHuman:true, hand:[], shop:START_SHOP, out:false, uid: DoDAuth.getProfile().uid, deceptionStrike:false}];
-            botNames.forEach((n,i) => players.push({id: i+1, name:n, isHuman:false, hand:[], shop:START_SHOP, out:false, uid:'bot_'+i, deceptionStrike:false}));
+            let players = [{
+                id: 0, name: DoDAuth.getProfile().displayName || "You", isHuman: true, hand: [], shop: START_SHOP, out: false, 
+                uid: DoDAuth.getProfile().uid, deceptionStrike: false, 
+                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile())
+            }];
+            
+            for (let i = 0; i < count - 1; i++) {
+                const botProfile = generateBotProfile();
+                PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]);
+                players.push({
+                    id: i + 1, name: botProfile.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
+                    uid: 'bot_' + i, deceptionStrike: false, 
+                    avatar: botProfile.avatar, frame: botProfile.frame, tier: botProfile.tier, level: botProfile.level
+                });
+            }
 
             let deck = makeDeck();
             players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
@@ -2351,8 +2576,9 @@ function listenToGameState() {
     const myUid = DoDAuth.getProfile().uid;
 
     gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
+        if (!doc.exists) return; // FIX: Prevent the entire renderer from crashing if the match drops mid-load
         const data = doc.data();
-        if (!data.gameState) return; 
+        if (!data || !data.gameState) return; 
 
         const serverState = data.gameState;
 
@@ -2597,6 +2823,12 @@ function layoutRing(){
     const av = p.avatar || 'Apprentice';
     const fr = p.frame || 'Apprentice';
     
+    let seatTitleHtml = '';
+    if (p.title) {
+        const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === p.title) : null;
+        if (tDef) seatTitleHtml = `<div style="margin-top:2px; transform:scale(0.85); transform-origin:top center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:7px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+    }
+    
     seat.innerHTML=`
       <div class="avatar" style="overflow:hidden; padding:0;">
         <div class="avatar-frame-wrap" style="width:100%; height:100%;">
@@ -2605,6 +2837,7 @@ function layoutRing(){
         </div>
       </div>
       <div class="rname">${p.name}</div>
+      ${seatTitleHtml}
       <div class="seat-stats" id="rmeta-${p.id}"></div>
     `;
     ring.appendChild(seat);
@@ -2617,7 +2850,12 @@ function seatRect(playerId){
   const el=document.getElementById('seat-'+playerId);
   return el ? el.getBoundingClientRect() : document.getElementById('tableRing').getBoundingClientRect();
 }
-function centerRect(){ const el=document.getElementById('ringCenter'); return el ? el.getBoundingClientRect() : document.getElementById('tableRing').getBoundingClientRect(); }
+function centerRect(){ 
+  const el=document.getElementById('ringCenter'); 
+  // Target the first child (.minicard) so the animation lands directly on the 'Last Played' card
+  if(el && el.firstElementChild) return el.firstElementChild.getBoundingClientRect();
+  return el ? el.getBoundingClientRect() : document.getElementById('tableRing').getBoundingClientRect(); 
+}
 function bankRect(){ return document.getElementById('deckpile').getBoundingClientRect(); }
 
 function getSeatOrPanelRect(id) {
@@ -2667,19 +2905,48 @@ function burstParticles(x, y, color, count, type='spark'){
 
 function flyCard(srcRect,dstRect,label,color,burstSize,val=''){
   sfx.card();
-  const w=42,h=60;
+  
+  // Default standard card size for flying to avatars
+  let w = 42;
+  let h = 60;
+  
+  // Only stretch to match dstRect if it is a card placeholder (taller than it is wide)
+  const isCardPlaceholder = dstRect && (dstRect.height > dstRect.width * 1.2);
+  if (isCardPlaceholder) {
+      w = dstRect.width;
+      h = dstRect.height;
+  }
+  
   const g=document.createElement('div');
   g.className='ghost-card';
   g.style.left=(srcRect.left+srcRect.width/2-w/2)+'px';
   g.style.top=(srcRect.top+srcRect.height/2-h/2)+'px';
   g.style.width=w+'px'; g.style.height=h+'px';
   g.style.border=`2px solid ${color}`; g.style.color=color;
-  g.innerHTML=`<div class="act-val">${val}</div><div>${label}</div>`;
+  
+  // Check if this is a face-down deal or a dud draw (label is empty or '?')
+  const isFaceDown = (label === '' || label === '?');
+  if (isFaceDown) {
+      g.style.backgroundImage = "url('Cards/Decks.png')";
+      g.innerHTML = '';
+  } else {
+      g.style.backgroundImage = "url('Cards/CardPhase.png')";
+      g.innerHTML = `<div class="act-val">${val}</div><div>${label}</div>`;
+  }
+  
   document.body.appendChild(g);
+  
   requestAnimationFrame(()=>{
-    g.style.left=(dstRect.left+dstRect.width/2-w/2)+'px';
-    g.style.top=(dstRect.top+dstRect.height/2-h/2)+'px';
-    g.style.transform='scale(0.85)';
+    if (isCardPlaceholder) {
+        // Drop perfectly into the center placeholder
+        g.style.left=dstRect.left+'px';
+        g.style.top=dstRect.top+'px';
+    } else {
+        // Fly directly to the center of the avatar
+        g.style.left=(dstRect.left+dstRect.width/2-w/2)+'px';
+        g.style.top=(dstRect.top+dstRect.height/2-h/2)+'px';
+    }
+    g.style.transform='scale(1)';
   });
   
   setTimeout(()=>{
@@ -2688,6 +2955,10 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val=''){
         burstParticles(c.x,c.y,color,burstSize||12, 'spark');
     } catch(e) {}
     if(g && g.parentNode) g.parentNode.removeChild(g);
+    
+    // Reveal the center structural text layout exactly when the visual card lands
+    const targetCardEl = document.getElementById('ringCenter') ? document.getElementById('ringCenter').firstElementChild : null;
+    if(targetCardEl) targetCardEl.style.color = '';
   },430);
 }
 
@@ -2865,6 +3136,12 @@ function renderAll(){
 
           const cAv = cur.avatar || 'Apprentice';
           const cFr = cur.frame || 'Apprentice';
+          
+          let apTitleHtml = '';
+          if (cur.title) {
+              const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === cur.title) : null;
+              if (tDef) apTitleHtml = `<div style="margin-top:3px;"><div class="player-title title-${tDef.rarity}" style="height:15px; font-size:7.5px; padding:0 12px 0 4px;"><span>${tDef.name}</span></div></div>`;
+          }
 
           ap.innerHTML = `
               <div class="ap-avatar" style="overflow:hidden; padding:0;">
@@ -2874,7 +3151,7 @@ function renderAll(){
                 </div>
               </div>
               <div class="ap-details">
-                  <div class="ap-name">${cur.name} <span style="color:var(--brass-bright);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-left:4px">${cur.shop}c</span></div>
+                  <div class="ap-name" style="line-height:1;">${cur.name} <span style="color:var(--brass-bright);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-left:4px">${cur.shop}c</span>${apTitleHtml}</div>
                   <div class="ap-cards" style="width:${dynWidth}px; height:${dynHeight}px; min-height:0; display:block;">${deckFanHtml}</div>
               </div>
           `;
@@ -2893,8 +3170,10 @@ function renderAll(){
     if(state.lastPlayedCardLabel) {
        let displayLabel = state.lastPlayedCardLabel;
        let tinyVal = state.lastEffectiveValue !== null && String(state.lastPlayedCardLabel) !== String(state.lastEffectiveValue) ? `<div class="act-val" style="font-size:10px; opacity:0.8">${state.lastEffectiveValue}</div>` : '';
-       // The 'pulse' class has been removed so it only sits still!
-       lastHtml = `<div class="minicard" style="border-color:${lastColor}">${tinyVal}${displayLabel}</div>`;
+       
+       // If currently animating a fresh action drop, hide text color until the flyCard timer resolves
+       const visibilityStyle = (state.uiState === 'ANIMATING') ? 'style="border-color:'+lastColor+'; color:transparent;"' : 'style="border-color:'+lastColor+'"';
+       lastHtml = `<div class="minicard" ${visibilityStyle}>${tinyVal}${displayLabel}</div>`;
     }
     
     const nextHtml = state.requiredValue===null
@@ -3153,6 +3432,7 @@ async function playWild(idx, el){
   
   you.hand.splice(idx,1);
   payFromOwn(you, WILD_COST);
+  if (you.isHuman) window.matchStats.wilds++;
   
   const effective = state.requiredValue===null?5:state.requiredValue;
   sweepEliminations();
@@ -3191,6 +3471,7 @@ async function playReverse(idx, el){
   
   you.hand.splice(idx,1);
   state.direction *= -1; 
+  if (you.isHuman) window.matchStats.reverses++; 
   you.shop+=PLAY_REWARD;
   const effective = state.requiredValue===null?5:state.requiredValue;
   const msg = `${you.name} played Reverse (matched ${card.value}). Direction changed! +${PLAY_REWARD} for play.`;
@@ -3233,6 +3514,10 @@ async function confirmActionTarget(target, actionType){
   
   you.hand.splice(idx,1);
   const effective = state.requiredValue===null?5:state.requiredValue;
+  if (you.isHuman) {
+      if (actionType === 'POWER') window.matchStats.powers++;
+      if (actionType === 'STEAL') window.matchStats.steals++;
+  }
   
   state.uiState = 'ANIMATING';
   renderAll();
@@ -3297,6 +3582,7 @@ async function doBuyDraw() {
         return;
     }
 
+    if (bl.tries === 0 && bl.buyer.isHuman) window.matchStats.forcedBuys++;
     bl.tries++;
     state.uiState = 'ANIMATING';
     renderAll();
@@ -3377,6 +3663,7 @@ function useInsurance() {
     if(dudIdx>=0) you.hand.splice(dudIdx,1);
     const insIdx = you.hand.findIndex(c=>c.type==='insurance');
     if(insIdx>=0) you.hand.splice(insIdx,1);
+    if (you.isHuman) window.matchStats.insurances++;
     log('Used Insurance to discard the dud card instead of keeping it.','ok');
     finishBuyLoopFailure();
 }
@@ -4017,6 +4304,7 @@ function usePeek(playerId,targetId){
   const idx=you.hand.findIndex(c=>c.type==='peek');
   if(idx===-1) return;
   you.hand.splice(idx,1);
+  if (you.isHuman) window.matchStats.peeks++;
   const nums=target.hand.map(c=>c.value).sort((a,b)=>a-b);
   state.peekResult = `${target.name}'s card values: ${nums.length?nums.join(', '):'Empty hand!'}`;
   renderAll();
@@ -4082,7 +4370,7 @@ function playNetworkedAnimation(action) {
 
     if (action.type === 'PLAY_NUMBER') {
         log(action.msg, 'ok');
-        // Animate the card from their visual seat to the center
+        // Animate the card physically landing on the center table deck collection
         flyCard(getSeatOrPanelRect(actorSeatIndex), centerRect(), action.cardValue, actorColor, 18, action.cardValue);
         flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
     } 
@@ -4091,7 +4379,8 @@ function playNetworkedAnimation(action) {
     }
     else if (action.type === 'MISS_DRAW') {
         log(action.msg);
-        flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5);
+        // Map card drawn directly away from the face-down marketplace pile into the drawing player's UI profiles
+        flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8);
         flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0); 
     }
 }
@@ -4583,17 +4872,44 @@ function computeMatchProgression() {
       }
   }
   
-  const newData = { tier: TIERS[cTierIdx], level: cLevel, points: total };
+  const isWin = rank === 1;
   
-  // Upload to Database
+  // Merge live match stats with lifetime profile stats
+  const mStats = window.matchStats || {};
+  const matchesPlayed = (profile.matchesPlayed || 0) + 1;
+  const wins = (profile.wins || 0) + (isWin ? 1 : 0);
+  const winStreak = isWin ? (profile.winStreak || 0) + 1 : 0; // Resets if lost
+  const totalScore = (profile.totalScore || 0) + Math.max(0, score(me));
+  
+  // Special match-specific condition checking
+  const maxCoinsMatch = score(me); // Captures their final coin count for the "Penny Pincher" title
+
+  const newData = { tier: TIERS[cTierIdx], level: cLevel, points: total, matchesPlayed, wins, totalScore };
+  
+  // Upload to Database along with action accumulators
   if (window.firebase) {
-      firebase.firestore().collection('users').doc(profile.uid).update({
-          tier: newData.tier, level: newData.level, points: newData.points
-      }).catch(()=>{});
+      const updatePayload = {
+          tier: newData.tier, level: newData.level, points: newData.points,
+          matchesPlayed: matchesPlayed, wins: wins, totalScore: totalScore, winStreak: winStreak, maxCoinsMatch: maxCoinsMatch,
+          wilds: (profile.wilds || 0) + (mStats.wilds || 0),
+          reverses: (profile.reverses || 0) + (mStats.reverses || 0),
+          powers: (profile.powers || 0) + (mStats.powers || 0),
+          steals: (profile.steals || 0) + (mStats.steals || 0),
+          peeks: (profile.peeks || 0) + (mStats.peeks || 0),
+          insurances: (profile.insurances || 0) + (mStats.insurances || 0),
+          forcedBuys: (profile.forcedBuys || 0) + (mStats.forcedBuys || 0),
+          deceptionsSurvived: (profile.deceptionsSurvived || 0) + (mStats.deceptionsSurvived || 0)
+      };
+      
+      firebase.firestore().collection('users').doc(profile.uid).update(updatePayload).catch(()=>{});
+      
+      // Update local cache so notification triggers instantly on returning to hub
+      Object.assign(profile, updatePayload);
   }
   
   // Update Local Cache
   profile.tier = newData.tier; profile.level = newData.level; profile.points = newData.points;
+  profile.matchesPlayed = matchesPlayed; profile.wins = wins; profile.totalScore = totalScore;
   
   return { old: oldData, new: newData, delta: finalDelta };
 }
@@ -4849,7 +5165,10 @@ function listenForPartyInvites() {
                     await db.collection('parties').doc(partyId).update({
                         members: firebase.firestore.FieldValue.arrayUnion({
                             uid: myProfile.uid,
-                            displayName: myProfile.displayName
+                            displayName: myProfile.displayName,
+                            title: myProfile.title || null,
+                            avatar: myProfile.avatar || 'Apprentice',
+                            frame: myProfile.frame || 'Apprentice'
                         })
                     });
                 } catch(e) {
@@ -4895,57 +5214,101 @@ async function initFriendsList() {
     if (friendsListenerUnsub) friendsListenerUnsub();
     
     // Listen for friends and requests
-    friendsListenerUnsub = db.collection('users').doc(uid).collection('friends').onSnapshot(snapshot => {
-        // --- existing social screen list ---
+    friendsListenerUnsub = db.collection('users').doc(uid).collection('friends').onSnapshot(async snapshot => {
         const container = document.getElementById('friendsListContainer');
-        if (container) {
-            container.innerHTML = '';
-            if (snapshot.empty) {
-                container.innerHTML = '<div class="mono" style="font-size:11px; color:rgba(242,234,216,0.5);">No friends yet.</div>';
-            } else {
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    let html = `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:6px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px;">
-                        <span class="mono" style="font-size:13px;">${data.displayName}</span>`;
-                    if (data.status === 'pending') {
-                        html += `<button class="btn small" style="background:var(--ok); color:#fff; padding:4px 8px;" onclick="acceptFriend('${doc.id}', '${data.displayName}')">Accept</button>`;
-                    } else {
-                        if (currentPartyId && isPartyLeader) {
-                            html += `<button class="btn small" style="padding:4px 8px;" onclick="inviteToParty('${doc.id}', '${data.displayName}')">Invite to Party</button>`;
-                        } else {
-                            html += `<span class="mono" style="font-size:10px; color:var(--ok);">Friends</span>`;
-                        }
-                    }
-                    html += `</div>`;
-                    container.innerHTML += html;
-                });
-            }
-        }
-        // --- PUBG HUD friends panel ---
         const pubgList = document.getElementById('pubgFriendsList');
-        if (pubgList) {
-            if (!snapshot || snapshot.empty) {
-                pubgList.innerHTML = '<div class="mono" style="font-size:11px; color:rgba(242,234,216,0.35); padding:4px 0;">No friends yet.</div>';
-            } else {
-                pubgList.innerHTML = '';
-                snapshot.forEach(doc => {
-                    const data = doc.data();
-                    let actionHtml = '';
-                    if (data.status === 'pending') {
-                        actionHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${doc.id}','${data.displayName}')">Accept</button>`;
+        
+        if (snapshot.empty) {
+            if (container) container.innerHTML = '<div class="mono" style="font-size:11px; color:rgba(242,234,216,0.5);">No friends yet.</div>';
+            if (pubgList) pubgList.innerHTML = '<div class="mono" style="font-size:11px; color:rgba(242,234,216,0.35); padding:4px 0;">No friends yet.</div>';
+            return;
+        }
+
+        // We fetch the live user profiles to get current avatar, frame, and title
+        const friendsData = await Promise.all(snapshot.docs.map(async doc => {
+            const relData = doc.data();
+            const userDoc = await db.collection('users').doc(doc.id).get();
+            const liveData = userDoc.exists ? userDoc.data() : relData;
+            return {
+                id: doc.id,
+                displayName: relData.displayName,
+                status: relData.status,
+                avatar: liveData.avatar || 'Apprentice',
+                frame: liveData.frame || 'Apprentice',
+                title: liveData.title || null
+            };
+        }));
+
+        // --- Social Screen List ---
+        if (container) {
+            container.innerHTML = friendsData.map(f => {
+                let titleHtml = '';
+                if (f.title) {
+                    const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
+                    if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+                }
+
+                let actionHtml = '';
+                if (f.status === 'pending') {
+                    actionHtml = `<button class="btn small" style="background:var(--ok); color:#fff; padding:4px 8px;" onclick="acceptFriend('${f.id}', '${f.displayName}')">Accept</button>`;
+                } else {
+                    if (currentPartyId && isPartyLeader) {
+                        actionHtml = `<button class="btn small" style="padding:4px 8px;" onclick="inviteToParty('${f.id}', '${f.displayName}')">Invite to Party</button>`;
                     } else {
-                        if (currentPartyId && !isPartyLeader) {
-                            actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Invite</button>`;
-                        } else {
-                            actionHtml = `<button class="pubg-friend-action invite" onclick="pubgInviteFriend('${doc.id}','${data.displayName}')">Invite</button>`;
-                        }
+                        actionHtml = `<span class="mono" style="font-size:10px; color:var(--ok);">Friends</span>`;
                     }
-                    pubgList.innerHTML += `<div class="pubg-friend-row">
-                        <span class="fname">${data.displayName}${data.status==='pending'?' <span style="color:var(--brass-bright);font-size:8px;">(req)</span>':''}</span>
-                        ${actionHtml}
-                    </div>`;
-                });
-            }
+                }
+
+                return `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:6px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px; margin-bottom:6px;">
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
+                            <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
+                            <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
+                        </div>
+                        <div style="display:flex; flex-direction:column; justify-content:center;">
+                            <span class="mono" style="line-height:1; font-size:13px; font-weight:600; color:#fff;">${f.displayName}</span>
+                            ${titleHtml}
+                        </div>
+                    </div>
+                    <div>${actionHtml}</div>
+                </div>`;
+            }).join('');
+        }
+
+        // --- PUBG HUD Friends List ---
+        if (pubgList) {
+            pubgList.innerHTML = friendsData.map(f => {
+                let titleHtml = '';
+                if (f.title) {
+                    const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
+                    if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+                }
+
+                let actionHtml = '';
+                if (f.status === 'pending') {
+                    actionHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${f.id}','${f.displayName}')">Accept</button>`;
+                } else {
+                    if (currentPartyId && !isPartyLeader) {
+                        actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Invite</button>`;
+                    } else {
+                        actionHtml = `<button class="pubg-friend-action invite" onclick="pubgInviteFriend('${f.id}','${f.displayName}')">Invite</button>`;
+                    }
+                }
+
+                return `<div class="pubg-friend-row" style="align-items:center;">
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <div class="avatar-frame-wrap" style="width:28px; height:28px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
+                            <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
+                            <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
+                        </div>
+                        <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center;">
+                            <span class="fname" style="line-height:1;">${f.displayName}${f.status==='pending'?' <span style="color:var(--brass-bright);font-size:8px;">(req)</span>':''}</span>
+                            ${titleHtml}
+                        </div>
+                    </div>
+                    <div>${actionHtml}</div>
+                </div>`;
+            }).join('');
         }
     });
 }
@@ -5008,7 +5371,7 @@ async function createParty() {
         leader: myProfile.uid,
         matchId: null,
         tableSize: pubgTableSize,
-        members: [{ uid: myProfile.uid, displayName: myProfile.displayName }]
+        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: myProfile.avatar || 'Apprentice', frame: myProfile.frame || 'Apprentice' }]
     });
 
     document.getElementById('btnCreateParty').style.display = 'none';
@@ -5120,7 +5483,25 @@ function listenToParty(partyId) {
         
         // Update UI Squad List
         const listEl = document.getElementById('partyMemberList');
-        listEl.innerHTML = data.members.map(m => `<div>${m.uid === data.leader ? '👑 ' : ''}${m.displayName}</div>`).join('');
+        listEl.innerHTML = data.members.map(m => {
+            const av = m.avatar || 'Apprentice';
+            const fr = m.frame || 'Apprentice';
+            let titleHtml = '';
+            if (m.title) {
+                const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === m.title) : null;
+                if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.8); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+            }
+            return `<div style="display:flex; gap:10px; align-items:center; background:rgba(0,0,0,0.2); padding:6px 10px; border-radius:4px; margin-bottom:6px; border:1px solid rgba(255,255,255,0.05);">
+                        <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
+                            <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+                            <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                        </div>
+                        <div style="display:flex; flex-direction:column; justify-content:center;">
+                            <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}</span>
+                            ${titleHtml}
+                        </div>
+                    </div>`;
+        }).join('');
 
         isPartyLeader = (data.leader === myUid);
         
@@ -5195,6 +5576,7 @@ function listenToParty(partyId) {
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
         if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId) {
             currentMatchId = data.matchId;
+            pubgCancelFlag = false; // FIX: Force reset the flag so the client doesn't instantly delete the new match!
             listenToPubgMatchFilling(
                 currentMatchId,
                 document.getElementById('pubgMmTimer'),
@@ -5293,16 +5675,20 @@ async function startOnlineMatchmaking() {
                     const data = checkDoc.data();
                     let currentSeats = data.seats;
                     let pSeats = data.publicSeats;
-                    const botNames = ["Bea", "Chen", "Deepa", "Farah", "Omar", "Priya", "Leo", "Sana"];
                     
                     if (currentSeats.length < mpTableSize) {
                         while (currentSeats.length < mpTableSize) {
                             const idx = currentSeats.length;
+                            const botP = generateBotProfile();
                             currentSeats.push({ 
                                 seat: idx, 
                                 uid: "bot_" + Math.random().toString(36).substr(2, 9), 
-                                displayName: botNames[idx % botNames.length], 
-                                isBot: true 
+                                displayName: botP.displayName, 
+                                isBot: true,
+                                avatar: botP.avatar,
+                                frame: botP.frame,
+                                tier: botP.tier,
+                                level: botP.level
                             });
                             pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
                         }
@@ -5375,16 +5761,20 @@ async function startPrivatePartyMatch() {
                 const data = checkDoc.data();
                 let currentSeats = data.seats;
                 let pSeats = data.publicSeats;
-                const botNames = ["Bea", "Chen", "Deepa", "Farah", "Omar", "Priya", "Leo", "Sana"];
                 
                 if (currentSeats.length < mpTableSize) {
                     while (currentSeats.length < mpTableSize) {
                         const idx = currentSeats.length;
+                        const botP = generateBotProfile();
                         currentSeats.push({ 
                             seat: idx, 
                             uid: "bot_" + Math.random().toString(36).substr(2, 9), 
-                            displayName: botNames[idx % botNames.length], 
-                            isBot: true 
+                            displayName: botP.displayName, 
+                            isBot: true,
+                            avatar: botP.avatar,
+                            frame: botP.frame,
+                            tier: botP.tier,
+                            level: botP.level
                         });
                         pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
                     }
@@ -5425,15 +5815,32 @@ function listenToMatchLobby(matchId) {
 
         data.seats.forEach(seat => {
             const isPlayerReady = (data.readyStatus && data.readyStatus[seat.uid]) || false;
-            // Bots are automatically treated as "Ready"
             if (!isPlayerReady && !seat.isBot) allReady = false; 
             
-            const readyBadge = seat.isBot ? '<span style="color:var(--ok); font-weight:bold;">[BOT Ready]</span>' 
-                            : isPlayerReady ? '<span style="color:var(--ok); font-weight:bold;">[Ready]</span>' 
-                            : '<span style="color:var(--danger-bright);">[Waiting]</span>';
+            const readyBadge = seat.isBot ? '<span style="color:var(--ok); font-weight:bold; font-size:11px;">[BOT Ready]</span>' 
+                            : isPlayerReady ? '<span style="color:var(--ok); font-weight:bold; font-size:11px;">[Ready]</span>' 
+                            : '<span style="color:var(--danger-bright); font-size:11px;">[Waiting]</span>';
                             
-            html += `<div style="display:flex; justify-content:space-between; background:rgba(0,0,0,0.3); padding:8px 12px; border:1px solid rgba(255,255,255,0.05); border-radius:4px;">
-                        <span>${seat.displayName}</span> ${readyBadge}
+            const av = seat.avatar || 'Apprentice';
+            const fr = seat.frame || 'Apprentice';
+            let titleHtml = '';
+            if (seat.title) {
+                const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === seat.title) : null;
+                if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.8); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+            }
+
+            html += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:8px 12px; border:1px solid rgba(255,255,255,0.05); border-radius:4px; margin-bottom:4px;">
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
+                                <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+                                <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                            </div>
+                            <div style="display:flex; flex-direction:column; justify-content:center;">
+                                <span style="line-height:1; font-size:13px; font-weight:600; color:#fff;">${seat.displayName}</span>
+                                ${titleHtml}
+                            </div>
+                        </div>
+                        <div>${readyBadge}</div>
                      </div>`;
         });
         
@@ -5756,23 +6163,26 @@ function updateLobbyView(seats, tableSize) {
 
         let avatarContent = '⋯';
         if (seat) {
-            if (seat.isBot) {
-                avatarContent = '🤖';
-            } else {
-                const av = (window.DoDAuth && DoDAuth.getProfile() && DoDAuth.getProfile().uid === seat.uid) 
-                    ? getEquippedAvatar(DoDAuth.getProfile()) : 'Apprentice';
-                const fr = (window.DoDAuth && DoDAuth.getProfile() && DoDAuth.getProfile().uid === seat.uid) 
-                    ? getEquippedFrame(DoDAuth.getProfile()) : 'Apprentice';
-                avatarContent = `
-                  <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-                    <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-                    <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
-                  </div>
-                `;
-            }
+            const av = seat.avatar || ((window.DoDAuth && DoDAuth.getProfile() && DoDAuth.getProfile().uid === seat.uid) ? getEquippedAvatar(DoDAuth.getProfile()) : 'Apprentice');
+            const fr = seat.frame || ((window.DoDAuth && DoDAuth.getProfile() && DoDAuth.getProfile().uid === seat.uid) ? getEquippedFrame(DoDAuth.getProfile()) : 'Apprentice');
+            avatarContent = `
+              <div class="avatar-frame-wrap" style="width:100%; height:100%;">
+                <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+                <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+              </div>
+            `;
         }
 
-        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>`;
+        let seatTitleHtml = '';
+        if (seat && seat.title) {
+            const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === seat.title) : null;
+            if (tDef) {
+                // Scaled down to fit beautifully under the avatar in the circle
+                seatTitleHtml = `<div style="margin-top:2px; transform:scale(0.85); transform-origin:top center;"><div class="player-title title-${tDef.rarity}" style="height:16px; font-size:8px;"><span>${tDef.name}</span></div></div>`;
+            }
+        }
+        
+        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>${seatTitleHtml}`;
         ring.appendChild(div);
     }
 }
@@ -5861,7 +6271,7 @@ async function startMatchmakingPubg() {
 
     // Matchmaking itself runs in the background right away, independent of the visuals above
     const db = firebase.firestore();
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: myProfile.avatar || 'Apprentice', frame: myProfile.frame || 'Apprentice' }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get().catch(() => null);
         if (partyDoc && partyDoc.exists) joiningSquad = partyDoc.data().members;
@@ -6000,10 +6410,19 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
             if (data.seats.length > 0 && data.seats[0].uid !== myUid) return;
 
             let seats = data.seats, pSeats = data.publicSeats;
-            const botNames = ["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana"];
             while (seats.length < data.tableSize) {
                 const idx = seats.length;
-                seats.push({ seat: idx, uid: 'bot_'+Math.random().toString(36).substr(2,9), displayName: botNames[idx % botNames.length], isBot: true });
+                const botP = generateBotProfile();
+                seats.push({ 
+                    seat: idx, 
+                    uid: 'bot_'+Math.random().toString(36).substr(2,9), 
+                    displayName: botP.displayName, 
+                    isBot: true,
+                    avatar: botP.avatar,
+                    frame: botP.frame,
+                    tier: botP.tier,
+                    level: botP.level
+                });
                 pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
             }
             await checkDoc.ref.update({ seats, publicSeats: pSeats });
@@ -6085,15 +6504,108 @@ function cancelMatchmakingPubg() {
 }
 
 // --- PUBG PROFILE & PROGRESSION UI LOGIC ---
+const TITLES_DB = [
+  // --- COMMON (Base Grey) ---
+  { id: 't_initiate', name: 'Initiate', rarity: 'common', desc: 'Complete your first match.', reqKey: 'matchesPlayed', reqVal: 1 },
+  { id: 't_regular', name: 'Regular', rarity: 'common', desc: 'Complete 10 matches.', reqKey: 'matchesPlayed', reqVal: 10 },
+  { id: 't_firstblood', name: 'First Blood', rarity: 'common', desc: 'Win your first match.', reqKey: 'wins', reqVal: 1 },
+  { id: 't_survivor', name: 'Survivor', rarity: 'common', desc: 'Survive your first Deception.', reqKey: 'deceptionsSurvived', reqVal: 1 },
+  { id: 't_shopper', name: 'Shopper', rarity: 'common', desc: 'Perform 5 Forced Buys.', reqKey: 'forcedBuys', reqVal: 5 },
+  { id: 't_consumer', name: 'Consumer', rarity: 'common', desc: 'Perform 25 Forced Buys.', reqKey: 'forcedBuys', reqVal: 25 },
+  { id: 't_pickpocket', name: 'Pickpocket', rarity: 'common', desc: 'Use 5 Steal cards.', reqKey: 'steals', reqVal: 5 },
+  { id: 't_taxman', name: 'Taxman', rarity: 'common', desc: 'Use 5 Power cards.', reqKey: 'powers', reqVal: 5 },
+  { id: 't_uturn', name: 'U-Turn', rarity: 'common', desc: 'Play 10 Reverse cards.', reqKey: 'reverses', reqVal: 10 },
+  { id: 't_switcher', name: 'Switcher', rarity: 'common', desc: 'Play 5 Wild cards.', reqKey: 'wilds', reqVal: 5 },
+  { id: 't_cautious', name: 'Cautious', rarity: 'common', desc: 'Use Insurance 5 times.', reqKey: 'insurances', reqVal: 5 },
+  { id: 't_peepingtom', name: 'Peeping Tom', rarity: 'common', desc: 'Use Peek 5 times.', reqKey: 'peeks', reqVal: 5 },
+  { id: 't_trickster', name: 'The Trickster', rarity: 'common', desc: 'Reach Trickster Tier.', reqKey: 'tierLevel', reqVal: 1 },
+  { id: 't_pennypincher', name: 'Penny Pincher', rarity: 'common', desc: 'End a match with exactly 1 coin.', reqKey: 'maxCoinsMatch', reqVal: 1 },
+
+  // --- RARE (Blue) ---
+  { id: 't_veteran', name: 'Veteran', rarity: 'rare', desc: 'Play 50 matches total.', reqKey: 'matchesPlayed', reqVal: 50 },
+  { id: 't_gladiator', name: 'Gladiator', rarity: 'rare', desc: 'Win 10 matches total.', reqKey: 'wins', reqVal: 10 },
+  { id: 't_doubledown', name: 'Double Down', rarity: 'rare', desc: 'Win 25 matches total.', reqKey: 'wins', reqVal: 25 },
+  { id: 't_streak', name: 'Streak', rarity: 'rare', desc: 'Reach a 2-game win streak.', reqKey: 'winStreak', reqVal: 2 },
+  { id: 't_paranoid', name: 'Paranoid', rarity: 'rare', desc: 'Survive 10 Deceptions.', reqKey: 'deceptionsSurvived', reqVal: 10 },
+  { id: 't_addict', name: 'Market Addict', rarity: 'rare', desc: 'Perform 50 Forced Buys.', reqKey: 'forcedBuys', reqVal: 50 },
+  { id: 't_bandit', name: 'Bandit', rarity: 'rare', desc: 'Use 25 Steal cards.', reqKey: 'steals', reqVal: 25 },
+  { id: 't_enforcer', name: 'Enforcer', rarity: 'rare', desc: 'Use 25 Power cards.', reqKey: 'powers', reqVal: 25 },
+  { id: 't_dizzy', name: 'Dizzy', rarity: 'rare', desc: 'Play 50 Reverse cards.', reqKey: 'reverses', reqVal: 50 },
+  { id: 't_wildthing', name: 'Wild Thing', rarity: 'rare', desc: 'Play 25 Wild cards.', reqKey: 'wilds', reqVal: 25 },
+  { id: 't_safebet', name: 'Safe Bet', rarity: 'rare', desc: 'Use Insurance 15 times.', reqKey: 'insurances', reqVal: 15 },
+  { id: 't_spy', name: 'Spy', rarity: 'rare', desc: 'Use Peek 25 times.', reqKey: 'peeks', reqVal: 25 },
+  { id: 't_wealthy', name: 'Wealthy', rarity: 'rare', desc: 'Accumulate 1,000 total score.', reqKey: 'totalScore', reqVal: 1000 },
+  { id: 't_phantom', name: 'The Phantom', rarity: 'rare', desc: 'Reach Phantom Tier.', reqKey: 'tierLevel', reqVal: 2 },
+
+  // --- MYTHIC (Purple) ---
+  { id: 't_centurion', name: 'Centurion', rarity: 'mythic', desc: 'Play 100 matches total.', reqKey: 'matchesPlayed', reqVal: 100 },
+  { id: 't_warlord', name: 'Warlord', rarity: 'mythic', desc: 'Win 50 matches total.', reqKey: 'wins', reqVal: 50 },
+  { id: 't_dominator', name: 'Dominator', rarity: 'mythic', desc: 'Reach a 3-game win streak.', reqKey: 'winStreak', reqVal: 3 },
+  { id: 't_mindreader', name: 'Mind Reader', rarity: 'mythic', desc: 'Survive 25 Deceptions.', reqKey: 'deceptionsSurvived', reqVal: 25 },
+  { id: 't_shopaholic', name: 'Shopaholic', rarity: 'mythic', desc: 'Perform 100 Forced Buys.', reqKey: 'forcedBuys', reqVal: 100 },
+  { id: 't_masterthief', name: 'Master Thief', rarity: 'mythic', desc: 'Use 50 Steal cards.', reqKey: 'steals', reqVal: 50 },
+  { id: 't_oppressor', name: 'Oppressor', rarity: 'mythic', desc: 'Use 50 Power cards.', reqKey: 'powers', reqVal: 50 },
+  { id: 't_eraser', name: 'The Eraser', rarity: 'mythic', desc: 'Use Insurance 30 times.', reqKey: 'insurances', reqVal: 30 },
+  { id: 't_clairvoyant', name: 'Clairvoyant', rarity: 'mythic', desc: 'Use Peek 50 times.', reqKey: 'peeks', reqVal: 50 },
+  { id: 't_unpredictable', name: 'Unpredictable', rarity: 'mythic', desc: 'Play 50 Wild cards.', reqKey: 'wilds', reqVal: 50 },
+  { id: 't_rich', name: 'High Roller', rarity: 'mythic', desc: 'Accumulate 5,000 total score.', reqKey: 'totalScore', reqVal: 5000 },
+  { id: 't_tycoon', name: 'Tycoon', rarity: 'mythic', desc: 'End a single match with 30+ coins.', reqKey: 'maxCoinsMatch', reqVal: 30 },
+  { id: 't_mastermind', name: 'The Mastermind', rarity: 'mythic', desc: 'Reach Mastermind Tier.', reqKey: 'tierLevel', reqVal: 3 },
+
+  // --- LEGENDARY (Gold) ---
+  { id: 't_immortal', name: 'Immortal', rarity: 'legendary', desc: 'Play 250 matches total.', reqKey: 'matchesPlayed', reqVal: 250 },
+  { id: 't_deceiver', name: 'True Deceiver', rarity: 'legendary', desc: 'Win 100 matches total.', reqKey: 'wins', reqVal: 100 },
+  { id: 't_untouchable', name: 'Untouchable', rarity: 'legendary', desc: 'Reach a 5-game win streak.', reqKey: 'winStreak', reqVal: 5 },
+  { id: 't_backfromdead', name: 'Back from the Dead', rarity: 'legendary', desc: 'Survive 50 Deceptions.', reqKey: 'deceptionsSurvived', reqVal: 50 },
+  { id: 't_executioner', name: 'Executioner', rarity: 'legendary', desc: 'Use 100 Power cards.', reqKey: 'powers', reqVal: 100 },
+  { id: 't_phantomthief', name: 'Phantom Thief', rarity: 'legendary', desc: 'Use 100 Steal cards.', reqKey: 'steals', reqVal: 100 },
+  { id: 't_monopoly', name: 'Monopoly', rarity: 'legendary', desc: 'End a single match with 50+ coins.', reqKey: 'maxCoinsMatch', reqVal: 50 },
+  { id: 't_onepercent', name: 'The 1%', rarity: 'legendary', desc: 'Accumulate 10,000 total score.', reqKey: 'totalScore', reqVal: 10000 },
+  { id: 't_oracle', name: 'The Oracle', rarity: 'legendary', desc: 'Reach Oracle Tier.', reqKey: 'tierLevel', reqVal: 4 },
+  { id: 't_legend', name: 'The Legend', rarity: 'legendary', desc: 'Reach Legend Tier.', reqKey: 'tierLevel', reqVal: 5 }
+];
+
 let _customCurrentTab = 'avatars';
 let _previewAvatar = 'Apprentice';
 let _previewFrame = 'Apprentice';
+let _previewTitle = '';
 
-function getEquippedAvatar(profile) {
-  return (profile && profile.avatar && TIERS.includes(profile.avatar)) ? profile.avatar : 'Apprentice';
+function getEquippedAvatar(profile) { return (profile && profile.avatar && TIERS.includes(profile.avatar)) ? profile.avatar : 'Apprentice'; }
+function getEquippedFrame(profile) { return (profile && profile.frame && TIERS.includes(profile.frame)) ? profile.frame : 'Apprentice'; }
+function getEquippedTitle(profile) { return (profile && profile.title) ? profile.title : ''; }
+
+function isTitleUnlocked(profile, titleDef) {
+    if (!profile) return false;
+    if (titleDef.reqKey === 'tierLevel') return TIERS.indexOf(profile.tier || 'Apprentice') >= titleDef.reqVal;
+    return (profile[titleDef.reqKey] || 0) >= titleDef.reqVal;
 }
-function getEquippedFrame(profile) {
-  return (profile && profile.frame && TIERS.includes(profile.frame)) ? profile.frame : 'Apprentice';
+
+function switchMainTab(tabId, btnElement) {
+    sfx.uiClick();
+    
+    // Deactivate all sidebar buttons
+    const buttons = document.querySelectorAll('.pubg-sidebar .pubg-tab-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    
+    // Activate clicked button
+    if (btnElement) btnElement.classList.add('active');
+    
+    // Hide all main panes
+    const panes = document.querySelectorAll('.pubg-main-pane');
+    panes.forEach(p => p.style.display = 'none');
+    
+    // Show specific pane
+    const targetPane = document.getElementById('pane-' + tabId);
+    if (targetPane) {
+        // Special rule for custom pane (uses display:flex instead of block)
+        targetPane.style.display = (tabId === 'custom') ? 'flex' : 'flex'; 
+    }
+    
+    // Disable "EQUIP" button if not on Custom tab
+    const equipBtn = document.getElementById('btnEquipCustom');
+    if (equipBtn) {
+        equipBtn.style.visibility = (tabId === 'custom') ? 'visible' : 'hidden';
+    }
 }
 
 function updateProfileWidget(profile) {
@@ -6123,17 +6635,140 @@ function updateProfileWidget(profile) {
         `;
     }
 
-    // Modal data updates
+    // Modal Common Data Update
     const modalName = document.getElementById('modalProfileName');
     const modalTier = document.getElementById('modalProfileTier');
     const modalBar = document.getElementById('modalLevelBar');
     
-    if (modalName) modalName.textContent = profile.displayName;
+    if (modalName) modalName.textContent = profile.displayName + (profile.gameId ? ` #${profile.gameId}` : '');
     if (modalTier) modalTier.textContent = `${profile.tier || 'Apprentice'} • Level ${profile.level || 1}`;
     
     const pts = profile.points || 0;
     const pct = Math.min(100, Math.max(0, pts));
     if (modalBar) modalBar.style.width = pct + '%';
+    
+    // Populate Basic Info Tab Data
+    const idEl = document.getElementById('infoPlayerId');
+    if (idEl) idEl.textContent = profile.gameId || '----';
+    
+    const statusEl = document.getElementById('infoAccountStatus');
+    if (statusEl) {
+        const isGuest = firebase.auth().currentUser && firebase.auth().currentUser.isAnonymous;
+        statusEl.textContent = isGuest ? "Guest Profile" : "Verified Account";
+        statusEl.style.color = isGuest ? "var(--danger-bright)" : "var(--ok)";
+    }
+    
+    const coinsEl = document.getElementById('infoTotalCoins');
+    if (coinsEl) coinsEl.textContent = profile.currency || 0;
+    
+    const rankEl = document.getElementById('infoCurrentRank');
+    if (rankEl) rankEl.textContent = profile.tier || 'Apprentice';
+    
+    // Populate Statistics Tab Data
+    const mp = profile.matchesPlayed || 0;
+    const w = profile.wins || 0;
+    const wr = mp > 0 ? Math.round((w / mp) * 100) : 0;
+    
+    const sMatches = document.getElementById('statMatches');
+    const sWins = document.getElementById('statWins');
+    const sWinRate = document.getElementById('statWinRate');
+    const sTotalScore = document.getElementById('statTotalScore');
+    
+    if (sMatches) sMatches.textContent = mp;
+    if (sWins) sWins.textContent = w;
+    if (sWinRate) sWinRate.textContent = wr + '%';
+    if (sTotalScore) sTotalScore.textContent = profile.totalScore || 0;
+
+    // Constantly monitor for newly earned unlocked titles!
+    checkNewlyUnlockedTitles(profile);
+}
+
+// --- ACHIEVEMENT NOTIFICATION LOGIC ---
+let _sessionPoppedTitles = [];
+
+function checkNewlyUnlockedTitles(profile) {
+    if (!profile) return;
+    const seen = profile.seenTitles || [];
+    let hasUnseen = false;
+    
+    TITLES_DB.forEach(t => {
+        if (isTitleUnlocked(profile, t)) {
+            if (!seen.includes(t.id)) {
+                hasUnseen = true;
+                // Trigger the popup only once per play session per title
+                if (!_sessionPoppedTitles.includes(t.id)) {
+                    _sessionPoppedTitles.push(t.id);
+                    showAchievementPopup(profile, t);
+                }
+            }
+        }
+    });
+    
+    // Toggle the Red Dots based on the unseen status
+    const wDot = document.getElementById('widgetRedDot');
+    const tDot = document.getElementById('titlesTabRedDot');
+    if (wDot) { if (hasUnseen) wDot.classList.add('show'); else wDot.classList.remove('show'); }
+    if (tDot) { if (hasUnseen) tDot.classList.add('show'); else tDot.classList.remove('show'); }
+}
+
+function showAchievementPopup(profile, tDef) {
+    const popup = document.getElementById('achievementPopup');
+    const tContainer = document.getElementById('achPopupTitle');
+    const equipBtn = document.getElementById('achPopupEquipBtn');
+    
+    if (!popup || !tContainer || !equipBtn) return;
+    
+    tContainer.innerHTML = renderTitleHTML(tDef.id, true);
+    equipBtn.onclick = () => equipFromPopup(tDef.id);
+    
+    try { sfx.win(); } catch(e){} 
+    popup.classList.add('show');
+    
+    // Auto-close removed. The popup remains centered until the player clicks Equip or Dismiss.
+}
+
+function closeAchievementPopup() {
+    const popup = document.getElementById('achievementPopup');
+    if (popup) popup.classList.remove('show');
+    try { sfx.uiBack(); } catch(e){}
+}
+
+async function equipFromPopup(titleId) {
+    try { sfx.uiEquip(); } catch(e){}
+    closeAchievementPopup();
+    
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+    
+    profile.title = titleId;
+    profile.seenTitles = profile.seenTitles || [];
+    if (!profile.seenTitles.includes(titleId)) profile.seenTitles.push(titleId);
+    
+    if (window.firebase) {
+        await firebase.firestore().collection('users').doc(profile.uid).update({
+            title: titleId,
+            seenTitles: firebase.firestore.FieldValue.arrayUnion(titleId)
+        }).catch(()=>{});
+    }
+    
+    updateProfileWidget(profile);
+    if(typeof renderUnlockSelectors === 'function') renderUnlockSelectors(profile);
+}
+
+async function markTitleAsSeen(titleId) {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+    
+    profile.seenTitles = profile.seenTitles || [];
+    if (!profile.seenTitles.includes(titleId)) {
+        profile.seenTitles.push(titleId);
+        if (window.firebase) {
+            firebase.firestore().collection('users').doc(profile.uid).update({
+                seenTitles: firebase.firestore.FieldValue.arrayUnion(titleId)
+            }).catch(()=>{});
+        }
+        updateProfileWidget(profile); // This implicitly refreshes and clears the red dots!
+    }
 }
 
 function openProfileCustomization() {
@@ -6142,6 +6777,7 @@ function openProfileCustomization() {
     
     _previewAvatar = getEquippedAvatar(profile);
     _previewFrame = getEquippedFrame(profile);
+    _previewTitle = getEquippedTitle(profile);
     
     updateProfileWidget(profile);
     updatePreviewBox();
@@ -6156,6 +6792,9 @@ function updatePreviewBox() {
     if (avImg) avImg.src = `Avatars/${_previewAvatar}.png`;
     if (frImg) frImg.src = `Frames/${_previewFrame}.png`;
     
+    const titleBox = document.getElementById('modalProfileTitleBox');
+    if (titleBox) titleBox.innerHTML = renderTitleHTML(_previewTitle, true);
+    
     updateEquipButtonState();
 }
 
@@ -6164,19 +6803,26 @@ function updateEquipButtonState() {
     const btn = document.getElementById('btnEquipCustom');
     if (!btn || !profile) return;
     
-    const userTier = profile.tier || 'Apprentice';
-    const userTierIdx = Math.max(0, TIERS.indexOf(userTier));
-    
-    const activeItem = (_customCurrentTab === 'avatars') ? _previewAvatar : _previewFrame;
-    const itemTierIdx = TIERS.indexOf(activeItem);
-    const isUnlocked = itemTierIdx <= userTierIdx;
-    
-    const equippedItem = (_customCurrentTab === 'avatars') ? getEquippedAvatar(profile) : getEquippedFrame(profile);
-    const isAlreadyEquipped = (activeItem === equippedItem);
+    let isUnlocked = false;
+    let isAlreadyEquipped = false;
+    let btnLabel = '';
+
+    if (_customCurrentTab === 'titles') {
+        const tDef = TITLES_DB.find(t => t.id === _previewTitle);
+        isUnlocked = tDef ? isTitleUnlocked(profile, tDef) : false;
+        isAlreadyEquipped = (_previewTitle === getEquippedTitle(profile));
+        btnLabel = tDef ? "TITLE" : '';
+    } else {
+        const userTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
+        const activeItem = (_customCurrentTab === 'avatars') ? _previewAvatar : _previewFrame;
+        isUnlocked = TIERS.indexOf(activeItem) <= userTierIdx;
+        isAlreadyEquipped = (activeItem === ((_customCurrentTab === 'avatars') ? getEquippedAvatar(profile) : getEquippedFrame(profile)));
+        btnLabel = activeItem;
+    }
     
     if (!isUnlocked) {
         btn.disabled = true;
-        btn.textContent = `LOCKED (${activeItem})`;
+        btn.textContent = `LOCKED (${btnLabel})`;
         btn.style.background = "rgba(255,255,255,0.1)";
         btn.style.color = "rgba(255,255,255,0.4)";
         btn.style.borderColor = "transparent";
@@ -6236,6 +6882,49 @@ function renderUnlockSelectors(profile) {
           </div>
         `;
     }).join('');
+
+    // 3. Render Titles List
+    const tiRow = document.getElementById('titleSelectorRow');
+    if (tiRow) {
+        const eqTitle = getEquippedTitle(profile);
+        const seen = profile.seenTitles || [];
+        tiRow.innerHTML = TITLES_DB.map(t => {
+            const isUnlocked = isTitleUnlocked(profile, t);
+            const isEquipped = t.id === eqTitle;
+            const isSelected = t.id === _previewTitle;
+            const isNew = isUnlocked && !seen.includes(t.id);
+            let classes = `title-row ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''}`;
+            
+            return `
+              <div onclick="${isUnlocked ? `selectTitleItem('${t.id}')` : ''}" class="${classes}">
+                <div style="position:relative;">
+                    ${isNew ? '<div class="red-dot show" style="left:-8px; top:4px; right:auto;"></div>' : ''}
+                    <div class="player-title title-${t.rarity}"><span>${t.name}</span></div>
+                    <div class="title-desc">${t.desc}</div>
+                </div>
+                <div>
+                    ${isEquipped ? '<span style="color:var(--ok); font-family:\'IBM Plex Mono\',monospace; font-size:10px; font-weight:bold;">EQUIPPED</span>' : ''}
+                    ${!isUnlocked ? '<span style="color:rgba(255,255,255,0.4); font-size:14px;">🔒</span>' : ''}
+                </div>
+              </div>
+            `;
+        }).join('');
+    }
+}
+
+function renderTitleHTML(titleId, large = false) {
+    if (!titleId) return '';
+    const t = TITLES_DB.find(x => x.id === titleId);
+    if (!t) return '';
+    return `<div class="player-title ${large ? 'large' : ''} title-${t.rarity}"><span>${t.name}</span></div>`;
+}
+
+function selectTitleItem(titleId) {
+    _previewTitle = titleId;
+    markTitleAsSeen(titleId); // Marks it as seen, removes red dots
+    updatePreviewBox();
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (profile) renderUnlockSelectors(profile);
 }
 
 function selectAvatarItem(tierName) {
@@ -6256,18 +6945,23 @@ async function equipSelectedCustomization() {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
     
+    let updates = {};
     if (_customCurrentTab === 'avatars') {
         profile.avatar = _previewAvatar;
-    } else {
+        updates.avatar = profile.avatar;
+    } else if (_customCurrentTab === 'frames') {
         profile.frame = _previewFrame;
+        updates.frame = profile.frame;
+    } else if (_customCurrentTab === 'titles') {
+        profile.title = _previewTitle;
+        updates.title = profile.title;
     }
     
+    sfx.uiEquip();
+    
     // Save to Firestore
-    if (window.firebase) {
-        await firebase.firestore().collection('users').doc(profile.uid).update({
-            avatar: profile.avatar || 'Apprentice',
-            frame: profile.frame || 'Apprentice'
-        }).catch(e => console.error("Equip save error:", e));
+    if (window.firebase && Object.keys(updates).length > 0) {
+        await firebase.firestore().collection('users').doc(profile.uid).update(updates).catch(e => console.error("Equip save error:", e));
     }
     
     updateProfileWidget(profile);
@@ -6279,6 +6973,7 @@ function switchCustomTab(tabName, btnElement) {
     _customCurrentTab = tabName;
     document.getElementById('avatarsGridContainer').style.display = (tabName === 'avatars') ? 'block' : 'none';
     document.getElementById('framesGridContainer').style.display = (tabName === 'frames') ? 'block' : 'none';
+    document.getElementById('titlesGridContainer').style.display = (tabName === 'titles') ? 'flex' : 'none';
     
     const buttons = btnElement.parentElement.querySelectorAll('.pubg-subtab-btn');
     buttons.forEach(b => b.classList.remove('active'));
@@ -6291,8 +6986,173 @@ function switchCustomTab(tabName, btnElement) {
 if (window.DoDAuth) {
     DoDAuth.onProfileReady(profile => {
         updateProfileWidget(profile);
+        renderSettingsAccountControls(profile);
     });
 }
+
+function renderSettingsAccountControls(profile) {
+    const area = document.getElementById('settingsAccountArea');
+    if (!area || !profile) return;
+    
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    const isAnonymous = user.isAnonymous;
+    
+    if (isAnonymous) {
+        area.innerHTML = `
+            <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to Google to secure your progress permanently without losing data.</p>
+            <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToGoogleAccount()">Link Google Account</button>
+        `;
+    } else {
+        area.innerHTML = `
+            <p class="mono" style="font-size:11px; color:var(--ok); text-align:center; margin:0 0 4px;">✓ Secured with Google Account</p>
+            <button class="btn ghost small" style="width:100%; color:var(--danger-bright); border-color:rgba(194,59,74,0.4);" onclick="handleSettingsSignOut()">Sign Out Log Out</button>
+        `;
+    }
+}
+
+async function linkGuestToGoogleAccount() {
+    sfx.uiClick();
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const user = firebase.auth().currentUser;
+    
+    if (!user) return;
+    
+    try {
+        // Safe account up-linking transaction: transfers all Firestore coins, skins, level progress cleanly to verified credentials
+        const credential = await user.linkWithPopup(provider);
+        showSystemToast("Account successfully linked to Google!");
+        
+        if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
+            await DoDAuth.refreshProfile();
+        } else {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error("Linking failed: ", error);
+        if (error.code === 'auth/credential-already-in-use') {
+            showSystemToast("This Google account is already linked to another player!");
+        } else {
+            showSystemToast("Linking cancelled or failed.");
+        }
+    }
+}
+
+async function handleSettingsSignOut() {
+    sfx.uiBack();
+    if (confirm("Are you sure you want to sign out?")) {
+        try {
+            await firebase.auth().signOut();
+            localStorage.removeItem('dod_active_match');
+            window.location.reload();
+        } catch(e) {
+            console.error(e);
+        }
+    }
+}
+
+// ============================================================
+// ANDROID BACK BUTTON HARDWARE NAVIGATION TRAP
+// ============================================================
+
+// Push an initial state so we have something to "pop"
+window.history.pushState({ dod_app_state: "trapped" }, "");
+
+let lastBackPressTime = 0;
+
+function showSystemToast(msg) {
+    const existing = document.getElementById('sysToast');
+    if (existing) existing.remove();
+    
+    const toast = document.createElement('div');
+    toast.id = 'sysToast';
+    toast.style.cssText = 'position:fixed; bottom:12%; left:50%; transform:translateX(-50%); background:rgba(6,3,5,0.9); border:1px solid var(--brass); color:#fff; padding:10px 24px; border-radius:30px; font-family:"IBM Plex Mono",monospace; font-size:12px; z-index:999999; pointer-events:none; transition:opacity 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.8); text-align:center; white-space:nowrap;';
+    toast.textContent = msg;
+    
+    document.body.appendChild(toast);
+    setTimeout(() => toast.style.opacity = '0', 1500);
+    setTimeout(() => toast.remove(), 1800);
+}
+
+window.addEventListener('popstate', function(event) {
+    // 1. Immediately push a new state forward so the user remains trapped in our app
+    window.history.pushState({ dod_app_state: "trapped" }, "");
+
+    // 2. Check for Open Modals/Popups and close them first
+    const leaveGameModal = document.getElementById('leaveGameOverlay');
+    if (leaveGameModal && leaveGameModal.classList.contains('show')) {
+        leaveGameModal.classList.remove('show');
+        return;
+    }
+
+    const finaleModal = document.getElementById('finaleModal');
+    if (finaleModal && finaleModal.classList.contains('show')) {
+        showProgressionScreen();
+        return;
+    }
+
+    const progModal = document.getElementById('progressionModal');
+    if (progModal && progModal.classList.contains('show')) {
+        returnToMenuFromEndgame();
+        return;
+    }
+
+    const profileModal = document.getElementById('profileModal');
+    if (profileModal && profileModal.classList.contains('show')) {
+        profileModal.classList.remove('show');
+        return;
+    }
+
+    const pubgInvite = document.getElementById('pubgInvitePopup');
+    if (pubgInvite) {
+        pubgInvite.remove();
+        return;
+    }
+
+    const searchPanel = document.getElementById('pubgSearchPanel');
+    if (searchPanel && searchPanel.classList.contains('show')) {
+        closePubgSearchPanel();
+        return;
+    }
+
+    // 3. Check if we are actively in a Game
+    const gameUI = document.getElementById('game');
+    if (gameUI && gameUI.style.display === 'flex') {
+        leaveGame(); // Triggers the "Are you sure you want to leave?" prompt
+        return;
+    }
+
+    // 4. Check if we are in a Matchmaking/Party Lobby
+    const mmOverlay = document.getElementById('pubgMatchmakingOverlay');
+    if (mmOverlay && mmOverlay.classList.contains('show')) {
+        cancelMatchmakingPubg();
+        return;
+    }
+    
+    const lobbyView = document.getElementById('pubgLobbyView');
+    if (lobbyView && lobbyView.classList.contains('show')) {
+        leavePartyLobby();
+        return;
+    }
+
+    // 5. Check if we are in a Sub-Menu (Shop, Ranks, Training, Settings, Social)
+    const hubScreen = document.getElementById('screen-hub');
+    if (hubScreen && hubScreen.classList.contains('hidden')) {
+        showMenuScreen('hub'); // Send them back to the main menu
+        return;
+    }
+
+    // 6. We are in the Main Hub. Require a Double-Tap to Exit the App.
+    const now = Date.now();
+    if (now - lastBackPressTime < 2000) {
+        // They pressed back twice within 2 seconds. Let them escape the browser trap.
+        window.history.go(-2); 
+    } else {
+        lastBackPressTime = now;
+        showSystemToast("Press BACK again to exit");
+    }
+});
 
 </script>
 <script src="shop.js"></script>
