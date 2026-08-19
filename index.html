@@ -37,13 +37,24 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* INTRO OVERLAY TO UNLOCK AUDIO */
 #introOverlay {
-  position: fixed; inset: 0; z-index: 9999; background: #000;
-  display: flex; align-items: center; justify-content: center;
-  color: var(--brass-bright); font-family: 'Cinzel Decorative', serif; font-size: clamp(20px, 5vw, 32px);
-  cursor: pointer; transition: opacity 0.8s ease; text-shadow: 0 0 16px rgba(224,189,74,0.4);
+  position: fixed; inset: 0; z-index: 300000; background: #060709;
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between;
+  cursor: pointer; transition: opacity 0.8s ease;
 }
-.pulse-text { animation: slowPulse 2s infinite alternate; }
-@keyframes slowPulse { 0% { opacity: 0.3; transform:scale(0.98); } 100% { opacity: 1; transform:scale(1); } }
+.intro-center {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1;
+}
+.intro-logo-img { width: 140px; height: auto; margin-bottom: 24px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5)); }
+.intro-title { font-family: 'Cinzel Decorative', serif; font-size: clamp(28px, 6vw, 46px); color: var(--brass-bright); letter-spacing: 2px; text-shadow: 0 4px 16px rgba(224,189,74,0.4); text-align: center; margin: 0; }
+.intro-bottom {
+  width: 100%; display: flex; flex-direction: column; align-items: center; padding-bottom: 4vh;
+}
+.intro-status { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(242,234,216,0.6); margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase; transition: color 0.3s; }
+.intro-bar-track { width: 65%; max-width: 400px; height: 3px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden; margin-bottom: 20px; transition: opacity 0.4s; }
+.intro-bar-fill { height: 100%; width: 0%; background: var(--brass-bright); transition: width 0.1s linear; }
+.intro-copyright { font-family: 'Inter', sans-serif; font-size: 9px; color: rgba(255,255,255,0.25); text-align: center; letter-spacing: 0.5px; line-height: 1.6; max-width: 85%; }
+.pulse-text { animation: slowPulse 1.5s infinite alternate; }
+@keyframes slowPulse { 0% { opacity: 0.4; transform:scale(0.98); } 100% { opacity: 1; transform:scale(1.02); } }
 
 /* CINEMATIC MAIN MENU REDESIGN */
 #menu{
@@ -99,23 +110,78 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .settings-row input[type=range]{ width:150px; }
 .mp-note{ max-width:440px; text-align:center; color:rgba(242,234,216,0.8); line-height:1.6; margin-top:10px; font-size:12.5px; text-shadow:0 2px 8px rgba(0,0,0,0.9); }
 
-#loadingScreen{ display:none; position:fixed; inset:0; z-index:5000; background:var(--felt-dark); align-items:center; justify-content:center; flex-direction:column; gap:20px; }
-#loadingScreen.show{ display:flex; }
-.loading-cards{ display:flex; gap:8px; }
-.loading-card { 
-  width:32px; height:46px; border-radius:4px; 
-  background-size: cover; background-position: center; border: 1px solid rgba(0,0,0,0.6);
-  box-shadow:0 4px 14px rgba(0,0,0,0.5); animation:cardBounce 1s ease-in-out infinite; 
+/* CINEMATIC LOADING SCREEN */
+#loadingScreen {
+  display: none; position: fixed; inset: 0; z-index: 5000;
+  background: radial-gradient(circle at center, #150c12 0%, #060709 100%);
+  align-items: center; justify-content: center; overflow: hidden;
 }
-.loading-card:nth-child(1){ background-image: url('Cards/SwapCard.png'); }
-.loading-card:nth-child(2){ background-image: url('Cards/PowerCard.png'); animation-delay:0.12s; }
-.loading-card:nth-child(3){ background-image: url('Cards/PeekCard.png'); animation-delay:0.24s; }
-.loading-card:nth-child(4){ background-image: url('Cards/SteelCard.png'); animation-delay:0.36s; }
-.loading-card:nth-child(5){ background-image: url('Cards/ReverseCard.png'); animation-delay:0.48s; }
-@keyframes cardBounce{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-14px) } }
-.loading-bar-track{ width:240px; height:6px; border-radius:3px; background:rgba(255,255,255,0.08); overflow:hidden; }
-.loading-bar-fill{ height:100%; width:0%; background:linear-gradient(90deg,var(--brass),var(--brass-bright)); transition:width .3s linear; }
-.loading-text{ font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(242,234,216,0.75); letter-spacing:1px; text-transform:uppercase; }
+#loadingScreen.show { display: flex; animation: lsFadeIn 0.6s ease forwards; }
+
+/* Massive slow-spinning glowing halo */
+.ls-halo {
+  position: absolute; top: 50%; left: 50%; width: 150vmax; height: 150vmax;
+  margin-top: -75vmax; margin-left: -75vmax;
+  background: conic-gradient(from 0deg, transparent 0deg, rgba(201,162,39,0.05) 60deg, transparent 120deg, rgba(201,162,39,0.05) 240deg, transparent 300deg);
+  animation: lsSpin 20s linear infinite; pointer-events: none; z-index: 0;
+}
+@keyframes lsSpin { 100% { transform: rotate(360deg); } }
+
+/* Floating embers/dust */
+.ls-particles { position: absolute; inset: 0; z-index: 1; pointer-events: none; }
+.ls-ember {
+  position: absolute; bottom: -20px; width: 4px; height: 4px; background: var(--brass-bright);
+  border-radius: 50%; filter: blur(1px); opacity: 0; animation: emberFloat 4s infinite ease-in;
+}
+@keyframes emberFloat {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(-300px) scale(0.2); opacity: 0; }
+}
+
+.ls-center {
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 500px; padding: 0 20px;
+}
+
+.ls-title {
+  font-family: 'Cinzel Decorative', serif; font-size: clamp(32px, 7vw, 56px);
+  margin-bottom: 40px; letter-spacing: 4px;
+  background: linear-gradient(100deg, #a9822c 20%, #f5dd8a 45%, #a9822c 60%);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 4px 16px rgba(224,189,74,0.3));
+  animation: shimmerSweep 3s linear infinite; text-align: center; line-height: 1.1;
+}
+
+/* Sleek, thin tactical progress bar */
+#loadingScreen .loading-bar-track {
+  width: 100%; max-width: 360px; height: 2px; border-radius: 2px;
+  background: rgba(255,255,255,0.08); overflow: hidden; margin-bottom: 16px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.8);
+}
+#loadingScreen .loading-bar-fill {
+  height: 100%; width: 0%; background: var(--brass-bright); box-shadow: 0 0 8px var(--brass-bright);
+}
+#loadingScreen .loading-text {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: rgba(242,234,216,0.6);
+  letter-spacing: 2px; text-transform: uppercase; animation: lsTextPulse 1.5s infinite alternate;
+}
+
+/* Tips Box at the bottom */
+.ls-tip-box {
+  position: absolute; bottom: 40px; z-index: 3;
+  display: flex; flex-direction: column; align-items: center; gap: 8px; width: 90%; max-width: 600px; text-align: center;
+}
+.ls-tip-label {
+  font-family: 'Cinzel', serif; font-size: 10px; font-weight: 700; color: var(--brass-bright);
+  letter-spacing: 2px; border: 1px solid rgba(201,162,39,0.4); padding: 2px 10px; border-radius: 12px; background: rgba(0,0,0,0.5);
+}
+.ls-tip-text {
+  font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(242,234,216,0.8); line-height: 1.5; font-weight: 500;
+}
+@keyframes lsFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
+@keyframes lsTextPulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
 .shop-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:14px; width:100%; margin-top:16px; }
 .shop-item{ background:rgba(0,0,0,0.4); border:1px solid rgba(201,162,39,0.25); border-radius:8px; padding:12px 10px; text-align:center; }
@@ -966,6 +1032,17 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .title-row.locked { opacity:0.4; filter:grayscale(0.8); cursor:not-allowed; }
 .title-desc { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); margin-top:4px; }
 
+/* --- PUBG EVENTS & CHESTS --- */
+.pubg-events-zone { position:absolute; top:90px; right:28px; display:flex; flex-direction:column; gap:10px; width:180px; align-items:flex-end; pointer-events:none; }
+.pubg-events-zone > * { pointer-events:auto; }
+.event-banner { width:100%; height:60px; background:linear-gradient(135deg, #2b1a24, #4a148c); border:1px solid #8b3dff; border-radius:4px; display:flex; align-items:center; justify-content:center; cursor:pointer; position:relative; overflow:hidden; box-shadow:0 4px 10px rgba(0,0,0,0.5); transition:transform 0.2s; }
+.event-banner:hover { transform:scale(1.02); }
+.event-banner::before { content:''; position:absolute; inset:0; background:url('Cards/Table.jpg'); opacity:0.3; background-size:cover; mix-blend-mode:overlay; }
+.event-text { font-family:'Cinzel Decorative',serif; color:#fff; font-size:15px; font-weight:bold; text-shadow:0 2px 4px #000; z-index:2; letter-spacing:1px; }
+.chest-inventory { width:100%; display:flex; flex-direction:column; gap:6px; margin-top:4px; }
+.chest-item { display:flex; align-items:center; justify-content:space-between; background:rgba(0,0,0,0.7); border:1px solid rgba(255,255,255,0.15); border-radius:4px; padding:8px 12px; cursor:pointer; transition:all 0.2s; backdrop-filter:blur(4px); }
+.chest-item:hover { background:rgba(255,255,255,0.1); border-color:var(--brass-bright); transform:translateX(-4px); }
+
 /* --- NOTIFICATIONS & RED DOTS --- */
 .red-dot { position:absolute; top:-4px; right:-4px; width:12px; height:12px; background:var(--danger-bright); border-radius:50%; border:2px solid var(--felt-dark); display:none; pointer-events:none; z-index:10; box-shadow:0 0 6px rgba(194,59,74,0.8); }
 .red-dot.show { display:block; animation: dotPulse 1.5s infinite; }
@@ -1236,6 +1313,137 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     100% { opacity: 0; transform: scale(1.15); letter-spacing: 8px; }
   }
 }
+
+/* ============================================================
+   ROYAL VAULT UI REFRESH — Shop / Profile / Settings / Training
+   (Purely additive — overrides earlier rules by cascade order)
+   ============================================================ */
+
+/* Screen titles: engraved gold-plate look with underline glow */
+.screen-title{
+  background:linear-gradient(180deg,#f5dd8a 0%,#c9a227 55%,#8a6a1c 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  text-shadow:none; filter:drop-shadow(0 3px 6px rgba(0,0,0,0.85));
+  padding-bottom:10px; position:relative;
+}
+.screen-title::after{
+  content:''; position:absolute; left:50%; bottom:0; transform:translateX(-50%);
+  width:64px; height:2px; background:linear-gradient(90deg,transparent,var(--brass-bright),transparent);
+  box-shadow:0 0 8px rgba(232,196,84,0.7);
+}
+
+/* Currency badge -> coin chip */
+.currency-badge{
+  display:inline-flex; align-items:center; gap:6px;
+  background:linear-gradient(145deg,rgba(20,14,8,0.9),rgba(40,28,14,0.75));
+  border:1px solid var(--brass); border-radius:999px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.08), 0 4px 14px rgba(0,0,0,0.5);
+  font-weight:700; letter-spacing:0.5px;
+}
+
+/* Buttons: richer gold gradient + sheen sweep on hover */
+.btn{
+  background:linear-gradient(180deg,var(--brass-bright) 0%,var(--brass) 55%,#a9822c 100%);
+  border:1px solid #f5dd8a; overflow:hidden; isolation:isolate;
+}
+.btn::after{
+  content:''; position:absolute; top:0; left:-60%; width:40%; height:100%;
+  background:linear-gradient(120deg,transparent,rgba(255,255,255,0.55),transparent);
+  transform:skewX(-20deg); transition:left .5s ease; z-index:1; pointer-events:none;
+}
+.btn:hover::after{ left:130%; }
+.btn.ghost{ background:rgba(0,0,0,0.35); backdrop-filter:blur(6px); border:1px solid rgba(232,196,84,0.4); }
+.btn.ghost::after{ display:none; }
+
+/* Section labels: small gold tab */
+.section-label{
+  color:var(--brass-bright); border-bottom:none; position:relative;
+  padding:4px 14px; background:rgba(201,162,39,0.08);
+  border:1px solid rgba(201,162,39,0.3); border-radius:4px 4px 0 0;
+}
+
+/* SHOP: rarity-styled premium cards */
+.shop-item{
+  background:linear-gradient(160deg,rgba(30,20,14,0.9),rgba(10,7,5,0.9));
+  border:1px solid rgba(201,162,39,0.35); border-radius:12px;
+  padding:16px 12px; position:relative; overflow:hidden;
+  box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.shop-item::before{
+  content:''; position:absolute; inset:0;
+  background:linear-gradient(160deg,rgba(232,196,84,0.08),transparent 60%);
+  pointer-events:none;
+}
+.shop-item:hover{
+  transform:translateY(-4px); border-color:var(--brass-bright);
+  box-shadow:0 12px 26px rgba(0,0,0,0.65), 0 0 18px rgba(232,196,84,0.25);
+}
+.shop-item .shop-swatch{
+  width:46px; height:46px; box-shadow:0 0 0 3px rgba(0,0,0,0.5), 0 6px 14px rgba(0,0,0,0.5);
+  border:2px solid rgba(255,255,255,0.15);
+}
+.shop-item .shop-name{ font-size:12px; letter-spacing:0.3px; }
+.shop-item .shop-price{
+  display:inline-flex; align-items:center; gap:4px; background:rgba(0,0,0,0.4);
+  padding:3px 10px; border-radius:20px; border:1px solid rgba(201,162,39,0.25);
+}
+.shop-item button{
+  font-family:'Cinzel',serif; font-weight:700; letter-spacing:0.5px;
+  background:linear-gradient(180deg,var(--brass-bright),var(--brass)); color:var(--felt-dark);
+  box-shadow:0 3px 8px rgba(0,0,0,0.4); transition:transform .15s;
+}
+.shop-item button:hover:not(:disabled){ transform:translateY(-1px); }
+.shop-item button.owned{ background:rgba(47,110,82,0.25); color:#9fd9b8; box-shadow:none; }
+.shop-item button.equipped{ background:linear-gradient(180deg,#3d8f68,var(--ok)); color:#fff; box-shadow:none; }
+.shop-item button.locked{ background:rgba(20,14,8,0.8); color:var(--brass-bright); border:1px solid rgba(201,162,39,0.4); }
+.shop-item button.locked:disabled{ background:rgba(255,255,255,0.05); color:rgba(242,234,216,0.3); border-color:rgba(255,255,255,0.08); }
+
+/* Shop / Profile tabs -> pill nav */
+.pubg-subtab-btn{ padding:8px 16px; border:1px solid transparent; border-radius:999px; background:rgba(255,255,255,0.03); }
+.pubg-subtab-btn.active{ background:rgba(232,196,84,0.12); border-color:var(--brass-bright); box-shadow:0 0 10px rgba(232,196,84,0.25); }
+
+/* TRAINING: rules box as parchment ledger */
+.rules-box{
+  background:linear-gradient(160deg,rgba(36,24,14,0.92),rgba(14,9,6,0.92));
+  border:1px solid rgba(201,162,39,0.3); border-left:3px solid var(--brass-bright);
+  border-radius:10px; padding:18px 20px; width:100%; max-width:520px;
+  box-shadow:0 10px 28px rgba(0,0,0,0.5); font-size:13px; line-height:1.65;
+}
+.rules-box b{ color:var(--brass-bright); }
+
+/* SETTINGS: card rows with a custom gold slider thumb */
+.settings-row{
+  background:rgba(0,0,0,0.35); border:1px solid rgba(255,255,255,0.06);
+  border-radius:10px; padding:12px 16px; max-width:380px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.settings-row input[type=range]{
+  -webkit-appearance:none; height:4px; border-radius:2px;
+  background:linear-gradient(90deg,var(--brass-bright),rgba(255,255,255,0.15)); outline:none;
+}
+.settings-row input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+  background:var(--brass-bright); border:2px solid #1a120a; box-shadow:0 2px 6px rgba(0,0,0,0.6); cursor:pointer;
+}
+.settings-row input[type=range]::-moz-range-thumb{
+  width:16px; height:16px; border-radius:50%; background:var(--brass-bright); border:2px solid #1a120a; cursor:pointer;
+}
+
+/* Profile modal: refined glass panel */
+#pubgProfileWidget{ padding:4px !important; border-radius:12px; }
+.pubg-modal-container{
+  border:1px solid rgba(201,162,39,0.35); border-radius:12px;
+  background:linear-gradient(160deg,rgba(16,12,10,0.98),rgba(6,5,5,0.98));
+  box-shadow:0 24px 70px rgba(0,0,0,0.9), 0 0 0 1px rgba(255,255,255,0.03) inset;
+}
+.pubg-sidebar{ background:rgba(0,0,0,0.25); }
+.pubg-tab-btn.active{ background:linear-gradient(90deg,rgba(232,196,84,0.14),transparent); }
+
+/* Ranks list + icon bar: matching polish */
+.rank-item{ border-radius:12px; }
+.rank-item.current{ box-shadow:0 0 22px rgba(226,189,74,0.3); }
+.pubg-icon-btn{ border-radius:14px; }
 </style>
 </head>
 <body>
@@ -1248,6 +1456,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 window.dodImagesLoaded = false;
 (function dodPreloadImages() {
   var srcs = [
+    'PixelaksLogoTransparent.png',
     'Cards/Decks.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
     'Cards/SteelCard.png', 'Cards/ReverseCard.png', 'Cards/PeekCard.png',
     'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Cards/Coins.png', 'Cards/Table.jpg',
@@ -1260,19 +1469,37 @@ window.dodImagesLoaded = false;
   ];
   var loaded = 0;
   var total = srcs.length;
+  var isCached = localStorage.getItem('dod_assets_cached') === 'true';
 
   function updateLoaderUI() {
       var overlay = document.getElementById('introOverlay');
-      var textEl = overlay ? overlay.querySelector('.pulse-text') : null;
-      if (!overlay || !textEl) return;
+      var statusEl = document.getElementById('introStatusText');
+      var fillEl = document.getElementById('introProgressFill');
+      var trackEl = document.getElementById('introBarTrack');
       
-      if (loaded < total) {
+      if (!overlay || !statusEl || !fillEl) return;
+      
+      // If assets were cached in a previous session, visually fast-track the loader to 100% instantly
+      var displayLoaded = isCached ? total : loaded;
+      var pct = total > 0 ? Math.floor((displayLoaded / total) * 100) : 0;
+      fillEl.style.width = pct + '%';
+
+      if (displayLoaded < total) {
           overlay.style.pointerEvents = 'none';
-          textEl.textContent = 'Loading Assets... (' + loaded + '/' + total + ')';
+          statusEl.textContent = 'Loading Assets... ' + pct + '%';
+          statusEl.classList.remove('pulse-text');
+          statusEl.style.color = 'rgba(242,234,216,0.6)';
       } else {
           window.dodImagesLoaded = true;
           overlay.style.pointerEvents = 'auto';
-          textEl.textContent = "Tap anywhere to enter";
+          statusEl.textContent = "Tap anywhere to enter";
+          statusEl.classList.add('pulse-text');
+          statusEl.style.color = 'var(--brass-bright)';
+          // Fade out the progress bar track leaving just the pulsing text and copyrights
+          if (trackEl) trackEl.style.opacity = '0';
+          
+          // Mark the local browser memory flag so next visit is instant
+          localStorage.setItem('dod_assets_cached', 'true');
       }
   }
 
@@ -1281,16 +1508,17 @@ window.dodImagesLoaded = false;
   var checkUI = setInterval(function() {
       if (document.getElementById('introOverlay')) {
           updateLoaderUI();
-          if (loaded >= total) clearInterval(checkUI);
+          if (loaded >= total || isCached) clearInterval(checkUI);
       }
-  }, 100);
+  }, 50);
 
   function markLoaded(img) {
       loaded++;
       // Append directly to DOM to force the GPU to decode and hold the texture for the CSS backgrounds
       var hiddenDiv = document.getElementById('hiddenPreloader');
       if (hiddenDiv) hiddenDiv.appendChild(img);
-      updateLoaderUI();
+      // Only incrementally update the UI if we aren't fast-tracking
+      if (!isCached) updateLoaderUI();
   }
 
   for (var i = 0; i < srcs.length; i++) {
@@ -1318,12 +1546,35 @@ window.dodImagesLoaded = false;
 
 <!-- AUDIO ENGINE -->
 <audio id="bgMusic" loop>
-  <source src="Cinematic_Thunder.mp3" type="audio/mpeg">
+  <source src="DeckofDeceptionTheme.mp3" type="audio/mpeg">
 </audio>
+<audio id="inGameMusic" loop>
+  <source src="GameBegins.mp3" type="audio/mpeg">
+</audio>
+<audio id="tensionMusic" loop>
+  <source src="ClockroomTension.mp3" type="audio/mpeg">
+</audio>
+
+<!-- CUSTOM SFX ENGINE -->
+<audio id="sfxClick" src="ClickSfx.mp4" preload="auto"></audio>
+<audio id="sfxPlay" src="PlaySfx.mp4" preload="auto"></audio>
+<audio id="sfxNotification" src="NotificationSfx.mp4" preload="auto"></audio>
+<audio id="sfxCoins" src="CoinsSfx.mp4" preload="auto"></audio>
 
 <!-- INTRO OVERLAY -->
 <div id="introOverlay">
-    <span class="pulse-text">Tap anywhere to enter</span>
+    <div class="intro-center">
+        <img src="PixelaksLogoTransparent.png" alt="Pixelaks Technologies" class="intro-logo-img">
+        <h1 class="intro-title">DECK OF DECEPTION</h1>
+    </div>
+    <div class="intro-bottom">
+        <div class="intro-status" id="introStatusText">Checking resources... 0%</div>
+        <div class="intro-bar-track" id="introBarTrack"><div class="intro-bar-fill" id="introProgressFill"></div></div>
+        <div class="intro-copyright">
+            COPYRIGHT © 2026 PIXELAKS TECHNOLOGIES ALL RIGHTS RESERVED<br>
+            Deck Of Deception, Copyright 2026. All rights reserved.
+        </div>
+    </div>
 </div>
 
 <!-- HOW TO PLAY TUTORIAL -->
@@ -1367,6 +1618,7 @@ window.dodImagesLoaded = false;
     <div style="text-align:left; display:flex; flex-direction:column; gap:2px;">
       <span id="widgetPlayerName" style="font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:#fff;">Loading...</span>
       <span id="widgetPlayerTier" style="font-family:'Inter',sans-serif; font-size:11px; color:var(--brass-bright); font-weight:600;">Bronze Lvl 1</span>
+      <div id="widgetPlayerTitleBox"></div>
     </div>
   </div>
 
@@ -1419,6 +1671,17 @@ window.dodImagesLoaded = false;
       <!-- Cancel button: hidden until searching starts, replaces the old overlay cancel -->
       <button id="pubgCancelBtn" onclick="cancelMatchmakingPubg()" style="display:none; width:100%; margin-top:5px; background:none; border:1px solid rgba(242,234,216,0.25); color:rgba(242,234,216,0.7); font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1px; padding:7px 0; cursor:pointer; border-radius:3px; transition: border-color .2s, color .2s;">✕ CANCEL</button>
     </div>
+    <!-- Right side Events & Chests -->
+    <div class="pubg-events-zone" id="pubgEventsZone">
+      <div class="event-banner" onclick="openLuckySpin()">
+        <div class="event-text">LUCKY SPIN</div>
+        <div id="spinRedDot" class="red-dot" style="top:5px; right:5px;"></div>
+      </div>
+      <div class="chest-inventory" id="chestInventoryList">
+        <!-- Chests populate here -->
+      </div>
+    </div>
+    
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
       <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Ranks">🏆<span class="ib-label">Ranks</span></button>
@@ -1480,14 +1743,25 @@ window.dodImagesLoaded = false;
   </div>
 
   <!-- SHOP -->
-  <div class="menu-screen hidden" id="screen-shop">
-    <div class="screen-header">
-      <div class="screen-title">Shop</div>
-      <div class="currency-badge">🪙 <span id="shopCurrency">0</span> coins</div>
+  <div class="menu-screen hidden" id="screen-shop" style="max-width: 800px; width: 100%;">
+    <div class="screen-header" style="margin-bottom: 0;">
+      <div class="screen-title">Marketplace</div>
+      <div class="currency-badge">🪙 <span id="shopCurrency">0</span></div>
     </div>
-    <div class="screen-content">
-      <div id="shopRoot" class="shop-grid"></div>
-      <p class="mp-note">Earn coins by finishing games — the more you're worth when the table closes out, the more you take home. This is a local, in-session economy for now, not a real payment system.</p>
+    <div class="screen-content" style="padding: 10px; width: 100%;">
+      <!-- Shop Tabs -->
+      <div style="display:flex; justify-content:center; gap:16px; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:16px; width: 100%; overflow-x: auto; padding-bottom: 5px;">
+        <button class="pubg-subtab-btn active" onclick="switchShopTab('cardFaces', this)">Faces</button>
+        <button class="pubg-subtab-btn" onclick="switchShopTab('cardBacks', this)">Backs</button>
+        <button class="pubg-subtab-btn" onclick="switchShopTab('tables', this)">Tables</button>
+        <button class="pubg-subtab-btn" onclick="switchShopTab('vfx', this)">VFX</button>
+        <button class="pubg-subtab-btn" onclick="switchShopTab('coins', this)">Coins</button>
+      </div>
+      
+      <!-- Dynamic Grid -->
+      <div id="shopRoot" class="shop-grid" style="display:grid; grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); gap:14px; width:100%;">
+         <!-- Handled by JS -->
+      </div>
     </div>
   </div>
 
@@ -1519,7 +1793,7 @@ window.dodImagesLoaded = false;
       <div class="screen-title">Settings</div>
     </div>
     <div class="screen-content">
-      <div class="settings-row"><span>Ambient music</span><input type="range" id="musicVol" min="0" max="100" value="30" oninput="setMusicVolume(this.value)"></div>
+      <div class="settings-row"><span>Ambient music</span><input type="range" id="musicVol" min="0" max="100" value="15" oninput="setMusicVolume(this.value)"></div>
       <div class="settings-row"><span>Sound effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
       
       <div class="section-label" style="margin-top:30px;">Account Management</div>
@@ -1598,13 +1872,19 @@ window.dodImagesLoaded = false;
 
 </div>
 
+<!-- CINEMATIC LOADING SCREEN -->
 <div id="loadingScreen">
-  <div class="suit-row" style="opacity:0.4"><span>♠</span><span>♥</span><span>♦</span><span>♣</span></div>
-  <div class="loading-cards">
-    <div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div><div class="loading-card"></div>
+  <div class="ls-halo"></div>
+  <div class="ls-particles" id="lsParticles"></div>
+  <div class="ls-center">
+    <h2 class="ls-title">DECK OF DECEPTION</h2>
+    <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
+    <div class="loading-text" id="loadingText">Shuffling the deck…</div>
   </div>
-  <div class="loading-bar-track"><div class="loading-bar-fill" id="loadingBarFill"></div></div>
-  <div class="loading-text" id="loadingText">Shuffling the deck…</div>
+  <div class="ls-tip-box">
+    <span class="ls-tip-label">TIP</span>
+    <span class="ls-tip-text" id="lsTipText">A good bluff is worth more than a good hand.</span>
+  </div>
 </div>
 
 <!-- CINEMATIC MATCH START TITLE -->
@@ -1614,6 +1894,13 @@ window.dodImagesLoaded = false;
 <!-- CINEMATIC DECEPTION TITLE -->
 <div id="deceptionIntroOverlay">
   <h1 class="match-intro-title" style="color: var(--danger-bright); text-shadow: 0 4px 24px rgba(194,59,74,0.7);">DECEPTION TIME</h1>
+</div>
+
+<!-- ELIMINATION CINEMATIC OVERLAY -->
+<div id="eliminationOverlay" style="display:none; position:fixed; inset:0; z-index:8200; background:radial-gradient(circle, rgba(122,31,46,0.95) 0%, #060709 100%); flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#fff; backdrop-filter:blur(10px);">
+    <div style="font-size:72px; margin-bottom:20px; animation: pulseIn 0.6s cubic-bezier(0.2, 1, 0.3, 1);">💀</div>
+    <h1 style="font-family:'Cinzel Decorative', serif; font-size:clamp(36px, 8vw, 64px); color:var(--danger-bright); text-shadow:0 4px 20px #000; margin:0 0 30px; letter-spacing:4px; text-transform:uppercase;" id="elimTitle">ELIMINATED</h1>
+    <div id="elimDetails" style="font-family:'IBM Plex Mono', monospace; font-size:16px; color:rgba(255,255,255,0.85); max-width:600px; line-height:1.6; padding: 0 20px;"></div>
 </div>
 
 <div id="game">
@@ -1768,6 +2055,27 @@ async function submitUniqueNameWithId() {
 }
 </script>
 
+<!-- LUCKY SPIN MODAL -->
+<div class="modal-bg" id="spinModalOverlay" style="z-index: 6500;">
+  <div class="modal" style="text-align:center; background:rgba(12,14,16,0.98); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Daily Lucky Spin</h3>
+    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Test your luck once a day to win Coins, Chests, or exclusive skins!</p>
+    <div id="spinResultBox" style="font-size:54px; margin-bottom:20px; min-height:60px; filter:drop-shadow(0 0 10px rgba(226,189,74,0.4));">🎰</div>
+    <button class="btn" id="btnDoSpin" style="width:100%;" onclick="executeLuckySpin()">SPIN NOW</button>
+    <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="document.getElementById('spinModalOverlay').classList.remove('show')">Close</button>
+  </div>
+</div>
+
+<!-- CHEST OPEN MODAL -->
+<div class="modal-bg" id="chestModalOverlay" style="z-index: 6600;">
+  <div class="modal" style="text-align:center; background:radial-gradient(circle at center, rgba(43,26,36,0.95), rgba(6,7,9,0.98)); border:1px solid var(--brass); padding:40px 30px; border-radius:12px; max-width:450px; width:90%; box-shadow:0 0 50px rgba(226,189,74,0.2);">
+    <h3 id="chestTitle" style="font-family:'Cinzel Decorative',serif; color:#fff; font-size:22px; margin-bottom:20px;">Opening Chest...</h3>
+    <div id="chestRewardIcon" style="font-size:72px; margin:20px 0; animation: pulseIn 0.5s ease;">🎁</div>
+    <div id="chestRewardText" style="font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--brass-bright); font-weight:bold; margin-bottom:30px; min-height:20px;"></div>
+    <button class="btn" style="width:100%;" onclick="document.getElementById('chestModalOverlay').classList.remove('show')">Awesome!</button>
+  </div>
+</div>
+
 <!-- PROFILE CUSTOMIZATION & PROGRESSION MODAL -->
 <div class="modal-bg" id="profileModal" style="z-index: 6000;">
   <div class="pubg-modal-container">
@@ -1858,6 +2166,10 @@ async function submitUniqueNameWithId() {
                    <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total Score</div>
                    <div id="statTotalScore" style="color:var(--brass-bright); font-size:24px; font-weight:bold;">0</div>
                </div>
+               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Copies Collected</div>
+                   <div id="statCopies" style="color:var(--ok); font-size:24px; font-weight:bold;">0</div>
+               </div>
            </div>
         </div>
 
@@ -1917,43 +2229,189 @@ async function submitUniqueNameWithId() {
 <script src="auth.js"></script>
 
 <script>
-// --- AUDIO SFX SYNTHESIZER ---
+// --- ADVANCED CINEMATIC AUDIO SYNTHESIZER ---
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
-let sfxVolume = 0.6;
+let savedSfx = localStorage.getItem('dod_sfx_vol');
+let sfxVolume = savedSfx !== null ? parseInt(savedSfx) / 100 : 0.6;
 
-function playTone(freq, type, duration, vol=0.1) {
-  if(!audioCtx) return;
-  try {
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = type;
-    osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-    gain.gain.setValueAtTime(vol*sfxVolume, audioCtx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + duration);
-    osc.connect(gain);
-    gain.connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + duration);
-  } catch(e) {}
+// Helper to generate white noise for swooshes and impacts
+function createNoiseBuffer() {
+    if(!audioCtx) return null;
+    const bufferSize = audioCtx.sampleRate * 2; 
+    const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+    return buffer;
+}
+let noiseBuffer;
+
+// Helper to play your custom audio files seamlessly
+function playExternalSfx(elementId) {
+    const el = document.getElementById(elementId);
+    if(el) {
+        el.volume = sfxVolume; // Respects the in-game SFX slider!
+        el.currentTime = 0;    // Instantly resets so it can be spammed
+        el.play().catch(()=>{});
+    }
 }
 
 const sfx = {
-  card: () => { playTone(300, 'sine', 0.1, 0.05); setTimeout(()=>playTone(600, 'triangle', 0.1, 0.03), 50); },
-  coin: () => { playTone(1200, 'sine', 0.1, 0.05); setTimeout(()=>playTone(1600, 'sine', 0.2, 0.05), 50); },
-  turn: () => playTone(300, 'sine', 0.3, 0.05),
-  alert: () => playTone(250, 'square', 0.2, 0.04),
-  win: () => { playTone(400,'sine',0.1); setTimeout(()=>playTone(500,'sine',0.1),100); setTimeout(()=>playTone(600,'sine',0.4),200); },
-  uiClick: () => playTone(580, 'sine', 0.08, 0.04),
-  uiBack: () => playTone(420, 'sine', 0.12, 0.04),
-  uiEquip: () => { playTone(880, 'sine', 0.06, 0.03); setTimeout(()=>playTone(1100, 'sine', 0.15, 0.03), 40); }
+    _init: () => {
+        if(!audioCtx) audioCtx = new AudioContext();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        if(!noiseBuffer) noiseBuffer = createNoiseBuffer();
+    },
+    uiClick: () => playExternalSfx('sfxClick'),
+    uiBack: () => playExternalSfx('sfxClick'),
+    playBtn: () => playExternalSfx('sfxPlay'),
+    deceptionStart: () => {
+        sfx._init();
+        // Deep, tense cinematic drum impact
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(30, now + 0.8);
+        gain.gain.setValueAtTime(0.8 * sfxVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 1.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 1.2);
+        
+        // Add a noise layer for the "hit" of the drum
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(300, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(50, now + 0.5);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.4 * sfxVolume, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+        noise.start(now); noise.stop(now + 0.5);
+    },
+    alert: () => playExternalSfx('sfxNotification'),
+    uiEquip: () => {
+        sfx._init();
+        // Heavy metallic equip/lock-in sound
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(150, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.1 * sfxVolume, audioCtx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 0.2);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+    },
+    card: () => {
+        sfx._init();
+        // Cinematic Card Slide: Air swoosh + physical snap
+        const now = audioCtx.currentTime;
+        
+        // Air Swoosh (Filtered noise)
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'bandpass';
+        noiseFilter.frequency.setValueAtTime(800, now);
+        noiseFilter.frequency.linearRampToValueAtTime(3000, now + 0.1);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0, now);
+        noiseGain.gain.linearRampToValueAtTime(0.15 * sfxVolume, now + 0.05);
+        noiseGain.gain.linearRampToValueAtTime(0, now + 0.15);
+        noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+        noise.start(now); noise.stop(now + 0.15);
+        
+        // Physical Snap (Fast triangle drop)
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.setValueAtTime(1200, now + 0.05);
+        osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+        gain.gain.setValueAtTime(0.2 * sfxVolume, now + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now + 0.05); osc.stop(now + 0.15);
+    },
+    coin: () => playExternalSfx('sfxCoins'),
+    turn: () => {
+        sfx._init();
+        // Subtle, deep heartbeat thud for turn indicator
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(90, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(30, audioCtx.currentTime + 0.4);
+        gain.gain.setValueAtTime(0.35 * sfxVolume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+    },
+    win: () => {
+        sfx._init();
+        // Grand Victory: Rising brassy synth chord
+        const now = audioCtx.currentTime;
+        const freqs = [392.00, 493.88, 587.33, 783.99]; // G Major chord
+        freqs.forEach((f) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.value = f;
+            
+            const filter = audioCtx.createBiquadFilter();
+            filter.type = 'lowpass';
+            filter.frequency.setValueAtTime(400, now);
+            filter.frequency.linearRampToValueAtTime(3500, now + 0.6); // Filter opens up
+            
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime((0.1 / freqs.length) * sfxVolume, now + 0.2);
+            gain.gain.setValueAtTime((0.1 / freqs.length) * sfxVolume, now + 1.5);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 3.5);
+            
+            osc.connect(filter); filter.connect(gain); gain.connect(audioCtx.destination);
+            osc.start(now); osc.stop(now + 3.5);
+        });
+    },
+    lose: () => {
+        sfx._init();
+        // Cinematic Loss: Heavy sub-bass drop & crash
+        const now = audioCtx.currentTime;
+        
+        // Bass drop
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(150, now);
+        osc.frequency.exponentialRampToValueAtTime(20, now + 1.5);
+        gain.gain.setValueAtTime(0.5 * sfxVolume, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 2.5);
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start(now); osc.stop(now + 2.5);
+
+        // Impact crash (Filtered noise)
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = noiseBuffer;
+        const noiseFilter = audioCtx.createBiquadFilter();
+        noiseFilter.type = 'lowpass';
+        noiseFilter.frequency.setValueAtTime(1000, now);
+        noiseFilter.frequency.exponentialRampToValueAtTime(100, now + 1.2);
+        const noiseGain = audioCtx.createGain();
+        noiseGain.gain.setValueAtTime(0.3 * sfxVolume, now);
+        noiseGain.gain.exponentialRampToValueAtTime(0.01, now + 2.0);
+        noise.connect(noiseFilter); noiseFilter.connect(noiseGain); noiseGain.connect(audioCtx.destination);
+        noise.start(now); noise.stop(now + 2.0);
+    }
 };
 
 // --- PROCEDURAL AMBIENT PAD (original, generated in-browser — used whenever the
 //     referenced music file is missing, so there's always real audio instead of silence) ---
 let _ambientStarted = false;
 let ambientMasterGain = null;
-let musicVolumeSetting = 0.3; // 0..1, driven by the Settings slider (default 30%)
+let savedMusic = localStorage.getItem('dod_music_vol');
+let musicVolumeSetting = savedMusic !== null ? parseInt(savedMusic) / 100 : 0.15; 
 function startAmbientPad(){
   if(!audioCtx || _ambientStarted) return;
   _ambientStarted = true;
@@ -1988,8 +2446,77 @@ function startAmbientPad(){
 
 // --- BACKGROUND MUSIC LOGIC ---
 const bgMusicElement = document.getElementById('bgMusic');
+const inGameMusicElement = document.getElementById('inGameMusic');
+const tensionMusicElement = document.getElementById('tensionMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
+
+// Helper to instantly cut all music tracks
+function stopAllMusic() {
+    if (bgMusicElement) bgMusicElement.pause();
+    if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) inGameMusicElement.pause();
+    if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
+        tensionMusicElement.pause();
+        tensionMusicElement.currentTime = 0; // Reset suspense track when stopped
+    }
+}
+
+function muteForLoading() {
+    stopAllMusic(); // Instantly mute all
+}
+
+function switchToGameMusic() {
+    stopAllMusic(); // Cut everything instantly
+    if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) {
+        inGameMusicElement.volume = musicVolumeSetting * 0.35;
+        inGameMusicElement.play().catch(()=>{});
+    }
+}
+
+function switchToMenuMusic() {
+    stopAllMusic(); // Cut everything instantly
+    if (bgMusicElement) {
+        bgMusicElement.volume = musicVolumeSetting * 0.35;
+        bgMusicElement.play().catch(()=>{});
+    }
+}
+
+function playTensionMusic() {
+    stopAllMusic(); // Instantly cuts the game music!
+    if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
+        tensionMusicElement.volume = musicVolumeSetting * 0.25;
+        tensionMusicElement.play().catch(()=>{});
+    }
+}
+
+function stopTensionMusic() {
+    if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
+        tensionMusicElement.pause();
+        tensionMusicElement.currentTime = 0;
+    }
+    // Snap game music back on instantly if we are actually still sitting at the table!
+    if (document.getElementById('game') && document.getElementById('game').style.display === 'flex') {
+        if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) {
+            inGameMusicElement.volume = musicVolumeSetting * 0.35;
+            inGameMusicElement.play().catch(()=>{});
+        }
+    }
+}
+
+// --- AUTO-MUTE WHEN GAME IS MINIMIZED OR CLOSED ---
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+        if (bgMusicElement && !bgMusicElement.paused) { bgMusicElement.dataset.wasPlaying = 'true'; bgMusicElement.pause(); }
+        if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) { inGameMusicElement.dataset.wasPlaying = 'true'; inGameMusicElement.pause(); }
+        if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) { tensionMusicElement.dataset.wasPlaying = 'true'; tensionMusicElement.pause(); }
+        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'running') { audioCtx.suspend(); }
+    } else {
+        if (bgMusicElement && bgMusicElement.dataset.wasPlaying === 'true') { bgMusicElement.play().catch(()=>{}); bgMusicElement.dataset.wasPlaying = 'false'; }
+        if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement && inGameMusicElement.dataset.wasPlaying === 'true') { inGameMusicElement.play().catch(()=>{}); inGameMusicElement.dataset.wasPlaying = 'false'; }
+        if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement && tensionMusicElement.dataset.wasPlaying === 'true') { tensionMusicElement.play().catch(()=>{}); tensionMusicElement.dataset.wasPlaying = 'false'; }
+        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+    }
+});
 
 // The Screen Rotation Function (Forced on initial tap)
 async function forceEnterFullscreen() {
@@ -2040,7 +2567,7 @@ introOverlay.addEventListener('click', function() {
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
     if(bgMusicElement) {
-        bgMusicElement.volume = 0.7; 
+        bgMusicElement.volume = musicVolumeSetting * 0.35; 
         if(bgMusicElement.error){ startAmbientPad(); } 
         else {
             bgMusicElement.play().catch(() => startAmbientPad());
@@ -2050,7 +2577,10 @@ introOverlay.addEventListener('click', function() {
         startAmbientPad();
     }
 
-    // Force the game to show the 3D Bootstrap animation for 2.5 seconds
+    // If the user has visited before and has cached assets, drastically cut down the 3D boot wait time!
+    const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
+    
+    // Show the 3D Bootstrap animation sequence
     setTimeout(() => {
         window.minimumBootTimePassed = true;
         
@@ -2060,7 +2590,7 @@ introOverlay.addEventListener('click', function() {
         } else {
             openTutorial(false);
         }
-    }, 2500);
+    }, bootTime);
 });
 
 const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
@@ -2074,7 +2604,14 @@ function generateBotProfile() {
     const level = Math.floor(Math.random() * 5) + 1;
     const avatar = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
     const frame = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
-    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame };
+    
+    let title = null;
+    if (Math.random() > 0.3 && typeof TITLES_DB !== 'undefined') {
+        const botTitleObj = TITLES_DB[Math.floor(Math.random() * TITLES_DB.length)];
+        title = botTitleObj.id;
+    }
+    
+    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame, title: title };
 }
 
 const SKINS=[
@@ -2185,14 +2722,17 @@ function renderTutorialSlide(){
   document.getElementById('tutNextBtn').textContent = tutIndex===TUTORIAL_SLIDES.length-1 ? 'Let\'s Play ↗' : 'Next →';
 }
 function tutorialNext(){
+  try { sfx.uiClick(); } catch(e){}
   if(tutIndex < TUTORIAL_SLIDES.length-1){ tutIndex++; renderTutorialSlide(); }
   else { closeTutorial(); }
 }
 function tutorialPrev(){
+  try { sfx.uiClick(); } catch(e){}
   if(tutIndex > 0){ tutIndex--; renderTutorialSlide(); }
 }
-function skipTutorial(){ closeTutorial(); }
+function skipTutorial(){ try { sfx.uiBack(); } catch(e){} closeTutorial(); }
 function openTutorial(fromSettings){
+  try { sfx.uiClick(); } catch(e){}
   tutFromSettings = !!fromSettings;
   tutIndex = 0;
   renderTutorialSlide();
@@ -2299,10 +2839,26 @@ if(window.DoDAuth){
 
 function setMusicVolume(v){
   musicVolumeSetting = v/100;
+  localStorage.setItem('dod_music_vol', v);
   if(ambientMasterGain) ambientMasterGain.gain.linearRampToValueAtTime(0.16*musicVolumeSetting, (audioCtx?audioCtx.currentTime:0)+0.2);
-  if(bgMusicElement) bgMusicElement.volume = musicVolumeSetting;
+  
+  // Update whichever track is currently playing dynamically
+  if(bgMusicElement && !bgMusicElement.paused) bgMusicElement.volume = musicVolumeSetting * 0.35;
+  if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 0.35;
+  if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.25;
 }
-function setSfxVolume(v){ sfxVolume = v/100; }
+function setSfxVolume(v){ 
+  sfxVolume = v/100; 
+  localStorage.setItem('dod_sfx_vol', v);
+}
+
+// Initialize UI sliders to match saved settings when the menu loads
+document.addEventListener('DOMContentLoaded', () => {
+    const mv = localStorage.getItem('dod_music_vol');
+    const sv = localStorage.getItem('dod_sfx_vol');
+    if (mv !== null && document.getElementById('musicVol')) document.getElementById('musicVol').value = mv;
+    if (sv !== null && document.getElementById('sfxVol')) document.getElementById('sfxVol').value = sv;
+});
 
 const TIER_REWARDS = [
   { name: 'Apprentice', req: 'Starting Rank', reward: 'Basic Matchmaking' },
@@ -2359,12 +2915,17 @@ function showMenuScreen(name){
       if(profileW) profileW.style.display = 'none';
   }
 
-  if(name==='hub'){
-    const el=document.getElementById('hubCurrency');
-    if(el && window.DoDShop) el.textContent = window.DoDShop.getCurrency();
+  if(name==='hub' || name==='shop'){
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    const coins = profile ? profile.currency || 0 : 0;
+    
+    const hubCur = document.getElementById('hubCurrency');
+    const shopCur = document.getElementById('shopCurrency');
+    if(hubCur) hubCur.textContent = coins;
+    if(shopCur) shopCur.textContent = coins;
   }
-  if(name==='shop' && window.DoDShop){
-    window.DoDShop.render();
+  if(name==='shop'){
+    renderShopItems();
   }
 }
 
@@ -2381,7 +2942,37 @@ showMenuScreen = function(name) {
 
 // ---------------- CINEMATIC LOADING SCREEN ----------------
 const LOADING_LINES = ["Shuffling the deck…","Setting the table…","Counting the coins…","Dealing hands…","Almost ready…"];
+const GAME_TIPS = [
+  "Holding too many cards at the end of the match will destroy your score. Play them or burn them!",
+  "A successful Deception guess rewards you with 15 coins. A wrong guess means instant elimination.",
+  "Power cards drain coins to the bank. Steal cards transfer coins directly to your pocket.",
+  "Watch your rivals' coins. If someone is broke, they might trigger a Deception showdown soon.",
+  "Use Insurance to safely discard a dud card drawn during a Forced Buy.",
+  "You can only use Wild cards if you can afford the 2-coin cost.",
+  "Pay attention to the timer. The player with the highest score when the clock hits zero wins.",
+  "Peek lets you see the next player's hand. Use it before calling the required number!",
+  "Reverse flips the table order, which is the perfect way to pass the burden onto someone else."
+];
+
+function renderLoadingScreenFX() {
+    document.getElementById('lsTipText').textContent = GAME_TIPS[Math.floor(Math.random() * GAME_TIPS.length)];
+    const container = document.getElementById('lsParticles');
+    if(container) {
+        container.innerHTML = '';
+        for(let i=0; i<30; i++) {
+            let ember = document.createElement('div');
+            ember.className = 'ls-ember';
+            ember.style.left = Math.random() * 100 + '%';
+            ember.style.animationDuration = (Math.random() * 3 + 2) + 's';
+            ember.style.animationDelay = (Math.random() * 2) + 's';
+            container.appendChild(ember);
+        }
+    }
+}
+
 function enterGameWithLoading(){
+  muteForLoading(); // Instantly mute all music during the loading screen
+  renderLoadingScreenFX(); // Fire particles and tips
   const overlay=document.getElementById('loadingScreen');
   const fill=document.getElementById('loadingBarFill');
   const text=document.getElementById('loadingText');
@@ -2389,7 +2980,7 @@ function enterGameWithLoading(){
   fill.style.width='0%';
   let step=0;
   text.textContent=LOADING_LINES[0];
-  const totalMs=2200;
+  const totalMs=4500; // Increased to 4.5 seconds
   const stepMs=totalMs/LOADING_LINES.length;
   const lineTimer=setInterval(()=>{
     step++;
@@ -2402,6 +2993,7 @@ function enterGameWithLoading(){
     // Wait for the game scene to fully mount behind the scenes before dropping the curtain
     setTimeout(() => {
         overlay.classList.remove('show');
+        switchToGameMusic(); // Trigger the battle track once the curtain drops!
     }, 850);
   }, totalMs+150);
 }
@@ -2438,11 +3030,7 @@ function startGame() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
 
-    // Absolute mute music and soundscapes for deep gameplay focus
-    if (bgMusicElement) {
-        bgMusicElement.volume = 0;
-        bgMusicElement.pause();
-    }
+    // Soundscapes are silenced; music fading is now managed by the loading screen drop!
     if (ambientMasterGain && audioCtx) {
         ambientMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
@@ -2495,8 +3083,9 @@ function startGame() {
                         deceptionStrike: false,
                         avatar: pAv,
                         frame: pFr,
-                        // Host assigns colors directly to the master state
-                        color: index === 0 ? SKINS[menuState.skinIdx].color : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
+                        title: seat.title || null,
+                        // Host assigns colors directly to the master state, pulling the host's actual equipped skin
+                        color: index === 0 ? ((typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces && SHOP_DB.cardFaces.find(c => c.id === (DoDAuth.getProfile().equippedFace || DoDAuth.getProfile().equippedCard || 'cf_default')))?.color || '#c9a227') : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
                     });
                 });
 
@@ -2529,13 +3118,17 @@ function startGame() {
             // --- OFFLINE BOT MODE FALLBACK (Keeps your practice mode working) ---
             const fast = document.getElementById('fastTest').checked;
             const count = menuState.count;
-            PLAYER_COLORS = [SKINS[menuState.skinIdx].color];
+            
+            const profile = DoDAuth.getProfile();
+            const eqCardId = profile.equippedFace || profile.equippedCard || 'cf_default';
+            const eqCardDef = (typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces) ? SHOP_DB.cardFaces.find(c => c.id === eqCardId) : null;
+            PLAYER_COLORS = [eqCardDef ? eqCardDef.color : '#c9a227'];
             document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
             
             let players = [{
                 id: 0, name: DoDAuth.getProfile().displayName || "You", isHuman: true, hand: [], shop: START_SHOP, out: false, 
                 uid: DoDAuth.getProfile().uid, deceptionStrike: false, 
-                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile())
+                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile()), title: getEquippedTitle(DoDAuth.getProfile())
             }];
             
             for (let i = 0; i < count - 1; i++) {
@@ -2544,7 +3137,7 @@ function startGame() {
                 players.push({
                     id: i + 1, name: botProfile.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
                     uid: 'bot_' + i, deceptionStrike: false, 
-                    avatar: botProfile.avatar, frame: botProfile.frame, tier: botProfile.tier, level: botProfile.level
+                    avatar: botProfile.avatar, frame: botProfile.frame, tier: botProfile.tier, level: botProfile.level, title: botProfile.title
                 });
             }
 
@@ -2659,6 +3252,11 @@ function listenToGameState() {
             });
         }
 
+        // 5. TRIGGER CARD ANIMATIONS & CINEMATICS (Moved up before Endgame checks!)
+        if (serverState.lastAction) {
+            playNetworkedAnimation(serverState.lastAction);
+        }
+
         // SAFETY NET: a Deception loss (or any other path that marks a player `out`
         // directly rather than through the local eliminate() call) can leave only one
         // player standing without ever running the local win-check. Every client catches
@@ -2677,7 +3275,7 @@ function listenToGameState() {
 
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
 
-        // --- 5. THE CURVE ANIMATION & BOT WAKE-UP ---
+        // --- 6. THE CURVE ANIMATION & BOT WAKE-UP ---
         if (localLastTurnUid !== serverState.turnUid) {
             // Animate the yellow turn curve
             const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
@@ -2689,9 +3287,6 @@ function listenToGameState() {
             localLastTurnUid = serverState.turnUid;
 
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
-            // If the new turn belongs to a bot, the Host calculates their move and pushes it to Firebase.
-            // A Deception showdown is only ever kicked off here, never mid-turn, so we skip all of
-            // this while one is already active (serverState.deception is truthy).
             if (isHost && !serverState.deception) {
                 const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
                 const stuck = curPlayer && !curPlayer.out && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
@@ -2719,11 +3314,6 @@ function listenToGameState() {
         // --- DECEPTION: HOST DRIVES BOT MOVES & PHASE RESOLUTION ---
         if (isHost && serverState.deception) {
             handleOnlineDeceptionHostLogic(serverState);
-        }
-
-        // 6. TRIGGER CARD ANIMATIONS
-        if (serverState.lastAction) {
-            playNetworkedAnimation(serverState.lastAction);
         }
         
         // 7. INITIAL DEAL
@@ -2779,12 +3369,17 @@ function transferToBank(from, amount) { const t = Math.min(parseInt(amount)||0, 
 function transferToPlayer(from, to, amount) { const t = Math.min(parseInt(amount)||0, parseInt(from.shop)||0); from.shop = (parseInt(from.shop)||0) - t; to.shop = (parseInt(to.shop)||0) + t; return t; }
 function payFromOwn(p, amount) { const t = Math.min(parseInt(amount)||0, parseInt(p.shop)||0); p.shop = (parseInt(p.shop)||0) - t; return t; }
 
-function eliminate(p, reason){
+function eliminate(p, reason, skipCinematic = false){
   if(p.out) return;
   p.out=true;
   log(`${p.name} is eliminated: ${reason}`, 'hi');
   const r=seatRect(p.id);
   burstParticles(r.left+r.width/2, r.top+r.height/2, '#b23c3c', 25, 'lightning');
+  
+  if (!skipCinematic) {
+      showEliminationCinematic([{ name: p.name }], null, true);
+  }
+  
   const left=activePlayers();
   if(left.length===1) endGame(left[0]);
 }
@@ -2956,9 +3551,12 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val=''){
     } catch(e) {}
     if(g && g.parentNode) g.parentNode.removeChild(g);
     
-    // Reveal the center structural text layout exactly when the visual card lands
-    const targetCardEl = document.getElementById('ringCenter') ? document.getElementById('ringCenter').firstElementChild : null;
-    if(targetCardEl) targetCardEl.style.color = '';
+    // Exactly when the card lands, release the visual lock and reveal the new card!
+    if (isCardPlaceholder) {
+        window.dodCenterIsLocked = false;
+        if (state && state.uiState === 'ANIMATING') state.uiState = 'WAITING_FOR_CALLOUT'; 
+        renderAll();
+    }
   },430);
 }
 
@@ -3117,7 +3715,7 @@ function renderAll(){
               let xOffset = i * 12;
               if (window.innerWidth < 840) { xOffset = i * 10; yOffset = Math.abs(rot) * 0.12; }
               if (yOffset > maxY) maxY = yOffset;
-              deckFanHtml += `<div class="ap-minicard" style="background:${PLAYER_COLORS[cur.id]}; transform: translateX(${xOffset}px) translateY(${yOffset}px) rotate(${rot}deg); z-index:${i}"></div>`;
+              deckFanHtml += `<div class="ap-minicard" style="background-image:url('Cards/Decks.png'); background-size:cover; background-position:center; border-color:${PLAYER_COLORS[cur.id]}; transform: translateX(${xOffset}px) translateY(${yOffset}px) rotate(${rot}deg); z-index:${i}"></div>`;
           }
           
           const isSmall = window.innerWidth < 840;
@@ -3169,17 +3767,40 @@ function renderAll(){
     let lastHtml = `<div class="minicard empty">—</div>`;
     if(state.lastPlayedCardLabel) {
        let displayLabel = state.lastPlayedCardLabel;
-       let tinyVal = state.lastEffectiveValue !== null && String(state.lastPlayedCardLabel) !== String(state.lastEffectiveValue) ? `<div class="act-val" style="font-size:10px; opacity:0.8">${state.lastEffectiveValue}</div>` : '';
+       let displayVal = state.lastEffectiveValue;
+       let tinyVal = displayVal !== null && String(displayLabel) !== String(displayVal) ? `<div class="act-val" style="font-size:10px; opacity:0.8">${displayVal}</div>` : '';
        
-       // If currently animating a fresh action drop, hide text color until the flyCard timer resolves
-       const visibilityStyle = (state.uiState === 'ANIMATING') ? 'style="border-color:'+lastColor+'; color:transparent;"' : 'style="border-color:'+lastColor+'"';
-       lastHtml = `<div class="minicard" ${visibilityStyle}>${tinyVal}${displayLabel}</div>`;
+       lastHtml = `<div class="minicard" style="border-color:${lastColor}">${tinyVal}<div>${displayLabel}</div></div>`;
     }
     
     const nextHtml = state.requiredValue===null
       ? `<div class="minicard empty">?</div>`
       : `<div class="minicard empty">${state.requiredValue}</div>`;
-    rc.innerHTML = `${lastHtml}<div class="miniarrow ${state.direction === -1 ? 'reverse' : ''}">→</div>${nextHtml}`;
+      
+    const newHtml = `${lastHtml}<div class="miniarrow ${state.direction === -1 ? 'reverse' : ''}">→</div>${nextHtml}`;
+
+    // Auto-detect a new card entering the center
+    const currentActionSig = state.lastPlayedCardLabel + '-' + state.lastPlayedBy;
+    if (window.renderedCenterCardSig !== currentActionSig) {
+        if (window.centerRenderCache) {
+            window.dodCenterIsLocked = true;
+            // Failsafe: force unlock after 1 second if flyCard animation drops
+            clearTimeout(window.dodCenterLockFailsafe);
+            window.dodCenterLockFailsafe = setTimeout(() => {
+                window.dodCenterIsLocked = false;
+                renderAll();
+            }, 1000);
+        }
+        window.renderedCenterCardSig = currentActionSig;
+    }
+
+    // VISUAL LOCK: If a card is physically flying to the center, freeze the table to show the OLD card!
+    if ((state.uiState === 'ANIMATING' || window.dodCenterIsLocked) && window.centerRenderCache) {
+        rc.innerHTML = window.centerRenderCache;
+    } else {
+        rc.innerHTML = newHtml;
+        window.centerRenderCache = newHtml; // Save this view for the next lock
+    }
   }
 
   const you=state.players[0];
@@ -3763,7 +4384,10 @@ function renderDeceptionOverlay(){
   
   if(!dec){ 
     modal.classList.remove('show'); 
-    localWasInDeception = false; // Reset when deception ends
+    if (localWasInDeception) {
+        localWasInDeception = false; // Reset when deception ends
+        stopTensionMusic(); // Fade out the suspense music smoothly
+    }
     return; 
   }
   
@@ -3774,8 +4398,9 @@ function renderDeceptionOverlay(){
     if (intro) {
         intro.style.display = 'flex';
         intro.classList.add('match-intro-animate');
-        // Play intense double-alert sound effect
-        try { sfx.alert(); setTimeout(() => sfx.alert(), 400); } catch(e){}
+        // Play new deception drum beat & start suspense music
+        try { sfx.deceptionStart(); } catch(e){}
+        playTensionMusic();
         
         // Hide cinematic after the 2.8s CSS animation finishes
         setTimeout(() => {
@@ -3928,18 +4553,11 @@ function startDeceptionPhaseOffline(triggerPlayer){
   }
 
   const proposer = rich[Math.floor(Math.random()*rich.length)];
-  state.deception = { brokeUids: broke.map(p=>p.uid), richUids: [proposer.uid], proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
+  state.deception = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
   state.uiState = 'DECEPTION';
 
-  if(!proposer.isHuman){
-    setTimeout(()=>{
-      if(!state.deception) return;
-      state.deception.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
-      renderAll();
-      offlineDeceptionStep();
-    }, 900);
-  }
   renderAll();
+  offlineDeceptionStep();
 }
 
 function offlineDeceptionStep(){
@@ -3953,14 +4571,28 @@ function offlineDeceptionStep(){
       resolveDeceptionVoteOffline();
       return;
     }
-    const nextUid = dec.richUids.find(uid => !(uid in stances));
+    let nextUid = null;
+    if (!(dec.proposerUid in stances)) {
+        nextUid = dec.proposerUid;
+    } else {
+        nextUid = dec.richUids.find(uid => !(uid in stances));
+    }
     if(!nextUid) return;
     const player = state.players.find(p=>p.uid===nextUid);
     if(player && !player.isHuman){
+      if (window.activeBotTimers && window.activeBotTimers[nextUid]) return;
+      if (!window.activeBotTimers) window.activeBotTimers = {};
+      window.activeBotTimers[nextUid] = true;
+
       setTimeout(()=>{
+        delete window.activeBotTimers[nextUid];
         if(!state.deception) return;
-        const accept = Math.random() < 0.55;
-        stances[nextUid] = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        if (nextUid === dec.proposerUid) {
+            stances[nextUid] = 1 + Math.floor(Math.random()*9);
+        } else {
+            const accept = Math.random() < 0.55;
+            stances[nextUid] = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        }
         renderAll();
         offlineDeceptionStep();
       }, 2000);
@@ -4000,14 +4632,7 @@ function resolveDeceptionVoteOffline(){
     log(`The table settles on a real secret number (kept hidden).`, 'hi');
     dec.phase = 'VOTE_CLAIM';
     renderAll();
-    if(!state.players.find(p=>p.uid===dec.proposerUid).isHuman){
-      setTimeout(()=>{
-        if(!state.deception) return;
-        dec.claimStances[dec.proposerUid] = 1 + Math.floor(Math.random()*9);
-        renderAll();
-        offlineDeceptionStep();
-      }, 900);
-    }
+    offlineDeceptionStep();
   } else {
     log(`The table agrees to tell the broke players ${resolved}.`, 'hi');
     dec.phase = 'ANSWER';
@@ -4019,7 +4644,7 @@ function resolveDeceptionVoteOffline(){
 function resolveDeceptionAnswersOffline(){
   const dec = state.deception;
   let correctCount = 0;
-  let toEliminate = []; // Array to safely hold losers
+  let deadInfo = [];
 
   dec.brokeUids.forEach(uid=>{
     const p = state.players.find(pp=>pp.uid===uid);
@@ -4034,39 +4659,59 @@ function resolveDeceptionAnswersOffline(){
       log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
     } else {
       log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — wrong! The real number was ${dec.realNumber}.`, 'hi');
-      toEliminate.push(p); // Store them to be eliminated properly!
+      deadInfo.push({ player: p, name: p.name, guess: effectiveGuess });
     }
     p.deceptionStrike = false;
   });
+
+  const resumeGameFlow = () => {
+      state.deception = null;
+      state.uiState = 'IDLE';
+      sweepEliminations();
+      renderAll();
+      if(state.over) return;
+      setTimeout(()=> advanceTurn(), 1000); 
+  };
 
   // SUDDEN DEATH CHECK (Everyone was broke)
   if (dec.richUids.length === 0) {
       if (correctCount === 0) {
           log("Everyone guessed wrong! Game over, calculating scores...", 'hi');
+          if (deadInfo.length > 0) {
+              deadInfo.forEach(d => eliminate(d.player, 'Lost the Deception showdown.', true));
+              showEliminationCinematic(deadInfo, dec.realNumber, false, () => {
+                  state.deception = null;
+                  finalizeGame();
+              });
+              return;
+          }
           state.deception = null;
           finalizeGame();
           return;
       } else if (correctCount === 1) {
           const winner = state.players.find(p => p.shop > 0);
           log(`${winner.name} was the only one to guess correctly and wins immediately!`, 'ok');
+          if (deadInfo.length > 0) {
+              deadInfo.forEach(d => eliminate(d.player, 'Lost the Deception showdown.', true));
+              showEliminationCinematic(deadInfo, dec.realNumber, false, () => {
+                  state.deception = null;
+                  finalizeGame();
+              });
+              return;
+          }
           state.deception = null;
           finalizeGame();
           return;
       }
   }
 
-  // Normal progression: let eliminate() handle marking them out so it triggers endGame()!
-  toEliminate.forEach(p => eliminate(p, `Lost the Deception showdown.`));
-
-  state.deception = null;
-  state.uiState = 'IDLE';
-  sweepEliminations();
-  renderAll();
-  
-  if(state.over) return;
-  
-  // Increased from 1200ms to 2500ms so humans can read the aftermath!
-  setTimeout(()=> advanceTurn(), 2500); 
+  // Normal progression
+  if (deadInfo.length > 0) {
+      deadInfo.forEach(d => eliminate(d.player, 'Lost the Deception showdown.', true));
+      showEliminationCinematic(deadInfo, dec.realNumber, false, resumeGameFlow);
+  } else {
+      resumeGameFlow();
+  }
 }
 
 // ---- ONLINE (Firestore) driver — host resolves phase transitions & bot moves ----
@@ -4081,7 +4726,7 @@ async function startDeceptionPhaseOnline(curPlayer){
     dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{} };
   } else {
     const proposer = rich[Math.floor(Math.random()*rich.length)];
-  dec = { brokeUids: broke.map(p=>p.uid), richUids: [proposer.uid], proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
     if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
   }
   await db.collection('matches').doc(currentMatchId).update({
@@ -4101,8 +4746,8 @@ async function handleOnlineDeceptionHostLogic(serverState){
     const stancesField = decStancesField(dec.phase);
     const stances = dec[stancesField] || {};
     if(Object.keys(stances).length >= dec.richUids.length){
-      if (window.activeBotTimers['transition']) return;
-      window.activeBotTimers['transition'] = true;
+      if (window.activeBotTimers['transition_' + dec.phase]) return;
+      window.activeBotTimers['transition_' + dec.phase] = true;
       
       const tally = {};
       Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
@@ -4111,65 +4756,71 @@ async function handleOnlineDeceptionHostLogic(serverState){
       const resolved = best[Math.floor(Math.random()*best.length)];
 
       if(dec.phase === 'VOTE_REAL'){
-        const proposerIsBot = dec.proposerUid && dec.proposerUid.startsWith('bot_');
         const update = {
           'gameState.deception.realNumber': resolved,
           'gameState.deception.phase': 'VOTE_CLAIM',
           'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table settles on a real secret number (kept hidden).` }
         };
-        if(proposerIsBot) update['gameState.deception.claimStances.' + dec.proposerUid] = 1 + Math.floor(Math.random()*9);
-        db.collection('matches').doc(currentMatchId).update(update).finally(() => delete window.activeBotTimers['transition']);
+        db.collection('matches').doc(currentMatchId).update(update).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
       } else {
         db.collection('matches').doc(currentMatchId).update({
           'gameState.deception.claimNumber': resolved,
           'gameState.deception.phase': 'ANSWER',
           'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved}.` }
-        }).finally(() => delete window.activeBotTimers['transition']);
+        }).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
       }
       return;
     }
-    const nextUid = dec.richUids.find(uid => !(uid in stances));
+    
+    let nextUid = null;
+    if (!(dec.proposerUid in stances)) {
+        nextUid = dec.proposerUid;
+    } else {
+        nextUid = dec.richUids.find(uid => !(uid in stances));
+    }
+
     if(nextUid && nextUid.startsWith('bot_')){
       if (window.activeBotTimers[nextUid]) return;
       window.activeBotTimers[nextUid] = true;
       
       setTimeout(()=>{
-        const accept = Math.random() < 0.55;
-        const n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        let n;
+        if (nextUid === dec.proposerUid) {
+            n = 1 + Math.floor(Math.random()*9);
+        } else {
+            const accept = Math.random() < 0.55;
+            n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+        }
         db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.${stancesField}.${nextUid}`]: n })
         .finally(() => delete window.activeBotTimers[nextUid]);
       }, 1200);
     }
   } else if(dec.phase === 'ANSWER'){
-    const responses = dec.responses || {};
-    if(Object.keys(responses).length >= dec.brokeUids.length){
-      if (window.activeBotTimers['transition']) return;
-      window.activeBotTimers['transition'] = true;
-      
-      let correctCount = 0;
-      
-      dec.brokeUids.forEach(uid=>{
-        const p = state.players.find(pp=>pp.uid===uid);
-        if(!p || p.out) return;
-        const r = responses[uid];
-        const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
-        const correct = effectiveGuess === dec.realNumber;
-        if(correct){ p.shop += 15; correctCount++; } else { p.out = true; }
-        p.deceptionStrike = false;
-      });
+        const responses = dec.responses || {};
+        if(Object.keys(responses).length >= dec.brokeUids.length){
+          if (window.activeBotTimers['transition_' + dec.phase]) return;
+          window.activeBotTimers['transition_' + dec.phase] = true;
+          
+          let correctCount = 0;
+          let deadInfo = [];
+          
+          dec.brokeUids.forEach(uid=>{
+            const p = state.players.find(pp=>pp.uid===uid);
+            if(!p || p.out) return;
+            const r = responses[uid];
+            const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
+            const correct = effectiveGuess === dec.realNumber;
+            if(correct){ 
+                p.shop += 15; 
+                correctCount++; 
+            } else { 
+                p.out = true; 
+                deadInfo.push({ uid: p.uid, name: p.name, guess: effectiveGuess });
+            }
+            p.deceptionStrike = false;
+          });
 
-      if (dec.richUids.length === 0) {
-          if (correctCount === 0) {
-              state.players.forEach(p => p.out = false);
-              serverState.over = true;
-          } else if (correctCount === 1) {
-              const winner = state.players.find(p => p.shop > 0);
-              state.players.forEach(p => { if (p.uid !== winner.uid) p.out = true; });
-              serverState.over = true;
-          }
-      }
-
-      const survivors = state.players.filter(p=>!p.out);
+          const survivors = state.players.filter(p=>!p.out);
       let nextTurnUid = serverState.turnUid;
       if(survivors.length > 1 && !serverState.over){
         let idx = state.players.findIndex(p=>p.uid===serverState.turnUid);
@@ -4178,16 +4829,22 @@ async function handleOnlineDeceptionHostLogic(serverState){
       }
       
       db.collection('matches').doc(currentMatchId).update({
-        'gameState.players': state.players,
-        'gameState.deception': firebase.firestore.FieldValue.delete(),
-        'gameState.turnUid': nextTurnUid,
-        'gameState.uiState': 'IDLE',
-        // FIX: The line below now safely forces a boolean to prevent Firebase crashes
-        'gameState.over': survivors.length <= 1 || !!serverState.over,
-        'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_RESULT', uid:'system', msg: `Deception resolved. The real number was ${dec.realNumber}.` }
-      }).finally(() => delete window.activeBotTimers['transition']);
-      return;
-    }
+            'gameState.players': state.players,
+            'gameState.deception': firebase.firestore.FieldValue.delete(),
+            'gameState.turnUid': nextTurnUid,
+            'gameState.uiState': 'IDLE',
+            'gameState.over': survivors.length <= 1 || !!serverState.over,
+            'gameState.lastAction': { 
+                id: Date.now().toString(), 
+                type:'DECEPTION_RESULT', 
+                uid:'system', 
+                realNumber: dec.realNumber,
+                deadInfo: deadInfo,
+                msg: `Deception resolved. The real number was ${dec.realNumber}.` 
+            }
+          }).finally(() => delete window.activeBotTimers['transition_ANSWER']);
+          return;
+        }
     const nextUid = dec.brokeUids.find(uid => !(uid in responses));
     if(nextUid && nextUid.startsWith('bot_')){
       if (window.activeBotTimers[nextUid]) return;
@@ -4364,13 +5021,21 @@ function playNetworkedAnimation(action) {
     if (localLastActionId === action.id) return;
     localLastActionId = action.id;
 
+    if (action.type === 'DECEPTION_RESULT') {
+        log(action.msg);
+        if (action.deadInfo && action.deadInfo.length > 0) {
+            showEliminationCinematic(action.deadInfo, action.realNumber, false);
+        }
+        return;
+    }
+
     // Find the local visual seat index for the player who made the move
     const actorSeatIndex = state.players.findIndex(p => p.uid === action.uid);
     const actorColor = PLAYER_COLORS[actorSeatIndex] || 'var(--brass)';
 
     if (action.type === 'PLAY_NUMBER') {
         log(action.msg, 'ok');
-        // Animate the card physically landing on the center table deck collection
+        window.dodCenterIsLocked = true; // Lock the visual center before the card flies
         flyCard(getSeatOrPanelRect(actorSeatIndex), centerRect(), action.cardValue, actorColor, 18, action.cardValue);
         flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
     } 
@@ -4463,8 +5128,8 @@ function botTurn(){
     if(state && state.deception) return;
     
     if(bot.hand.length===0){
-      if(state.deck.length===0){ log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
-      if(bot.shop < BUY_COST){ log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
+      if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
+      if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
       botSingleDraw(bot);
       return;
     }
@@ -4474,12 +5139,14 @@ function botTurn(){
       const card=bot.hand[matchIdx];
       bot.hand.splice(matchIdx,1);
       bot.shop+=PLAY_REWARD;
-      log(`${bot.name} plays a ${card.value}. +${PLAY_REWARD} coin.`);
       state.lastEffectiveValue=card.value; state.lastPlayedCardLabel=card.value; state.lastPlayedBy=bot.id;
       
-      renderAll(); 
-      flyCard(getSeatOrPanelRect(bot.id), centerRect(), card.value, PLAYER_COLORS[bot.id], 15, card.value);
-      setTimeout(()=>botDeclare(bot), 600); return;
+      if (!currentMatchId) {
+          log(`${bot.name} plays a ${card.value}. +${PLAY_REWARD} coin.`);
+          renderAll(); 
+          flyCard(getSeatOrPanelRect(bot.id), centerRect(), card.value, PLAYER_COLORS[bot.id], 15, card.value);
+      }
+      setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
     }
     
     const actCheck = (type) => bot.hand.findIndex(c=>c.type===type && (state.requiredValue===null || c.value===state.requiredValue));
@@ -4492,15 +5159,17 @@ function botTurn(){
             bot.hand.splice(playIdx,1);
             const target=opts.sort((a,b)=>b.shop-a.shop)[0];
             const taken=transferToPlayer(target,bot,card.tier);
-            flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(bot.id), 0);
             bot.shop+=PLAY_REWARD;
-            log(`${bot.name} plays Steal (${card.value}) on ${target.name}, stealing ${taken}.`);
-            if(!target.out) protestFrom(target);
             state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='STL'; state.lastPlayedBy=bot.id;
             
-            renderAll();
-            flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value);
-            setTimeout(()=>botDeclare(bot), 600); return;
+            if (!currentMatchId) {
+                flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(bot.id), 0);
+                log(`${bot.name} plays Steal (${card.value}) on ${target.name}, stealing ${taken}.`);
+                if(!target.out) protestFrom(target);
+                renderAll();
+                flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value);
+            }
+            setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
         }
     }
     
@@ -4512,15 +5181,17 @@ function botTurn(){
             bot.hand.splice(playIdx,1);
             const target=opts.sort((a,b)=>b.shop-a.shop)[0];
             const taken=transferToBank(target,card.tier);
-            flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
             bot.shop+=PLAY_REWARD;
-            log(`${bot.name} plays Power (${card.value}) on ${target.name}, draining ${taken} to bank.`);
-            if(!target.out) protestFrom(target);
             state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='PWR'; state.lastPlayedBy=bot.id;
             
-            renderAll();
-            flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', PLAYER_COLORS[bot.id], 20, card.value);
-            setTimeout(()=>botDeclare(bot), 600); return;
+            if (!currentMatchId) {
+                flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+                log(`${bot.name} plays Power (${card.value}) on ${target.name}, draining ${taken} to bank.`);
+                if(!target.out) protestFrom(target);
+                renderAll();
+                flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', PLAYER_COLORS[bot.id], 20, card.value);
+            }
+            setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
         }
     }
     
@@ -4530,12 +5201,14 @@ function botTurn(){
         bot.hand.splice(playIdx,1);
         state.direction *= -1;
         bot.shop+=PLAY_REWARD;
-        log(`${bot.name} plays Reverse (${card.value}). Direction changed!`);
         state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=bot.id;
         
-        renderAll();
-        flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'REV', '#d16b24', 20, card.value);
-        setTimeout(()=>botDeclare(bot), 600); return;
+        if (!currentMatchId) {
+            log(`${bot.name} plays Reverse (${card.value}). Direction changed!`);
+            renderAll();
+            flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'REV', '#d16b24', 20, card.value);
+        }
+        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
     }
     
     playIdx = actCheck('wild');
@@ -4543,19 +5216,21 @@ function botTurn(){
       const card=bot.hand[playIdx];
       bot.hand.splice(playIdx,1);
       payFromOwn(bot,WILD_COST);
-      flyCoin(getSeatOrPanelRect(bot.id), bankRect(), 0);
       bot.shop+=PLAY_REWARD;
-      log(`${bot.name} plays Wild Swap (matched ${card.value}).`);
       state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='W'; state.lastPlayedBy=bot.id;
       
-      renderAll();
-      flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'W', PLAYER_COLORS[bot.id], 18, card.value);
-      setTimeout(()=>botDeclare(bot), 600); return;
+      if (!currentMatchId) {
+          flyCoin(getSeatOrPanelRect(bot.id), bankRect(), 0);
+          log(`${bot.name} plays Wild Swap (matched ${card.value}).`);
+          renderAll();
+          flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'W', PLAYER_COLORS[bot.id], 18, card.value);
+      }
+      setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
     }
     
-    if(state.deck.length===0){ log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
+    if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
     
-    if(bot.shop < BUY_COST){ log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
+    if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
     botBuyLoop(bot);
     
   },650);
@@ -4563,11 +5238,11 @@ function botTurn(){
 
 function botSingleDraw(buyer){
   const taken=payFromOwn(buyer,BUY_COST);
-  flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
+  if (!currentMatchId) flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
   sweepEliminations();
-  if(buyer.out){ renderAll(); return; }
+  if(buyer.out){ if (!currentMatchId) renderAll(); return; }
   const card=state.deck.pop();
-  if(!card){ log(`${buyer.name} finds the market empty — turn skips.`); advanceTurn(); return; }
+  if(!card){ if (!currentMatchId) log(`${buyer.name} finds the market empty — turn skips.`); advanceTurn(); return; }
   
   const isMatch=(card.value===state.requiredValue)||(state.requiredValue===null);
   if(isMatch){
@@ -4578,13 +5253,15 @@ function botSingleDraw(buyer){
         if(card.type==='reverse') { state.direction *= -1; }
     }
     buyer.shop+=PLAY_REWARD;
-    log(`${buyer.name} draws and instantly plays a match (${card.value}). Paid ${taken}c out of pocket.`,'ok');
     state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
     
-    renderAll();
-    flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+    if (!currentMatchId) {
+        log(`${buyer.name} draws and instantly plays a match (${card.value}). Paid ${taken}c out of pocket.`,'ok');
+        renderAll();
+        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+    }
     sweepEliminations();
-    setTimeout(()=>botDeclare(buyer), 600);
+    setTimeout(()=>botDeclare(buyer), currentMatchId ? 50 : 600);
   } else {
         buyer.hand.push(card);
         const msg = `${buyer.name} draws a dud (${card.value}) — turn skips.`;
@@ -4611,11 +5288,11 @@ function botSingleDraw(buyer){
 function botBuyLoop(buyer){
   let tries=0, success=false;
   while(tries<MAX_TRIES && state.deck.length>0 && !buyer.out){
-    if (buyer.shop < BUY_COST) { log(`${buyer.name} ran out of coins mid-loop.`); break; }
+    if (buyer.shop < BUY_COST) { if (!currentMatchId) log(`${buyer.name} ran out of coins mid-loop.`); break; }
     
     tries++;
     const taken=payFromOwn(buyer,BUY_COST);
-    flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), tries*110);
+    if (!currentMatchId) flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), tries*110);
     sweepEliminations();
     if(buyer.out) break;
     const card=state.deck.pop();
@@ -4624,10 +5301,10 @@ function botBuyLoop(buyer){
     const isMatch=(card.value===state.requiredValue) || (state.requiredValue===null);
     if(isMatch){
       let effective,label;
-      if(card.type==='number'){ effective=card.value; label=card.value; log(`${buyer.name} draws a match on try ${tries} (${card.value}).`,'ok'); }
+      if(card.type==='number'){ effective=card.value; label=card.value; if(!currentMatchId) log(`${buyer.name} draws a match on try ${tries} (${card.value}).`,'ok'); }
       else { 
           effective=state.requiredValue; label=card.type.toUpperCase(); 
-          log(`${buyer.name} draws Action match on try ${tries} (${card.value}).`,'ok');
+          if (!currentMatchId) log(`${buyer.name} draws Action match on try ${tries} (${card.value}).`,'ok');
           if(card.type==='reverse') { state.direction *= -1; }
       }
       buyer.shop+=PLAY_REWARD;
@@ -4637,22 +5314,24 @@ function botBuyLoop(buyer){
       if(insIdx >= 0 && tries > 1) {
           buyer.hand.splice(insIdx, 1);
           buyer.hand.pop(); 
-          log(`${buyer.name} uses Insurance to discard a dud!`);
+          if (!currentMatchId) log(`${buyer.name} uses Insurance to discard a dud!`);
       }
       
       success=true; 
-      renderAll();
-      flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+      if (!currentMatchId) {
+          renderAll();
+          flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+      }
       break;
     } else {
       buyer.hand.push(card);
-      log(`${buyer.name} tries and misses on try ${tries} (${card.value}).`);
+      if (!currentMatchId) log(`${buyer.name} tries and misses on try ${tries} (${card.value}).`);
     }
   }
   sweepEliminations();
   
   if(success){
-        setTimeout(()=>botDeclare(buyer), 600);
+        setTimeout(()=>botDeclare(buyer), currentMatchId ? 50 : 600);
       } else { 
         const msg = `${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`;
         if (currentMatchId) {
@@ -4732,11 +5411,24 @@ async function botDeclare(bot) {
 
 // ---------------- LEAVE GAME ----------------
 function leaveGame(){
+    try { sfx.uiBack(); } catch(e){}
     document.getElementById('leaveGameOverlay').classList.add('show');
 }
 
 async function confirmLeaveGame(){
+    try { sfx.uiBack(); } catch(e){}
     document.getElementById('leaveGameOverlay').classList.remove('show');
+
+    // Trigger the loading screen for the exit transition
+    muteForLoading();
+    renderLoadingScreenFX(); // Fire particles and tips
+    const overlay = document.getElementById('loadingScreen');
+    const fill = document.getElementById('loadingBarFill');
+    const text = document.getElementById('loadingText');
+    overlay.classList.add('show');
+    fill.style.width = '0%';
+    text.textContent = "Returning to Lobby...";
+    requestAnimationFrame(() => { fill.style.transition = `width 3500ms linear`; fill.style.width = '100%'; }); // Increased to 3.5 seconds
 
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
@@ -4764,35 +5456,32 @@ async function confirmLeaveGame(){
     localLastTurnUid = null;
     localLastActionId = null;
 
-    document.getElementById('finaleModal').classList.remove('show');
-    document.getElementById('game').style.display = 'none';
-    menu.style.display = 'flex';
-    menu.style.opacity = '1';
-    menu.classList.add('menu-visible');
-    showMenuScreen('hub');
-    if (typeof revertCamera === 'function') revertCamera();
-    document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+    // Wait for loading screen to finish before swapping UI
+    setTimeout(() => {
+        document.getElementById('finaleModal').classList.remove('show');
+        document.getElementById('game').style.display = 'none';
+        menu.style.display = 'flex';
+        menu.style.opacity = '1';
+        menu.classList.add('menu-visible');
+        showMenuScreen('hub');
+        if (typeof revertCamera === 'function') revertCamera();
+        document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
 
-    // FIX: if this session reconnected straight into an active game on load,
-    // the one-time DoDAuth.onProfileReady callback returned early and never
-    // hid #accountLoading / revealed .hub-buttons — leaving "Signing you in…"
-    // stuck forever once you leave the game. Force the hub into its
-    // signed-in state here as a safety net.
-    const accountLoadingEl = document.getElementById('accountLoading');
-    const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
-    const hubBadgeEl = document.getElementById('hubCurrencyBadge');
-    if (accountLoadingEl) accountLoadingEl.style.display = 'none';
-    if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-    if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
-    if (window.DoDAuth && DoDAuth.getProfile()) {
-        const hubCurrencyEl = document.getElementById('hubCurrency');
-        if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
-    }
+        // Restore HUB ui
+        const accountLoadingEl = document.getElementById('accountLoading');
+        const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
+        const hubBadgeEl = document.getElementById('hubCurrencyBadge');
+        if (accountLoadingEl) accountLoadingEl.style.display = 'none';
+        if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
+        if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+        if (window.DoDAuth && DoDAuth.getProfile()) {
+            const hubCurrencyEl = document.getElementById('hubCurrency');
+            if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
+        }
 
-    if (bgMusicElement) {
-        bgMusicElement.volume = 0.7;
-        bgMusicElement.play().catch(() => {});
-    }
+        overlay.classList.remove('show');
+        switchToMenuMusic();
+    }, 3500); // Matches the 3.5s bar animation
 }
 
 // ---------------- MODALS ----------------
@@ -5008,6 +5697,17 @@ function showProgressionScreen() {
 function returnToMenuFromEndgame() {
     document.getElementById('progressionModal').classList.remove('show');
     
+    // Trigger the loading screen for the exit transition
+    muteForLoading();
+    renderLoadingScreenFX(); // Fire particles and tips
+    const overlay = document.getElementById('loadingScreen');
+    const fill = document.getElementById('loadingBarFill');
+    const text = document.getElementById('loadingText');
+    overlay.classList.add('show');
+    fill.style.width = '0%';
+    text.textContent = "Returning to Lobby...";
+    requestAnimationFrame(() => { fill.style.transition = `width 3500ms linear`; fill.style.width = '100%'; }); // Increased to 3.5 seconds
+
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
 
@@ -5018,50 +5718,101 @@ function returnToMenuFromEndgame() {
     localLastTurnUid = null;
     localLastActionId = null;
 
-    document.getElementById('game').style.display = 'none';
-    const menu = document.getElementById('menu');
-    menu.style.display = 'flex';
-    menu.style.opacity = '1';
-    menu.classList.add('menu-visible');
-    
-    // If in a party, restore the party lobby view directly instead of standard hub
-    if (currentPartyId) {
-        showMenuScreen('hub');
-        showPartyLobbyCinematic();
-        if (window.firebase) {
-            // Tell server the match is over so we can queue again
-            firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
-            // Re-render squad avatars around the table
-            firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
-                if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
-            }).catch(()=>{});
+    setTimeout(() => {
+        document.getElementById('game').style.display = 'none';
+        const menu = document.getElementById('menu');
+        menu.style.display = 'flex';
+        menu.style.opacity = '1';
+        menu.classList.add('menu-visible');
+        
+        // If in a party, restore the party lobby view directly instead of standard hub
+        if (currentPartyId) {
+            showMenuScreen('hub');
+            showPartyLobbyCinematic();
+            if (window.firebase) {
+                // Tell server the match is over so we can queue again
+                firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
+                // Re-render squad avatars around the table
+                firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
+                    if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
+                }).catch(()=>{});
+            }
+        } else {
+            // Solo players revert normally
+            showMenuScreen('hub');
+            if (typeof revertCamera === 'function') revertCamera();
+            document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
         }
+
+        // Restore HUB ui
+        const accountLoadingEl = document.getElementById('accountLoading');
+        const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
+        const hubBadgeEl = document.getElementById('hubCurrencyBadge');
+        if (accountLoadingEl) accountLoadingEl.style.display = 'none';
+        if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
+        if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+        if (window.DoDAuth && DoDAuth.getProfile()) {
+            const hubCurrencyEl = document.getElementById('hubCurrency');
+            if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
+        }
+
+        overlay.classList.remove('show');
+        switchToMenuMusic();
+    }, 3500); // Matches the 3.5s bar animation
+}
+
+window.isEliminationPlaying = false;
+window.pendingEndGame = null;
+
+function showEliminationCinematic(deadPlayersData, realNumber, isBankrupt, onComplete) {
+    window.isEliminationPlaying = true;
+    try { sfx.lose(); } catch(e){} // Play intense loss sound
+
+    const overlay = document.getElementById('eliminationOverlay');
+    const title = document.getElementById('elimTitle');
+    const details = document.getElementById('elimDetails');
+
+    title.textContent = deadPlayersData.length > 1 ? "PLAYERS ELIMINATED" : "PLAYER ELIMINATED";
+
+    let detailsHtml = '';
+    if (isBankrupt) {
+        detailsHtml = deadPlayersData.map(p => `<b style="color:var(--brass-bright); font-size:24px;">${p.name}</b><br>Bankrupt with no cards left.`).join('<br><br>');
     } else {
-        // Solo players revert normally
-        showMenuScreen('hub');
-        if (typeof revertCamera === 'function') revertCamera();
-        document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+        detailsHtml = `<div style="color:var(--danger-bright); font-size:16px; margin-bottom:20px; font-weight:bold;">The Real Number was <span style="font-size:24px; color:#fff;">${realNumber}</span></div>`;
+        detailsHtml += deadPlayersData.map(p => `<b style="color:var(--brass-bright); font-size:24px;">${p.name}</b><br>Guessed: ${p.guess}`).join('<br><br>');
     }
 
-    // Restore HUB ui
-    const accountLoadingEl = document.getElementById('accountLoading');
-    const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
-    const hubBadgeEl = document.getElementById('hubCurrencyBadge');
-    if (accountLoadingEl) accountLoadingEl.style.display = 'none';
-    if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-    if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
-    if (window.DoDAuth && DoDAuth.getProfile()) {
-        const hubCurrencyEl = document.getElementById('hubCurrency');
-        if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
-    }
+    details.innerHTML = detailsHtml;
+    overlay.style.display = 'flex';
+    overlay.style.opacity = '0';
+    overlay.style.transition = 'opacity 0.5s ease';
+    
+    requestAnimationFrame(() => overlay.style.opacity = '1');
 
-    if (bgMusicElement) {
-        bgMusicElement.volume = 0.7;
-        bgMusicElement.play().catch(() => {});
-    }
+    setTimeout(() => {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+            window.isEliminationPlaying = false;
+            if(onComplete) onComplete();
+            
+            // If the game ended while the cinematic was playing, trigger the finale now!
+            if (window.pendingEndGame) {
+                const { winner, byScore } = window.pendingEndGame;
+                window.pendingEndGame = null;
+                endGame(winner, byScore);
+            }
+        }, 500);
+    }, 4500); // Hold the screen for 4.5 seconds to ensure everyone sees it
 }
 
 function endGame(winner,byScore){
+  // Delay the finale if an elimination cinematic is currently dominating the screen
+  if (window.isEliminationPlaying) {
+      window.pendingEndGame = { winner, byScore };
+      return;
+  }
+
   const modal = document.getElementById('finaleModal');
   if(modal && modal.classList.contains('show')) return;
   
@@ -5118,7 +5869,11 @@ function endGame(winner,byScore){
   openModal('finaleModal');
   renderAll();
   
-  if(isMyWin) celebrateWin();
+  if(isMyWin) {
+      celebrateWin();
+  } else {
+      try { sfx.lose(); } catch(e){}
+  }
 }
 
 // ============================================================
@@ -5167,8 +5922,8 @@ function listenForPartyInvites() {
                             uid: myProfile.uid,
                             displayName: myProfile.displayName,
                             title: myProfile.title || null,
-                            avatar: myProfile.avatar || 'Apprentice',
-                            frame: myProfile.frame || 'Apprentice'
+                            avatar: getEquippedAvatar(myProfile),
+                            frame: getEquippedFrame(myProfile)
                         })
                     });
                 } catch(e) {
@@ -5233,8 +5988,8 @@ async function initFriendsList() {
                 id: doc.id,
                 displayName: relData.displayName,
                 status: relData.status,
-                avatar: liveData.avatar || 'Apprentice',
-                frame: liveData.frame || 'Apprentice',
+                avatar: getEquippedAvatar(liveData),
+                frame: getEquippedFrame(liveData),
                 title: liveData.title || null
             };
         }));
@@ -5360,6 +6115,7 @@ async function acceptFriend(friendUid, friendName) {
 
 // ---------------- 2. PARTY SYSTEM (PUBG LOBBY) ----------------
 async function createParty() {
+    try { sfx.uiClick(); } catch(e){}
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
 
@@ -5371,7 +6127,7 @@ async function createParty() {
         leader: myProfile.uid,
         matchId: null,
         tableSize: pubgTableSize,
-        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: myProfile.avatar || 'Apprentice', frame: myProfile.frame || 'Apprentice' }]
+        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile) }]
     });
 
     document.getElementById('btnCreateParty').style.display = 'none';
@@ -5403,6 +6159,7 @@ async function inviteToParty(friendUid, friendName) {
 }
 
 async function leaveParty() {
+    try { sfx.uiBack(); } catch(e){}
     if (!currentPartyId) return;
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
@@ -5464,6 +6221,7 @@ async function leaveParty() {
 // Leave Lobby button inside the seat ring — works whether we're just waiting in
 // the pre-match party lobby, or already sitting at a filling table.
 async function leavePartyLobby() {
+    try { sfx.uiBack(); } catch(e){}
     if (currentMatchId) {
         cancelMatchmakingPubg(); // already matched/filling a table — same cleanup as Cancel
         return;
@@ -5593,6 +6351,7 @@ let matchLobbyUnsub = null;
 let countdownTimer = null;
 
 async function startOnlineMatchmaking() {
+    try { sfx.uiClick(); } catch(e){}
     const btn = document.getElementById('searchMatchBtn');
     const status = document.getElementById('matchmakingStatus');
     
@@ -5718,6 +6477,7 @@ async function startOnlineMatchmaking() {
 }
 
 async function startPrivatePartyMatch() {
+    try { sfx.playBtn(); } catch(e){} // Triggers your PlaySfx!
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
     
@@ -5735,7 +6495,7 @@ async function startPrivatePartyMatch() {
         let readyStatus = {}; 
         
         joiningSquad.forEach((member, i) => {
-            newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
+            newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null });
             newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
             readyStatus[member.uid] = false;
         });
@@ -5774,7 +6534,8 @@ async function startPrivatePartyMatch() {
                             avatar: botP.avatar,
                             frame: botP.frame,
                             tier: botP.tier,
-                            level: botP.level
+                            level: botP.level,
+                            title: botP.title
                         });
                         pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
                     }
@@ -5914,6 +6675,7 @@ function listenToMatchLobby(matchId) {
 }
 
 async function toggleReady() {
+    try { sfx.uiClick(); } catch(e){}
     if (!currentMatchId) return;
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
@@ -5934,6 +6696,7 @@ async function toggleReady() {
 }
 
 async function leaveMatchLobby() {
+    try { sfx.uiBack(); } catch(e){}
     localStorage.removeItem('dod_active_match'); // Clear memory
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
@@ -5994,10 +6757,12 @@ function pickPubgMode(size) {
 
 // --- Search panel ---
 function openPubgSearchPanel() {
+    try { sfx.uiClick(); } catch(e){}
     const panel = document.getElementById('pubgSearchPanel');
     if (panel) { panel.classList.add('show'); document.getElementById('pubgSearchInput').focus(); }
 }
 function closePubgSearchPanel() {
+    try { sfx.uiBack(); } catch(e){}
     const panel = document.getElementById('pubgSearchPanel');
     if (!panel) return;
     panel.classList.remove('show');
@@ -6213,6 +6978,8 @@ async function startMatchmakingPubg() {
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
     if (currentPartyId && !isPartyLeader) return; // only the host can start the match for the squad
 
+    try { sfx.playBtn(); } catch(e){} // Triggers your PlaySfx!
+
     btn.classList.add('searching');
     btn.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">0:00 &nbsp;·&nbsp; 1/' + pubgTableSize + '</span>';
     pubgCancelFlag = false;
@@ -6271,7 +7038,7 @@ async function startMatchmakingPubg() {
 
     // Matchmaking itself runs in the background right away, independent of the visuals above
     const db = firebase.firestore();
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: myProfile.avatar || 'Apprentice', frame: myProfile.frame || 'Apprentice' }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile) }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get().catch(() => null);
         if (partyDoc && partyDoc.exists) joiningSquad = partyDoc.data().members;
@@ -6300,7 +7067,7 @@ async function startMatchmakingPubg() {
             let currentPublic = matchDoc.publicSeats || {};
             joiningSquad.forEach(member => {
                 const idx = currentSeats.length;
-                currentSeats.push({ seat: idx, uid: member.uid, displayName: member.displayName, isBot: false });
+                currentSeats.push({ seat: idx, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null });
                 currentPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
             });
             await matchRef.update({ seats: currentSeats, publicSeats: currentPublic });
@@ -6309,7 +7076,7 @@ async function startMatchmakingPubg() {
             matchRef = db.collection('matches').doc();
             let newSeats = [], newPublic = {}, readyStatus = {};
             joiningSquad.forEach((member, i) => {
-                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
+                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null });
                 newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
                 readyStatus[member.uid] = false;
             });
@@ -6421,7 +7188,8 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
                     avatar: botP.avatar,
                     frame: botP.frame,
                     tier: botP.tier,
-                    level: botP.level
+                    level: botP.level,
+                    title: botP.title
                 });
                 pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
             }
@@ -6450,6 +7218,7 @@ function dodResetCinematicMenu() {
 }
 
 function cancelMatchmakingPubg() {
+    try { sfx.uiBack(); } catch(e){}
     pubgCancelFlag = true;
     clearInterval(pubgMmIntervalId);
     if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
@@ -6616,10 +7385,25 @@ function updateProfileWidget(profile) {
     
     const nameEl = document.getElementById('widgetPlayerName');
     const tierEl = document.getElementById('widgetPlayerTier');
+    const titleBoxEl = document.getElementById('widgetPlayerTitleBox');
+    
     if (nameEl) nameEl.textContent = profile.displayName || "Agent";
     if (tierEl) {
         const safeTier = TIERS.includes(profile.tier) ? profile.tier : 'Apprentice';
         tierEl.innerHTML = `<img src="Tiers/${safeTier}.png" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 0 2px #000);">${profile.tier || 'Apprentice'} • Lvl ${profile.level || 1}`;
+    }
+    if (titleBoxEl) {
+        const eqTitle = getEquippedTitle(profile);
+        if (eqTitle) {
+            const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === eqTitle) : null;
+            if (tDef) {
+                titleBoxEl.innerHTML = `<div style="transform:scale(0.85); transform-origin:left center; margin-top:2px;"><div class="player-title title-${tDef.rarity}" style="height:16px; font-size:9px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+            } else {
+                titleBoxEl.innerHTML = '';
+            }
+        } else {
+            titleBoxEl.innerHTML = '';
+        }
     }
 
     // Top-Left Frame Widget Render
@@ -6673,14 +7457,244 @@ function updateProfileWidget(profile) {
     const sWins = document.getElementById('statWins');
     const sWinRate = document.getElementById('statWinRate');
     const sTotalScore = document.getElementById('statTotalScore');
+    const sCopies = document.getElementById('statCopies');
     
     if (sMatches) sMatches.textContent = mp;
     if (sWins) sWins.textContent = w;
     if (sWinRate) sWinRate.textContent = wr + '%';
     if (sTotalScore) sTotalScore.textContent = profile.totalScore || 0;
+    if (sCopies) sCopies.textContent = profile.totalCopies || 0;
 
     // Constantly monitor for newly earned unlocked titles!
     checkNewlyUnlockedTitles(profile);
+
+    // Render the PUBG style events and chests hub
+    renderEventsHub(profile);
+}
+
+// --- ACHIEVEMENT NOTIFICATION LOGIC ---
+function renderEventsHub(profile) {
+    if (!profile) return;
+    const today = new Date().toDateString();
+    const hasSpun = profile.lastSpinDate === today;
+    const dot = document.getElementById('spinRedDot');
+    if (dot) {
+        if (!hasSpun) dot.classList.add('show');
+        else dot.classList.remove('show');
+    }
+    
+    const list = document.getElementById('chestInventoryList');
+    if (list) {
+        let html = '';
+        const chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
+        if (chests.legendary > 0) html += `<div class="chest-item" onclick="openChest('legendary')"><span style="font-size:24px;">🧰</span><div style="text-align:right;"><div style="color:#f5dd8a; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Legendary</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.legendary}</div></div></div>`;
+        if (chests.mythic > 0) html += `<div class="chest-item" onclick="openChest('mythic')"><span style="font-size:24px;">🔮</span><div style="text-align:right;"><div style="color:#d094ff; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Mythic</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.mythic}</div></div></div>`;
+        if (chests.base > 0) html += `<div class="chest-item" onclick="openChest('base')"><span style="font-size:24px;">📦</span><div style="text-align:right;"><div style="color:#e4d8bd; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Base Chest</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.base}</div></div></div>`;
+        list.innerHTML = html;
+    }
+}
+
+function openLuckySpin() {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+    try { sfx.uiClick(); } catch(e){}
+    
+    const today = new Date().toDateString();
+    const hasSpun = profile.lastSpinDate === today;
+    
+    const btn = document.getElementById('btnDoSpin');
+    const resultBox = document.getElementById('spinResultBox');
+    
+    if (hasSpun) {
+        btn.disabled = true;
+        btn.textContent = "COME BACK TOMORROW";
+        btn.className = "btn ghost";
+        resultBox.textContent = "⏳";
+    } else {
+        btn.disabled = false;
+        btn.textContent = "SPIN NOW";
+        btn.className = "btn";
+        resultBox.textContent = "🎰";
+    }
+    
+    document.getElementById('spinModalOverlay').classList.add('show');
+}
+
+async function executeLuckySpin() {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+    
+    const today = new Date().toDateString();
+    if (profile.lastSpinDate === today) return;
+    
+    try { sfx.uiClick(); } catch(e){}
+    const btn = document.getElementById('btnDoSpin');
+    const resultBox = document.getElementById('spinResultBox');
+    btn.disabled = true;
+    
+    // Animate Spin
+    let rolls = 0;
+    const icons = ["🪙", "📦", "🔮", "🧰", "❌"];
+    const spinAnim = setInterval(() => {
+        resultBox.textContent = icons[rolls % icons.length];
+        rolls++;
+    }, 100);
+    
+    setTimeout(async () => {
+        clearInterval(spinAnim);
+        
+        // Roll probabilities: 20c (30%), 60c (20%), 100c (10%), Base (20%), Mythic (5%), Leg (1%), No Luck (14%)
+        const r = Math.random();
+        let rewardType = '', amount = 0, icon = '', msg = '';
+        let updates = { lastSpinDate: today };
+        
+        profile.chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
+        
+        if (r < 0.30) { rewardType = 'coins'; amount = 20; icon = "🪙"; msg = "20 Coins!"; }
+        else if (r < 0.50) { rewardType = 'coins'; amount = 60; icon = "🪙"; msg = "60 Coins!"; }
+        else if (r < 0.60) { rewardType = 'coins'; amount = 100; icon = "🪙"; msg = "100 Coins!"; }
+        else if (r < 0.80) { rewardType = 'chest'; amount = 'base'; icon = "📦"; msg = "Base Chest!"; }
+        else if (r < 0.85) { rewardType = 'chest'; amount = 'mythic'; icon = "🔮"; msg = "Mythic Chest!"; }
+        else if (r < 0.86) { rewardType = 'chest'; amount = 'legendary'; icon = "🧰"; msg = "Legendary Chest!"; }
+        else { rewardType = 'none'; icon = "❌"; msg = "No luck next time!"; }
+        
+        if (rewardType === 'coins') {
+            profile.currency = (profile.currency || 0) + amount;
+            updates.currency = profile.currency;
+        } else if (rewardType === 'chest') {
+            profile.chests[amount] += 1;
+            updates.chests = profile.chests;
+        }
+        
+        profile.lastSpinDate = today;
+        if (window.firebase) await firebase.firestore().collection('users').doc(profile.uid).update(updates).catch(()=>{});
+        
+        try { if(rewardType==='none') sfx.uiBack(); else sfx.win(); } catch(e){}
+        
+        resultBox.innerHTML = `<div style="font-size:54px;">${icon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${msg}</div>`;
+        btn.textContent = "COME BACK TOMORROW";
+        btn.className = "btn ghost";
+        
+        // Refresh Hub
+        const hubCur = document.getElementById('hubCurrency');
+        if (hubCur) hubCur.textContent = profile.currency || 0;
+        renderEventsHub(profile);
+        
+    }, 2000);
+}
+
+async function openChest(tier) {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile || !profile.chests || profile.chests[tier] <= 0) return;
+    
+    try { sfx.uiClick(); } catch(e){}
+    
+    const db = firebase.firestore();
+    profile.chests[tier] -= 1;
+    let updates = { chests: profile.chests };
+    
+    const modal = document.getElementById('chestModalOverlay');
+    const title = document.getElementById('chestTitle');
+    const icon = document.getElementById('chestRewardIcon');
+    const text = document.getElementById('chestRewardText');
+    
+    title.textContent = `Opening ${tier.charAt(0).toUpperCase() + tier.slice(1)} Chest...`;
+    icon.textContent = "🎁";
+    text.textContent = "Unlocking...";
+    modal.classList.add('show');
+    
+    // Simulate Opening Delay
+    setTimeout(async () => {
+        try { sfx.win(); } catch(e){}
+        
+        const r = Math.random();
+        let rewardMsg = "", rewardIcon = "";
+        
+        // Helper to grab a random coin-buyable card to give copies of
+        const coinItems = [];
+        if (typeof SHOP_DB !== 'undefined') {
+            if (SHOP_DB.cardFaces) SHOP_DB.cardFaces.filter(c => c.method === 'coins').forEach(c => coinItems.push(c));
+            if (SHOP_DB.cardBacks) SHOP_DB.cardBacks.filter(c => c.method === 'coins').forEach(c => coinItems.push(c));
+        }
+        const spinItems = [];
+        if (typeof SHOP_DB !== 'undefined') {
+            if (SHOP_DB.cardFaces) SHOP_DB.cardFaces.filter(c => c.method === 'spin').forEach(c => spinItems.push(c));
+            if (SHOP_DB.cardBacks) SHOP_DB.cardBacks.filter(c => c.method === 'spin').forEach(c => spinItems.push(c));
+        }
+
+        profile.shards = profile.shards || {};
+        profile.inventory = profile.inventory || ['cf_default', 'cb_default'];
+
+        if (tier === 'base') {
+            if (r < 0.5 || coinItems.length === 0) {
+                // 50 Coins
+                profile.currency = (profile.currency || 0) + 50;
+                updates.currency = profile.currency;
+                rewardIcon = "🪙"; rewardMsg = "+50 Coins";
+            } else {
+                // 2 Copies of random item
+                const target = coinItems[Math.floor(Math.random() * coinItems.length)];
+                profile.shards[target.id] = (profile.shards[target.id] || 0) + 2;
+                profile.totalCopies = (profile.totalCopies || 0) + 2;
+                updates[`shards.${target.id}`] = profile.shards[target.id];
+                updates.totalCopies = profile.totalCopies;
+                rewardIcon = "🃏"; rewardMsg = `+2 Copies of ${target.name}`;
+            }
+        } else if (tier === 'mythic') {
+            if (r < 0.4 || coinItems.length === 0) {
+                profile.currency = (profile.currency || 0) + 200;
+                updates.currency = profile.currency;
+                rewardIcon = "🪙"; rewardMsg = "+200 Coins";
+            } else if (r < 0.9) {
+                const target = coinItems[Math.floor(Math.random() * coinItems.length)];
+                profile.shards[target.id] = (profile.shards[target.id] || 0) + 10;
+                profile.totalCopies = (profile.totalCopies || 0) + 10;
+                updates[`shards.${target.id}`] = profile.shards[target.id];
+                updates.totalCopies = profile.totalCopies;
+                rewardIcon = "🃏"; rewardMsg = `+10 Copies of ${target.name}`;
+            } else {
+                // Rare spin item unlock
+                const target = spinItems.length > 0 ? spinItems[Math.floor(Math.random() * spinItems.length)] : null;
+                if (target && !profile.inventory.includes(target.id)) {
+                    profile.inventory.push(target.id);
+                    updates.inventory = firebase.firestore.FieldValue.arrayUnion(target.id);
+                    rewardIcon = "✨"; rewardMsg = `UNLOCKED: ${target.name}!`;
+                } else {
+                    profile.currency = (profile.currency || 0) + 500;
+                    updates.currency = profile.currency;
+                    rewardIcon = "🪙"; rewardMsg = "+500 Coins (Duplicate)";
+                }
+            }
+        } else if (tier === 'legendary') {
+            if (r < 0.4) {
+                profile.currency = (profile.currency || 0) + 1000;
+                updates.currency = profile.currency;
+                rewardIcon = "🪙"; rewardMsg = "+1000 Coins";
+            } else {
+                const target = spinItems.length > 0 ? spinItems[Math.floor(Math.random() * spinItems.length)] : null;
+                if (target && !profile.inventory.includes(target.id)) {
+                    profile.inventory.push(target.id);
+                    updates.inventory = firebase.firestore.FieldValue.arrayUnion(target.id);
+                    rewardIcon = "🌟"; rewardMsg = `LEGENDARY UNLOCK: ${target.name}!`;
+                } else {
+                    profile.currency = (profile.currency || 0) + 1500;
+                    updates.currency = profile.currency;
+                    rewardIcon = "🪙"; rewardMsg = "+1500 Coins (Duplicate)";
+                }
+            }
+        }
+        
+        icon.textContent = rewardIcon;
+        text.textContent = rewardMsg;
+        
+        if (window.firebase) await db.collection('users').doc(profile.uid).update(updates).catch(()=>{});
+        
+        const hubCur = document.getElementById('hubCurrency');
+        if (hubCur) hubCur.textContent = profile.currency || 0;
+        renderEventsHub(profile);
+        if (typeof renderShopItems === 'function') renderShopItems();
+        
+    }, 1500);
 }
 
 // --- ACHIEVEMENT NOTIFICATION LOGIC ---
@@ -6721,7 +7735,7 @@ function showAchievementPopup(profile, tDef) {
     tContainer.innerHTML = renderTitleHTML(tDef.id, true);
     equipBtn.onclick = () => equipFromPopup(tDef.id);
     
-    try { sfx.win(); } catch(e){} 
+    try { sfx.alert(); } catch(e){} // Now triggers your NotificationSfx.mp4!
     popup.classList.add('show');
     
     // Auto-close removed. The popup remains centered until the player clicks Equip or Dismiss.
@@ -6772,6 +7786,7 @@ async function markTitleAsSeen(titleId) {
 }
 
 function openProfileCustomization() {
+    try { sfx.uiClick(); } catch(e){}
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
     
@@ -6920,6 +7935,7 @@ function renderTitleHTML(titleId, large = false) {
 }
 
 function selectTitleItem(titleId) {
+    try { sfx.uiClick(); } catch(e){}
     _previewTitle = titleId;
     markTitleAsSeen(titleId); // Marks it as seen, removes red dots
     updatePreviewBox();
@@ -6928,6 +7944,7 @@ function selectTitleItem(titleId) {
 }
 
 function selectAvatarItem(tierName) {
+    try { sfx.uiClick(); } catch(e){}
     _previewAvatar = tierName;
     updatePreviewBox();
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
@@ -6935,6 +7952,7 @@ function selectAvatarItem(tierName) {
 }
 
 function selectFrameItem(tierName) {
+    try { sfx.uiClick(); } catch(e){}
     _previewFrame = tierName;
     updatePreviewBox();
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
@@ -6970,6 +7988,7 @@ async function equipSelectedCustomization() {
 }
 
 function switchCustomTab(tabName, btnElement) {
+    try { sfx.uiClick(); } catch(e){}
     _customCurrentTab = tabName;
     document.getElementById('avatarsGridContainer').style.display = (tabName === 'avatars') ? 'block' : 'none';
     document.getElementById('framesGridContainer').style.display = (tabName === 'frames') ? 'block' : 'none';
@@ -7155,6 +8174,257 @@ window.addEventListener('popstate', function(event) {
 });
 
 </script>
-<script src="shop.js"></script>
+<script>
+// ============================================================
+// NEW MARKETPLACE ENGINE (Cards, Tables, VFX, IAP)
+// ============================================================
+let currentShopTab = 'cardFaces';
+
+const SHOP_DB = {
+    cardFaces: [
+        { id: 'cf_default', name: 'Brass Standard', method: 'default', color: '#c9a227' },
+        { id: 'cf_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 150, shardsNeeded: 10, color: '#b2455e' },
+        { id: 'cf_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 200, shardsNeeded: 15, color: '#3c7fb2' },
+        { id: 'cf_emerald', name: 'Emerald Viper', method: 'coins', shardPrice: 300, shardsNeeded: 20, color: '#3ca25e' },
+        { id: 'cf_phantom', name: 'Phantom Strike', method: 'tier', unlockTier: 'Phantom', color: '#8b3dff' },
+        { id: 'cf_obsidian', name: 'Obsidian Void', method: 'achievement', color: '#1a1a1a' },
+        { id: 'cf_diamond', name: 'Prismatic Diamond', method: 'spin', color: '#e0f7fa' }
+    ],
+    cardBacks: [
+        { id: 'cb_default', name: 'Classic Deck', method: 'default' },
+        { id: 'cb_midnight', name: 'Midnight Deck', method: 'coins', shardPrice: 250, shardsNeeded: 15 },
+        { id: 'cb_gold', name: 'Golden Deck', method: 'coins', shardPrice: 400, shardsNeeded: 25 },
+        { id: 'cb_oracle', name: 'Oracle Deck', method: 'tier', unlockTier: 'Oracle' },
+        { id: 'cb_legend', name: 'Legendary Deck', method: 'achievement' },
+        { id: 'cb_lucky', name: 'Neon Spin Deck', method: 'spin' }
+    ],
+    tables: [
+        { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard felt.' },
+        { id: 'tb_blood', name: 'Bloodwood', method: 'coins', price: 1500, desc: 'Dark mahogany red felt.' },
+        { id: 'tb_midnight', name: 'Midnight Blue', method: 'coins', price: 3000, desc: 'Deep ocean blue felt.' },
+        { id: 'tb_gold', name: 'High Roller Gold', method: 'tier', unlockTier: 'Mastermind', desc: 'Exclusive VIP golden felt.' }
+    ],
+    vfx: [
+        { id: 'vfx_default', name: 'Standard Spark', price: 0, desc: 'Basic card impact sparks.' },
+        { id: 'vfx_fire', name: 'Hellfire Trail', price: 2500, desc: 'Cards leave a trail of fire.' },
+        { id: 'vfx_lightning', name: 'Storm Strike', price: 4000, desc: 'Electric shock on play.' },
+        { id: 'vfx_void', name: 'Void Portal', price: 10000, desc: 'Summon cards from the void.' }
+    ],
+    coins: [
+        { id: 'iap_1', name: 'Handful of Coins', price: '$0.99', reward: 1000 },
+        { id: 'iap_2', name: 'Coin Pouch', price: '$4.99', reward: 5500 },
+        { id: 'iap_3', name: 'Treasure Chest', price: '$9.99', reward: 12000 },
+        { id: 'iap_4', name: 'Bank Vault', price: '$19.99', reward: 30000 }
+    ]
+};
+
+function switchShopTab(tab, btn) {
+    try { sfx.uiClick(); } catch(e){}
+    currentShopTab = tab;
+    
+    // Update active button state
+    const buttons = btn.parentElement.querySelectorAll('.pubg-subtab-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    renderShopItems();
+}
+
+function renderShopItems() {
+    const root = document.getElementById('shopRoot');
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!root || !profile) return;
+    
+    const items = SHOP_DB[currentShopTab] || [];
+    const inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
+    
+    const eqFace = profile.equippedFace || profile.equippedCard || 'cf_default'; // Fallback for old accounts
+    const eqBack = profile.equippedBack || 'cb_default';
+    const eqTable = profile.equippedTable || 'tb_default';
+    const eqVfx = profile.equippedVfx || 'vfx_default';
+
+    root.innerHTML = items.map(item => {
+        let isEquipped = (item.id === eqFace || item.id === eqBack || item.id === eqTable || item.id === eqVfx);
+        let isOwned = inventory.includes(item.id) || item.method === 'default';
+
+        // Unlock Overrides
+        if (item.method === 'tier') {
+            const userTierIdx = TIERS.indexOf(profile.tier || 'Apprentice');
+            isOwned = userTierIdx >= TIERS.indexOf(item.unlockTier);
+        } else if (item.method === 'achievement' || item.method === 'spin') {
+            isOwned = inventory.includes(item.id); 
+        }
+
+        let visualHtml = '';
+        if (currentShopTab === 'cardFaces') {
+            visualHtml = `<div class="shop-swatch" style="background:${item.color}; margin-top:10px; width:38px; height:38px; border-radius:50%; margin:10px auto; border:2px solid rgba(255,255,255,0.2);"></div>`;
+        } else if (currentShopTab === 'cardBacks') {
+            visualHtml = `<div style="width:34px; height:48px; border-radius:4px; margin:10px auto; background-image:url('Cards/Decks.png'); background-size:cover; border:2px solid rgba(255,255,255,0.2);"></div>`;
+        } else if (currentShopTab === 'tables') {
+            visualHtml = `<div style="font-size:24px; margin:10px 0;">🎰</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
+        } else if (currentShopTab === 'vfx') {
+            visualHtml = `<div style="font-size:24px; margin:10px 0;">✨</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
+        } else if (currentShopTab === 'coins') {
+            visualHtml = `<div style="font-size:28px; margin:10px 0; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6));">🪙</div><div style="font-size:12px; color:var(--ok); font-weight:bold; font-family:'IBM Plex Mono',monospace; margin-bottom:10px;">+${item.reward}</div>`;
+        }
+
+        let btnHtml = '';
+        if (currentShopTab === 'coins') {
+            btnHtml = `<button class="btn small" style="background:var(--ok); border-color:#5faa82; color:#fff; width:100%;" onclick="purchaseIAP('${item.id}', ${item.reward})">Buy ${item.price}</button>`;
+        } else if (isEquipped) {
+            btnHtml = `<button class="btn small equipped" style="width:100%;" disabled>EQUIPPED ✓</button>`;
+        } else if (isOwned) {
+            btnHtml = `<button class="btn small owned" style="background:var(--brass); color:var(--felt-dark); width:100%; font-weight:bold;" onclick="equipShopItem('${item.id}', '${currentShopTab}')">EQUIP</button>`;
+        } else if (item.method === 'coins') {
+            if (item.shardsNeeded) {
+                let shards = (profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
+                let canAffordShard = (profile.currency || 0) >= item.shardPrice;
+                btnHtml = `<button class="btn small locked" style="width:100%; font-size:9.5px; padding:6px 2px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded})">Buy Copy (${item.shardPrice}c)</button>
+                           <div style="font-size:9.5px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:6px; background:rgba(0,0,0,0.5); padding:2px; border-radius:3px;">Copies: ${shards}/${item.shardsNeeded}</div>`;
+            } else {
+                let canAfford = (profile.currency || 0) >= item.price;
+                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price})">${item.price} Coins</button>`;
+            }
+        } else if (item.method === 'tier') {
+            btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Unlocks at ${item.unlockTier}</button>`;
+        } else if (item.method === 'achievement') {
+            btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Achievement Unlock</button>`;
+        } else if (item.method === 'spin') {
+            btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Lucky Spin Only</button>`;
+        }
+
+        return `
+            <div class="shop-item" style="display:flex; flex-direction:column; justify-content:space-between; background:rgba(0,0,0,0.6); border:1px solid ${isEquipped ? 'var(--brass-bright)' : 'rgba(255,255,255,0.1)'}; border-radius:8px; padding:14px 10px; text-align:center;">
+                <div>
+                    <div class="shop-name" style="font-size:12px; font-weight:bold; color:${isEquipped ? 'var(--brass-bright)' : '#fff'}; font-family:'Cinzel',serif;">${item.name}</div>
+                    ${visualHtml}
+                </div>
+                <div style="margin-top:auto;">
+                    ${btnHtml}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function buyShopItem(itemId, price) {
+    try { sfx.coin(); } catch(e){}
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile || (profile.currency || 0) < price) return;
+
+    const db = firebase.firestore();
+    
+    // Deduct coins and add to inventory
+    const newCurrency = (profile.currency || 0) - price;
+    
+    await db.collection('users').doc(profile.uid).update({
+        currency: newCurrency,
+        inventory: firebase.firestore.FieldValue.arrayUnion(itemId)
+    });
+    
+    profile.currency = newCurrency;
+    profile.inventory = profile.inventory || ['c_default', 'tb_default', 'vfx_default'];
+    profile.inventory.push(itemId);
+    
+    try { sfx.win(); } catch(e){}
+    
+    // Refresh UI
+    const shopCur = document.getElementById('shopCurrency');
+    const hubCur = document.getElementById('hubCurrency');
+    if (shopCur) shopCur.textContent = profile.currency;
+    if (hubCur) hubCur.textContent = profile.currency;
+    
+    renderShopItems();
+}
+
+async function buyShard(itemId, price, requiredAmount) {
+    try { sfx.coin(); } catch(e){}
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile || (profile.currency || 0) < price) return;
+
+    const db = firebase.firestore();
+    const newCurrency = (profile.currency || 0) - price;
+    
+    let currentShards = (profile.shards && profile.shards[itemId]) ? profile.shards[itemId] : 0;
+    currentShards += 1;
+    let totalCopies = (profile.totalCopies || 0) + 1;
+
+    let updates = {
+        currency: newCurrency,
+        [`shards.${itemId}`]: currentShards,
+        totalCopies: totalCopies
+    };
+
+    profile.currency = newCurrency;
+    profile.shards = profile.shards || {};
+    profile.shards[itemId] = currentShards;
+    profile.totalCopies = totalCopies;
+
+    if (currentShards >= requiredAmount) {
+        updates.inventory = firebase.firestore.FieldValue.arrayUnion(itemId);
+        profile.inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
+        profile.inventory.push(itemId);
+        try { sfx.win(); } catch(e){}
+        if (typeof showSystemToast === 'function') showSystemToast("Skin Unlocked!");
+    } else {
+        try { sfx.uiEquip(); } catch(e){} 
+    }
+
+    await db.collection('users').doc(profile.uid).update(updates).catch(()=>{});
+    
+    const shopCur = document.getElementById('shopCurrency');
+    const hubCur = document.getElementById('hubCurrency');
+    if (shopCur) shopCur.textContent = profile.currency;
+    if (hubCur) hubCur.textContent = profile.currency;
+    
+    renderShopItems();
+}
+
+async function equipShopItem(itemId, category) {
+    try { sfx.uiEquip(); } catch(e){}
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+
+    let updateField = '';
+    if (category === 'cardFaces') { updateField = 'equippedFace'; profile.equippedFace = itemId; }
+    else if (category === 'cardBacks') { updateField = 'equippedBack'; profile.equippedBack = itemId; }
+    else if (category === 'tables') { updateField = 'equippedTable'; profile.equippedTable = itemId; }
+    else if (category === 'vfx') { updateField = 'equippedVfx'; profile.equippedVfx = itemId; }
+
+    if (updateField) {
+        await firebase.firestore().collection('users').doc(profile.uid).update({
+            [updateField]: itemId
+        });
+    }
+    
+    renderShopItems();
+}
+
+async function purchaseIAP(itemId, rewardAmount) {
+    try { sfx.coin(); } catch(e){}
+    // MOCK IAP PROCESS
+    if(confirm("Simulate In-App Purchase? This will instantly add " + rewardAmount + " coins to your account.")) {
+        const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+        if (!profile) return;
+
+        const newCurrency = (profile.currency || 0) + rewardAmount;
+        
+        await firebase.firestore().collection('users').doc(profile.uid).update({
+            currency: newCurrency
+        });
+        
+        profile.currency = newCurrency;
+        try { sfx.win(); } catch(e){}
+        
+        const shopCur = document.getElementById('shopCurrency');
+        const hubCur = document.getElementById('hubCurrency');
+        if (shopCur) shopCur.textContent = profile.currency;
+        if (hubCur) hubCur.textContent = profile.currency;
+        
+        renderShopItems();
+        if (typeof showSystemToast === 'function') showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
+    }
+}
+</script>
 </body>
 </html>
