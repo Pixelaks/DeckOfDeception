@@ -2468,7 +2468,7 @@ function muteForLoading() {
 function switchToGameMusic() {
     stopAllMusic(); // Cut everything instantly
     if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) {
-        inGameMusicElement.volume = musicVolumeSetting * 0.35;
+        inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
         inGameMusicElement.play().catch(()=>{});
     }
 }
@@ -2476,7 +2476,7 @@ function switchToGameMusic() {
 function switchToMenuMusic() {
     stopAllMusic(); // Cut everything instantly
     if (bgMusicElement) {
-        bgMusicElement.volume = musicVolumeSetting * 0.35;
+        bgMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
         bgMusicElement.play().catch(()=>{});
     }
 }
@@ -2484,7 +2484,7 @@ function switchToMenuMusic() {
 function playTensionMusic() {
     stopAllMusic(); // Instantly cuts the game music!
     if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
-        tensionMusicElement.volume = musicVolumeSetting * 0.25;
+        tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult;
         tensionMusicElement.play().catch(()=>{});
     }
 }
@@ -2497,7 +2497,7 @@ function stopTensionMusic() {
     // Snap game music back on instantly if we are actually still sitting at the table!
     if (document.getElementById('game') && document.getElementById('game').style.display === 'flex') {
         if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) {
-            inGameMusicElement.volume = musicVolumeSetting * 0.35;
+            inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
             inGameMusicElement.play().catch(()=>{});
         }
     }
@@ -2837,15 +2837,23 @@ if(window.DoDAuth){
   if(buttons) buttons.style.display='flex';
 }
 
+let micDuckMult = 1.0; // Drops to 0.35 when microphone is active
+
+// Call this when your voice chat connects or disconnects!
+function setMicActive(isActive) {
+    micDuckMult = isActive ? 0.35 : 1.0;
+    setMusicVolume(musicVolumeSetting * 100); // Safely recalculates live volume
+}
+
 function setMusicVolume(v){
   musicVolumeSetting = v/100;
   localStorage.setItem('dod_music_vol', v);
   if(ambientMasterGain) ambientMasterGain.gain.linearRampToValueAtTime(0.16*musicVolumeSetting, (audioCtx?audioCtx.currentTime:0)+0.2);
   
-  // Update whichever track is currently playing dynamically
-  if(bgMusicElement && !bgMusicElement.paused) bgMusicElement.volume = musicVolumeSetting * 0.35;
-  if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 0.35;
-  if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.25;
+  // Update whichever track is currently playing dynamically (Full volume * Mic Ducking)
+  if(bgMusicElement && !bgMusicElement.paused) bgMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
+  if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
+  if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult; // Slightly softer than main themes
 }
 function setSfxVolume(v){ 
   sfxVolume = v/100; 
