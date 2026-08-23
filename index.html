@@ -93,7 +93,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .menu-table {
   position: absolute; inset: 0;
   /* Layers a dark vignette spotlight over your AI texture */
-  background: radial-gradient(circle at center, rgba(28,68,56,0.6) 0%, rgba(8,20,16,0.95) 90%), var(--my-table);
+  background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.9) 90%), var(--my-table);
   background-size: cover;
   background-position: center;
 }
@@ -352,8 +352,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .skin-note{font-size:11px;color:rgba(242,234,216,0.5);margin-top:10px;font-family:'IBM Plex Mono',monospace}
 
 /* GAME UI */
-#game{display:none;height:100%;background:radial-gradient(ellipse at 50% 0%, #1e4a3d 0%, var(--felt) 45%, var(--felt-dark) 100%);
-  padding:8px 12px;flex-direction:column;gap:6px;position:relative;overflow:hidden}
+#game{display:none;height:100%;
+ background:radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 45%, rgba(0,0,0,0.98) 100%), var(--my-table);
+ background-size:cover; background-position:center;
+ padding:8px 12px;flex-direction:column;gap:6px;position:relative;overflow:hidden}
 .topbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
 .topbar .title{font-family: 'Cinzel Decorative', serif; font-size:22px; letter-spacing:1px; color:var(--brass-bright); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:58vw}
 @media(max-width:420px){ .topbar .title{ font-size:15px; letter-spacing:0.5px; max-width:46vw } .topbar .timer{ font-size:12px } }
@@ -426,7 +428,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .tablefelt{
   position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;
   /* Layers the gameplay spotlight over your AI texture */
-  background: radial-gradient(ellipse at 50% 36%, rgba(31,77,64,0.7) 0%, rgba(43,26,36,0.85) 55%, rgba(21,12,18,0.98) 100%), var(--my-table);
+  background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.95) 100%), var(--my-table);
   background-size: cover;
   background-position: center;
   border:2px solid var(--brass);
@@ -436,6 +438,26 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 #arrowLayer { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none; }
 
 /* SEATS & DENSITY SYSTEM */
+@keyframes speakerBounce {
+  0%, 100% { transform: translateY(0) scale(1.15); box-shadow: 0 0 0 2px var(--ok), 0 4px 16px rgba(47,110,82,0.6); }
+  50% { transform: translateY(-5px) scale(1.15); box-shadow: 0 0 0 4px var(--ok), 0 8px 20px rgba(47,110,82,0.8); }
+}
+.speaking .af-frame { filter: drop-shadow(0 0 8px var(--ok)); }
+.ringseat .avatar.speaking, .lobby-seat .ls-avatar.speaking, .active-player-panel .ap-avatar.speaking {
+  animation: speakerBounce 0.5s infinite;
+  border: 2px solid var(--ok) !important;
+}
+
+#playerVolumePopup {
+  position: fixed; background: rgba(12,14,16,0.95); border: 1px solid var(--brass); border-radius: 8px;
+  padding: 12px; z-index: 99999; display: none; flex-direction: column; gap: 8px; align-items: center;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.8); font-family: 'IBM Plex Mono', monospace; color: white;
+  min-width: 140px;
+}
+#playerVolumePopup .pv-name { font-size: 12px; color: var(--brass-bright); font-weight: bold; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;}
+#playerVolumePopup input[type=range] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
+#playerVolumePopup input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--ok); border-radius: 50%; cursor: pointer; }
+
 .ringseat{position:absolute;transform:translate(-50%,-50%);text-align:center;display:flex;flex-direction:column;align-items:center;gap:2px;transition:opacity .3s;z-index:10;}
 .ringseat .avatar{border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;color:#fff;
   box-shadow:0 2px 6px rgba(0,0,0,0.5); border:none; background:transparent !important; transition:all 0.2s; width:44px; height:44px; font-size:18px;}
@@ -959,11 +981,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   padding: 5px 8px; border-radius: 4px;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
 }
-.pubg-friend-row .fname { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--paper); }
+.pubg-friend-row .fname { font-family: 'IBM Plex Mono', monospace; font-size: clamp(8px, 1.8vh, 11px); color: var(--paper); }
 .pubg-friend-action {
-  font-family: 'IBM Plex Mono', monospace; font-size: 9px;
-  padding: 3px 7px; border-radius: 3px; border: none; cursor: pointer;
+  font-family: 'IBM Plex Mono', monospace; font-size: clamp(7px, 1.5vh, 9px);
+  padding: clamp(2px, 0.6vh, 4px) clamp(4px, 1.2vh, 8px); border-radius: 3px; border: none; cursor: pointer;
   transition: all 0.15s; font-weight: 700;
+}
+.pubg-friend-row .avatar-frame-wrap {
+  width: clamp(20px, 4.5vh, 28px) !important;
+  height: clamp(20px, 4.5vh, 28px) !important;
 }
 .pubg-friend-action.accept { background: var(--ok); color: #fff; }
 .pubg-friend-action.invite { background: var(--brass); color: var(--felt-dark); }
@@ -1071,6 +1097,19 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .lobby-seat-ring {
   width: min(500px, 88vw, 72vh); height: min(500px, 88vw, 72vh); position: relative; border-radius: 50%;
   border: 2px dashed rgba(201,162,39,0.22);
+}
+.lobby-action-bar {
+  position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
+  pointer-events: all; z-index: 6; display: flex; gap: 8px; align-items: center;
+}
+.lobby-action-btn {
+  padding: 8px 18px !important;
+  font-size: clamp(10px, 2vh, 13px) !important;
+  letter-spacing: 1px;
+}
+#lobbyMicToggleBtn.lobby-action-btn {
+  font-size: clamp(14px, 3vh, 18px) !important;
+  padding: 8px 14px !important;
 }
 @media (max-width: 480px), (max-height: 480px) {
   .lobby-seat .ls-avatar { width: 32px; height: 32px; font-size: 12px; }
@@ -1568,14 +1607,14 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .peekbox { padding: 4px 8px; font-size: 9.5px; margin-top: 4px; }
 
   /* SHRINK PUBG HUD FOR COMPACT SCREENS (e.g., iPhone SE) */
-  .pubg-friends-panel { width: 140px !important; left: 15px !important; top: auto !important; bottom: 110px !important; max-height: 160px !important; }
+  .pubg-friends-panel { width: 140px !important; left: 15px !important; top: auto !important; bottom: clamp(90px, 22vh, 110px) !important; max-height: 160px !important; }
   .pubg-friends-header { padding: 4px 8px !important; }
   .pubg-friends-header span { font-size: 10px !important; }
-  .pubg-friend-row { padding: 3px 6px !important; }
-  .pubg-friend-row .fname { font-size: 9px !important; }
+  .pubg-friend-row { padding: clamp(2px, 0.5vh, 4px) 6px !important; }
+  .pubg-friend-row .fname { font-size: clamp(8px, 1.8vh, 9px) !important; }
   
-  .pubg-play-zone { width: 140px !important; bottom: 15px !important; left: 15px !important; }
-  .pubg-play-btn { padding: 10px 0 !important; font-size: 14px !important; }
+  .pubg-play-zone { width: 140px !important; bottom: clamp(10px, 2vh, 15px) !important; left: 15px !important; }
+  .pubg-play-btn { padding: clamp(6px, 1.5vh, 10px) 0 !important; font-size: clamp(12px, 2.5vh, 14px) !important; }
   
   .pubg-events-zone { top: auto !important; bottom: 65px !important; right: 15px !important; width: 115px !important; }
   .event-banner { height: 36px !important; }
@@ -1595,10 +1634,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     transform: perspective(1000px) rotateX(0deg) rotateZ(0deg) translateZ(0px) translateY(0%) scale(0.9) !important;
   }
 
-  /* Shift the Leave Lobby button lower on compact screens */
-  #pubgLeaveLobbyBtn {
-    bottom: 4px !important;
-    padding: 6px 14px !important;
+  /* Shift the Leave Lobby button lower and scale on compact screens */
+  .lobby-action-bar {
+    bottom: clamp(2px, 1.5vh, 12px) !important;
+  }
+  .lobby-action-btn {
+    padding: clamp(4px, 1vh, 8px) clamp(10px, 2vw, 16px) !important;
   }
 
   /* Adjust the shifted title for smaller screens */
@@ -1637,7 +1678,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 #bootstrapOverlay {
   position: fixed; inset: 0; z-index: 200000; 
   /* Added beautiful moody table background */
-  background: radial-gradient(circle at center, rgba(31,77,64,0.7) 0%, rgba(8,20,16,0.98) 100%), var(--my-table);
+  background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table);
   background-size: cover; background-position: center;
   display: flex; flex-direction: column; align-items: center; justify-content: center;
   transition: opacity 0.8s ease, visibility 0.8s;
@@ -1914,9 +1955,9 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   --my-table: url('Tables/GreenWood.png');
   --my-deck: url('CardstoBuy/TheBase.png');
 }
-.menu-table { background: radial-gradient(circle at center, rgba(28,68,56,0.6) 0%, rgba(8,20,16,0.95) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
-.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(31,77,64,0.7) 0%, rgba(43,26,36,0.85) 55%, rgba(21,12,18,0.98) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
-#bootstrapOverlay { background: radial-gradient(circle at center, rgba(31,77,64,0.7) 0%, rgba(8,20,16,0.98) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.menu-table { background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.9) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+#bootstrapOverlay { background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .event-banner::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; mix-blend-mode: overlay !important; }
 #finaleModal::before, #progressionModal::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .deck-3d .stack { background-image: var(--my-deck) !important; }
@@ -2199,10 +2240,10 @@ window.dodImagesLoaded = false;
     
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
-      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Ranks">🏆<span class="ib-label">Ranks</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('training')" title="Training">🎯<span class="ib-label">Train</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">🛍️<span class="ib-label">Shop</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">⚙️<span class="ib-label">Settings</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Ranks">👑<span class="ib-label">Ranks</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('training')" title="Training">⚔️<span class="ib-label">Train</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">💎<span class="ib-label">Shop</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">🗝️<span class="ib-label">Settings</span></button>
     </div>
     <!-- Matchmaking overlay -->
     <div id="pubgMatchmakingOverlay" class="pubg-matchmaking-overlay">
@@ -2214,7 +2255,10 @@ window.dodImagesLoaded = false;
     </div>
     <!-- Lobby seat ring -->
     <div id="pubgLobbyView" class="lobby-table-view">
-      <button id="pubgLeaveLobbyBtn" class="btn ghost small" style="position:absolute; bottom:28px; left:50%; transform:translateX(-50%); pointer-events:all; z-index:6; padding:8px 18px; font-size:11px;" onclick="leavePartyLobby()">Leave Lobby</button>
+      <div class="lobby-action-bar">
+        <button id="lobbyMicToggleBtn" class="btn ghost small lobby-action-btn" style="color:var(--brass-bright); display:none;" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
+        <button id="pubgLeaveLobbyBtn" class="btn ghost small lobby-action-btn" onclick="leavePartyLobby()">LEAVE LOBBY</button>
+      </div>
       <div class="lobby-seat-ring" id="pubgLobbyRing"></div>
     </div>
   </div>
@@ -2421,7 +2465,7 @@ window.dodImagesLoaded = false;
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
-    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
+    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
   </div>
 
   <!-- ACTIVE PLAYER PANEL -->
@@ -2768,6 +2812,7 @@ async function submitUniqueNameWithId() {
 <script src="https://cdn.jsdelivr.net/npm/@pixi/particle-emitter@5.0.8/dist/particle-emitter.min.js"></script>
 
 <!-- Firebase SDK (compat build, plain script tags, no bundler required) -->
+<script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
@@ -3595,6 +3640,160 @@ function makeDeck(){
   return deck;
 }
 
+// ============================================================
+// LIVEKIT (SFU) VOICE CHAT ENGINE
+// ============================================================
+
+const VoiceChat = {
+    room: null,
+    isMuted: true, // DEFAULT MIC DISABLED
+
+    async joinRoom(matchId) {
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            console.warn("Voice chat not supported on this browser.");
+            return;
+        }
+
+        try {
+            // 1. Ask our secure Worker for a token
+            const res = await secureServerCall('voice/token', { matchId });
+
+            // 2. Connect to LiveKit (Removed adaptive stream to reduce pre-flight region checks that might time out)
+            this.room = new LivekitClient.Room();
+
+            this.room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
+                if (track.kind === 'audio') {
+                    const audioEl = track.attach();
+                    audioEl.id = `lkAudio_${participant.identity}`;
+                    if (window.playerVolumes && window.playerVolumes[participant.identity] !== undefined) {
+                        audioEl.volume = window.playerVolumes[participant.identity];
+                    }
+                    document.body.appendChild(audioEl);
+                }
+            });
+            
+            this.room.on(LivekitClient.RoomEvent.TrackUnsubscribed, (track) => {
+                track.detach().forEach(el => el.remove());
+            });
+
+            this.room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
+                speakers.forEach(speaker => {
+                    const uid = speaker.identity;
+                    const lAvatar = document.getElementById(`lobby-avatar-${uid}`);
+                    if(lAvatar) lAvatar.classList.add('speaking');
+                    const gAvatar = document.getElementById(`game-avatar-${uid}`);
+                    if(gAvatar) gAvatar.classList.add('speaking');
+                    const apAvatar = document.getElementById(`ap-avatar-${uid}`);
+                    if(apAvatar) apAvatar.classList.add('speaking');
+                });
+            });
+
+            // 3. Connect with a timeout race so it doesn't hang forever if LiveKit is down
+            const connectPromise = this.room.connect(res.url, res.token);
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+            
+            await Promise.race([connectPromise, timeoutPromise]);
+
+            await this.room.localParticipant.setMicrophoneEnabled(true);
+            this.isMuted = true;
+            await this.room.localParticipant.setMicrophoneEnabled(false);
+
+            if (typeof setMicActive === 'function') setMicActive(false); 
+            this.updateMuteButtonUI();
+
+        } catch (err) {
+            console.warn("Voice Connection Failed:", err);
+            // Gracefully tell the user without breaking the game!
+            if (typeof showSystemToast === 'function') {
+                showSystemToast("Voice server unreachable. Chat disabled.");
+            }
+            // Clean up the dead room
+            if (this.room) {
+                this.room.disconnect();
+                this.room = null;
+            }
+        }
+    },
+
+    toggleMute() {
+        if (!this.room) return;
+        this.isMuted = !this.isMuted;
+        this.room.localParticipant.setMicrophoneEnabled(!this.isMuted);
+        if (typeof setMicActive === 'function') setMicActive(!this.isMuted);
+        this.updateMuteButtonUI();
+    },
+
+    updateMuteButtonUI() {
+        const btn = document.getElementById('micToggleBtn');
+        const lobbyBtn = document.getElementById('lobbyMicToggleBtn');
+        if (btn) {
+            btn.innerHTML = this.isMuted ? '🔇' : '🎙️';
+            btn.style.color = this.isMuted ? 'var(--danger-bright)' : 'var(--brass-bright)';
+        }
+        if (lobbyBtn) {
+            lobbyBtn.innerHTML = this.isMuted ? '🔇' : '🎙️';
+            lobbyBtn.style.color = this.isMuted ? 'var(--danger-bright)' : 'var(--brass-bright)';
+        }
+    },
+
+    leaveRoom(matchId) {
+        if (this.room) {
+            this.room.disconnect();
+            this.room = null;
+        }
+        document.querySelectorAll('audio[id^="lkAudio_"]').forEach(el => el.remove());
+        if (typeof setMicActive === 'function') setMicActive(false);
+    }
+};
+
+// --- GLOBAL VOLUME CONTROLLER UI ---
+window.playerVolumes = {};
+
+function openVolumePopup(e, uid, name) {
+    e.stopPropagation();
+    let popup = document.getElementById('playerVolumePopup');
+    if(!popup) {
+        popup = document.createElement('div');
+        popup.id = 'playerVolumePopup';
+        document.body.appendChild(popup);
+        document.addEventListener('click', (ev) => {
+            if(popup && !popup.contains(ev.target)) popup.style.display = 'none';
+        });
+    }
+    
+    const currentVol = window.playerVolumes[uid] !== undefined ? window.playerVolumes[uid] : 1.0;
+    
+    popup.innerHTML = `
+        <div class="pv-name">${name}</div>
+        <div style="font-size:18px; margin-bottom:-4px;">${currentVol === 0 ? '🔇' : '🔊'}</div>
+        <input type="range" min="0" max="100" value="${currentVol * 100}" oninput="setPlayerVolume('${uid}', this.value)">
+    `;
+    
+    popup.style.display = 'flex';
+    
+    let x = e.clientX;
+    let y = e.clientY + 20;
+    if(x + 150 > window.innerWidth) x = window.innerWidth - 160;
+    if(y + 100 > window.innerHeight) y = e.clientY - 100;
+    
+    popup.style.left = x + 'px';
+    popup.style.top = y + 'px';
+}
+
+function setPlayerVolume(uid, val) {
+    const vol = parseInt(val) / 100;
+    window.playerVolumes[uid] = vol;
+    const audioEl = document.getElementById('lkAudio_' + uid);
+    if(audioEl) audioEl.volume = vol;
+    
+    const popup = document.getElementById('playerVolumePopup');
+    if(popup) {
+        const icon = popup.querySelector('div:nth-child(2)');
+        if(icon) icon.textContent = vol === 0 ? '🔇' : '🔊';
+    }
+}
+
 function startGame() {
     if (!audioCtx) audioCtx = new AudioContext();
     if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -3634,55 +3833,17 @@ function startGame() {
             const myUid = DoDAuth.getProfile().uid;
             const isHost = window.onlineMatchSeats[0].uid === myUid;
 
-            // ONLY THE HOST CREATES THE GAME STATE
+            // ONLY THE HOST SECURELY TRIGGERS INITIALIZATION ON CLOUDFLARE
             if (isHost) {
-                let masterDeck = makeDeck();
-                let masterPlayers = [];
-
-                window.onlineMatchSeats.forEach((seat, index) => {
-                    let hand = [];
-                    for (let k = 0; k < 5; k++) hand.push(masterDeck.pop());
-                    
-                    // Host fetches real player data if human, or uses the bot's generated data
-                    let pAv = seat.avatar || 'Apprentice';
-                    let pFr = seat.frame || 'Apprentice';
-                    let pSkin = seat.deckSkin || 'CardstoBuy/TheBase.png';
-                    
-                    masterPlayers.push({
-                        uid: seat.uid,
-                        name: seat.displayName,
-                        hand: hand,
-                        shop: START_SHOP,
-                        out: false,
-                        deceptionStrike: false,
-                        avatar: pAv,
-                        frame: pFr,
-                        title: seat.title || null,
-                        deckSkin: pSkin,
-                        color: index === 0 ? ((typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces && SHOP_DB.cardFaces.find(c => c.id === (DoDAuth.getProfile().equippedFace || DoDAuth.getProfile().equippedCard || 'cf_default')))?.color || '#c9a227') : BOT_COLOR_POOL[index % BOT_COLOR_POOL.length]
-                    });
-                });
-
-                // Upload the fresh game to Firebase
-                await firebase.firestore().collection('matches').doc(currentMatchId).update({
-                    gameState: {
-                        turnUid: window.onlineMatchSeats[0].uid,
-                        direction: 1,
-                        deck: masterDeck,
-                        players: masterPlayers,
-                        requiredValue: null,
-                        lastEffectiveValue: null,
-                        lastPlayedCardLabel: null,
-                        lastPlayedBy: null, 
-                        uiState: 'IDLE',
-                        deception: null,
-                        lastAction: null, // Explicitly setting this to null instead of undefined!
-                        // FIX: real wall-clock anchor so the timer survives refreshes/reconnects
-                        // instead of resetting to the full duration every time.
-                        startedAtMs: Date.now(),
-                        durationSec: GAME_DURATION_SEC
-                    }
-                });
+                const eqCardId = DoDAuth.getProfile().equippedFace || DoDAuth.getProfile().equippedCard || 'cf_default';
+                const eqCardDef = (typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces) ? SHOP_DB.cardFaces.find(c => c.id === eqCardId) : null;
+                const hostColor = eqCardDef ? eqCardDef.color : '#c9a227';
+                
+                try {
+                    await secureServerCall('startGame', { hostColor: hostColor });
+                } catch (e) {
+                    console.error("Failed to start game on server:", e);
+                }
             }
             
             // EVERYONE LISTENS TO THE FIREBASE STATE
@@ -3795,10 +3956,20 @@ function listenToGameState() {
         
         // Preserve local turn timer unless the turn just changed
         let computedTurnTimeLeft = 30;
+        let localExpiresAt = serverState.turnExpiresAt || 0; 
+        
         if (typeof state !== 'undefined' && state !== null) {
-            if (state.turnUid === serverState.turnUid && state.turnTimeLeft !== undefined) {
+            if (state.turnUid === serverState.turnUid) {
+                // Same turn: preserve local timer and our local expiration anchor
                 computedTurnTimeLeft = state.turnTimeLeft;
+                localExpiresAt = state.turnExpiresAt || (Date.now() + 30000);
+            } else {
+                // NEW TURN: Ignore server clock skew, start exactly at 30 locally!
+                computedTurnTimeLeft = 30;
+                localExpiresAt = Date.now() + 30000; 
             }
+        } else {
+            localExpiresAt = Date.now() + 30000; 
         }
 
         state = {
@@ -3817,10 +3988,9 @@ function listenToGameState() {
             uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
             buyLoop: preservedBuyLoop,
             peekResult: preservedPeek,
-            // DECEPTION: always mirrored straight from the server — this is a shared,
-            // multi-player mini-phase, not per-client UI state, so (unlike buyLoop) it's
-            // never "preserved" locally, just taken fresh every snapshot.
             deception: serverState.deception || null,
+            gameExpiresAt: serverState.gameExpiresAt || (serverState.startedAtMs + (GAME_DURATION_SEC * 1000)),
+            turnExpiresAt: localExpiresAt,
             turnTimeLeft: computedTurnTimeLeft
         };
 
@@ -3833,6 +4003,11 @@ function listenToGameState() {
                 layoutRing();
                 renderAll();
             });
+        }
+
+        // Start SFU voice chat session exclusively for live multiplayer matches
+        if (currentMatchId && !VoiceChat.room) {
+            VoiceChat.joinRoom(currentMatchId);
         }
 
         // 5. TRIGGER CARD ANIMATIONS & CINEMATICS (Moved up before Endgame checks!)
@@ -3863,10 +4038,16 @@ function listenToGameState() {
             // Animate the yellow turn curve
             const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
             const toIdx = orderedPlayers.findIndex(p => p.uid === serverState.turnUid);
+            
             if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
-                animateTurnArc(fromIdx, toIdx, serverState.direction);
-                sfx.turn(); 
+                // If we already animated this locally via Optimistic UI, skip doing it again!
+                if (!window.dodJustPassedTurnLocally) {
+                    animateTurnArc(fromIdx, toIdx, serverState.direction);
+                    sfx.turn(); 
+                }
             }
+            window.dodJustPassedTurnLocally = false; // Reset the flag
+            
             localLastTurnUid = serverState.turnUid;
 
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
@@ -3882,14 +4063,16 @@ function listenToGameState() {
                             'gameState.players': state.players,
                             'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
                         });
-                        if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 1800);
+                        // SPEED UP: Bots wake up much faster online to remove the laggy feeling
+                        if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
                     }
                 } else {
                     if (curPlayer && curPlayer.deceptionStrike) {
                         curPlayer.deceptionStrike = false;
                         firebase.firestore().collection('matches').doc(currentMatchId).update({ 'gameState.players': state.players });
                     }
-                    if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 1800);
+                    // SPEED UP: Bots wake up much faster online to remove the laggy feeling
+                    if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
                 }
             }
         }
@@ -3910,71 +4093,90 @@ function listenToGameState() {
     });
 }
 
-function tick(){
-  if(state.over){ clearInterval(timerInterval); return; }
-  state.timeLeft--;
-  if(state.timeLeft<=0){ state.timeLeft=0; state.timeUp=true; }
-  const m=Math.floor(state.timeLeft/60), s=state.timeLeft%60;
-  const disp=document.getElementById('timerDisplay');
-  disp.textContent=`${m}:${s.toString().padStart(2,'0')}`;
-  disp.classList.toggle('low', state.timeLeft<=60);
-  
-  // TURN TIMER LOGIC
-  if (!state.deception && state.uiState !== 'ANIMATING' && state.turnTimeLeft !== undefined) {
-      state.turnTimeLeft--;
-      
-      // Dynamically update the turn text without doing a full render cycle
-      const cur = state.players[state.turn];
-      const turnInd = document.getElementById('turnIndicator');
-      if (turnInd) {
-          turnInd.textContent = (cur.isHuman ? 'Your turn' : `${cur.name} is playing…`) + ` (${state.turnTimeLeft}s)`;
-          turnInd.style.color = state.turnTimeLeft <= 10 ? 'var(--danger-bright)' : '';
-      }
-      
-      if (state.turnTimeLeft <= 0) {
-          handleTurnTimeout();
-      }
-  }
-
-  if(state.timeLeft<=0) {
-    clearInterval(timerInterval);
-    finalizeGame(); // Force the game to end immediately when time is up!
-  }
+function tick() {
+    if (!state || state.over) { clearInterval(timerInterval); return; }
+    
+    const now = Date.now();
+    
+    // 1. SECURE GAME TIMER
+    const gameMsLeft = state.gameExpiresAt ? (state.gameExpiresAt - now) : 0;
+    state.timeLeft = Math.max(0, Math.floor(gameMsLeft / 1000));
+    
+    if (state.timeLeft <= 0 && !state.timeUp) {
+        state.timeUp = true;
+        if (currentMatchId) {
+            // Securely tell server to end game
+            secureServerCall('triggerGameTimeout', {}).catch(()=>{});
+        } else {
+            finalizeGame();
+        }
+        return;
+    }
+    
+    const m = Math.floor(state.timeLeft / 60), s = state.timeLeft % 60;
+    const disp = document.getElementById('timerDisplay');
+    if (disp) {
+        disp.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+        disp.classList.toggle('low', state.timeLeft <= 60);
+    }
+    
+    // 2. SECURE TURN TIMER (Online)
+    if (currentMatchId && !state.deception && state.uiState !== 'ANIMATING' && state.turnExpiresAt) {
+        if (window.dodCenterIsLocked) {
+            // Pause the timer from draining while the incoming card is still flying across the screen!
+            state.turnExpiresAt += 1000;
+        } else {
+            state.turnTimeLeft = Math.max(0, Math.floor((state.turnExpiresAt - now) / 1000));
+        }
+        
+        // Dynamically update the turn text
+        const cur = state.players[state.turn];
+        const turnInd = document.getElementById('turnIndicator');
+        if (turnInd) {
+            turnInd.textContent = (cur.isHuman ? 'Your turn' : `${cur.name} is playing…`) + ` (${state.turnTimeLeft}s)`;
+            turnInd.style.color = state.turnTimeLeft <= 10 ? 'var(--danger-bright)' : '';
+        }
+        
+        if (state.turnTimeLeft <= 0) {
+            handleTurnTimeout();
+        }
+    } 
+    // OFFLINE BOT MODE FALLBACK
+    else if (!currentMatchId && state.turnTimeLeft !== undefined && !state.deception && state.uiState !== 'ANIMATING') {
+        state.turnTimeLeft--;
+        const cur = state.players[state.turn];
+        const turnInd = document.getElementById('turnIndicator');
+        if (turnInd) {
+            turnInd.textContent = (cur.isHuman ? 'Your turn' : `${cur.name} is playing…`) + ` (${state.turnTimeLeft}s)`;
+            turnInd.style.color = state.turnTimeLeft <= 10 ? 'var(--danger-bright)' : '';
+        }
+        if (state.turnTimeLeft <= 0) handleTurnTimeout();
+    }
 }
 
 async function handleTurnTimeout() {
     if (!state || state.over || state.uiState === 'ANIMATING' || state.deception) return;
     
     const curPlayer = state.players[state.turn];
-    
-    // For online mode, ONLY the host executes timeouts to prevent duplicate server calls
     const isOnline = !!currentMatchId;
+    
     if (isOnline) {
+        // Prevent API spam: Only the host pushes the timeout ping to the server.
         const myUid = DoDAuth.getProfile().uid;
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
-        if (!isHost) return; // Clients wait for host to process
-    }
-    
-    const penalty = 2;
-    curPlayer.shop = Math.max(0, curPlayer.shop - penalty);
-    const msg = `⏳ Time's up! ${curPlayer.name} took too long and lost ${penalty} coins. Turn skipped.`;
-    
-    if (isOnline) {
-        state.uiState = 'ANIMATING';
-        renderAll();
+        if (!isHost) return; 
         
-        let nextIndex = state.turn;
-        do { 
-            nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
-        } while(state.players[nextIndex].out);
-        
-        await firebase.firestore().collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players,
-            'gameState.turnUid': state.players[nextIndex].uid,
-            'gameState.uiState': 'IDLE',
-            'gameState.lastAction': { id: Date.now().toString(), type: 'TIMEOUT_PENALTY', uid: curPlayer.uid, msg: msg }
-        });
+        try {
+            await secureServerCall('triggerTimeout', {});
+        } catch (e) {
+            console.warn("Timeout rejection:", e);
+        }
     } else {
+        // OFFLINE BOT MODE LOGIC
+        const penalty = 2;
+        curPlayer.shop = Math.max(0, curPlayer.shop - penalty);
+        const msg = `⏳ Time's up! ${curPlayer.name} took too long and lost ${penalty} coins. Turn skipped.`;
+        
         log(msg, 'alert');
         state.buyLoop = null; 
         state.uiState = 'ANIMATING';
@@ -4101,7 +4303,8 @@ function layoutRing(){
     seat.id='seat-'+p.id;
     seat.className='ringseat' + (isDense ? ' dense' : '');
     seat.style.left=left+'%'; seat.style.top=top+'%';
-    seat.onclick = () => onSeatClick(p.id);
+    // Pass the event so the popup knows where to spawn!
+    seat.onclick = (e) => onSeatClick(p.id, e);
     
     const av = p.avatar || 'Apprentice';
     const fr = p.frame || 'Apprentice';
@@ -4112,8 +4315,9 @@ function layoutRing(){
         if (tDef) seatTitleHtml = `<div style="margin-top:2px; transform:scale(0.85); transform-origin:top center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:7px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
     }
     
+    // Add ID to avatar for speaker glow
     seat.innerHTML=`
-      <div class="avatar" style="overflow:hidden; padding:0;">
+      <div class="avatar" id="game-avatar-${p.uid}" style="overflow:hidden; padding:0;">
         <div class="avatar-frame-wrap" style="width:100%; height:100%;">
           <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
           <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
@@ -4655,7 +4859,7 @@ function renderAll(){
           const cFr = cur.frame || 'Apprentice';
 
           ap.innerHTML = `
-              <div class="ap-avatar" style="overflow:hidden; padding:0;">
+              <div class="ap-avatar" id="ap-avatar-${cur.uid}" style="overflow:hidden; padding:0; cursor:pointer;" onclick="if('${cur.uid}' !== DoDAuth.getProfile().uid) openVolumePopup(event, '${cur.uid}', '${cur.name}')">
                 <div class="avatar-frame-wrap" style="width:100%; height:100%;">
                   <img src="Avatars/${cAv}.png" class="af-avatar" alt="Avatar">
                   <img src="Frames/${cFr}.png" class="af-frame" alt="Frame">
@@ -4802,15 +5006,19 @@ function isYourTurn() {
     return state.turn === 0 && !state.players[0].out; 
 }
 
-function onSeatClick(id) {
-    if (!isYourTurn()) return;
+function onSeatClick(id, event) {
     const target = playerById(id);
     if (!target || target.out || id === 0) return;
 
     if (state.uiState === 'CHOOSE_TARGET_POWER') {
+        if (!isYourTurn()) return;
         confirmActionTarget(target, 'POWER');
     } else if (state.uiState === 'CHOOSE_TARGET_STEAL') {
+        if (!isYourTurn()) return;
         confirmActionTarget(target, 'STEAL');
+    } else {
+        // If not targeting an attack, open the volume UI!
+        if (event && !target.isBot) openVolumePopup(event, target.uid, target.name);
     }
 }
 
@@ -4931,6 +5139,37 @@ function triggerCalloutPhase(delay = 500) {
     }, delay);
 }
 
+// 1. ADD THIS SECURE UTILITY TO TALK TO CLOUDFLARE
+async function secureServerCall(endpoint, payload) {
+    const user = firebase.auth().currentUser;
+    if (!user) return;
+    
+    // Get a secure token to prove the player's identity to Cloudflare
+    const userToken = await user.getIdToken();
+    payload.userToken = userToken;
+    
+    // FIX: Only grab the global ID if we didn't explicitly pass one in the payload!
+    payload.matchId = payload.matchId || currentMatchId;
+
+    // Pointing to your live Cloudflare Worker!
+    const CLOUDFLARE_URL = "https://cold-night-0cc8.aksgames03.workers.dev";
+
+
+    const response = await fetch(`${CLOUDFLARE_URL}/api/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+
+    const data = await response.json();
+    if (!data.success) {
+        log("Server rejected move: " + data.error, "alert");
+        throw new Error(data.error);
+    }
+    return data;
+}
+
+// 2. THE UPDATED PLAY FUNCTION (Optimistic UI)
 async function playNumberFromHand(idx, el) {
     if(!isYourTurn()) return;
     
@@ -4938,41 +5177,42 @@ async function playNumberFromHand(idx, el) {
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
-    // 1. Apply local logic
+    // --- INSTANT OPTIMISTIC UI (Applies to both Offline and Online!) ---
     myPlayerObj.hand.splice(idx, 1);
     myPlayerObj.shop += PLAY_REWARD;
+
+    // ADD THIS LINE HERE:
+    log(`${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok', myUid);
     
+    state.lastEffectiveValue = card.value;
+    state.lastPlayedCardLabel = card.value;
+    state.lastPlayedBy = 0; // You are always index 0 locally
+    state.uiState = 'ANIMATING';
+    
+    // Instantly animate the card flying and the coin dropping
+    if (el) el.classList.add('card-pending');
+    renderAll(); 
+    const srcRect = el.getBoundingClientRect();
+    flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
+    flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
+    
+    // Instantly pop up the number pad
+    triggerCalloutPhase();
+
+    // --- SERVER SYNC ---
     if (currentMatchId) {
-        // ONLINE MODE (Firebase)
-        const db = firebase.firestore();
-        await db.collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players,
-            'gameState.lastEffectiveValue': card.value,
-            'gameState.lastPlayedCardLabel': card.value,
-            'gameState.lastPlayedBy': myUid,
-            'gameState.uiState': 'CHOOSE_CALL', 
-            'gameState.lastAction': {
-                id: Date.now().toString(),
-                type: 'PLAY_NUMBER',
-                uid: myUid,
-                cardValue: card.value,
-                msg: `${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`
-            }
-        });
-    } else {
-        // OFFLINE MODE (Local Bots)
-        log(`You played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok');
-        state.lastEffectiveValue = card.value;
-        state.lastPlayedCardLabel = card.value;
-        state.lastPlayedBy = 0;
-        state.uiState = 'ANIMATING';
+        // Tell the incoming Firebase snapshot to skip the animation since we just did it
+        window.dodJustPlayedLocally = true; 
         
-        renderAll(); 
-        const srcRect = el.getBoundingClientRect();
-        flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
-        flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-        
-        triggerCalloutPhase();
+        try {
+            // Ask Cloudflare to officially save this move in the background
+            await secureServerCall('playCard', { cardIndex: idx });
+        } catch (e) {
+            // If the server rejects it (lag or error), unlock the UI. 
+            state.uiState = 'IDLE';
+            if (el) el.classList.remove('card-pending');
+            renderAll();
+        }
     }
 }
 
@@ -4980,39 +5220,39 @@ async function playWild(idx, el){
   if(!isYourTurn()) return;
   const myUid = DoDAuth.getProfile().uid;
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
-  const card=you.hand[idx];
+  const card = you.hand[idx];
   const srcRect = el.getBoundingClientRect();
   
+  // --- INSTANT OPTIMISTIC UI ---
   you.hand.splice(idx,1);
   payFromOwn(you, WILD_COST);
   if (you.isHuman) window.matchStats.wilds++;
+  you.shop+=PLAY_REWARD;
+
+  // ADD THIS LINE HERE:
+  log(`${you.name} played Wild Swap (matched ${card.value}). Cost ${WILD_COST}, +${PLAY_REWARD} for play.`, 'ok', myUid);
   
   const effective = state.requiredValue===null?5:state.requiredValue;
-  sweepEliminations();
+  state.lastEffectiveValue=effective; state.lastPlayedCardLabel='W'; state.lastPlayedBy=0;
+  state.uiState = 'ANIMATING';
   
-  if(!you.out){
-    you.shop+=PLAY_REWARD;
-    const msg = `${you.name} played Wild Swap (matched ${card.value}). Cost ${WILD_COST}, +${PLAY_REWARD} for play.`;
-    
-    if (currentMatchId) {
-        await firebase.firestore().collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players,
-            'gameState.lastEffectiveValue': effective,
-            'gameState.lastPlayedCardLabel': 'W',
-            'gameState.lastPlayedBy': myUid,
-            'gameState.uiState': 'CHOOSE_CALL',
-            'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
-        });
-    } else {
-        log(msg,'ok');
-        state.lastEffectiveValue=effective; state.lastPlayedCardLabel='W'; state.lastPlayedBy=0;
-        state.uiState = 'ANIMATING';
-        renderAll();
-        flyCoin(getSeatOrPanelRect(0), bankRect(), 0);
-        flyCard(srcRect, centerRect(), 'W', PLAYER_COLORS[0], 22, card.value);
-        triggerCalloutPhase();
-    }
-  } else renderAll();
+  if (el) el.classList.add('card-pending');
+  renderAll();
+  flyCoin(getSeatOrPanelRect(0), bankRect(), 0);
+  flyCard(srcRect, centerRect(), 'W', PLAYER_COLORS[0], 22, card.value);
+  triggerCalloutPhase();
+
+  // --- SERVER SYNC ---
+  if (currentMatchId) {
+      window.dodJustPlayedLocally = true;
+      try {
+          await secureServerCall('playWild', { cardIndex: idx });
+      } catch (e) {
+          state.uiState = 'IDLE';
+          if (el) el.classList.remove('card-pending');
+          renderAll();
+      }
+  }
 }
 
 async function playReverse(idx, el){
@@ -5022,31 +5262,35 @@ async function playReverse(idx, el){
   const card=you.hand[idx];
   const srcRect = el.getBoundingClientRect();
   
+  // --- INSTANT OPTIMISTIC UI ---
   you.hand.splice(idx,1);
   state.direction *= -1; 
   if (you.isHuman) window.matchStats.reverses++; 
   you.shop+=PLAY_REWARD;
   const effective = state.requiredValue===null?5:state.requiredValue;
-  const msg = `${you.name} played Reverse (matched ${card.value}). Direction changed! +${PLAY_REWARD} for play.`;
 
+  // ADD THIS LINE HERE:
+  log(`${you.name} played Reverse (matched ${card.value}). Direction changed! +${PLAY_REWARD} for play.`, 'ok', myUid);
+
+  state.lastEffectiveValue=effective; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=0;
+  state.uiState = 'ANIMATING';
+  
+  if (el) el.classList.add('card-pending');
+  renderAll();
+  flyCard(srcRect, centerRect(), 'REV', '#d16b24', 25, card.value);
+  flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
+  triggerCalloutPhase();
+
+  // --- SERVER SYNC ---
   if (currentMatchId) {
-      await firebase.firestore().collection('matches').doc(currentMatchId).update({
-          'gameState.players': state.players,
-          'gameState.direction': state.direction,
-          'gameState.lastEffectiveValue': effective,
-          'gameState.lastPlayedCardLabel': 'REV',
-          'gameState.lastPlayedBy': myUid,
-          'gameState.uiState': 'CHOOSE_CALL',
-          'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
-      });
-  } else {
-      log(msg,'ok');
-      state.lastEffectiveValue=effective; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=0;
-      state.uiState = 'ANIMATING';
-      renderAll();
-      flyCard(srcRect, centerRect(), 'REV', '#d16b24', 25, card.value);
-      flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
-      triggerCalloutPhase();
+      window.dodJustPlayedLocally = true;
+      try {
+          await secureServerCall('playReverse', { cardIndex: idx });
+      } catch (e) {
+          state.uiState = 'IDLE';
+          if (el) el.classList.remove('card-pending');
+          renderAll();
+      }
   }
 }
 
@@ -5065,6 +5309,7 @@ async function confirmActionTarget(target, actionType){
   const el = state._pendingActionEl;
   const srcRect = el ? el.getBoundingClientRect() : getSeatOrPanelRect(0);
   
+  // --- INSTANT OPTIMISTIC UI ---
   you.hand.splice(idx,1);
   const effective = state.requiredValue===null?5:state.requiredValue;
   if (you.isHuman) {
@@ -5073,43 +5318,41 @@ async function confirmActionTarget(target, actionType){
   }
   
   state.uiState = 'ANIMATING';
+  if (el) el.classList.add('card-pending');
   renderAll();
 
-  let msg = '';
   let label = '';
-  // Ensure the card tier is safely parsed as an integer to prevent string concatenation bugs
   const tier = parseInt(card.tier) || (actionType === 'STEAL' ? 3 : 2);
   
+  // REPLACE THIS ENTIRE IF/ELSE BLOCK:
   if(actionType === 'POWER') {
       const taken = transferToBank(target, tier); 
-      msg = `${you.name} played Power (${card.value}) on ${target.name}, draining ${taken} coins.`;
       label = 'PWR';
+      log(`${you.name} played Power (${card.value}) on ${target.name}, draining ${taken} coins.`, 'ok', myUid);
+      flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
   } else if (actionType === 'STEAL') {
       const taken = transferToPlayer(target, you, tier); 
-      msg = `${you.name} played Steal (${card.value}) on ${target.name}, stealing ${taken} coins!`;
       label = 'STL';
+      log(`${you.name} played Steal (${card.value}) on ${target.name}, stealing ${taken} coins!`, 'ok', myUid);
+      flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(0), 0);
   }
   
   you.shop+=PLAY_REWARD;
+  state.lastPlayedCardLabel = label; state.lastEffectiveValue = effective; state.lastPlayedBy = 0;
   
+  flyCard(srcRect, centerRect(), label, (actionType==='STEAL' || actionType==='POWER') ? '#b23c3c' : PLAYER_COLORS[0], 24, card.value, null, getSeatOrPanelRect(target.id));
+  triggerCalloutPhase();
+
+  // --- SERVER SYNC ---
   if (currentMatchId) {
-      await firebase.firestore().collection('matches').doc(currentMatchId).update({
-          'gameState.players': state.players,
-          'gameState.lastEffectiveValue': effective,
-          'gameState.lastPlayedCardLabel': label,
-          'gameState.lastPlayedBy': myUid,
-          'gameState.uiState': 'CHOOSE_CALL',
-          'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: card.value, msg: msg }
-      });
-  } else {
-      log(msg,'ok');
-      if(actionType === 'POWER') flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
-      if(actionType === 'STEAL') flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(0), 0);
-      // Pass target.id rect to flyCard so the Claw slashes them!
-      flyCard(srcRect, centerRect(), label, (actionType==='STEAL' || actionType==='POWER') ? '#b23c3c' : PLAYER_COLORS[0], 24, card.value, null, getSeatOrPanelRect(target.id));
-      if(!target.out) protestFrom(target);
-      state.lastPlayedCardLabel = label; state.lastEffectiveValue = effective; state.lastPlayedBy = 0;
-      triggerCalloutPhase();
+      window.dodJustPlayedLocally = true;
+      try {
+          await secureServerCall('playTargeted', { cardIndex: idx, targetUid: target.uid, actionType: actionType });
+      } catch (e) {
+          state.uiState = 'IDLE';
+          if (el) el.classList.remove('card-pending');
+          renderAll();
+      }
   }
 }
 
@@ -5266,6 +5509,7 @@ async function finishBuyLoopFailure() {
             'gameState.players': state.players,
             'gameState.uiState': 'IDLE',
             'gameState.turnUid': state.players[nextIndex].uid,
+            'gameState.turnExpiresAt': Date.now() + 30000,
             'gameState.lastAction': { id: Date.now().toString(), type: 'CALLOUT', uid: myUid, msg: `Forced buy failed. Requirement of ${state.requiredValue} carries over.` }
         });
     } else {
@@ -5290,6 +5534,7 @@ async function skipStuckHumanTurn(reasonMsg){
     await firebase.firestore().collection('matches').doc(currentMatchId).update({
       'gameState.players': state.players,
       'gameState.turnUid': state.players[nextIdx].uid,
+      'gameState.turnExpiresAt': Date.now() + 30000,
       'gameState.uiState': 'IDLE',
       'gameState.lastAction': { id: Date.now().toString(), type:'CALLOUT', uid: myUid, msg: reasonMsg }
     });
@@ -5510,11 +5755,25 @@ function showDeceptionAnswerGrid(){
 // ---- Human-facing actions (both offline & online; branch internally) ----
 async function writeDeceptionField(path, value){
   if(currentMatchId){
-    await firebase.firestore().collection('matches').doc(currentMatchId).update({ [path]: value });
+    // ONLINE: Optimistic UI to freeze the buttons instantly
+    const dec = state.deception; 
+    if(dec) {
+        const parts = path.split('.').slice(2); 
+        let obj = dec;
+        for(let i=0;i<parts.length-1;i++) obj = obj[parts[i]];
+        obj[parts[parts.length-1]] = value;
+        renderAll();
+    }
+    
+    // Secure Sync
+    try {
+        await secureServerCall('deceptionVote', { path: path, value: value });
+    } catch(e) { console.error("Vote failed:", e); }
+    
   } else {
+    // OFFLINE
     const dec = state.deception; if(!dec) return;
-    // path looks like "gameState.deception.realStances.<uid>" — walk it onto local state.deception
-    const parts = path.split('.').slice(2); // drop "gameState.deception"
+    const parts = path.split('.').slice(2); 
     let obj = dec;
     for(let i=0;i<parts.length-1;i++) obj = obj[parts[i]];
     obj[parts[parts.length-1]] = value;
@@ -5767,7 +6026,6 @@ function resolveDeceptionAnswersOffline(){
 async function startDeceptionPhaseOnline(curPlayer){
   const broke = state.players.filter(p=>!p.out && p.shop < BUY_COST);
   const rich = state.players.filter(p=>!p.out && p.shop >= BUY_COST);
-  const db = firebase.firestore();
   let dec;
   if(rich.length === 0){
     const realNumber = 1 + Math.floor(Math.random()*9);
@@ -5778,10 +6036,12 @@ async function startDeceptionPhaseOnline(curPlayer){
     dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
     if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
   }
-  await db.collection('matches').doc(currentMatchId).update({
-    'gameState.deception': dec,
-    'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_START', uid:'system', msg: `💀 Deception! ${broke.map(p=>p.name).join(', ')} ${broke.length>1?'are':'is'} out of coins with nothing to play.` }
-  });
+  
+  // Optimistic UI
+  state.deception = dec;
+  renderAll();
+
+  await secureServerCall('startDeception', { deceptionObj: dec });
 }
 
 window.activeBotTimers = window.activeBotTimers || {};
@@ -5789,7 +6049,6 @@ window.activeBotTimers = window.activeBotTimers || {};
 async function handleOnlineDeceptionHostLogic(serverState){
   const dec = serverState.deception;
   if(!dec) return;
-  const db = firebase.firestore();
 
   if(dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM'){
     const stancesField = decStancesField(dec.phase);
@@ -5806,46 +6065,39 @@ async function handleOnlineDeceptionHostLogic(serverState){
 
       let reasonStr = "";
       let votesArr = Object.values(stances);
-      if (best.length === 1) {
-          reasonStr = `(Majority vote: ${votesArr.join(', ')})`;
-      } else {
-          reasonStr = `(Tie-breaker between ${best.join(', ')} from votes: ${votesArr.join(', ')})`;
-      }
+      if (best.length === 1) { reasonStr = `(Majority vote: ${votesArr.join(', ')})`; } 
+      else { reasonStr = `(Tie-breaker between ${best.join(', ')} from votes: ${votesArr.join(', ')})`; }
 
       const currentPhase = dec.phase;
-      const animDelay = 4000; // Hold the screen so players can read it
+      const animDelay = 4000; 
       
-      // Update to reveal phase
-      db.collection('matches').doc(currentMatchId).update({
+      // Update to reveal phase securely
+      secureServerCall('hostSyncDeception', { updates: {
           [`gameState.deception.resolved_${currentPhase}`]: resolved,
           'gameState.deception.phase': currentPhase === 'VOTE_REAL' ? 'REVEAL_REAL' : 'REVEAL_CLAIM'
-      });
+      }});
 
       setTimeout(() => {
           if(currentPhase === 'VOTE_REAL'){
-            const update = {
+            secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.realNumber': resolved,
               'gameState.deception.phase': 'VOTE_CLAIM',
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table locked in a real secret number ${reasonStr} (kept hidden).` }
-            };
-            db.collection('matches').doc(currentMatchId).update(update).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
+            }}).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
           } else {
-            db.collection('matches').doc(currentMatchId).update({
+            secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.claimNumber': resolved,
               'gameState.deception.phase': 'ANSWER',
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved} ${reasonStr}.` }
-            }).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
+            }}).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
           }
       }, animDelay);
       return;
     }
     
     let nextUid = null;
-    if (!(dec.proposerUid in stances)) {
-        nextUid = dec.proposerUid;
-    } else {
-        nextUid = dec.richUids.find(uid => !(uid in stances));
-    }
+    if (!(dec.proposerUid in stances)) { nextUid = dec.proposerUid; } 
+    else { nextUid = dec.richUids.find(uid => !(uid in stances)); }
 
     if(nextUid && nextUid.startsWith('bot_')){
       if (window.activeBotTimers[nextUid]) return;
@@ -5853,13 +6105,12 @@ async function handleOnlineDeceptionHostLogic(serverState){
       
       setTimeout(()=>{
         let n;
-        if (nextUid === dec.proposerUid) {
-            n = 1 + Math.floor(Math.random()*9);
-        } else {
+        if (nextUid === dec.proposerUid) { n = 1 + Math.floor(Math.random()*9); } 
+        else {
             const accept = Math.random() < 0.55;
             n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
         }
-        db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.${stancesField}.${nextUid}`]: n })
+        secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.${stancesField}.${nextUid}`]: n } })
         .finally(() => delete window.activeBotTimers[nextUid]);
       }, 1200);
     }
@@ -5869,10 +6120,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
           if (window.activeBotTimers['transition_' + dec.phase]) return;
           window.activeBotTimers['transition_' + dec.phase] = true;
           
-          // Update to tension phase
-          db.collection('matches').doc(currentMatchId).update({
-              'gameState.deception.phase': 'REVEAL_RESULTS'
-          });
+          secureServerCall('hostSyncDeception', { updates: { 'gameState.deception.phase': 'REVEAL_RESULTS' } });
 
           const animDelay = (Object.keys(responses).length * 1000) + 3000;
           
@@ -5886,28 +6134,24 @@ async function handleOnlineDeceptionHostLogic(serverState){
             const r = responses[uid];
             const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
             const correct = effectiveGuess === dec.realNumber;
-            if(correct){ 
-                p.shop += 15; 
-                correctCount++; 
-            } else { 
-                p.out = true; 
-                deadInfo.push({ uid: p.uid, name: p.name, guess: effectiveGuess });
-            }
+            if(correct){ p.shop += 15; correctCount++; } 
+            else { p.out = true; deadInfo.push({ uid: p.uid, name: p.name, guess: effectiveGuess }); }
             p.deceptionStrike = false;
           });
 
           const survivors = state.players.filter(p=>!p.out);
-      let nextTurnUid = serverState.turnUid;
-      if(survivors.length > 1 && !serverState.over){
-        let idx = state.players.findIndex(p=>p.uid===serverState.turnUid);
-        do { idx = (idx + serverState.direction + state.players.length) % state.players.length; } while(state.players[idx].out);
-        nextTurnUid = state.players[idx].uid;
-      }
-      
-      db.collection('matches').doc(currentMatchId).update({
+          let nextTurnUid = serverState.turnUid;
+          if(survivors.length > 1 && !serverState.over){
+            let idx = state.players.findIndex(p=>p.uid===serverState.turnUid);
+            do { idx = (idx + serverState.direction + state.players.length) % state.players.length; } while(state.players[idx].out);
+            nextTurnUid = state.players[idx].uid;
+          }
+          
+          secureServerCall('hostSyncDeception', { updates: {
                   'gameState.players': state.players,
-                  'gameState.deception': firebase.firestore.FieldValue.delete(),
+                  'gameState.deception': null, 
                   'gameState.turnUid': nextTurnUid,
+                  'gameState.turnExpiresAt': Date.now() + 30000,
                   'gameState.uiState': 'IDLE',
                   'gameState.over': survivors.length <= 1 || !!serverState.over,
                   'gameState.lastAction': { 
@@ -5918,7 +6162,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
                       deadInfo: deadInfo,
                       msg: `Deception resolved. The real number was ${dec.realNumber}.` 
                   }
-                }).finally(() => delete window.activeBotTimers['transition_ANSWER']);
+                }}).finally(() => delete window.activeBotTimers['transition_ANSWER']);
             }, animDelay);
           return;
         }
@@ -5930,7 +6174,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
       setTimeout(()=>{
         const believe = Math.random() < 0.5;
         const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
-        db.collection('matches').doc(currentMatchId).update({ [`gameState.deception.responses.${nextUid}`]: r })
+        secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.responses.${nextUid}`]: r } })
         .finally(() => delete window.activeBotTimers[nextUid]);
       }, 1200);
     }
@@ -6045,7 +6289,6 @@ function usePeek(playerId,targetId){
 }
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
-    
     state.uiState = 'ANIMATING'; 
     renderActionBar();
     
@@ -6059,35 +6302,45 @@ async function confirmGuess(v) {
     } while (state.players[nextIndex].out);
     
     const nextPlayerObj = state.players[nextIndex];
-    const myPlayerObj = state.players[currentIndex];
+    const myPlayerObj = state.players[currentIndex]; 
     const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
 
+    // --- INSTANT OPTIMISTIC UI ---
+    state.requiredValue = v;
+    log(`${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`, '', myUid);
+    window.dodJustPlayedLocally = true; 
+
     if (currentMatchId) {
-        // ONLINE MODE (Firebase)
-        const db = firebase.firestore();
+        // ONLINE: Instantly shift the turn arrow and update the table
+        state.uiState = 'IDLE';
+        state.turnUid = nextPlayerObj.uid;
+        state.turn = nextIndex;
+        state.turnTimeLeft = 30; 
+        state.turnExpiresAt = Date.now() + 30000; // <--- FIX: Securely reset local timestamp immediately
+        
+        window.dodJustPassedTurnLocally = true; // Tell snapshot to skip double animation
+        
+        renderAll();
+        animateTurnArc(currentIndex, nextIndex, state.direction);
+        sfx.turn(); 
+
+        // --- SERVER SYNC ---
         try {
-            await db.collection('matches').doc(currentMatchId).update({
-                'gameState.requiredValue': v,
-                'gameState.uiState': 'IDLE',
-                'gameState.turnUid': nextPlayerObj.uid, 
-                'gameState.lastAction': {
-                    id: Date.now().toString(),
-                    type: 'CALLOUT',
-                    uid: myUid,
-                    calledValue: v,
-                    msg: `${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`
-                }
-            });
+            await secureServerCall('callout', { calledValue: v });
         } catch(error) {
-            console.error("Failed to pass turn:", error);
+            // If it fails (lag/error), revert the turn back to you
             state.uiState = 'CHOOSE_CALL'; 
-            renderActionBar();
+            state.turnUid = myUid;
+            state.turn = currentIndex;
+            state.turnTimeLeft = 30;
+            state.turnExpiresAt = Date.now() + 30000; // <--- FIX
+            window.dodJustPassedTurnLocally = false;
+            renderAll();
+            animateTurnArc(nextIndex, currentIndex, state.direction * -1); 
         }
     } else {
-        // OFFLINE MODE (Local Bots)
-        state.requiredValue = v;
-        log(`You call out — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`);
-        advanceTurn(); // Pass the turn to the bots locally
+        // OFFLINE: Let the local bot driver handle everything
+        advanceTurn(); 
     }
 }
 
@@ -6103,6 +6356,14 @@ function playNetworkedAnimation(action) {
         if (action.deadInfo && action.deadInfo.length > 0) {
             showEliminationCinematic(action.deadInfo, action.realNumber, false);
         }
+        return;
+    }
+
+    // --- OPTIMISTIC UI UPGRADE ---
+    // If this is our own move, we ALREADY logged and animated it instantly.
+    // Return completely so we don't double-log or double-animate!
+    if (action.uid === DoDAuth.getProfile().uid && window.dodJustPlayedLocally) {
+        window.dodJustPlayedLocally = false;
         return;
     }
 
@@ -6161,7 +6422,8 @@ async function advanceTurn() {
             await firebase.firestore().collection('matches').doc(currentMatchId).update({
                 'gameState.players': state.players,
                 'gameState.deck': state.deck,
-                'gameState.turnUid': state.players[nextIndex].uid
+                'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.turnExpiresAt': Date.now() + 30000
             });
         }
         return; 
@@ -6218,9 +6480,25 @@ async function advanceTurn() {
 function botTurn(){
   const bot=state.players[state.turn];
   if(bot.isHuman||state.over||bot.out) return;
-  setTimeout(()=>{
+  
+  setTimeout(async ()=>{
     if(state && state.deception) return;
-    
+
+    // --- ONLINE SECURE BOT AI ---
+    // If playing online, bypass all local logic and have Cloudflare securely calculate the bot's moves!
+    if (currentMatchId) {
+        const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === DoDAuth.getProfile().uid;
+        if (isHost) {
+            try {
+                await secureServerCall('executeBotTurn', {});
+            } catch(e) {
+                console.error("Bot turn failed on server:", e);
+            }
+        }
+        return; // Halt local execution
+    }
+
+    // --- OFFLINE LOCAL BOT AI ---
     if(bot.hand.length===0){
       if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
       if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
@@ -6381,6 +6659,7 @@ function botSingleDraw(buyer){
                 'gameState.players': state.players,
                 'gameState.deck': state.deck,
                 'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.turnExpiresAt': Date.now() + 30000,
                 'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
             });
         } else {
@@ -6457,6 +6736,7 @@ function botBuyLoop(buyer){
                 'gameState.players': state.players,
                 'gameState.deck': state.deck,
                 'gameState.turnUid': state.players[nextIndex].uid,
+                'gameState.turnExpiresAt': Date.now() + 30000,
                 'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
             });
         } else {
@@ -6503,17 +6783,18 @@ async function botDeclare(bot) {
         const msg = `${bot.name} ${playedStr} and calls it — ${nextPlayer.name} needs a ${chosen}.${totalTxt}`;
 
         await db.collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players, // Uploads any coins/cards the bot stole or bought!
+            'gameState.players': state.players, 
             'gameState.deck': state.deck,
             'gameState.requiredValue': chosen,
             'gameState.turnUid': nextPlayer.uid,
+            'gameState.turnExpiresAt': Date.now() + 30000, // RESET TIMER
             'gameState.direction': state.direction,
             'gameState.lastEffectiveValue': state.lastEffectiveValue,
             'gameState.lastPlayedCardLabel': state.lastPlayedCardLabel,
             'gameState.lastPlayedBy': bot.uid,
             'gameState.lastAction': {
                 id: Date.now().toString(),
-                type: 'PLAY_NUMBER', // This tells other clients to animate the center card
+                type: 'PLAY_NUMBER', 
                 uid: bot.uid,
                 cardValue: state.lastEffectiveValue || chosen, 
                 msg: msg
@@ -6539,44 +6820,40 @@ async function confirmLeaveGame(){
     try { sfx.uiBack(); } catch(e){}
     document.getElementById('leaveGameOverlay').classList.remove('show');
 
-    // Trigger the loading screen for the exit transition
     muteForLoading();
-    renderLoadingScreenFX(); // Fire particles and tips
+    renderLoadingScreenFX(); 
     const overlay = document.getElementById('loadingScreen');
     const fill = document.getElementById('loadingBarFill');
     const text = document.getElementById('loadingText');
     overlay.classList.add('show');
     fill.style.width = '0%';
     text.textContent = "Returning to Lobby...";
-    requestAnimationFrame(() => { fill.style.transition = `width 3500ms linear`; fill.style.width = '100%'; }); // Increased to 3.5 seconds
+    requestAnimationFrame(() => { fill.style.transition = `width 3500ms linear`; fill.style.width = '100%'; }); 
 
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
 
-    if (currentMatchId) {
+    // Store the ID safely here before we clear it, so both Cloudflare and VoiceChat can use it!
+    const matchToLeave = currentMatchId;
+
+    if (matchToLeave) {
         try {
-            const db = firebase.firestore();
-            const myUid = DoDAuth.getProfile().uid;
-            if (state && state.players) {
-                const me = state.players.find(p => p.uid === myUid);
-                if (me) me.out = true;
-                await db.collection('matches').doc(currentMatchId).update({
-                    'gameState.players': state.players
-                });
-            }
+            currentMatchId = null;
+            // Securely leave match and reassign host
+            secureServerCall('leaveMatch', { matchId: matchToLeave }).catch(e => console.error('Failed to notify server that you left:', e));
         } catch(e) {
-            console.error('Failed to notify server that you left:', e);
+            console.error(e);
         }
     }
 
     localStorage.removeItem('dod_active_match');
-    currentMatchId = null;
     state = null;
     initialDealDone = false;
     localLastTurnUid = null;
     localLastActionId = null;
+    
+    VoiceChat.leaveRoom(matchToLeave); // This will now successfully close the audio connection
 
-    // Wait for loading screen to finish before swapping UI
     setTimeout(() => {
         document.getElementById('finaleModal').classList.remove('show');
         document.getElementById('game').style.display = 'none';
@@ -6587,7 +6864,6 @@ async function confirmLeaveGame(){
         if (typeof revertCamera === 'function') revertCamera();
         document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
 
-        // Restore HUB ui
         const accountLoadingEl = document.getElementById('accountLoading');
         const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
         const hubBadgeEl = document.getElementById('hubCurrencyBadge');
@@ -6601,7 +6877,7 @@ async function confirmLeaveGame(){
 
         overlay.classList.remove('show');
         switchToMenuMusic();
-    }, 3500); // Matches the 3.5s bar animation
+    }, 3500); 
 }
 
 // ---------------- MODALS ----------------
@@ -6617,110 +6893,181 @@ function finalizeGame(){
 }
 const TIERS = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
 
-function computeMatchProgression() {
+async function computeMatchProgression() {
   const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
   if (!profile) return null;
   
+  if (currentMatchId) {
+      // --- SECURE ONLINE CALCULATION (CLOUDFLARE) ---
+      try {
+          const res = await secureServerCall('claimRewards', { matchStats: window.matchStats || {} });
+          if (res.progression) {
+              // Update local profile instantly so UI reflects the new coins/rank
+              Object.assign(profile, res.progression.new);
+              profile.currency = (profile.currency || 0) + res.progression.earnedCoins;
+              
+              // Add basic stats to local cache so the profile tab updates visually
+              profile.matchesPlayed = (profile.matchesPlayed || 0) + 1;
+              profile.totalScore = (profile.totalScore || 0) + res.progression.earnedCoins;
+              
+              return res.progression;
+          } else if (res.message === "Already claimed") {
+              if (window._latestProgression) return window._latestProgression;
+              
+              // BUG FIX: If we reconnected to an already-claimed game, rebuild the data visually 
+              // so the UI doesn't crash reading a "null" object!
+              let cTierIdx = TIERS.indexOf(profile.tier);
+              if (cTierIdx < 0) cTierIdx = 0;
+              return {
+                  old: { tier: profile.tier || 'Apprentice', level: profile.level || 1, points: profile.points || 0 },
+                  new: { tier: profile.tier || 'Apprentice', level: profile.level || 1, points: profile.points || 0 },
+                  delta: 0,
+                  earnedCoins: 0
+              };
+          }
+      } catch(e) {
+          console.error("Failed to claim rewards:", e);
+          // Return a safe zero-state fallback instead of null to prevent the UI from crashing on network errors
+          let cTierIdx = TIERS.indexOf(profile.tier);
+          if (cTierIdx < 0) cTierIdx = 0;
+          return {
+              old: { tier: profile.tier || 'Apprentice', level: profile.level || 1, points: profile.points || 0 },
+              new: { tier: profile.tier || 'Apprentice', level: profile.level || 1, points: profile.points || 0 },
+              delta: 0,
+              earnedCoins: 0
+          };
+      }
+  }
+
+  // --- INSECURE OFFLINE CALCULATION (BOT TRAINING MODE) ---
   const me = state.players.find(p => p.uid === profile.uid);
   if (!me) return null;
   
-  // Sort by who is alive first, then by score
   const sorted = [...state.players].sort((a,b) => {
       if(a.out !== b.out) return a.out ? 1 : -1;
       return score(b) - score(a);
   });
-  
   const rank = sorted.findIndex(p => p.uid === profile.uid) + 1;
   const n = state.players.length;
   
-  // Adjusted PUBG-style base placement points (Much lower!)
   let baseDelta = 0;
   if (rank === 1) baseDelta = 20;
   else if (rank === 2 && n >= 3) baseDelta = 5;
   else if (rank === n) baseDelta = -10;
   else baseDelta = -5;
   
-  // Add bonus points based on how rich you were (Lowered scaling)
-  const scoreBonus = Math.floor(score(me) / 4);
-  const finalDelta = baseDelta + scoreBonus;
+  const finalDelta = baseDelta + Math.floor(score(me) / 4);
   
-  // Current Profile Stats
   let cTierIdx = TIERS.indexOf(profile.tier);
   if (cTierIdx < 0) cTierIdx = 0;
   let cLevel = profile.level || 1;
   let cPoints = profile.points || 0;
   
   const oldData = { tier: TIERS[cTierIdx], level: cLevel, points: cPoints };
-  
   let total = cPoints + finalDelta;
   
-  // LEVEL UP LOGIC
-  while (total >= 100) {
-      total -= 100;
-      cLevel++;
-      if (cLevel > 5) {
-          cLevel = 1;
-          cTierIdx++;
-          if (cTierIdx >= TIERS.length) { cTierIdx = TIERS.length - 1; cLevel = 5; total = 100; } // Max Cap
-      }
-  }
-  // LEVEL DOWN LOGIC
-  while (total < 0) {
-      cLevel--;
-      if (cLevel < 1) {
-          if (cTierIdx > 0) {
-              cTierIdx--;
-              cLevel = 5;
-              total += 100;
-          } else {
-              cLevel = 1;
-              total = 0; // Absolute Rock Bottom
-          }
-      } else {
-          total += 100;
-      }
-  }
+  while (total >= 100) { total -= 100; cLevel++; if (cLevel > 5) { cLevel = 1; cTierIdx++; if (cTierIdx >= TIERS.length) { cTierIdx = TIERS.length - 1; cLevel = 5; total = 100; } } }
+  while (total < 0) { cLevel--; if (cLevel < 1) { if (cTierIdx > 0) { cTierIdx--; cLevel = 5; total += 100; } else { cLevel = 1; total = 0; } } else { total += 100; } }
   
-  const isWin = rank === 1;
-  
-  // Merge live match stats with lifetime profile stats
-  const mStats = window.matchStats || {};
-  const matchesPlayed = (profile.matchesPlayed || 0) + 1;
-  const wins = (profile.wins || 0) + (isWin ? 1 : 0);
-  const winStreak = isWin ? (profile.winStreak || 0) + 1 : 0; // Resets if lost
-  const totalScore = (profile.totalScore || 0) + Math.max(0, score(me));
-  
-  // Special match-specific condition checking
-  const maxCoinsMatch = score(me); // Captures their final coin count for the "Penny Pincher" title
-
-  const newData = { tier: TIERS[cTierIdx], level: cLevel, points: total, matchesPlayed, wins, totalScore };
-  
-  // Upload to Database along with action accumulators
-  if (window.firebase) {
-      const updatePayload = {
-          tier: newData.tier, level: newData.level, points: newData.points,
-          matchesPlayed: matchesPlayed, wins: wins, totalScore: totalScore, winStreak: winStreak, maxCoinsMatch: maxCoinsMatch,
-          wilds: (profile.wilds || 0) + (mStats.wilds || 0),
-          reverses: (profile.reverses || 0) + (mStats.reverses || 0),
-          powers: (profile.powers || 0) + (mStats.powers || 0),
-          steals: (profile.steals || 0) + (mStats.steals || 0),
-          peeks: (profile.peeks || 0) + (mStats.peeks || 0),
-          insurances: (profile.insurances || 0) + (mStats.insurances || 0),
-          forcedBuys: (profile.forcedBuys || 0) + (mStats.forcedBuys || 0),
-          deceptionsSurvived: (profile.deceptionsSurvived || 0) + (mStats.deceptionsSurvived || 0)
-      };
-      
-      firebase.firestore().collection('users').doc(profile.uid).update(updatePayload).catch(()=>{});
-      
-      // Update local cache so notification triggers instantly on returning to hub
-      Object.assign(profile, updatePayload);
-  }
-  
-  // Update Local Cache
+  const newData = { tier: TIERS[cTierIdx], level: cLevel, points: total };
   profile.tier = newData.tier; profile.level = newData.level; profile.points = newData.points;
-  profile.matchesPlayed = matchesPlayed; profile.wins = wins; profile.totalScore = totalScore;
   
   return { old: oldData, new: newData, delta: finalDelta };
+}
+
+async function endGame(winner, byScore) {
+  // Delay the finale if an elimination cinematic is currently dominating the screen
+  if (window.isEliminationPlaying) {
+      window.pendingEndGame = { winner, byScore };
+      return;
+  }
+
+  // --- BUG FIX: THE ASYNC LOCK ---
+  // Prevent Firebase from triggering the endgame twice while we wait for Cloudflare!
+  if (window.isEndGameRunning) return;
+  
+  const modal = document.getElementById('finaleModal');
+  if(modal && modal.classList.contains('show')) return;
+  
+  window.isEndGameRunning = true; // Lock the gates!
+
+  state.over = true;
+  clearInterval(timerInterval);
+  document.getElementById('deceptionModal').classList.remove('show');
+
+  // Spawn cinematic floating embers for the finale
+  const fContainer = document.getElementById('finaleParticles');
+  if (fContainer) {
+      fContainer.innerHTML = '';
+      for(let i=0; i<40; i++) {
+          let ember = document.createElement('div');
+          ember.className = 'ls-ember';
+          ember.style.left = Math.random() * 100 + '%';
+          ember.style.animationDuration = (Math.random() * 3 + 2) + 's';
+          ember.style.animationDelay = (Math.random() * 2) + 's';
+          fContainer.appendChild(ember);
+      }
+  }
+
+  // --- WAIT FOR SECURE CLOUDFLARE REWARDS ---
+  window._latestProgression = await computeMatchProgression();
+
+  const you = state.players[0]; // Local player is always seat 0 locally
+  
+  // OFFLINE ONLY: Add currency locally (Online is handled entirely by Cloudflare)
+  if(!currentMatchId && window.DoDShop){
+      const earned = Math.max(0, score(you));
+      window.DoDShop.addCurrency(earned);
+  }
+
+  // Sort players to determine absolute placements
+  const sorted = [...state.players].sort((a,b) => {
+      if(a.out !== b.out) return a.out ? 1 : -1;
+      return score(b) - score(a);
+  });
+  
+  const myRank = sorted.findIndex(p => p.id === you.id) + 1;
+  const isMyWin = myRank === 1;
+
+  let headerHtml = `<div class="finale-header">
+      <h1 class="finale-status ${isMyWin ? 'win' : 'loss'}">${isMyWin ? 'WINNER!' : `LOSS #${myRank}`}</h1>
+      <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${byScore ? 'Time Limit Reached' : 'Match Concluded'}</div>
+  </div>`;
+
+  let listHtml = `<div class="finale-list">`;
+  sorted.forEach((p, idx) => {
+      const rank = idx + 1;
+      const isMe = p.id === you.id;
+      const isWinner = rank === 1;
+      const sc = score(p);
+      const stats = p.out ? 'Eliminated' : `${p.shop} Coins / ${p.hand.length} Cards`;
+      
+      listHtml += `
+        <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
+          <div class="finale-rank">#${rank}</div>
+          <div class="finale-name">${p.name} ${isMe ? '(You)' : ''}</div>
+          <div class="finale-stats">${stats}</div>
+          <div class="finale-score">${sc}</div>
+        </div>
+      `;
+  });
+  listHtml += `</div>`;
+
+  // Safely grab the coins without crashing if the server hiccuped
+  const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${earnedCoins} Coins Earned</div>`;
+  
+  let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
+  
+  document.getElementById('finaleContent').innerHTML=html;
+  openModal('finaleModal');
+  renderAll();
+  
+  if(isMyWin) {
+      celebrateWin();
+  } else {
+      try { sfx.lose(); } catch(e){}
+  }
 }
 
 function getTierIconHTML(tierStr) {
@@ -6833,7 +7180,9 @@ function showProgressionScreen() {
 }
 
 // Bypasses the "Forfeit" check and properly clears the game state when the match is officially over
+// Bypasses the "Forfeit" check and properly clears the game state when the match is officially over
 function returnToMenuFromEndgame() {
+    window.isEndGameRunning = false; // Reset the lock for the next game!
     document.getElementById('progressionModal').classList.remove('show');
     
     // Trigger the loading screen for the exit transition
@@ -6953,17 +7302,23 @@ function showEliminationCinematic(deadPlayersData, realNumber, isBankrupt, onCom
     }, 4500); // Hold the screen for 4.5 seconds to ensure everyone sees it
 }
 
-function endGame(winner,byScore){
+async function endGame(winner, byScore) {
   // Delay the finale if an elimination cinematic is currently dominating the screen
   if (window.isEliminationPlaying) {
       window.pendingEndGame = { winner, byScore };
       return;
   }
 
+  // --- BUG FIX: THE ASYNC LOCK ---
+  // Prevent Firebase from triggering the endgame twice while we wait for Cloudflare!
+  if (window.isEndGameRunning) return;
+  
   const modal = document.getElementById('finaleModal');
   if(modal && modal.classList.contains('show')) return;
   
-  state.over=true;
+  window.isEndGameRunning = true; // Lock the gates!
+
+  state.over = true;
   clearInterval(timerInterval);
   document.getElementById('deceptionModal').classList.remove('show');
 
@@ -6981,12 +7336,16 @@ function endGame(winner,byScore){
       }
   }
 
-  window._latestProgression = computeMatchProgression();
+  // --- WAIT FOR SECURE CLOUDFLARE REWARDS ---
+  // The 'await' keyword here is the magic that fixes the crash!
+  window._latestProgression = await computeMatchProgression();
 
   const you = state.players[0]; // Local player is always seat 0 locally
-  if(window.DoDShop){
-    const earned = Math.max(0, score(you));
-    window.DoDShop.addCurrency(earned);
+  
+  // OFFLINE ONLY: Add currency locally (Online is handled entirely by Cloudflare)
+  if(!currentMatchId && window.DoDShop){
+      const earned = Math.max(0, score(you));
+      window.DoDShop.addCurrency(earned);
   }
 
   // Sort players to determine absolute placements
@@ -7022,7 +7381,9 @@ function endGame(winner,byScore){
   });
   listHtml += `</div>`;
 
-  const earnedTxt = window.DoDShop ? `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${Math.max(0,score(you))} Coins Earned</div>` : '';
+  // Safely grab the coins without crashing if the server hiccuped
+  const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${earnedCoins} Coins Earned</div>`;
   
   let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
@@ -7036,7 +7397,6 @@ function endGame(winner,byScore){
       try { sfx.lose(); } catch(e){}
   }
 }
-
 // ============================================================
 // ONLINE MULTIPLAYER: FRIENDS, PARTIES, & MATCHMAKING
 // ============================================================
@@ -7525,105 +7885,20 @@ async function startOnlineMatchmaking() {
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
     
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), title: myProfile.title || null, deckSkin: getEquippedBackImg(myProfile) }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get();
         if (partyDoc.exists) joiningSquad = partyDoc.data().members;
     }
 
     try {
-        const snapshot = await db.collection('matches')
-            .where('status', '==', 'waiting')
-            .where('tableSize', '==', mpTableSize)
-            .get();
+        const res = await secureServerCall('matchmake', { 
+            tableSize: mpTableSize, 
+            joiningSquad: joiningSquad, 
+            isPrivate: false 
+        });
 
-        let matchRef = null;
-        let matchDoc = null;
-
-        for (let doc of snapshot.docs) {
-            if (doc.data().isPrivate) continue; // Skip private party matches!
-            if (doc.data().seats.length + joiningSquad.length <= mpTableSize) {
-                matchRef = doc.ref;
-                matchDoc = doc.data();
-                break;
-            }
-        }
-
-        if (matchRef) {
-            // JOIN EXISTING PUBLIC TABLE
-            let currentSeats = matchDoc.seats;
-            let currentPublic = matchDoc.publicSeats || {};
-            
-            joiningSquad.forEach(member => {
-                const idx = currentSeats.length;
-                currentSeats.push({ seat: idx, uid: member.uid, displayName: member.displayName, isBot: false });
-                currentPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
-            });
-
-            await matchRef.update({ seats: currentSeats, publicSeats: currentPublic });
-            currentMatchId = matchRef.id;
-
-        } else {
-            // HOST NEW PUBLIC TABLE
-            matchRef = db.collection('matches').doc();
-            let newSeats = [];
-            let newPublic = {};
-            let readyStatus = {}; 
-            
-            joiningSquad.forEach((member, i) => {
-                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false });
-                newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
-                readyStatus[member.uid] = false;
-            });
-
-            await matchRef.set({
-                tableSize: mpTableSize,
-                status: 'waiting',
-                isPrivate: false, // Flag for public match
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                seats: newSeats,
-                turn: 0,
-                requiredValue: null,
-                publicSeats: newPublic,
-                readyStatus: readyStatus
-            });
-            
-            currentMatchId = matchRef.id;
-            
-            setTimeout(async () => {
-                const checkDoc = await matchRef.get();
-                if (checkDoc.exists && checkDoc.data().status === 'waiting') {
-                    const data = checkDoc.data();
-                    let currentSeats = data.seats;
-                    let pSeats = data.publicSeats;
-                    
-                    if (currentSeats.length < mpTableSize) {
-                        while (currentSeats.length < mpTableSize) {
-                            const idx = currentSeats.length;
-                            const botP = generateBotProfile();
-                            currentSeats.push({ 
-                                seat: idx, 
-                                uid: "bot_" + Math.random().toString(36).substr(2, 9), 
-                                displayName: botP.displayName, 
-                                isBot: true,
-                                avatar: botP.avatar,
-                                frame: botP.frame,
-                                tier: botP.tier,
-                                level: botP.level,
-                                title: botP.title,
-                                deckSkin: botP.deckSkin
-                            });
-                            pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
-                        }
-                        await matchRef.update({ seats: currentSeats, publicSeats: pSeats });
-                    }
-                }
-            }, 15000); 
-        }
-
-        if (currentPartyId && isPartyLeader) {
-            await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
-        }
+        currentMatchId = res.matchId;
 
         btn.disabled = false;
         btn.textContent = "Search Match ↗";
@@ -7641,74 +7916,25 @@ async function startOnlineMatchmaking() {
 }
 
 async function startPrivatePartyMatch() {
-    try { sfx.playBtn(); } catch(e){} // Triggers your PlaySfx!
+    try { sfx.playBtn(); } catch(e){} 
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
     
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), title: myProfile.title || null, deckSkin: getEquippedBackImg(myProfile) }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get();
         if (partyDoc.exists) joiningSquad = partyDoc.data().members;
     }
 
     try {
-        // ALWAYS CREATE A NEW PRIVATE TABLE
-        let matchRef = db.collection('matches').doc();
-        let newSeats = [];
-        let newPublic = {};
-        let readyStatus = {}; 
-        
-        joiningSquad.forEach((member, i) => {
-            newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null, deckSkin: member.deckSkin || 'CardstoBuy/TheBase.png' });
-            newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
-            readyStatus[member.uid] = false;
-        });
-
-        await matchRef.set({
-            tableSize: mpTableSize,
-            status: 'waiting',
-            isPrivate: true, // This ensures it stays off the public Matchmaking
-            createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-            seats: newSeats,
-            turn: 0,
-            requiredValue: null,
-            publicSeats: newPublic,
-            readyStatus: readyStatus
+        const res = await secureServerCall('matchmake', { 
+            tableSize: mpTableSize, 
+            joiningSquad: joiningSquad, 
+            isPrivate: true 
         });
         
-        currentMatchId = matchRef.id;
+        currentMatchId = res.matchId;
         
-        // Wait 10 seconds before filling empty private lobby spots with bots
-        setTimeout(async () => {
-            const checkDoc = await matchRef.get();
-            if (checkDoc.exists && checkDoc.data().status === 'waiting') {
-                const data = checkDoc.data();
-                let currentSeats = data.seats;
-                let pSeats = data.publicSeats;
-                
-                if (currentSeats.length < mpTableSize) {
-                    while (currentSeats.length < mpTableSize) {
-                        const idx = currentSeats.length;
-                        const botP = generateBotProfile();
-                        currentSeats.push({ 
-                            seat: idx, 
-                            uid: "bot_" + Math.random().toString(36).substr(2, 9), 
-                            displayName: botP.displayName, 
-                            isBot: true,
-                            avatar: botP.avatar,
-                            frame: botP.frame,
-                            tier: botP.tier,
-                            level: botP.level,
-                            title: botP.title,
-                            deckSkin: botP.deckSkin
-                        });
-                        pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
-                    }
-                    await matchRef.update({ seats: currentSeats, publicSeats: pSeats });
-                }
-            }
-        }, 10000); 
-
         if (currentPartyId && isPartyLeader) {
             await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
         }
@@ -8071,6 +8297,9 @@ function showPartyLobbyCinematic() {
     pubgCinematicTimer2 = setTimeout(() => {
         const lobbyView = document.getElementById('pubgLobbyView');
         if (lobbyView) lobbyView.classList.add('show');
+        if (lobbyView) lobbyView.classList.add('show');
+        const lobbyMicBtn = document.getElementById('lobbyMicToggleBtn');
+        if (lobbyMicBtn) lobbyMicBtn.style.display = 'block'; // Reveal mic in lobby!
     }, DOD_HUD_FADE_MS + DOD_CAMERA_MOVE_MS);
 }
 
@@ -8099,6 +8328,12 @@ function updateLobbyView(seats, tableSize) {
         div.className = 'lobby-seat';
         div.style.left = x + 'px';
         div.style.top = y + 'px';
+        
+        // Add click listener to show volume control (if it's not our own seat)
+        if (seat && (!window.DoDAuth || seat.uid !== DoDAuth.getProfile().uid)) {
+            div.style.cursor = 'pointer';
+            div.onclick = (e) => openVolumePopup(e, seat.uid, seat.displayName);
+        }
 
         let avatarContent = '⋯';
         if (seat) {
@@ -8116,12 +8351,12 @@ function updateLobbyView(seats, tableSize) {
         if (seat && seat.title) {
             const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === seat.title) : null;
             if (tDef) {
-                // Scaled down to fit beautifully under the avatar in the circle
                 seatTitleHtml = `<div style="margin-top:2px; transform:scale(0.85); transform-origin:top center;"><div class="player-title title-${tDef.rarity}" style="height:16px; font-size:8px;"><span>${tDef.name}</span></div></div>`;
             }
         }
         
-        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>${seatTitleHtml}`;
+        // ADD ID TO AVATAR TO SUPPORT SPEAKER HIGHLIGHT
+        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" id="lobby-avatar-${seat ? seat.uid : ''}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>${seatTitleHtml}`;
         ring.appendChild(div);
     }
 }
@@ -8150,25 +8385,22 @@ async function startMatchmakingPubg() {
     const btn = document.getElementById('pubgPlayBtn');
     if (!btn || btn.classList.contains('searching') || btn.disabled) return;
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
-    if (currentPartyId && !isPartyLeader) return; // only the host can start the match for the squad
+    if (currentPartyId && !isPartyLeader) return; 
 
-    try { sfx.playBtn(); } catch(e){} // Triggers your PlaySfx!
+    try { sfx.playBtn(); } catch(e){} 
 
     btn.classList.add('searching');
-    btn.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">0:00 &nbsp;·&nbsp; 1/' + pubgTableSize + '</span>';
+    btn.innerHTML = '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">0:00 &nbsp;·&nbsp; 1/' + pubgTableSize + '</span>';
     pubgCancelFlag = false;
     mpTableSize = pubgTableSize;
 
-    // Show cancel button, hide mode select while searching
     const cancelBtn = document.getElementById('pubgCancelBtn');
     const modeSelectEl = document.getElementById('pubgModeSelect');
     if (cancelBtn) cancelBtn.style.display = 'block';
     if (modeSelectEl) modeSelectEl.style.display = 'none';
 
-    // 1) Fade out the main-menu chrome (title, friends panel, play zone, icon bar, profile widget)
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
 
-    // Pre-build my seat now so the ring has content the instant it's revealed
     const myProfile = DoDAuth.getProfile();
     updateLobbyView([{ uid: myProfile.uid, displayName: myProfile.displayName, isBot: false }], pubgTableSize);
 
@@ -8177,19 +8409,15 @@ async function startMatchmakingPubg() {
     const statusEl = document.getElementById('pubgMmStatus');
     const lobbyView = document.getElementById('pubgLobbyView');
 
-    // 2) Once the chrome has faded out, glide the camera up into the top-down table view
     clearTimeout(pubgCinematicTimer1);
     pubgCinematicTimer1 = setTimeout(() => {
         if (pubgCancelFlag) return;
         transitionToTopdown();
     }, DOD_HUD_FADE_MS);
 
-    // 3) Once the camera has settled, fade in the seat ring only (no big overlay box —
-    //    timer + player count now run on the play button itself).
     clearTimeout(pubgCinematicTimer2);
     pubgCinematicTimer2 = setTimeout(() => {
         if (pubgCancelFlag) return;
-        // overlay intentionally NOT shown — info is on the play button
         if (lobbyView) lobbyView.classList.add('show');
 
         pubgMmSeconds = 0;
@@ -8199,18 +8427,15 @@ async function startMatchmakingPubg() {
             pubgMmSeconds++;
             const m = Math.floor(pubgMmSeconds / 60);
             const s = (pubgMmSeconds % 60).toString().padStart(2, '0');
-            // Update the hidden overlay elements (kept for compatibility)
             if (timerEl) timerEl.textContent = m + ':' + s;
-            // Also update the play button text with timer + current seat count
             const playBtn = document.getElementById('pubgPlayBtn');
             const cnt = window._pubgLobbyCount || 1;
             if (playBtn && playBtn.classList.contains('searching')) {
-                playBtn.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">' + m + ':' + s + ' &nbsp;·&nbsp; ' + cnt + '/' + pubgTableSize + '</span>';
+                playBtn.innerHTML = '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">' + m + ':' + s + ' &nbsp;·&nbsp; ' + cnt + '/' + pubgTableSize + '</span>';
             }
         }, 1000);
     }, DOD_HUD_FADE_MS + DOD_CAMERA_MOVE_MS);
 
-    // Matchmaking itself runs in the background right away, independent of the visuals above
     const db = firebase.firestore();
     let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile) }];
     if (currentPartyId) {
@@ -8219,51 +8444,18 @@ async function startMatchmakingPubg() {
     }
 
     try {
-        clearTimeout(pubgRevertTimer); // Prevent visual glitches if clicking play quickly
+        clearTimeout(pubgRevertTimer); 
         if (statusEl) statusEl.textContent = 'Looking for an open table...';
 
-        const snapshot = await db.collection('matches')
-            .where('status', '==', 'waiting')
-            .where('tableSize', '==', mpTableSize)
-            .get();
+        // Call Cloudflare to securely pair players without collision!
+        const res = await secureServerCall('matchmake', { 
+            tableSize: mpTableSize, 
+            joiningSquad: joiningSquad, 
+            isPrivate: false 
+        });
 
-        let matchRef = null, matchDoc = null;
-        for (let doc of snapshot.docs) {
-            if (doc.data().isPrivate) continue;
-            if (doc.id === window._lastCancelledMatchId) continue; // Prevent joining the match we just left
-            if (doc.data().seats.length + joiningSquad.length <= mpTableSize) {
-                matchRef = doc.ref; matchDoc = doc.data(); break;
-            }
-        }
+        currentMatchId = res.matchId;
 
-        if (matchRef) {
-            let currentSeats = matchDoc.seats;
-            let currentPublic = matchDoc.publicSeats || {};
-            joiningSquad.forEach(member => {
-                const idx = currentSeats.length;
-                currentSeats.push({ seat: idx, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null });
-                currentPublic[idx.toString()] = { shop: 20, handCount: 5, out: false };
-            });
-            await matchRef.update({ seats: currentSeats, publicSeats: currentPublic });
-            currentMatchId = matchRef.id;
-        } else {
-            matchRef = db.collection('matches').doc();
-            let newSeats = [], newPublic = {}, readyStatus = {};
-            joiningSquad.forEach((member, i) => {
-                newSeats.push({ seat: i, uid: member.uid, displayName: member.displayName, isBot: false, avatar: member.avatar, frame: member.frame, title: member.title || null });
-                newPublic[i.toString()] = { shop: 20, handCount: 5, out: false };
-                readyStatus[member.uid] = false;
-            });
-            await matchRef.set({
-                tableSize: mpTableSize, status: 'waiting', isPrivate: false,
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                seats: newSeats, turn: 0, requiredValue: null,
-                publicSeats: newPublic, readyStatus: readyStatus
-            });
-            currentMatchId = matchRef.id;
-        }
-
-        // Tell the party which match we joined so they follow!
         if (currentPartyId && isPartyLeader) {
             await db.collection('parties').doc(currentPartyId).update({ matchId: currentMatchId });
         }
@@ -8295,7 +8487,7 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
         if (playBtnEl && playBtnEl.classList.contains('searching')) {
             const mm = Math.floor(pubgMmSeconds / 60);
             const ss = (pubgMmSeconds % 60).toString().padStart(2, '0');
-            playBtnEl.innerHTML = '<span style="font-size:14px;font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;display:block;margin-top:3px;opacity:0.9;">' + mm + ':' + ss + ' &nbsp;·&nbsp; ' + data.seats.length + '/' + data.tableSize + '</span>';
+            playBtnEl.innerHTML = '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">' + mm + ':' + ss + ' &nbsp;·&nbsp; ' + data.seats.length + '/' + data.tableSize + '</span>';
         }
 
         // Fix 5: lock dropdown options that can't accommodate the current seated count
@@ -8397,19 +8589,15 @@ function cancelMatchmakingPubg() {
     clearInterval(pubgMmIntervalId);
     if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
     
-    // FIX: If we are in an active party, do NOT drop the camera back to the main menu.
-    // Just hide the searching overlay so we remain at the table as a squad.
     if (currentPartyId && partyLobbyCinematicActive) {
         const overlay = document.getElementById('pubgMatchmakingOverlay');
         if (overlay) overlay.classList.remove('show');
         resetPubgPlayBtn();
         
-        // Ensure the Party doc clears the dead match ID so squadmates don't get stuck in a dead loop!
         if (isPartyLeader && window.firebase) {
             firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
         }
         
-        // Manually restore the avatars to show your Squad, rather than random players/bots from matchmaking
         if (window.firebase) {
              firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
                  if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
@@ -8420,29 +8608,12 @@ function cancelMatchmakingPubg() {
     }
     
     if (currentMatchId && window.DoDAuth && DoDAuth.getProfile()) {
-        window._lastCancelledMatchId = currentMatchId; // Remember this ID
-        const db = firebase.firestore();
-        const myUid = DoDAuth.getProfile().uid;
+        window._lastCancelledMatchId = currentMatchId; 
         const matchToCancel = currentMatchId;
-        currentMatchId = null; // Clear immediately
+        currentMatchId = null; 
 
-        // Immediately update status to prevent race conditions when searching again quickly
-        db.collection('matches').doc(matchToCancel).update({ status: 'cancelled' }).catch(()=>{});
-
-        db.collection('matches').doc(matchToCancel).get().then(doc => {
-            if (!doc.exists) return;
-            const allSeats = doc.data().seats || [];
-            const remainingSeats = allSeats.filter(s => s.uid !== myUid);
-            const remainingHumans = remainingSeats.filter(s => !s.isBot);
-            const iAmHost = allSeats.length > 0 && allSeats[0].uid === myUid;
-
-            if (iAmHost || remainingHumans.length <= 1) {
-                doc.ref.delete();
-            } else {
-                // If not deleting, revert status back to waiting so others can join
-                doc.ref.update({ seats: remainingSeats, status: 'waiting' });
-            }
-        }).catch(() => {});
+        // Send to Cloudflare to safely leave and pass host
+        secureServerCall('leaveMatch', { matchId: matchToCancel }).catch(e => console.error("Error leaving match:", e));
     }
 }
 
@@ -8710,56 +8881,44 @@ async function executeLuckySpin() {
     const btn = document.getElementById('btnDoSpin');
     const resultBox = document.getElementById('spinResultBox');
     btn.disabled = true;
-    
-    // Animate Spin
-    let rolls = 0;
-    const icons = ["🪙", "📦", "🔮", "🧰", "❌"];
-    const spinAnim = setInterval(() => {
-        resultBox.textContent = icons[rolls % icons.length];
-        rolls++;
-    }, 100);
-    
-    setTimeout(async () => {
-        clearInterval(spinAnim);
+
+    try {
+        // Securely fetch result from Cloudflare
+        const res = await secureServerCall('economy/spin', {});
+        const rollData = res.result;
+
+        // Animate Spin Visually
+        let rolls = 0;
+        const icons = ["🪙", "📦", "🔮", "🧰", "❌"];
+        const spinAnim = setInterval(() => {
+            resultBox.textContent = icons[rolls % icons.length];
+            rolls++;
+        }, 100);
         
-        // Roll probabilities: 20c (30%), 60c (20%), 100c (10%), Base (20%), Mythic (5%), Leg (1%), No Luck (14%)
-        const r = Math.random();
-        let rewardType = '', amount = 0, icon = '', msg = '';
-        let updates = { lastSpinDate: today };
-        
-        profile.chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
-        
-        if (r < 0.30) { rewardType = 'coins'; amount = 20; icon = "🪙"; msg = "20 Coins!"; }
-        else if (r < 0.50) { rewardType = 'coins'; amount = 60; icon = "🪙"; msg = "60 Coins!"; }
-        else if (r < 0.60) { rewardType = 'coins'; amount = 100; icon = "🪙"; msg = "100 Coins!"; }
-        else if (r < 0.80) { rewardType = 'chest'; amount = 'base'; icon = "📦"; msg = "Base Chest!"; }
-        else if (r < 0.85) { rewardType = 'chest'; amount = 'mythic'; icon = "🔮"; msg = "Mythic Chest!"; }
-        else if (r < 0.86) { rewardType = 'chest'; amount = 'legendary'; icon = "🧰"; msg = "Legendary Chest!"; }
-        else { rewardType = 'none'; icon = "❌"; msg = "No luck next time!"; }
-        
-        if (rewardType === 'coins') {
-            profile.currency = (profile.currency || 0) + amount;
-            updates.currency = profile.currency;
-        } else if (rewardType === 'chest') {
-            profile.chests[amount] += 1;
-            updates.chests = profile.chests;
-        }
-        
-        profile.lastSpinDate = today;
-        if (window.firebase) await firebase.firestore().collection('users').doc(profile.uid).update(updates).catch(()=>{});
-        
-        try { if(rewardType==='none') sfx.uiBack(); else sfx.win(); } catch(e){}
-        
-        resultBox.innerHTML = `<div style="font-size:54px;">${icon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${msg}</div>`;
-        btn.textContent = "COME BACK TOMORROW";
-        btn.className = "btn ghost";
-        
-        // Refresh Hub
-        const hubCur = document.getElementById('hubCurrency');
-        if (hubCur) hubCur.textContent = profile.currency || 0;
-        renderEventsHub(profile);
-        
-    }, 2000);
+        setTimeout(async () => {
+            clearInterval(spinAnim);
+            
+            // Sync Local Cache with Server Truth
+            profile.lastSpinDate = rollData.date;
+            if (res.newCurrency !== undefined) profile.currency = res.newCurrency;
+            if (res.newChests !== undefined) profile.chests = res.newChests;
+
+            try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
+            
+            resultBox.innerHTML = `<div style="font-size:54px;">${rollData.icon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${rollData.msg}</div>`;
+            btn.textContent = "COME BACK TOMORROW";
+            btn.className = "btn ghost";
+            
+            // Refresh Hub UI
+            const hubCur = document.getElementById('hubCurrency');
+            if (hubCur) hubCur.textContent = profile.currency || 0;
+            renderEventsHub(profile);
+            
+        }, 2000);
+    } catch(e) {
+        console.error("Spin failed:", e);
+        btn.disabled = false;
+    }
 }
 
 async function openChest(tier) {
@@ -8767,10 +8926,6 @@ async function openChest(tier) {
     if (!profile || !profile.chests || profile.chests[tier] <= 0) return;
     
     try { sfx.uiClick(); } catch(e){}
-    
-    const db = firebase.firestore();
-    profile.chests[tier] -= 1;
-    let updates = { chests: profile.chests };
     
     const modal = document.getElementById('chestModalOverlay');
     const title = document.getElementById('chestTitle');
@@ -8782,98 +8937,35 @@ async function openChest(tier) {
     text.textContent = "Unlocking...";
     modal.classList.add('show');
     
-    // Simulate Opening Delay
-    setTimeout(async () => {
-        try { sfx.win(); } catch(e){}
-        
-        const r = Math.random();
-        let rewardMsg = "", rewardIcon = "";
-        
-        // Helper to grab a random coin-buyable card to give copies of
-        const coinItems = [];
-        if (typeof SHOP_DB !== 'undefined') {
-            if (SHOP_DB.cardFaces) SHOP_DB.cardFaces.filter(c => c.method === 'coins').forEach(c => coinItems.push(c));
-            if (SHOP_DB.cardBacks) SHOP_DB.cardBacks.filter(c => c.method === 'coins').forEach(c => coinItems.push(c));
-        }
-        const spinItems = [];
-        if (typeof SHOP_DB !== 'undefined') {
-            if (SHOP_DB.cardFaces) SHOP_DB.cardFaces.filter(c => c.method === 'spin').forEach(c => spinItems.push(c));
-            if (SHOP_DB.cardBacks) SHOP_DB.cardBacks.filter(c => c.method === 'spin').forEach(c => spinItems.push(c));
-        }
+    try {
+        // Securely fetch result from Cloudflare
+        const res = await secureServerCall('economy/openChest', { tier });
+        const rollData = res.result;
 
-        profile.shards = profile.shards || {};
-        profile.inventory = profile.inventory || ['cf_default', 'cb_default'];
+        // Simulate Opening Delay
+        setTimeout(async () => {
+            try { sfx.win(); } catch(e){}
+            
+            icon.textContent = rollData.icon;
+            text.textContent = rollData.msg;
 
-        if (tier === 'base') {
-            if (r < 0.5 || coinItems.length === 0) {
-                // 50 Coins
-                profile.currency = (profile.currency || 0) + 50;
-                updates.currency = profile.currency;
-                rewardIcon = "🪙"; rewardMsg = "+50 Coins";
-            } else {
-                // 2 Copies of random item
-                const target = coinItems[Math.floor(Math.random() * coinItems.length)];
-                profile.shards[target.id] = (profile.shards[target.id] || 0) + 2;
-                profile.totalCopies = (profile.totalCopies || 0) + 2;
-                updates[`shards.${target.id}`] = profile.shards[target.id];
-                updates.totalCopies = profile.totalCopies;
-                rewardIcon = "🃏"; rewardMsg = `+2 Copies of ${target.name}`;
-            }
-        } else if (tier === 'mythic') {
-            if (r < 0.4 || coinItems.length === 0) {
-                profile.currency = (profile.currency || 0) + 200;
-                updates.currency = profile.currency;
-                rewardIcon = "🪙"; rewardMsg = "+200 Coins";
-            } else if (r < 0.9) {
-                const target = coinItems[Math.floor(Math.random() * coinItems.length)];
-                profile.shards[target.id] = (profile.shards[target.id] || 0) + 10;
-                profile.totalCopies = (profile.totalCopies || 0) + 10;
-                updates[`shards.${target.id}`] = profile.shards[target.id];
-                updates.totalCopies = profile.totalCopies;
-                rewardIcon = "🃏"; rewardMsg = `+10 Copies of ${target.name}`;
-            } else {
-                // Rare spin item unlock
-                const target = spinItems.length > 0 ? spinItems[Math.floor(Math.random() * spinItems.length)] : null;
-                if (target && !profile.inventory.includes(target.id)) {
-                    profile.inventory.push(target.id);
-                    updates.inventory = firebase.firestore.FieldValue.arrayUnion(target.id);
-                    rewardIcon = "✨"; rewardMsg = `UNLOCKED: ${target.name}!`;
-                } else {
-                    profile.currency = (profile.currency || 0) + 500;
-                    updates.currency = profile.currency;
-                    rewardIcon = "🪙"; rewardMsg = "+500 Coins (Duplicate)";
-                }
-            }
-        } else if (tier === 'legendary') {
-            if (r < 0.4) {
-                profile.currency = (profile.currency || 0) + 1000;
-                updates.currency = profile.currency;
-                rewardIcon = "🪙"; rewardMsg = "+1000 Coins";
-            } else {
-                const target = spinItems.length > 0 ? spinItems[Math.floor(Math.random() * spinItems.length)] : null;
-                if (target && !profile.inventory.includes(target.id)) {
-                    profile.inventory.push(target.id);
-                    updates.inventory = firebase.firestore.FieldValue.arrayUnion(target.id);
-                    rewardIcon = "🌟"; rewardMsg = `LEGENDARY UNLOCK: ${target.name}!`;
-                } else {
-                    profile.currency = (profile.currency || 0) + 1500;
-                    updates.currency = profile.currency;
-                    rewardIcon = "🪙"; rewardMsg = "+1500 Coins (Duplicate)";
-                }
-            }
-        }
-        
-        icon.textContent = rewardIcon;
-        text.textContent = rewardMsg;
-        
-        if (window.firebase) await db.collection('users').doc(profile.uid).update(updates).catch(()=>{});
-        
-        const hubCur = document.getElementById('hubCurrency');
-        if (hubCur) hubCur.textContent = profile.currency || 0;
-        renderEventsHub(profile);
-        if (typeof renderShopItems === 'function') renderShopItems();
-        
-    }, 1500);
+            // Sync Local Cache with Server Truth
+            profile.chests = res.newChests;
+            profile.currency = rollData.newCurrency;
+            profile.shards = rollData.newShards;
+            profile.inventory = rollData.newInventory;
+            profile.totalCopies = rollData.totalCopies;
+            
+            const hubCur = document.getElementById('hubCurrency');
+            if (hubCur) hubCur.textContent = profile.currency || 0;
+            renderEventsHub(profile);
+            if (typeof renderShopItems === 'function') renderShopItems();
+            
+        }, 1500);
+    } catch(e) {
+        console.error("Chest error:", e);
+        modal.classList.remove('show');
+    }
 }
 
 // --- ACHIEVEMENT NOTIFICATION LOGIC ---
@@ -9648,7 +9740,7 @@ function renderShopItems() {
 
         let btnHtml = '';
         if (currentShopTab === 'coins') {
-            btnHtml = `<button class="btn small" style="background:var(--ok); border-color:#5faa82; color:#fff; width:100%;" onclick="purchaseIAP('${item.id}', ${item.reward})">Buy ${item.price}</button>`;
+            btnHtml = `<button class="btn small" style="background:var(--ok); border-color:#5faa82; color:#fff; width:100%;" onclick="purchaseIAP('${item.id}', ${item.reward}, event)">Buy ${item.price}</button>`;
         } else if (isEquipped) {
             btnHtml = `<button class="btn small equipped" style="width:100%;" disabled>EQUIPPED ✓</button>`;
         } else if (isOwned) {
@@ -9657,11 +9749,11 @@ function renderShopItems() {
             if (item.shardsNeeded) {
                 let shards = (profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
                 let canAffordShard = (profile.currency || 0) >= item.shardPrice;
-                btnHtml = `<button class="btn small locked" style="width:100%; font-size:9.5px; padding:6px 2px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded})">Buy Copy (${item.shardPrice}c)</button>
+                btnHtml = `<button class="btn small locked" style="width:100%; font-size:9.5px; padding:6px 2px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded}, event)">Buy Copy (${item.shardPrice}c)</button>
                            <div style="font-size:9.5px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:6px; background:rgba(0,0,0,0.5); padding:2px; border-radius:3px;">Copies: ${shards}/${item.shardsNeeded}</div>`;
             } else {
                 let canAfford = (profile.currency || 0) >= item.price;
-                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price})">${item.price} Coins</button>`;
+                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event)">${item.price} Coins</button>`;
             }
         } else if (item.method === 'tier') {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Unlocks at ${item.unlockTier}</button>`;
@@ -9745,11 +9837,11 @@ function openShopPreview(itemId, tab) {
         if (item.shardsNeeded) {
             let shards = (profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
             let canAffordShard = (profile.currency || 0) >= item.shardPrice;
-            btnHtml = `<button class="btn locked" style="width:100%; font-size:14px; padding:12px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded}); document.getElementById('shopPreviewModal').classList.remove('show');">Buy Copy (${item.shardPrice}c)</button>
+            btnHtml = `<button class="btn locked" style="width:100%; font-size:14px; padding:12px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded}, event); document.getElementById('shopPreviewModal').classList.remove('show');">Buy Copy (${item.shardPrice}c)</button>
                        <div style="font-size:11px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:8px; background:rgba(0,0,0,0.5); padding:4px; border-radius:3px; text-align:center;">Copies Collected: ${shards}/${item.shardsNeeded}</div>`;
         } else {
             let canAfford = (profile.currency || 0) >= item.price;
-            btnHtml = `<button class="btn locked" style="width:100%; font-size:14px; padding:12px;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}); document.getElementById('shopPreviewModal').classList.remove('show');">Buy for ${item.price} Coins</button>`;
+            btnHtml = `<button class="btn locked" style="width:100%; font-size:14px; padding:12px;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event); document.getElementById('shopPreviewModal').classList.remove('show');">Buy for ${item.price} Coins</button>`;
         }
     } else if (item.method === 'tier') {
         btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Unlocks at ${item.unlockTier} Rank</button>`;
@@ -9763,77 +9855,114 @@ function openShopPreview(itemId, tab) {
     document.getElementById('shopPreviewModal').classList.add('show');
 }
 
-async function buyShopItem(itemId, price) {
-    try { sfx.coin(); } catch(e){}
+async function buyShopItem(itemId, price, event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || (profile.currency || 0) < price) return;
 
-    const db = firebase.firestore();
-    
-    // Deduct coins and add to inventory
-    const newCurrency = (profile.currency || 0) - price;
-    
-    await db.collection('users').doc(profile.uid).update({
-        currency: newCurrency,
-        inventory: firebase.firestore.FieldValue.arrayUnion(itemId)
-    });
-    
-    profile.currency = newCurrency;
-    profile.inventory = profile.inventory || ['c_default', 'tb_default', 'vfx_default'];
-    profile.inventory.push(itemId);
-    
+    // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
+    const backupCurrency = profile.currency;
+    const backupInventory = [...(profile.inventory || [])];
+
+    // --- 1. INSTANT OPTIMISTIC UI ---
+    profile.currency -= price;
+    profile.inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
+    if (!profile.inventory.includes(itemId)) profile.inventory.push(itemId);
+
+    try { sfx.coin(); } catch(e){}
+    if (event) triggerNotificationVfx('equip', event);
     try { sfx.win(); } catch(e){}
-    
-    // Refresh UI
+    triggerNotificationVfx('gold'); 
+
     const shopCur = document.getElementById('shopCurrency');
     const hubCur = document.getElementById('hubCurrency');
     if (shopCur) shopCur.textContent = profile.currency;
     if (hubCur) hubCur.textContent = profile.currency;
-    
     renderShopItems();
+
+    // --- 2. BACKGROUND SERVER SYNC ---
+    try {
+        const res = await secureServerCall('economy/buyItem', { itemId });
+        // Silently correct to exact server truth
+        profile.currency = res.newCurrency;
+        profile.inventory = res.newInventory;
+    } catch (e) {
+        console.error("Purchase failed:", e);
+        
+        // --- 3. ROLLBACK ON FAILURE ---
+        profile.currency = backupCurrency;
+        profile.inventory = backupInventory;
+        if (shopCur) shopCur.textContent = profile.currency;
+        if (hubCur) hubCur.textContent = profile.currency;
+        renderShopItems();
+        
+        showSystemToast("Transaction rejected. Coins refunded.");
+    }
 }
 
-async function buyShard(itemId, price, requiredAmount) {
-    try { sfx.coin(); } catch(e){}
+async function buyShard(itemId, price, requiredAmount, event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || (profile.currency || 0) < price) return;
 
-    const db = firebase.firestore();
-    const newCurrency = (profile.currency || 0) - price;
-    
-    let currentShards = (profile.shards && profile.shards[itemId]) ? profile.shards[itemId] : 0;
-    currentShards += 1;
-    let totalCopies = (profile.totalCopies || 0) + 1;
+    // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
+    const backupCurrency = profile.currency;
+    const backupShards = { ...(profile.shards || {}) };
+    const backupTotalCopies = profile.totalCopies || 0;
+    const backupInventory = [...(profile.inventory || [])];
 
-    let updates = {
-        currency: newCurrency,
-        [`shards.${itemId}`]: currentShards,
-        totalCopies: totalCopies
-    };
-
-    profile.currency = newCurrency;
+    // --- 1. INSTANT OPTIMISTIC UI ---
+    profile.currency -= price;
     profile.shards = profile.shards || {};
-    profile.shards[itemId] = currentShards;
-    profile.totalCopies = totalCopies;
+    profile.shards[itemId] = (profile.shards[itemId] || 0) + 1;
+    profile.totalCopies = (profile.totalCopies || 0) + 1;
 
-    if (currentShards >= requiredAmount) {
-        updates.inventory = firebase.firestore.FieldValue.arrayUnion(itemId);
-        profile.inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
-        profile.inventory.push(itemId);
-        try { sfx.win(); } catch(e){}
-        if (typeof showSystemToast === 'function') showSystemToast("Skin Unlocked!");
-    } else {
-        try { sfx.uiEquip(); } catch(e){} 
+    const isUnlockedNow = profile.shards[itemId] >= requiredAmount;
+    if (isUnlockedNow) {
+        profile.inventory = profile.inventory || [];
+        if (!profile.inventory.includes(itemId)) profile.inventory.push(itemId);
     }
 
-    await db.collection('users').doc(profile.uid).update(updates).catch(()=>{});
+    try { sfx.coin(); } catch(e){}
+    if (event) triggerNotificationVfx('equip', event);
+
+    if (isUnlockedNow) {
+        try { sfx.win(); } catch(e){}
+        triggerNotificationVfx('gold'); 
+        showSystemToast("Skin Unlocked!");
+    } else {
+        try { sfx.uiEquip(); } catch(e){} 
+        showSystemToast("Copy Purchased!");
+    }
     
     const shopCur = document.getElementById('shopCurrency');
     const hubCur = document.getElementById('hubCurrency');
     if (shopCur) shopCur.textContent = profile.currency;
     if (hubCur) hubCur.textContent = profile.currency;
-    
     renderShopItems();
+
+    // --- 2. BACKGROUND SERVER SYNC ---
+    try {
+        const res = await secureServerCall('economy/buyShard', { itemId });
+        profile.currency = res.newCurrency;
+        profile.shards = res.newShards;
+        profile.totalCopies = res.totalCopies;
+        if (res.unlocked && !profile.inventory.includes(itemId)) {
+            profile.inventory.push(itemId);
+        }
+    } catch (e) {
+        console.error("Purchase failed:", e);
+        
+        // --- 3. ROLLBACK ON FAILURE ---
+        profile.currency = backupCurrency;
+        profile.shards = backupShards;
+        profile.totalCopies = backupTotalCopies;
+        profile.inventory = backupInventory;
+        
+        if (shopCur) shopCur.textContent = profile.currency;
+        if (hubCur) hubCur.textContent = profile.currency;
+        renderShopItems();
+        
+        showSystemToast("Transaction rejected. Coins refunded.");
+    }
 }
 
 async function equipShopItem(itemId, category, event) {
@@ -9858,21 +9987,30 @@ async function equipShopItem(itemId, category, event) {
     renderShopItems();
 }
 
-async function purchaseIAP(itemId, rewardAmount) {
+async function purchaseIAP(itemId, rewardAmount, event) {
     try { sfx.coin(); } catch(e){}
-    // MOCK IAP PROCESS
-    if(confirm("Simulate In-App Purchase? This will instantly add " + rewardAmount + " coins to your account.")) {
+    
+    if(confirm("Simulate In-App Purchase? This will securely add " + rewardAmount + " coins to your account.")) {
         const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
         if (!profile) return;
 
-        const newCurrency = (profile.currency || 0) + rewardAmount;
-        
-        await firebase.firestore().collection('users').doc(profile.uid).update({
-            currency: newCurrency
-        });
-        
-        profile.currency = newCurrency;
+        // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
+        const backupCurrency = profile.currency || 0;
+
+        // --- 1. INSTANT OPTIMISTIC UI ---
+        profile.currency = backupCurrency + rewardAmount;
+        if (event) triggerNotificationVfx('equip', event);
         try { sfx.win(); } catch(e){}
+        
+        if (typeof confetti !== 'undefined') {
+            const duration = 2000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
         
         const shopCur = document.getElementById('shopCurrency');
         const hubCur = document.getElementById('hubCurrency');
@@ -9880,7 +10018,23 @@ async function purchaseIAP(itemId, rewardAmount) {
         if (hubCur) hubCur.textContent = profile.currency;
         
         renderShopItems();
-        if (typeof showSystemToast === 'function') showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
+        showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
+
+        // --- 2. BACKGROUND SERVER SYNC ---
+        try {
+            const res = await secureServerCall('economy/iap', { rewardAmount });
+            profile.currency = res.newCurrency;
+        } catch(e) {
+            console.error("IAP failed:", e);
+            
+            // --- 3. ROLLBACK ON FAILURE ---
+            profile.currency = backupCurrency;
+            if (shopCur) shopCur.textContent = profile.currency;
+            if (hubCur) hubCur.textContent = profile.currency;
+            renderShopItems();
+            
+            showSystemToast("Transaction rejected by server.");
+        }
     }
 }
 </script>
