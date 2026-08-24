@@ -3149,6 +3149,58 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
+// ============================================================
+// ON-SCREEN DEBUG CONSOLE (temporary — remove once bug is fixed)
+// Mirrors console.log/warn/error into a visible box on the phone screen.
+// ============================================================
+(function setupOnScreenDebugConsole() {
+    const box = document.createElement('div');
+    box.id = 'dodDebugConsole';
+    box.style.cssText = `
+        position: fixed; bottom: 0; left: 0; right: 0; height: 40vh;
+        background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
+        font-size: 11px; line-height: 1.4; overflow-y: auto; z-index: 999999;
+        padding: 8px; box-sizing: border-box; white-space: pre-wrap;
+        word-break: break-all; border-top: 2px solid #0f0; display: none;
+    `;
+    document.body.appendChild(box);
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = 'DBG';
+    toggleBtn.style.cssText = `
+        position: fixed; bottom: 8px; right: 8px; z-index: 1000000;
+        background: #0f0; color: #000; border: none; border-radius: 4px;
+        padding: 6px 10px; font-family: monospace; font-weight: bold; font-size: 12px;
+    `;
+    toggleBtn.addEventListener('click', () => {
+        box.style.display = box.style.display === 'none' ? 'block' : 'none';
+    });
+    document.body.appendChild(toggleBtn);
+
+    function logToBox(level, args) {
+        const line = document.createElement('div');
+        line.style.color = level === 'warn' ? '#ff0' : level === 'error' ? '#f55' : '#0f0';
+        const msg = args.map(a => {
+            try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
+            catch(e) { return String(a); }
+        }).join(' ');
+        line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+        box.appendChild(line);
+        box.scrollTop = box.scrollHeight;
+    }
+
+    const origLog = console.log.bind(console);
+    const origWarn = console.warn.bind(console);
+    const origError = console.error.bind(console);
+    console.log = function(...args) { origLog(...args); logToBox('log', args); };
+    console.warn = function(...args) { origWarn(...args); logToBox('warn', args); };
+    console.error = function(...args) { origError(...args); logToBox('error', args); };
+
+    window.addEventListener('error', (e) => {
+        logToBox('error', ['UNCAUGHT: ' + e.message + ' @ ' + e.filename + ':' + e.lineno]);
+    });
+})();
+
 // The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
   const doc = document.documentElement;
