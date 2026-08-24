@@ -2200,7 +2200,7 @@ window.dodImagesLoaded = false;
   <button class="btn ghost small dod-hud-el" id="globalBackBtn" onclick="showMenuScreen('hub')" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
   <!-- FULLSCREEN TOGGLE BUTTON -->
-  <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen()" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
+  <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
 
   <!-- TOP-RIGHT CURRENCY CHIP -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:6px;">
@@ -2517,7 +2517,7 @@ window.dodImagesLoaded = false;
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
-    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen()" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
+    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
   </div>
 
   <!-- ACTIVE PLAYER PANEL -->
@@ -3333,11 +3333,15 @@ function proceedWithBoot(overlayEl) {
                     this.dataset.micResolved = 'true';
                     if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
                 });
-        } else {
-            // Already asked before, just boot normally
-            this.dataset.booted = 'true';
+    } else {
+        // Already asked before, just boot normally
+        this.dataset.booted = 'true';
+        
+        // FIX: You were missing this wrapper to force full screen for returning players!
+        forceEnterFullscreen(e).finally(() => {
             proceedWithBoot(this);
-        }
+        });
+    }
     });
 });
 
