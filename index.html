@@ -3153,15 +3153,24 @@ document.addEventListener("visibilitychange", function() {
 function forceEnterFullscreen() {
   const doc = document.documentElement;
   
+  if (typeof showSystemToast === 'function') showSystemToast("Sending Fullscreen Request...");
+
   if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
+      screen.orientation.lock('landscape').catch((e) => console.log("Orientation block:", e));
   }
 
-  // ALWAYS forcefully request fullscreen to bypass browser permission exit desyncs
-  if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
-  else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
-  else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
-  else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
+  let req = null;
+  if (doc.requestFullscreen) { req = doc.requestFullscreen(); }
+  else if (doc.webkitRequestFullscreen) { req = doc.webkitRequestFullscreen(); }
+  else if (doc.mozRequestFullScreen) { req = doc.mozRequestFullScreen(); }
+  else if (doc.msRequestFullscreen) { req = doc.msRequestFullscreen(); }
+  
+  // Catch and display the exact reason the browser rejects the fullscreen attempt
+  if (req && req.catch) {
+      req.catch(err => {
+          if (typeof showSystemToast === 'function') showSystemToast("FS Blocked: " + err.message);
+      });
+  }
   
   setTimeout(updateFullscreenIcons, 300);
 }
@@ -3169,11 +3178,18 @@ function forceEnterFullscreen() {
 // Toggle function for the UI buttons
 function toggleFullscreen() {
   let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  let wH = window.innerHeight;
+  let sH = window.screen.height;
   
-  // FIX: If the browser thinks it's in fullscreen but the window is small (e.g. after mic popups), treat it as windowed.
-  if (isFs && window.innerHeight < window.screen.height - 100) {
+  let debugMsg = `State FS: ${!!isFs} | wH: ${wH} | sH: ${sH}`;
+  
+  if (isFs && wH < sH - 100) {
       isFs = null;
+      debugMsg += " -> Fixed Desync";
   }
+
+  // Print the state calculation to the screen
+  if (typeof showSystemToast === 'function') showSystemToast(debugMsg);
 
   if (!isFs) {
       forceEnterFullscreen();
@@ -3188,12 +3204,9 @@ function toggleFullscreen() {
 
 function updateFullscreenIcons() {
     let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-    
-    // FIX: Match the actual visible state, fixing the icon if a popup broke the browser state.
     if (isFs && window.innerHeight < window.screen.height - 100) {
         isFs = null;
     }
-    
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
         btn.textContent = isFs ? '✖' : '⛶'; 
     });
