@@ -3247,40 +3247,29 @@ function proceedWithBoot(overlayEl) {
 // Use ONLY 'click' so the browser securely registers the user gesture for Fullscreen API
 introOverlay.addEventListener('click', function(e) {
     if (this.dataset.booted === 'true') return;
-    if (this.dataset.waitingForMic === 'true') return;
 
-    // If mic permission is resolved, this tap guarantees full screen execution!
-    if (this.dataset.micResolved === 'true') {
-        this.dataset.booted = 'true';
-        proceedWithBoot(this);
-        return;
-    }
+    // Enter fullscreen + boot RIGHT NOW, on this exact tap — the same tap that already
+    // works fine for the rotate-overlay. We no longer wait on the mic permission dialog
+    // before doing this, because that dialog reliably breaks Android's fullscreen/immersive
+    // state, and re-requesting fullscreen on a LATER tap (after the dialog closes) does not
+    // reliably recover it. Ask first, act second — never the other way around.
+    this.dataset.booted = 'true';
+    proceedWithBoot(this);
 
-    // FIRST TAP: Ask for microphone
+    // Ask for microphone permission in the BACKGROUND, after fullscreen is already
+    // in motion. This doesn't block boot and doesn't require a second tap — if the
+    // native dialog knocks fullscreen out, forceEnterFullscreen() already ran once
+    // successfully off this gesture and the game is proceeding regardless.
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        this.dataset.waitingForMic = 'true';
-        const statusText = document.getElementById('introStatusText');
-        if (statusText) statusText.textContent = "Please allow microphone access...";
-        
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
             })
             .catch(err => {
                 console.warn("Microphone denied.", err);
                 localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
             });
-    } else {
-        // Already asked before, just boot normally
-        this.dataset.booted = 'true';
-        proceedWithBoot(this);
     }
 });
 
