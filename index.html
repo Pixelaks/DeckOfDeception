@@ -3297,14 +3297,6 @@ function proceedWithBoot(overlayEl) {
 introOverlay.addEventListener('click', function(e) {
     if (this.dataset.booted === 'true' || this.dataset.waitingForMic === 'true') return;
 
-    // Tap #2 (After mic allowed/denied)
-    if (this.dataset.micResolved === 'true') {
-        this.dataset.booted = 'true';
-        forceEnterFullscreen(); 
-        proceedWithBoot(this);
-        return;
-    }
-
     // Tap #1 (First visit - Ask for Microphone)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
         this.dataset.waitingForMic = 'true';
@@ -3315,18 +3307,20 @@ introOverlay.addEventListener('click', function(e) {
             .then(stream => {
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                
+                // THE REFRESH WORKAROUND: Force a page reload so the browser resets its buggy fullscreen state
+                if (statusText) statusText.textContent = "Permission saved! Reloading game...";
+                setTimeout(() => window.location.reload(), 400);
             })
             .catch(err => {
                 localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                
+                // THE REFRESH WORKAROUND: Do the same even if they denied it
+                if (statusText) statusText.textContent = "Settings saved! Reloading game...";
+                setTimeout(() => window.location.reload(), 400);
             });
     } else {
-        // Returning user
+        // Returning user (Permission was already handled in a previous load)
         this.dataset.booted = 'true';
         forceEnterFullscreen(); 
         proceedWithBoot(this);
