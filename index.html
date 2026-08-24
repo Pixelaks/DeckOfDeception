@@ -3158,91 +3158,55 @@ document.addEventListener("visibilitychange", function() {
 // ============================================================
 
 // ============================================================
-// ROBUST FULLSCREEN + LANDSCAPE SYSTEM (INSTANT SYNC FIX)
+// THE FINAL BULLETPROOF ANDROID FULLSCREEN FIX
 // ============================================================
 
-function forceEnterFullscreen() {
+async function forceEnterFullscreen() {
     const doc = document.documentElement;
-
     try {
-        // 1. Fire Fullscreen instantly (No delays, no await)
+        // 1. Enter Fullscreen and WAIT for the browser to confirm it is fully loaded
         if (doc.requestFullscreen) {
-            doc.requestFullscreen().catch(err => console.warn("FS block:", err));
+            await doc.requestFullscreen();
         } else if (doc.webkitRequestFullscreen) {
-            doc.webkitRequestFullscreen();
-        } else if (doc.mozRequestFullScreen) {
-            doc.mozRequestFullScreen();
-        } else if (doc.msRequestFullscreen) {
-            doc.msRequestFullscreen();
+            await doc.webkitRequestFullscreen();
         }
 
-        // 2. Fire Orientation Lock instantly 
-        // Because we removed the delay, the browser still trusts the user's tap!
+        // 2. Only AFTER fullscreen is confirmed, lock the orientation
         if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(err => console.warn("Lock block:", err));
+            await screen.orientation.lock('landscape');
         }
-
-        // 3. Android address bar shove
+    } catch (err) {
+        console.warn("Fullscreen/Orientation safely ignored by browser:", err);
+    } finally {
         window.scrollTo(0, 1);
         updateFullscreenIcons();
-    } catch (err) {
-        console.error("Fullscreen/Orientation error:", err);
     }
 }
 
 function toggleFullscreen(e) {
     if (e) e.stopPropagation();
-    
-    // Safely check real fullscreen state
-    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
     if (!isFs) {
         forceEnterFullscreen();
     } else {
-        try {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
-            } else if (document.webkitExitFullscreen) {
-                document.webkitExitFullscreen();
-            } else if (document.mozCancelFullScreen) {
-                document.mozCancelFullScreen();
-            } else if (document.msExitFullscreen) {
-                document.msExitFullscreen();
-            }
-        } catch (err) {
-            console.warn("Fullscreen exit failed:", err);
-        }
+        if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
         setTimeout(updateFullscreenIcons, 150);
     }
 }
 
 function updateFullscreenIcons() {
-    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-    document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
-        btn.textContent = isFs ? '✖' : '⛶';
-    });
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+    document.querySelectorAll('.fs-toggle-btn').forEach(btn => btn.textContent = isFs ? '✖' : '⛶');
 }
 
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
-document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
-document.addEventListener('MSFullscreenChange', updateFullscreenIcons);
-window.addEventListener('resize', () => {
-    updateFullscreenIcons();
-    window.scrollTo(0, 1); // Keep address bar pushed away on rotation/resize
-});
+window.addEventListener('resize', () => { updateFullscreenIcons(); window.scrollTo(0, 1); });
 
-
-// Rotate overlay:
-// ONLY use click. Do not use touchstart for fullscreen.
-document.addEventListener('DOMContentLoaded', () => {
-    const rotateOverlay = document.getElementById('rotate-device-overlay');
-    if (rotateOverlay) {
-        rotateOverlay.addEventListener('click', function(e) {
-            forceEnterFullscreen();
-        });
-    }
-});
+// ============================================================
+// BOOT SEQUENCE
+// ============================================================
 
 window.minimumBootTimePassed = false;
 
@@ -3276,12 +3240,17 @@ function proceedWithBoot(overlayEl) {
     }, bootTime);
 }
 
-introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true' || this.dataset.waitingForMic === 'true') return;
+// ============================================================
+// MOBILE-FIRST TOUCH LISTENERS (Bypasses Android Click Glitch)
+// ============================================================
+
+function handleGameBoot(e) {
+    const intro = document.getElementById('introOverlay');
+    if (intro.dataset.booted === 'true' || intro.dataset.waitingForMic === 'true') return;
 
     // Tap #1 (First visit - Ask for Microphone)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        this.dataset.waitingForMic = 'true';
+        intro.dataset.waitingForMic = 'true';
         const statusText = document.getElementById('introStatusText');
         if (statusText) statusText.textContent = "Please allow microphone access...";
         
@@ -3289,31 +3258,35 @@ introOverlay.addEventListener('click', function(e) {
             .then(stream => {
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
-                
                 if (statusText) statusText.textContent = "Permission saved! Rebooting game...";
-                
-                // THE HARD RESTART: Tricks Brave into destroying the tab's memory entirely, clearing the glitch
-                setTimeout(() => {
-                    window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now());
-                }, 500);
+                setTimeout(() => { window.location.href = window.location.href.split('?')[0] + '?reboot=' + Date.now(); }, 500);
             })
             .catch(err => {
                 localStorage.setItem('dod_mic_asked', 'true');
-                
                 if (statusText) statusText.textContent = "Settings saved! Rebooting game...";
-                
-                // THE HARD RESTART (Even on denial)
-                setTimeout(() => {
-                    window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now());
-                }, 500);
+                setTimeout(() => { window.location.href = window.location.href.split('?')[0] + '?reboot=' + Date.now(); }, 500);
             });
     } else {
         // Returning user (Mic prompt handled, tab is fresh)
-        this.dataset.booted = 'true';
-        forceEnterFullscreen(); 
-        proceedWithBoot(this);
+        intro.dataset.booted = 'true';
+        forceEnterFullscreen().then(() => {
+            proceedWithBoot(intro);
+        });
     }
-});
+}
+
+// BIND TO BOTH TOUCHEND AND CLICK TO GUARANTEE INSTANT ANDROID RESPONSE
+const introOverlayEl = document.getElementById('introOverlay');
+if (introOverlayEl) {
+    introOverlayEl.addEventListener('touchend', handleGameBoot, { passive: false });
+    introOverlayEl.addEventListener('click', handleGameBoot);
+}
+
+const rotateOverlayEl = document.getElementById('rotate-device-overlay');
+if (rotateOverlayEl) {
+    rotateOverlayEl.addEventListener('touchend', () => { forceEnterFullscreen(); }, { passive: false });
+    rotateOverlayEl.addEventListener('click', () => { forceEnterFullscreen(); });
+}
 
 const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
 const BOT_NAME_POOL = ["Shadow","Ghost","Apex","Nova","Vortex","Pulse","Echo","Jester","Maverick","Rogue","Gambit","Cipher","Onyx","Zenith","Kraken","Viper","Neon","Drifter","Kael","Sila","Ronin","Myth","Forge","Silas","Nyx","Raven"];
