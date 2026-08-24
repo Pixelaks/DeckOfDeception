@@ -3159,22 +3159,21 @@ document.addEventListener("visibilitychange", function() {
 
 function forceEnterFullscreen() {
     const doc = document.documentElement;
-    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
 
     let fsPromise = null;
     try {
-        if (!isFs) {
-            if (doc.requestFullscreen) {
-                fsPromise = doc.requestFullscreen();
-            } else if (doc.webkitRequestFullscreen) {
-                fsPromise = doc.webkitRequestFullscreen();
-            } else if (doc.mozRequestFullScreen) {
-                fsPromise = doc.mozRequestFullScreen();
-            } else if (doc.msRequestFullscreen) {
-                fsPromise = doc.msRequestFullscreen();
-            }
-        } else {
-            fsPromise = Promise.resolve();
+        // FIX: ALWAYS call requestFullscreen on Android/Brave. 
+        // When the mic permission dialog closes, the address bar gets stuck because 
+        // the browser technically thinks it's still in fullscreen. 
+        // Removing the "if (!isFs)" check forces the browser to recalculate and hide the address bar!
+        if (doc.requestFullscreen) {
+            fsPromise = doc.requestFullscreen();
+        } else if (doc.webkitRequestFullscreen) {
+            fsPromise = doc.webkitRequestFullscreen();
+        } else if (doc.mozRequestFullScreen) {
+            fsPromise = doc.mozRequestFullScreen();
+        } else if (doc.msRequestFullscreen) {
+            fsPromise = doc.msRequestFullscreen();
         }
 
         if (fsPromise && typeof fsPromise.then === 'function') {
