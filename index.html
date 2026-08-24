@@ -3158,53 +3158,35 @@ document.addEventListener("visibilitychange", function() {
 // ============================================================
 
 // ============================================================
-// ROBUST FULLSCREEN + LANDSCAPE SYSTEM (THE ANTI-GLITCH FIX)
+// ROBUST FULLSCREEN + LANDSCAPE SYSTEM (INSTANT SYNC FIX)
 // ============================================================
 
 function forceEnterFullscreen() {
     const doc = document.documentElement;
 
     try {
-        // 1. Grab the correct browser-specific function
-        const requestFS = doc.requestFullscreen || doc.webkitRequestFullscreen || doc.mozRequestFullScreen || doc.msRequestFullscreen;
-        
-        if (requestFS) {
-            // 2. Execute synchronously (using .call to prevent illegal invocation errors)
-            const promise = requestFS.call(doc);
-
-            if (promise && typeof promise.then === 'function') {
-                promise.then(() => {
-                    // 3. THE MAGIC FIX: Wait 150ms AFTER fullscreen is fully granted before locking orientation.
-                    // This prevents Brave/Chrome from panicking and permanently sticking the address bar on screen!
-                    setTimeout(() => {
-                        if (screen.orientation && screen.orientation.lock) {
-                            screen.orientation.lock('landscape').catch(() => {});
-                        }
-                        // Dirty Android hack: scrolling pushes the address bar away if the UI is still glitchy
-                        window.scrollTo(0, 1);
-                    }, 150);
-                    updateFullscreenIcons();
-                }).catch(err => {
-                    console.warn("Fullscreen blocked:", err);
-                    // 4. NUCLEAR RESET: If the browser is glitched and thinks it's already in fullscreen, 
-                    // force it to exit so your very next tap works cleanly.
-                    if (document.exitFullscreen) {
-                        document.exitFullscreen().catch(()=>{});
-                    } else if (document.webkitExitFullscreen) {
-                        document.webkitExitFullscreen();
-                    }
-                });
-            } else {
-                // Fallback for older browsers
-                setTimeout(() => {
-                    if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => {});
-                    window.scrollTo(0, 1);
-                    updateFullscreenIcons();
-                }, 400);
-            }
+        // 1. Fire Fullscreen instantly (No delays, no await)
+        if (doc.requestFullscreen) {
+            doc.requestFullscreen().catch(err => console.warn("FS block:", err));
+        } else if (doc.webkitRequestFullscreen) {
+            doc.webkitRequestFullscreen();
+        } else if (doc.mozRequestFullScreen) {
+            doc.mozRequestFullScreen();
+        } else if (doc.msRequestFullscreen) {
+            doc.msRequestFullscreen();
         }
+
+        // 2. Fire Orientation Lock instantly 
+        // Because we removed the delay, the browser still trusts the user's tap!
+        if (screen.orientation && screen.orientation.lock) {
+            screen.orientation.lock('landscape').catch(err => console.warn("Lock block:", err));
+        }
+
+        // 3. Android address bar shove
+        window.scrollTo(0, 1);
+        updateFullscreenIcons();
     } catch (err) {
-        console.error("Fullscreen error:", err);
+        console.error("Fullscreen/Orientation error:", err);
     }
 }
 
