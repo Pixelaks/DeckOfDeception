@@ -3150,38 +3150,19 @@ document.addEventListener("visibilitychange", function() {
 });
 
 // The Screen Rotation Function (Forced on initial tap)
-// The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
   const doc = document.documentElement;
+  
+  if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
+  }
 
-  const requestFS = () => {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  if (!isFs) {
       if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
       else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
       else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
       else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
-      
-      if (screen.orientation && screen.orientation.lock) {
-          screen.orientation.lock('landscape').catch(() => {});
-      }
-  };
-
-  // ANDROID CHROME IMMERSIVE BUG FIX:
-  // If the mic dialog dropped us out of fullscreen, Chrome still thinks it's in fullscreen.
-  // Calling requestFullscreen() in this state is a "no-op" (it does nothing).
-  // We check if the DOM thinks it's fullscreen BUT the window height is physically smaller 
-  // than the screen (meaning the URL bar is visible).
-  const isStuck = document.fullscreenElement && (window.innerHeight < window.screen.height * 0.85);
-
-  if (isStuck) {
-      // Force exit the broken state, then immediately re-request it
-      document.exitFullscreen().then(() => {
-          requestFS();
-      }).catch(() => {
-          requestFS();
-      });
-  } else {
-      // Standard entry
-      requestFS();
   }
   
   setTimeout(updateFullscreenIcons, 300);
@@ -3217,27 +3198,8 @@ window.addEventListener('resize', updateFullscreenIcons);
 document.addEventListener('DOMContentLoaded', () => {
     const rotateOverlay = document.getElementById('rotate-device-overlay');
     if (rotateOverlay) {
-        const handleRotateTap = function(e) {
-            e.preventDefault(); // Prevent double-firing if using touch
-            forceEnterFullscreen();
-            
-            // Hide the overlay instantly so the user sees the game behind it
-            rotateOverlay.style.display = 'none';
-            
-            // Failsafe: if the Pixilaks Logo intro screen got stuck during the mic prompt, kill it too
-            const intro = document.getElementById('introOverlay');
-            if (intro && intro.style.display !== 'none') {
-                intro.style.opacity = '0';
-                intro.style.pointerEvents = 'none';
-                setTimeout(() => intro.style.display = 'none', 300);
-            }
-            
-            setTimeout(() => { rotateOverlay.style.display = ''; }, 1500);
-        };
-        
-        // Bind to touchend for faster response on mobile, fallback to click
-        rotateOverlay.addEventListener('touchend', handleRotateTap, { passive: false });
-        rotateOverlay.addEventListener('click', handleRotateTap);
+        rotateOverlay.addEventListener('click', forceEnterFullscreen);
+        rotateOverlay.addEventListener('touchstart', forceEnterFullscreen);
     }
 });
 
@@ -3248,13 +3210,6 @@ function proceedWithBoot(overlayEl) {
 
     overlayEl.style.opacity = '0';
     setTimeout(() => overlayEl.style.display = 'none', 800);
-    
-    // FIX: Hide the "Connecting to Table..." bootstrap overlay!
-    const bootOverlay = document.getElementById('bootstrapOverlay');
-    if (bootOverlay) {
-        bootOverlay.style.opacity = '0';
-        setTimeout(() => bootOverlay.style.display = 'none', 800);
-    }
     
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
@@ -3282,44 +3237,47 @@ function proceedWithBoot(overlayEl) {
     }, bootTime);
 }
 
-// Use ONLY 'click' so the browser securely registers the user gesture for Fullscreen API
-introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true') return;
-    if (this.dataset.waitingForMic === 'true') return;
-
-    // If mic permission is resolved, this tap guarantees full screen execution!
-    if (this.dataset.micResolved === 'true') {
-        this.dataset.booted = 'true';
-        proceedWithBoot(this);
-        return;
-    }
-
-    // FIRST TAP: Ask for microphone
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        this.dataset.waitingForMic = 'true';
-        const statusText = document.getElementById('introStatusText');
-        if (statusText) statusText.textContent = "Please allow microphone access...";
+['click', 'touchend'].forEach(eventName => {
+    introOverlay.addEventListener(eventName, function(e) {
+        if (eventName === 'touchend') e.preventDefault(); 
         
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
-                localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
-            })
-            .catch(err => {
-                console.warn("Microphone denied.", err);
-                localStorage.setItem('dod_mic_asked', 'true');
-                this.dataset.waitingForMic = 'false';
-                this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
-            });
-    } else {
-        // Already asked before, just boot normally
-        this.dataset.booted = 'true';
-        proceedWithBoot(this);
-    }
+        if (this.dataset.booted === 'true') return;
+        if (this.dataset.waitingForMic === 'true') return;
+
+        // If mic permission is resolved, this tap guarantees full screen execution!
+        if (this.dataset.micResolved === 'true') {
+            this.dataset.booted = 'true';
+            proceedWithBoot(this);
+            return;
+        }
+
+        // FIRST TAP: Ask for microphone
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
+            this.dataset.waitingForMic = 'true';
+            const statusText = document.getElementById('introStatusText');
+            if (statusText) statusText.textContent = "Please allow microphone access...";
+            
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    this.dataset.waitingForMic = 'false';
+                    this.dataset.micResolved = 'true';
+                    if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                })
+                .catch(err => {
+                    console.warn("Microphone denied.", err);
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    this.dataset.waitingForMic = 'false';
+                    this.dataset.micResolved = 'true';
+                    if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                });
+        } else {
+            // Already asked before, just boot normally
+            this.dataset.booted = 'true';
+            proceedWithBoot(this);
+        }
+    });
 });
 
 const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
