@@ -3149,91 +3149,120 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
-let lastFsCall = 0; // Robust time-based anti-spam lock
+// ============================================================
+// ROBUST FULLSCREEN + LANDSCAPE SYSTEM
+// ============================================================
 
-// The Screen Rotation Function (Forced on initial tap)
-function forceEnterFullscreen(e) {
-  // CRITICAL FIX: Ignore 'touchstart' because it does NOT contain a valid user gesture token for Fullscreen APIs.
-  // By ignoring it here, we allow the subsequent 'click' event to fire and successfully enter fullscreen.
-  if (e && e.type === 'touchstart') return;
-  
-  const now = Date.now();
-  if (now - lastFsCall < 500) return; // Prevent double-firing without relying on brittle Promises
-  lastFsCall = now;
-  
-  const doc = document.documentElement;
-  
-  // 1. Request fullscreen FIRST
-  try {
-      if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
-      else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen(); }
-      else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
-      else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
-  } catch (err) {
-      console.warn("Fullscreen error:", err);
-  }
+async function forceEnterFullscreen(e) {
+    // Fullscreen MUST originate from a real user interaction.
+    if (e && e.type === 'touchstart') return;
 
-  // 2. Lock Orientation second
-  if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
-  }
-  
-  setTimeout(updateFullscreenIcons, 500);
+    const doc = document.documentElement;
+
+    try {
+        // If already fullscreen, don't request it again.
+        const alreadyFullscreen =
+            document.fullscreenElement ||
+            document.webkitFullscreenElement ||
+            document.mozFullScreenElement ||
+            document.msFullscreenElement;
+
+        if (!alreadyFullscreen) {
+            if (doc.requestFullscreen) {
+                await doc.requestFullscreen();
+            } else if (doc.webkitRequestFullscreen) {
+                doc.webkitRequestFullscreen();
+            } else if (doc.mozRequestFullScreen) {
+                await doc.mozRequestFullScreen();
+            } else if (doc.msRequestFullscreen) {
+                doc.msRequestFullscreen();
+            }
+        }
+
+        // Only attempt orientation lock after fullscreen succeeds.
+        if (screen.orientation && screen.orientation.lock) {
+            try {
+                await screen.orientation.lock('landscape');
+            } catch (orientationError) {
+                console.warn("Landscape lock unavailable:", orientationError);
+            }
+        }
+
+        updateFullscreenIcons();
+
+    } catch (err) {
+        console.warn("Fullscreen request failed:", err);
+        updateFullscreenIcons();
+    }
 }
+
 
 // Toggle function for the UI buttons
-function toggleFullscreen(e) {
-  let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-  
-  // FIX: Detect if the browser dropped out of fullscreen (due to a mic popup) but failed to update its internal state
-  if (isFs && window.innerHeight < window.screen.height - 100) {
-      isFs = null;
-  }
+async function toggleFullscreen(e) {
+    const isFs =
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement;
 
-  if (!isFs) {
-      forceEnterFullscreen(e);
-  } else {
-      try {
-          if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
-          else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-          else if (document.mozCancelFullScreen) { document.mozCancelFullScreen().catch(()=>{}); }
-          else if (document.msExitFullscreen) { document.msExitFullscreen().catch(()=>{}); }
-      } catch(err) {}
-  }
-  setTimeout(updateFullscreenIcons, 500);
+    if (!isFs) {
+        await forceEnterFullscreen(e);
+    } else {
+        try {
+            if (document.exitFullscreen) {
+                await document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.mozCancelFullScreen) {
+                await document.mozCancelFullScreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        } catch (err) {
+            console.warn("Fullscreen exit failed:", err);
+        }
+
+        updateFullscreenIcons();
+    }
 }
 
+
 function updateFullscreenIcons() {
-    let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-    
-    if (isFs && window.innerHeight < window.screen.height - 100) {
-        isFs = null;
-    }
-    
+    const isFs =
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.mozFullScreenElement ||
+        document.msFullscreenElement;
+
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
-        btn.textContent = isFs ? '✖' : '⛶'; 
+        btn.textContent = isFs ? '✖' : '⛶';
     });
 }
 
-// Ensure the button state fixes itself if Google Auth or Mic popups break the screen state
+
+// Keep the UI synchronized with the REAL browser fullscreen state.
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
+document.addEventListener('MSFullscreenChange', updateFullscreenIcons);
 window.addEventListener('resize', updateFullscreenIcons);
 
-// Make the Rotate Screen fallback clickable to force landscape
+
+// Rotate overlay:
+// ONLY use click. Do not use touchstart for fullscreen.
 document.addEventListener('DOMContentLoaded', () => {
     const rotateOverlay = document.getElementById('rotate-device-overlay');
+
     if (rotateOverlay) {
-        rotateOverlay.addEventListener('click', forceEnterFullscreen);
-        rotateOverlay.addEventListener('touchstart', forceEnterFullscreen);
+        rotateOverlay.addEventListener('click', function(e) {
+            forceEnterFullscreen(e);
+        });
     }
 });
 
 window.minimumBootTimePassed = false;
 
 function proceedWithBoot(overlayEl) {
-    forceEnterFullscreen();
-
     overlayEl.style.opacity = '0';
     setTimeout(() => overlayEl.style.display = 'none', 800);
     
@@ -3272,10 +3301,16 @@ function proceedWithBoot(overlayEl) {
 
         // If mic permission is resolved, this tap guarantees full screen execution!
         if (this.dataset.micResolved === 'true') {
-            this.dataset.booted = 'true';
+        this.dataset.booted = 'true';
+
+        // The current tap is the fresh user gesture.
+        // Re-enter fullscreen FIRST, then continue boot.
+        forceEnterFullscreen(e).finally(() => {
             proceedWithBoot(this);
-            return;
-        }
+        });
+
+        return;
+    }
 
         // FIRST TAP: Ask for microphone
         if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
@@ -9772,7 +9807,7 @@ async function linkGuestToGoogleAccount() {
         const credential = await user.linkWithPopup(provider);
         
         // Instantly recover the screen orientation!
-        if (typeof forceEnterFullscreen === 'function') forceEnterFullscreen();
+        // Fullscreen is restored only by an explicit user gesture.
         
         showSystemToast("Account successfully linked to Google!");
         
@@ -9785,7 +9820,7 @@ async function linkGuestToGoogleAccount() {
         console.error("Linking failed: ", error);
         
         // Recover the screen orientation even if they cancelled!
-        if (typeof forceEnterFullscreen === 'function') forceEnterFullscreen();
+        // Fullscreen is restored only by an explicit user gesture.
         
         if (error.code === 'auth/credential-already-in-use') {
             showSystemToast("This Google account is already linked to another player!");
