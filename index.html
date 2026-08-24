@@ -3149,16 +3149,6 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
-// BUG FIX: Re-lock the screen when returning from Native OS Prompts (like Microphone permissions)
-window.addEventListener('focus', () => {
-    const intro = document.getElementById('introOverlay');
-    // Only force it if the player has already passed the initial intro screen
-    if (intro && intro.style.display === 'none') {
-        // A tiny 300ms delay gives the browser time to settle after the prompt closes
-        setTimeout(() => forceEnterFullscreen(), 300);
-    }
-});
-
 // The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
   const doc = document.documentElement;
@@ -3210,48 +3200,66 @@ function updateFullscreenIcons() {
 
 window.minimumBootTimePassed = false;
 
+function proceedWithBoot(overlayEl) {
+    // Trigger rotation and fullscreen AFTER permission is handled
+    forceEnterFullscreen();
+
+    // Hide the "Tap to start" overlay so we can see the 3D animation
+    overlayEl.style.opacity = '0';
+    setTimeout(() => overlayEl.style.display = 'none', 800);
+    
+    // Start the music immediately while the animation plays
+    if(!audioCtx) audioCtx = new AudioContext();
+    if(audioCtx.state === 'suspended') audioCtx.resume();
+    
+    if(bgMusicElement) {
+        bgMusicElement.volume = musicVolumeSetting * 0.35; 
+        if(bgMusicElement.error){ startAmbientPad(); } 
+        else {
+            bgMusicElement.play().catch(() => startAmbientPad());
+            bgMusicElement.addEventListener('error', () => startAmbientPad(), {once:true});
+        }
+    } else {
+        startAmbientPad();
+    }
+
+    // If the user has visited before and has cached assets, cut down the 3D boot wait time
+    const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
+    
+    // Show the 3D Bootstrap animation sequence
+    setTimeout(() => {
+        window.minimumBootTimePassed = true;
+        
+        // Now fade in the main menu (or tutorial)
+        if (localStorage.getItem('dod_seen_tutorial')) {
+            menu.classList.add('menu-visible');
+        } else {
+            openTutorial(false);
+        }
+    }, bootTime);
+}
+
 ['click', 'touchend'].forEach(eventName => {
     introOverlay.addEventListener(eventName, function(e) {
         if (this.dataset.booted) return; // Prevent double-firing from touch + click
         if (eventName === 'touchend') e.preventDefault(); 
         this.dataset.booted = 'true';
 
-        // Trigger rotation and fullscreen on tap
-        forceEnterFullscreen();
-
-        // Hide the "Tap to start" overlay so we can see the 3D animation
-        this.style.opacity = '0';
-        setTimeout(() => this.style.display = 'none', 800);
-        
-        // Start the music immediately while the animation plays
-        if(!audioCtx) audioCtx = new AudioContext();
-        if(audioCtx.state === 'suspended') audioCtx.resume();
-        
-        if(bgMusicElement) {
-            bgMusicElement.volume = musicVolumeSetting * 0.35; 
-            if(bgMusicElement.error){ startAmbientPad(); } 
-            else {
-                bgMusicElement.play().catch(() => startAmbientPad());
-                bgMusicElement.addEventListener('error', () => startAmbientPad(), {once:true});
-            }
+        // Request microphone permission at the VERY FIRST tap
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    // Immediately stop tracks, we just needed the permission granted
+                    stream.getTracks().forEach(track => track.stop());
+                    proceedWithBoot(this);
+                })
+                .catch(err => {
+                    console.warn("Microphone permission denied or ignored.", err);
+                    proceedWithBoot(this);
+                });
         } else {
-            startAmbientPad();
+            proceedWithBoot(this);
         }
-
-        // If the user has visited before and has cached assets, cut down the 3D boot wait time
-        const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
-        
-        // Show the 3D Bootstrap animation sequence
-        setTimeout(() => {
-            window.minimumBootTimePassed = true;
-            
-            // Now fade in the main menu (or tutorial)
-            if (localStorage.getItem('dod_seen_tutorial')) {
-                menu.classList.add('menu-visible');
-            } else {
-                openTutorial(false);
-            }
-        }, bootTime);
     });
 });
 
@@ -3627,7 +3635,7 @@ function buildRanksScreen() {
 // ---------------- MENU HUB / SCREEN SWITCHING ----------------
 function showMenuScreen(name){
   if(name==='hub') { sfx.uiBack(); } else { sfx.uiClick(); }
-  if(name==='ranks') buildRanksScreen();
+  
   document.querySelectorAll('.menu-screen').forEach(el=>el.classList.add('hidden'));
   const target = document.getElementById('screen-'+name);
   if(target) target.classList.remove('hidden');
@@ -3660,9 +3668,12 @@ function showMenuScreen(name){
     if(hubCur) hubCur.textContent = coins;
     if(shopCur) shopCur.textContent = coins;
   }
-  if(name==='shop'){
-    renderShopItems();
-  }
+
+  // Defer heavy UI rendering to unblock the screen transition so the tap feels instant
+  setTimeout(() => {
+      if(name==='ranks') buildRanksScreen();
+      if(name==='shop') renderShopItems();
+  }, 10);
 }
 
 // FULL FIX: Hook the invite listener when visiting the social screen to guarantee connection
@@ -3769,14 +3780,20 @@ function makeDeck(){
 const VoiceChat = {
     room: null,
     isMuted: true, // DEFAULT MIC DISABLED
+    currentRoomId: null,
 
     async joinRoom(matchId) {
+        if (!matchId) return;
+        if (this.currentRoomId === matchId && this.room) return; // Already connected
+        if (this.room) this.leaveRoom(); // Clean up old connection
+
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
             console.warn("Voice chat not supported on this browser.");
             return;
         }
 
         try {
+            this.currentRoomId = matchId;
             // 1. Ask our secure Worker for a token
             const res = await secureServerCall('voice/token', { matchId });
 
@@ -3859,11 +3876,12 @@ const VoiceChat = {
         }
     },
 
-    leaveRoom(matchId) {
+    leaveRoom() {
         if (this.room) {
             this.room.disconnect();
             this.room = null;
         }
+        this.currentRoomId = null;
         document.querySelectorAll('audio[id^="lkAudio_"]').forEach(el => el.remove());
         if (typeof setMicActive === 'function') setMicActive(false);
     }
@@ -8037,6 +8055,11 @@ function listenToParty(partyId) {
     const myUid = DoDAuth.getProfile().uid;
 
     if (partyListenerUnsub) partyListenerUnsub();
+    
+    // Connect to Voice Chat for the Party Lobby
+    if (VoiceChat && typeof VoiceChat.joinRoom === 'function') {
+        VoiceChat.joinRoom(partyId);
+    }
 
     partyListenerUnsub = db.collection('parties').doc(partyId).onSnapshot(doc => {
         if (!doc.exists) { leaveParty(); return; }
@@ -8250,6 +8273,11 @@ function listenToMatchLobby(matchId) {
     const myUid = DoDAuth.getProfile().uid;
 
     if (matchLobbyUnsub) matchLobbyUnsub();
+    
+    // Connect to Voice Chat for the Match Lobby
+    if (VoiceChat && typeof VoiceChat.joinRoom === 'function') {
+        VoiceChat.joinRoom(matchId);
+    }
 
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
         if (!doc.exists) { leaveMatchLobby(); return; }
@@ -8803,6 +8831,11 @@ async function startMatchmakingPubg() {
 function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
     const db = firebase.firestore();
     if (matchLobbyUnsub) matchLobbyUnsub();
+    
+    // Connect to Voice Chat for the filling match lobby
+    if (VoiceChat && typeof VoiceChat.joinRoom === 'function') {
+        VoiceChat.joinRoom(matchId);
+    }
 
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
         if (pubgCancelFlag || !doc.exists || doc.data().status === 'cancelled') { cancelMatchmakingPubg(); return; }
@@ -10347,53 +10380,51 @@ async function equipShopItem(itemId, category, event) {
 }
 
 async function purchaseIAP(itemId, rewardAmount, event) {
-    try { sfx.coin(); } catch(e){}
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+
+    // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
+    const backupCurrency = profile.currency || 0;
+
+    // --- 1. INSTANT OPTIMISTIC UI ---
+    profile.currency = backupCurrency + rewardAmount;
     
-    if(confirm("Simulate In-App Purchase? This will securely add " + rewardAmount + " coins to your account.")) {
-        const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
-        if (!profile) return;
+    try { sfx.coin(); } catch(e){}
+    if (event) triggerNotificationVfx('equip', event);
+    try { sfx.win(); } catch(e){}
+    
+    if (typeof confetti !== 'undefined') {
+        const duration = 2000;
+        const end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    }
+    
+    const shopCur = document.getElementById('shopCurrency');
+    const hubCur = document.getElementById('hubCurrency');
+    if (shopCur) shopCur.textContent = profile.currency;
+    if (hubCur) hubCur.textContent = profile.currency;
+    
+    renderShopItems();
+    showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
 
-        // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
-        const backupCurrency = profile.currency || 0;
-
-        // --- 1. INSTANT OPTIMISTIC UI ---
-        profile.currency = backupCurrency + rewardAmount;
-        if (event) triggerNotificationVfx('equip', event);
-        try { sfx.win(); } catch(e){}
+    // --- 2. BACKGROUND SERVER SYNC ---
+    try {
+        const res = await secureServerCall('economy/iap', { rewardAmount });
+        profile.currency = res.newCurrency;
+    } catch(e) {
+        console.error("IAP failed:", e);
         
-        if (typeof confetti !== 'undefined') {
-            const duration = 2000;
-            const end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
-        
-        const shopCur = document.getElementById('shopCurrency');
-        const hubCur = document.getElementById('hubCurrency');
+        // --- 3. ROLLBACK ON FAILURE ---
+        profile.currency = backupCurrency;
         if (shopCur) shopCur.textContent = profile.currency;
         if (hubCur) hubCur.textContent = profile.currency;
-        
         renderShopItems();
-        showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
-
-        // --- 2. BACKGROUND SERVER SYNC ---
-        try {
-            const res = await secureServerCall('economy/iap', { rewardAmount });
-            profile.currency = res.newCurrency;
-        } catch(e) {
-            console.error("IAP failed:", e);
-            
-            // --- 3. ROLLBACK ON FAILURE ---
-            profile.currency = backupCurrency;
-            if (shopCur) shopCur.textContent = profile.currency;
-            if (hubCur) hubCur.textContent = profile.currency;
-            renderShopItems();
-            
-            showSystemToast("Transaction rejected by server.");
-        }
+        
+        showSystemToast("Transaction rejected by server.");
     }
 }
 </script>
