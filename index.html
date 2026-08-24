@@ -3157,20 +3157,24 @@ function forceEnterFullscreen() {
       screen.orientation.lock('landscape').catch(() => {});
   }
 
-  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-  if (!isFs) {
-      if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
-      else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
-      else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
-      else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
-  }
+  // ALWAYS forcefully request fullscreen to bypass browser permission exit desyncs
+  if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
+  else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
+  else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
+  else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
   
   setTimeout(updateFullscreenIcons, 300);
 }
 
 // Toggle function for the UI buttons
 function toggleFullscreen() {
-  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  
+  // FIX: If the browser thinks it's in fullscreen but the window is small (e.g. after mic popups), treat it as windowed.
+  if (isFs && window.innerHeight < window.screen.height - 100) {
+      isFs = null;
+  }
+
   if (!isFs) {
       forceEnterFullscreen();
   } else {
@@ -3183,7 +3187,13 @@ function toggleFullscreen() {
 }
 
 function updateFullscreenIcons() {
-    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    
+    // FIX: Match the actual visible state, fixing the icon if a popup broke the browser state.
+    if (isFs && window.innerHeight < window.screen.height - 100) {
+        isFs = null;
+    }
+    
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
         btn.textContent = isFs ? '✖' : '⛶'; 
     });
