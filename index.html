@@ -3154,45 +3154,47 @@ document.addEventListener("visibilitychange", function() {
 // ============================================================
 
 async function forceEnterFullscreen(e) {
-    // Fullscreen MUST originate from a real user interaction.
-    if (e && e.type === 'touchstart') return;
+    console.group("[DEBUG] forceEnterFullscreen Triggered");
+    console.log("Trigger Event:", e ? e.type : "Direct Code Call");
+    console.log("User Activation State:", navigator.userActivation ? `HasBeenActive: ${navigator.userActivation.hasBeenActive}, IsActive: ${navigator.userActivation.isActive}` : "Not Supported");
 
     const doc = document.documentElement;
 
     try {
-        // If already fullscreen, don't request it again.
-        const alreadyFullscreen =
-            document.fullscreenElement ||
-            document.webkitFullscreenElement ||
-            document.mozFullScreenElement ||
-            document.msFullscreenElement;
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        console.log("Current Fullscreen Element:", isFs);
 
-        if (!alreadyFullscreen) {
+        if (!isFs) {
+            console.log("Requesting Document Fullscreen...");
             if (doc.requestFullscreen) {
                 await doc.requestFullscreen();
+                console.log("✓ doc.requestFullscreen() resolved successfully.");
             } else if (doc.webkitRequestFullscreen) {
-                doc.webkitRequestFullscreen();
-            } else if (doc.mozRequestFullScreen) {
-                await doc.mozRequestFullScreen();
-            } else if (doc.msRequestFullscreen) {
-                doc.msRequestFullscreen();
+                await doc.webkitRequestFullscreen();
+                console.log("✓ doc.webkitRequestFullscreen() resolved successfully.");
+            } else {
+                console.warn("⚠ Fullscreen API not found on documentElement.");
             }
+        } else {
+            console.log("ℹ Already in Fullscreen mode.");
         }
 
-        // Only attempt orientation lock after fullscreen succeeds.
         if (screen.orientation && screen.orientation.lock) {
+            console.log("Attempting screen.orientation.lock('landscape')...");
             try {
                 await screen.orientation.lock('landscape');
-            } catch (orientationError) {
-                console.warn("Landscape lock unavailable:", orientationError);
+                console.log("✓ Landscape orientation lock succeeded.");
+            } catch (orErr) {
+                console.error("✗ Orientation Lock Failed:", orErr.name, "-", orErr.message);
             }
+        } else {
+            console.warn("⚠ screen.orientation.lock API not supported on this browser.");
         }
-
-        updateFullscreenIcons();
-
     } catch (err) {
-        console.warn("Fullscreen request failed:", err);
+        console.error("✗ Fullscreen Request Rejected by Browser:", err.name, "-", err.message);
+    } finally {
         updateFullscreenIcons();
+        console.groupEnd();
     }
 }
 
@@ -3293,47 +3295,69 @@ function proceedWithBoot(overlayEl) {
 }
 
 introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true') return;
-    if (this.dataset.waitingForMic === 'true') return;
+    console.group("[DEBUG] introOverlay Clicked");
+    console.log("dataset.booted:", this.dataset.booted);
+    console.log("dataset.waitingForMic:", this.dataset.waitingForMic);
+    console.log("dataset.micResolved:", this.dataset.micResolved);
+    console.log("localStorage dod_mic_asked:", localStorage.getItem('dod_mic_asked'));
 
-    // If mic permission is resolved, this tap guarantees full screen execution!
-    if (this.dataset.micResolved === 'true') {
-        this.dataset.booted = 'true';
-
-        // The current tap is a pure 'click' gesture.
-        forceEnterFullscreen(e).finally(() => {
-            proceedWithBoot(this);
-        });
-
+    if (this.dataset.booted === 'true') {
+        console.log("Already booted, ignoring click.");
+        console.groupEnd();
+        return;
+    }
+    if (this.dataset.waitingForMic === 'true') {
+        console.log("Waiting on mic prompt, ignoring click.");
+        console.groupEnd();
         return;
     }
 
-    // FIRST TAP: Ask for microphone
+    // Tap #2 (After mic allowed/denied)
+    if (this.dataset.micResolved === 'true') {
+        console.log("Proceeding with Tap #2 (Post-Mic Fullscreen & Boot)...");
+        this.dataset.booted = 'true';
+
+        forceEnterFullscreen(e).finally(() => {
+            console.log("Booting game after Tap #2...");
+            proceedWithBoot(this);
+            console.groupEnd();
+        });
+        return;
+    }
+
+    // Tap #1 (First visit - Ask for Microphone)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
+        console.log("Requesting microphone permission for the first time...");
         this.dataset.waitingForMic = 'true';
         const statusText = document.getElementById('introStatusText');
         if (statusText) statusText.textContent = "Please allow microphone access...";
         
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
+                console.log("✓ Microphone access GRANTED by user.");
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
                 if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                console.groupEnd();
             })
             .catch(err => {
-                console.warn("Microphone denied.", err);
+                console.warn("✗ Microphone access DENIED or dismissed by user:", err.name, err.message);
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
                 if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+                console.groupEnd();
             });
     } else {
-        // Already asked before, just boot normally
+        // Returning user
+        console.log("Returning user detected (mic already resolved in past session).");
         this.dataset.booted = 'true';
         forceEnterFullscreen(e).finally(() => {
+            console.log("Booting game for returning player...");
             proceedWithBoot(this);
+            console.groupEnd();
         });
     }
 });
