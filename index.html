@@ -7,8 +7,15 @@
 (function(){
     var d = localStorage.getItem('dod_cached_deck');
     var t = localStorage.getItem('dod_cached_table');
+    var g = localStorage.getItem('dod_cached_glow');
+    
     if(d) document.documentElement.style.setProperty('--my-deck', d);
     if(t) document.documentElement.style.setProperty('--my-table', t);
+    
+    // Safety check: Only apply the glow if it is a valid RGB string (not an old Hex code)
+    if(g && !g.startsWith('#')) {
+        document.documentElement.style.setProperty('--table-glow', g);
+    }
 })();
 </script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -22,7 +29,7 @@
 <!-- Secondary game images -->
 <link rel="preload" as="image" href="Cards/Table.jpg">
 <link rel="preload" as="image" href="Cards/CardPhase.png">
-<link rel="preload" as="image" href="Cards/Coins.png">
+<link rel="preload" as="image" href="Coins/Coins.png">
 <link rel="preload" as="image" href="Cards/SteelCard.png">
 <link rel="preload" as="image" href="Cards/ReverseCard.png">
 <link rel="preload" as="image" href="Cards/PeekCard.png">
@@ -118,7 +125,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 .shop-content { padding: 5px 10px 10px 10px; width: 100%; }
 /* Drop minmax width and padding to stop cards from stretching massively */
-.shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(115px, 1fr)); gap: 10px; width: 100%; justify-content: center; }
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 150px)); gap: 14px; width: 100%; justify-content: center; }
 .shop-item { padding: 10px 8px !important; }
 .menu-screen.hidden { display:none; }
 .screen-header { flex-shrink:0; width:100%; text-align:center; z-index:10; margin-bottom: 12px; }
@@ -210,7 +217,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 @keyframes lsFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes lsTextPulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
-.shop-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(120px,1fr)); gap:14px; width:100%; margin-top:16px; }
+.shop-grid { 
+    display: grid; 
+    /* By using a fixed 140px track instead of minmax, justify-content can properly center the entire group! */
+    grid-template-columns: repeat(auto-fit, 140px); 
+    gap: 14px; 
+    width: 100%; 
+    justify-content: center; 
+    margin-top: 16px; 
+}
 .shop-item{ background:rgba(0,0,0,0.4); border:1px solid rgba(201,162,39,0.25); border-radius:8px; padding:12px 10px; text-align:center; }
 .shop-item .shop-swatch{ width:38px; height:38px; border-radius:50%; margin:0 auto 8px; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
 .shop-item .shop-name{ font-family:'Cinzel',serif; font-size:11.5px; color:var(--paper); margin-bottom:3px; }
@@ -253,15 +268,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* 3D Scene Elements (Rendered 5x larger for Ultra-HD 3D clarity) */
 .menu-bg-card { 
   position: absolute; 
-  width: 220px; height: 330px; /* Perfect 2:3 ratio */
+  width: 220px; height: 330px; 
   border-radius: 12px; 
   border: 4px solid rgba(201,162,39,0.5); 
   box-shadow: -15px 15px 40px rgba(0,0,0,0.6); 
-  background-size: 100% 100%; /* Stop using contain so it fills perfectly */
+  background-size: 100% 100%; 
   background-position: center; 
   background-repeat: no-repeat;
-  image-rendering: high-quality;
+  /* Removed image-rendering: high-quality; to save massive GPU VRAM */
   transform-style: preserve-3d;
+  will-change: transform; /* Hardware acceleration hint */
 }
 
 /* Give the cards physical paper/cardstock thickness */
@@ -274,7 +290,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   position: absolute; 
   width: 80px; height: 80px; /* 5x larger */
   border-radius: 50%; 
-  background-image: url('Cards/Coins.png'); 
+  background-image: url('Coins/Coins.png'); 
   background-size: contain; 
   background-position: center; 
   background-repeat: no-repeat;
@@ -353,7 +369,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* GAME UI */
 #game{display:none;height:100%;
- background:radial-gradient(ellipse at 50% 0%, rgba(0,0,0,0.3) 0%, rgba(0,0,0,0.8) 45%, rgba(0,0,0,0.98) 100%), var(--my-table);
+ background:radial-gradient(ellipse at 50% 0%, rgba(var(--table-glow, 30,74,61), 0.75) 0%, rgba(0,0,0,0.8) 45%, rgba(0,0,0,0.98) 100%), var(--my-table);
  background-size:cover; background-position:center;
  padding:8px 12px;flex-direction:column;gap:6px;position:relative;overflow:hidden}
 .topbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
@@ -440,12 +456,14 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* SEATS & DENSITY SYSTEM */
 @keyframes speakerBounce {
   0%, 100% { transform: translateY(0) scale(1.15); box-shadow: 0 0 0 2px var(--ok), 0 4px 16px rgba(47,110,82,0.6); }
-  50% { transform: translateY(-5px) scale(1.15); box-shadow: 0 0 0 4px var(--ok), 0 8px 20px rgba(47,110,82,0.8); }
+  50% { transform: translateY(-6px) scale(1.15); box-shadow: 0 0 0 4px var(--ok), 0 8px 24px rgba(47,110,82,0.8); }
 }
 .speaking .af-frame { filter: drop-shadow(0 0 8px var(--ok)); }
 .ringseat .avatar.speaking, .lobby-seat .ls-avatar.speaking, .active-player-panel .ap-avatar.speaking {
-  animation: speakerBounce 0.5s infinite;
+  animation: speakerBounce 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; /* Faster, punchier bounce */
   border: 2px solid var(--ok) !important;
+  transition: none !important; /* BUG FIX: Kills the CSS delay instantly */
+  will-change: transform, box-shadow; /* Forces the GPU to handle the bounce */
 }
 
 #playerVolumePopup {
@@ -496,7 +514,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .stat-pill{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);
   border-radius:3px;padding:1px 4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(242,234,216,0.85)}
 .mini-skin{width:7px;height:10px;border-radius:1.5px;border:1px solid rgba(255,255,255,0.5);background-size:cover;background-position:center;}
-.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Cards/Coins.png');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Coins/Coins.png');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
 
 /* ENLARGED CENTER CARDS */
 .ringcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:14px;z-index:2}
@@ -840,12 +858,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
   transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
-  background-image:url('Cards/CardPhase.png');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;image-rendering:high-quality;
-  box-shadow: 2px 4px 12px rgba(0,0,0,0.5);}
+  background-image:url('Cards/CardPhase.png');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
+  box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
+  will-change: left, top, transform; transform: translateZ(0); /* Force GPU composite */
+}
 .ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
   transition:left .48s ease, top .48s ease, opacity .48s;
-  background-image:url('Cards/Coins.png');background-size:cover;background-position:center;
-  box-shadow: 1px 2px 6px rgba(0,0,0,0.5);}
+  background-image:url('Coins/Coins.png');background-size:cover;background-position:center;
+  box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
+  will-change: left, top; transform: translateZ(0); /* Force GPU composite */
+}
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
 .particle.spark { border-radius:50%; animation:particleBurst .7s cubic-bezier(0.2, 1, 0.3, 1) forwards; }
@@ -897,60 +919,61 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   will-change: transform;
 }
 
-/* Mobile-specific GPU optimizations */
+/* AAA Mobile-specific GPU optimizations (60 FPS Target with High Fidelity) */
 @media (max-width: 768px) {
-  /* Restore cinematic pan on mobile, but keep shadows/thickness simplified to save GPU */
+  /* 1. Simplify 3D background objects but keep their shadows */
+  .menu-bg-card::before, .menu-bg-coin::before, .menu-bg-coin::after { display: none !important; }
+  .menu-bg-card { border-width: 2px !important; box-shadow: -6px 8px 16px rgba(0,0,0,0.8) !important; }
+  .menu-bg-coin { box-shadow: -2px 4px 8px rgba(0,0,0,0.8) !important; }
   
-  /* Simplify pseudo-element 3D thickness on mobile to stop render thrashing */
-  .menu-bg-card::before { display: none !important; }
-  .menu-bg-coin::before, .menu-bg-coin::after { display: none !important; }
-  
-  /* Use simpler single box-shadow on mobile */
-  .menu-bg-card { box-shadow: -4px 4px 12px rgba(0, 0, 0, 0.6) !important; }
-  .menu-bg-coin { box-shadow: -2px 2px 8px rgba(0, 0, 0, 0.6) !important; }
-  
-  /* Optimize table rendering */
-  .tablefelt { box-shadow: none !important; }
-
-  /* === ANDROID PERFORMANCE FIXES === */
-
-  /* Disable shimmerSweep (background-position animation → CPU repaint every frame) */
-  #menu h1 {
-    animation: titleReveal 3s cubic-bezier(0.2, 1, 0.3, 1) 0.5s backwards !important;
-    background-size: 100% auto !important; /* No sweep needed; static gradient still looks great */
+  /* 2. Remove ONLY the expensive blur, but use "Fake Glass" tinted gradients to keep it beautiful */
+  * { 
+    -webkit-backdrop-filter: none !important; 
+    backdrop-filter: none !important; 
   }
-
-  /* backdrop-filter:blur is VERY expensive on mid-range Android — kills compositing budget */
+  
+  /* The Magic Trick: Blend the dynamic table glow into a translucent gradient */
+  .pubg-modal-container, .modal, .tut-card, #achievementPopup, .active-player-panel, .pubg-friends-box {
+    background: linear-gradient(135deg, rgba(var(--table-glow), 0.85) 0%, rgba(10, 10, 15, 0.95) 100%) !important;
+    border: 1px solid rgba(var(--table-glow), 0.5) !important;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.85) !important;
+  }
+  
+  /* Make the cinematic full-screen overlays glow properly */
   #matchIntroOverlay, #deceptionIntroOverlay {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    background: rgba(0, 0, 0, 0.85) !important;
+    background: radial-gradient(circle at center, rgba(var(--table-glow), 0.6) 0%, rgba(0,0,0,0.95) 100%) !important;
   }
-
-  /* Reduce the 3D menu scene container — 200vw×200vh creates a massive GPU texture upload */
+  
+  /* 3. Disable CPU-bound repaints but keep static drop shadows for depth */
+  #menu h1, .finale-status, h2 {
+    animation: titleReveal 3s cubic-bezier(0.2, 1, 0.3, 1) 0.5s backwards !important; 
+    background-size: 100% auto !important; 
+    transform: translateZ(0);
+  }
   .menu-camera {
-    width: 140vw !important;
-    height: 140vh !important;
-    left: -20vw !important;
-    top: -20vh !important;
+    width: 140vw !important; height: 140vh !important; left: -20vw !important; top: -20vh !important;
   }
-
-  /* Simpler cinematic pan range on mobile = smaller GPU transform budget */
   @keyframes cinematicPan {
-    0%   { transform: perspective(800px) rotateX(52deg) rotateZ(0deg) translateZ(-50px); }
-    100% { transform: perspective(800px) rotateX(46deg) rotateZ(12deg) translateZ(80px); }
+    0%   { transform: perspective(800px) rotateX(50deg) rotateZ(0deg) translateZ(-40px); }
+    100% { transform: perspective(800px) rotateX(45deg) rotateZ(8deg) translateZ(60px); }
   }
-
-  /* Add layout containment to game sections so browser knows what to skip */
-  #game { contain: layout style; }
-  .hand-wrap, .deckpile, .log, .chainbox { contain: layout style; }
+  
+  /* 4. Layout Containment */
+  #game, .menu-screen.hidden, #screen-hub { contain: strict; }
+  .hand-wrap, .deckpile, .log, .chainbox { contain: content; }
+  
+  /* 5. Targetable Glow Fix */
+  .ringseat.targetable .avatar {
+    animation: none !important;
+    border-color: var(--danger-bright) !important;
+  }
 }
 
 /* ====================================================
    PUBG-STYLE MAIN MENU HUD
    ==================================================== */
 .pubg-friends-panel {
-  position: absolute; left: 28px; top: auto; bottom: 140px; max-height: 40vh;
+  position: absolute; left: 28px; top: auto; bottom: 165px; max-height: 40vh;
   display: flex; flex-direction: column;
   width: 180px; /* Matches the new Play button width */
   background: rgba(0,0,0,0.65); border: 1px solid rgba(201,162,39,0.35);
@@ -996,7 +1019,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pubg-friend-action.sent { background: rgba(255,255,255,0.08); color: rgba(242,234,216,0.4); cursor: default; }
 
 .pubg-search-panel {
-  position: absolute; left: 215px; bottom: 140px;
+  position: absolute; left: 215px; bottom: 165px;
   width: 260px; padding: 12px;
   background: rgba(8,4,6,0.97); border: 1px solid rgba(201,162,39,0.52);
   border-radius: 8px;
@@ -1042,6 +1065,19 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   border-color: #5faa82 !important; animation: none !important; cursor: default;
 }
 .pubg-mode-row { display: flex; gap: 5px; }
+
+/* CUSTOM DROPDOWN SELECTOR */
+.custom-select { position: relative; width: 100%; user-select: none; font-family: 'IBM Plex Mono', monospace; font-size: 13px; z-index: 50; }
+.custom-select-trigger { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; height: 38px; }
+.custom-select.open .custom-select-trigger { border-color: var(--brass-bright); box-shadow: 0 0 8px rgba(201,162,39,0.3); }
+.custom-select-options { position: absolute; bottom: calc(100% + 4px); top: auto; left: 0; right: 0; background: rgba(12,14,16,0.98); border: 1px solid var(--brass); border-radius: 4px; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; max-height: 220px; overflow-y: auto; z-index: 100; }
+.custom-select.open .custom-select-options { display: flex; animation: fadeUp 0.2s ease; }
+.custom-option { padding: 10px 12px; color: rgba(242,234,216,0.8); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s, color 0.2s; }
+.custom-option:last-child { border-bottom: none; }
+.custom-option:hover, .custom-option.selected { background: rgba(201,162,39,0.15); color: var(--brass-bright); font-weight: bold; }
+.custom-select .arrow { font-size: 10px; transition: transform 0.2s; color: rgba(255,255,255,0.5); transform: rotate(180deg); }
+.custom-select.open .arrow { transform: rotate(0deg); color: var(--brass-bright); }
+.custom-option.disabled-opt { display: none !important; }
 .pubg-mode-btn {
   font-family: 'IBM Plex Mono', monospace; font-size: 11px;
   background: rgba(0,0,0,0.55); color: var(--paper);
@@ -1373,7 +1409,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   
   /* Compress Grid Items */
   .shop-content { padding-top: 4px !important; }
-  .shop-grid { margin-top: 4px; gap: 6px; grid-template-columns: repeat(auto-fill, minmax(95px, 1fr)) !important; }
+  .shop-grid { margin-top: 4px; gap: 8px; grid-template-columns: repeat(auto-fit, 110px) !important; justify-content: center !important; }
   .shop-item { padding: 8px 6px !important; border-radius: 6px !important; }
   .shop-item .shop-name { font-size: 9px !important; margin-bottom: 2px !important; }
   .shop-item .shop-swatch { width: 26px !important; height: 26px !important; margin-bottom: 2px !important; }
@@ -1607,7 +1643,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .peekbox { padding: 4px 8px; font-size: 9.5px; margin-top: 4px; }
 
   /* SHRINK PUBG HUD FOR COMPACT SCREENS (e.g., iPhone SE) */
-  .pubg-friends-panel { width: 140px !important; left: 15px !important; top: auto !important; bottom: clamp(90px, 22vh, 110px) !important; max-height: 160px !important; }
+  .pubg-friends-panel { width: 140px !important; left: 15px !important; top: auto !important; bottom: clamp(120px, 26vh, 140px) !important; max-height: 160px !important; }
   .pubg-friends-header { padding: 4px 8px !important; }
   .pubg-friends-header span { font-size: 10px !important; }
   .pubg-friend-row { padding: clamp(2px, 0.5vh, 4px) 6px !important; }
@@ -1626,7 +1662,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .pubg-icon-btn { width: 38px !important; height: 38px !important; font-size: 16px !important; }
   .pubg-icon-btn span.ib-label { font-size: 6.5px !important; }
   
-  .pubg-search-panel { left: 165px !important; bottom: 110px !important; width: 220px !important; padding: 8px !important; }
+  .pubg-search-panel { left: 165px !important; bottom: clamp(120px, 26vh, 140px) !important; width: 220px !important; padding: 8px !important; }
   .pubg-search-panel input { padding: 5px 8px !important; font-size: 10px !important; }
 
   /* FIX GREEN TABLE SIZE IN LOBBY FOR MOBILE */
@@ -1954,10 +1990,11 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 :root {
   --my-table: url('Tables/GreenWood.png');
   --my-deck: url('CardstoBuy/TheBase.png');
+  --table-glow: 30, 74, 61;
 }
-.menu-table { background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.9) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
-.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
-#bootstrapOverlay { background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.menu-table { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.6) 0%, rgba(0,0,0, 0.95) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.85) 55%, rgba(0,0,0, 0.98) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+#bootstrapOverlay { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .event-banner::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; mix-blend-mode: overlay !important; }
 #finaleModal::before, #progressionModal::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .deck-3d .stack { background-image: var(--my-deck) !important; }
@@ -2013,7 +2050,7 @@ window.dodImagesLoaded = false;
     'PixelaksLogoTransparent.png',
     'Cards/Decks.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
     'Cards/SteelCard.png', 'Cards/ReverseCard.png', 'Cards/PeekCard.png',
-    'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Cards/Coins.png', 'Cards/Table.jpg',
+    'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Coins/Coins.png', 'Cards/Table.jpg',
     'Tiers/Apprentice.png', 'Tiers/Trickster.png', 'Tiers/Phantom.png',
     'Tiers/Mastermind.png', 'Tiers/Oracle.png', 'Tiers/Legend.png',
     'Avatars/Apprentice.png', 'Avatars/Trickster.png', 'Avatars/Phantom.png',
@@ -2165,7 +2202,7 @@ window.dodImagesLoaded = false;
 
   <!-- TOP-RIGHT CURRENCY CHIP -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:6px;">
-    <span style="color:var(--brass-bright); font-size:16px;">🪙</span> <span id="hubCurrency">0</span>
+    <img src="Coins/Coins.png" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
   </div>
 
   <!-- PUBG TOP-LEFT PROFILE WIDGET -->
@@ -2218,12 +2255,17 @@ window.dodImagesLoaded = false;
     <!-- Bottom-left: Play button + mode selector -->
     <div class="pubg-play-zone show" style="pointer-events:all; width: 180px; z-index: 20;">
       <button class="pubg-play-btn" id="pubgPlayBtn" onclick="startMatchmakingPubg()" style="width: 100%; padding: 14px 0;">PLAY ↗</button>
-      <select class="pubg-mode-select" id="pubgModeSelect" onchange="pickPubgMode(parseInt(this.value))" style="width: 100%; padding: 8px; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: 12px; outline: none; cursor: pointer;">
-        <option value="2">2 Players</option>
-        <option value="4" selected>4 Players</option>
-        <option value="6">6 Players</option>
-        <option value="8">8 Players</option>
-      </select>
+      <div class="custom-select pubg-mode-select" id="customPubgSelect" data-value="4" onclick="toggleCustomSelect(this)" style="width: 100%;">
+          <div class="custom-select-trigger" style="padding:8px 12px; font-size:12px;"><span>4 Players</span> <span class="arrow">▼</span></div>
+          <div class="custom-select-options">
+              <div class="custom-option" data-value="2" onclick="selectCustomOption(event, this, 'pubgMode', 2)">2 Players</div>
+              <div class="custom-option" data-value="3" onclick="selectCustomOption(event, this, 'pubgMode', 3)">3 Players</div>
+              <div class="custom-option selected" data-value="4" onclick="selectCustomOption(event, this, 'pubgMode', 4)">4 Players</div>
+              <div class="custom-option" data-value="5" onclick="selectCustomOption(event, this, 'pubgMode', 5)">5 Players</div>
+              <div class="custom-option" data-value="6" onclick="selectCustomOption(event, this, 'pubgMode', 6)">6 Players</div>
+              <div class="custom-option" data-value="8" onclick="selectCustomOption(event, this, 'pubgMode', 8)">8 Players</div>
+          </div>
+      </div>
       <!-- Cancel button: hidden until searching starts, replaces the old overlay cancel -->
       <button id="pubgCancelBtn" onclick="cancelMatchmakingPubg()" style="display:none; width:100%; margin-top:5px; background:none; border:1px solid rgba(242,234,216,0.25); color:rgba(242,234,216,0.7); font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:1px; padding:7px 0; cursor:pointer; border-radius:3px; transition: border-color .2s, color .2s;">✕ CANCEL</button>
     </div>
@@ -2273,13 +2315,17 @@ window.dodImagesLoaded = false;
       <div class="skin-note" style="text-align:center;">Own more skins in the Shop.</div>
       <div class="section-label" style="margin-top:20px; text-align:center;">Table size</div>
       <div id="mpCountRow" style="width:100%; max-width:240px; margin-top:14px;">
-        <select class="pubg-mode-select" onchange="pickMpCount(parseInt(this.value))" style="width:100%; padding:10px; background:rgba(0,0,0,0.6); color:var(--paper); border:1px solid rgba(255,255,255,0.2); border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; cursor:pointer;">
-          <option value="2">2 players</option>
-          <option value="3">3 players</option>
-          <option value="4" selected>4 players</option>
-          <option value="6">6 players</option>
-          <option value="8">8 players</option>
-        </select>
+        <div class="custom-select" id="onlineMatchSelect" data-value="4" onclick="toggleCustomSelect(this)">
+            <div class="custom-select-trigger"><span>4 Players</span> <span class="arrow">▼</span></div>
+            <div class="custom-select-options">
+                <div class="custom-option" data-value="2" onclick="selectCustomOption(event, this, 'onlineMode', 2)">2 Players</div>
+                <div class="custom-option" data-value="3" onclick="selectCustomOption(event, this, 'onlineMode', 3)">3 Players</div>
+                <div class="custom-option selected" data-value="4" onclick="selectCustomOption(event, this, 'onlineMode', 4)">4 Players</div>
+                <div class="custom-option" data-value="5" onclick="selectCustomOption(event, this, 'onlineMode', 5)">5 Players</div>
+                <div class="custom-option" data-value="6" onclick="selectCustomOption(event, this, 'onlineMode', 6)">6 Players</div>
+                <div class="custom-option" data-value="8" onclick="selectCustomOption(event, this, 'onlineMode', 8)">8 Players</div>
+            </div>
+        </div>
       </div>
       <div id="matchmakingStatus" class="mono" style="margin-top:10px; color:var(--brass-bright); font-size:13px; display:none; text-align:center;">Searching...</div>
     </div>
@@ -2335,7 +2381,7 @@ window.dodImagesLoaded = false;
         <div style="margin-top:6px"><b>No match (hand not empty):</b> forced buy, first draw mandatory, then try again / stop / discard with Insurance, up to 3 tries.</div>
         <div style="margin-top:6px"><b>Hand completely empty:</b> single forced draw only — play it if it matches, otherwise skip.</div>
         <div style="margin-top:6px"><b>Elimination:</b> only when shop AND hand both hit zero. Broke but holding cards? You can still climb back.</div>
-        <div style="margin-top:6px"><b>Wild Swap</b> matches anything for 2 coins. <b>Power 2/4/6</b> matches anything and drains a rival instead. <b>Peek</b> reveals the next player's hand before you call.</div>
+        <div style="margin-top:6px"><b>Wild Swap</b> matches anything for 2 PC. <b>Power 2/4/6</b> matches anything and drains a rival instead. <b>Peek</b> reveals the next player's hand before you call.</div>
       </div>
       <div class="section-label" style="margin-top:20px; text-align:center;">Table size (Bots)</div>
       <div id="countRow" style="width:100%; max-width:240px; margin-top:14px;"></div>
@@ -2383,13 +2429,17 @@ window.dodImagesLoaded = false;
       <div id="partyLeaderControls" style="width:100%; display:none; text-align:center;">
         <div class="section-label">Private Table Size</div>
         <div id="partyCountRow" style="width:100%; max-width:240px; margin:14px auto 0;">
-          <select id="privateModeSelect" class="pubg-mode-select" onchange="pickMpCount(parseInt(this.value))" style="width:100%; padding:10px; background:rgba(0,0,0,0.6); color:var(--paper); border:1px solid rgba(255,255,255,0.2); border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; cursor:pointer;">
-            <option value="2">2 players</option>
-            <option value="3">3 players</option>
-            <option value="4" selected>4 players</option>
-            <option value="6">6 players</option>
-            <option value="8">8 players</option>
-          </select>
+          <div class="custom-select" id="customPrivateSelect" data-value="4" onclick="toggleCustomSelect(this)">
+              <div class="custom-select-trigger"><span>4 Players</span> <span class="arrow">▼</span></div>
+              <div class="custom-select-options">
+                  <div class="custom-option" data-value="2" onclick="selectCustomOption(event, this, 'privateMode', 2)">2 Players</div>
+                  <div class="custom-option" data-value="3" onclick="selectCustomOption(event, this, 'privateMode', 3)">3 Players</div>
+                  <div class="custom-option selected" data-value="4" onclick="selectCustomOption(event, this, 'privateMode', 4)">4 Players</div>
+                  <div class="custom-option" data-value="5" onclick="selectCustomOption(event, this, 'privateMode', 5)">5 Players</div>
+                  <div class="custom-option" data-value="6" onclick="selectCustomOption(event, this, 'privateMode', 6)">6 Players</div>
+                  <div class="custom-option" data-value="8" onclick="selectCustomOption(event, this, 'privateMode', 8)">8 Players</div>
+              </div>
+          </div>
         </div>
         <button class="btn" style="margin-top:20px; width:100%; max-width:320px;" onclick="startPrivatePartyMatch()">Start Private Game ↗</button>
       </div>
@@ -2718,7 +2768,7 @@ async function submitUniqueNameWithId() {
                    <div id="infoAccountStatus" style="color:var(--ok); font-size:14px;">Verified</div>
                </div>
                <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total Coins</div>
+                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total PC</div>
                    <div id="infoTotalCoins" style="color:var(--brass-bright); font-size:14px;">---</div>
                </div>
                <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05);">
@@ -3097,32 +3147,58 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
+// BUG FIX: Re-lock the screen when returning from Native OS Prompts (like Microphone permissions)
+window.addEventListener('focus', () => {
+    const intro = document.getElementById('introOverlay');
+    // Only force it if the player has already passed the initial intro screen
+    if (intro && intro.style.display === 'none') {
+        // A tiny 300ms delay gives the browser time to settle after the prompt closes
+        setTimeout(() => forceEnterFullscreen(), 300);
+    }
+});
+
 // The Screen Rotation Function (Forced on initial tap)
-async function forceEnterFullscreen() {
+function forceEnterFullscreen() {
   const doc = document.documentElement;
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      if (doc.requestFullscreen) { await doc.requestFullscreen().catch(()=>{}); }
-      else if (doc.webkitRequestFullscreen) { await doc.webkitRequestFullscreen().catch(()=>{}); }
-  }
+  
+  // 1. Try locking orientation FIRST. Mobile browsers prefer this.
   if (screen.orientation && screen.orientation.lock) {
-    try { await screen.orientation.lock('landscape'); } catch (error) {}
+      screen.orientation.lock('landscape').catch(() => {});
+  }
+
+  // 2. Request Fullscreen (Must be purely synchronous, NO async/await)
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+      if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
+      else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
   }
 }
 
 // Toggle function for the UI buttons
-async function toggleFullscreen() {
+function toggleFullscreen() {
   if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-      await forceEnterFullscreen();
+      forceEnterFullscreen();
   } else {
-      if (document.exitFullscreen) { await document.exitFullscreen().catch(()=>{}); }
-      else if (document.webkitExitFullscreen) { await document.webkitExitFullscreen().catch(()=>{}); }
-      if (screen.orientation && screen.orientation.unlock) { screen.orientation.unlock(); }
+      if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
+      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen().catch(()=>{}); }
+      
+      if (screen.orientation && screen.orientation.unlock) { 
+          screen.orientation.unlock(); 
+      }
   }
 }
 
 // Update icons automatically if player uses ESC key
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+
+// Make the Rotate Screen fallback clickable to force landscape
+document.addEventListener('DOMContentLoaded', () => {
+    const rotateOverlay = document.getElementById('rotate-device-overlay');
+    if (rotateOverlay) {
+        rotateOverlay.addEventListener('click', forceEnterFullscreen);
+        rotateOverlay.addEventListener('touchstart', forceEnterFullscreen);
+    }
+});
 
 function updateFullscreenIcons() {
     const isFs = document.fullscreenElement || document.webkitFullscreenElement;
@@ -3133,43 +3209,49 @@ function updateFullscreenIcons() {
 
 window.minimumBootTimePassed = false;
 
-introOverlay.addEventListener('click', function() {
-    // Trigger rotation and fullscreen on tap
-    forceEnterFullscreen();
+['click', 'touchend'].forEach(eventName => {
+    introOverlay.addEventListener(eventName, function(e) {
+        if (this.dataset.booted) return; // Prevent double-firing from touch + click
+        if (eventName === 'touchend') e.preventDefault(); 
+        this.dataset.booted = 'true';
 
-    // Hide the "Tap to start" overlay so we can see the 3D animation
-    this.style.opacity = '0';
-    setTimeout(() => this.style.display = 'none', 800);
-    
-    // Start the music immediately while the animation plays
-    if(!audioCtx) audioCtx = new AudioContext();
-    if(audioCtx.state === 'suspended') audioCtx.resume();
-    
-    if(bgMusicElement) {
-        bgMusicElement.volume = musicVolumeSetting * 0.35; 
-        if(bgMusicElement.error){ startAmbientPad(); } 
-        else {
-            bgMusicElement.play().catch(() => startAmbientPad());
-            bgMusicElement.addEventListener('error', () => startAmbientPad(), {once:true});
-        }
-    } else {
-        startAmbientPad();
-    }
+        // Trigger rotation and fullscreen on tap
+        forceEnterFullscreen();
 
-    // If the user has visited before and has cached assets, drastically cut down the 3D boot wait time!
-    const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
-    
-    // Show the 3D Bootstrap animation sequence
-    setTimeout(() => {
-        window.minimumBootTimePassed = true;
+        // Hide the "Tap to start" overlay so we can see the 3D animation
+        this.style.opacity = '0';
+        setTimeout(() => this.style.display = 'none', 800);
         
-        // Now fade in the main menu (or tutorial)
-        if (localStorage.getItem('dod_seen_tutorial')) {
-            menu.classList.add('menu-visible');
+        // Start the music immediately while the animation plays
+        if(!audioCtx) audioCtx = new AudioContext();
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        
+        if(bgMusicElement) {
+            bgMusicElement.volume = musicVolumeSetting * 0.35; 
+            if(bgMusicElement.error){ startAmbientPad(); } 
+            else {
+                bgMusicElement.play().catch(() => startAmbientPad());
+                bgMusicElement.addEventListener('error', () => startAmbientPad(), {once:true});
+            }
         } else {
-            openTutorial(false);
+            startAmbientPad();
         }
-    }, bootTime);
+
+        // If the user has visited before and has cached assets, cut down the 3D boot wait time
+        const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
+        
+        // Show the 3D Bootstrap animation sequence
+        setTimeout(() => {
+            window.minimumBootTimePassed = true;
+            
+            // Now fade in the main menu (or tutorial)
+            if (localStorage.getItem('dod_seen_tutorial')) {
+                menu.classList.add('menu-visible');
+            } else {
+                openTutorial(false);
+            }
+        }, bootTime);
+    });
 });
 
 const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
@@ -3191,12 +3273,13 @@ function generateBotProfile() {
     }
     
     let backImg = 'CardstoBuy/TheBase.png';
-    if (typeof SHOP_DB !== 'undefined' && SHOP_DB.cardBacks) {
-        const backs = SHOP_DB.cardBacks;
-        backImg = `CardstoBuy/${backs[Math.floor(Math.random() * backs.length)].img}`;
+    let tableImg = 'tb_default';
+    if (typeof SHOP_DB !== 'undefined') {
+        if (SHOP_DB.cardBacks) backImg = `CardstoBuy/${SHOP_DB.cardBacks[Math.floor(Math.random() * SHOP_DB.cardBacks.length)].img}`;
+        if (SHOP_DB.tables) tableImg = SHOP_DB.tables[Math.floor(Math.random() * SHOP_DB.tables.length)].id;
     }
     
-    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame, title: title, deckSkin: backImg };
+    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame, title: title, deckSkin: backImg, equippedTable: tableImg };
 }
 
 const SKINS=[
@@ -3278,9 +3361,16 @@ function buildMenu(){
   
   const cr=document.getElementById('countRow');
   if(cr) {
-    cr.innerHTML = `<select class="pubg-mode-select" onchange="pickCount(parseInt(this.value))" style="width:100%; padding:10px; background:rgba(0,0,0,0.6); color:var(--paper); border:1px solid rgba(255,255,255,0.2); border-radius:4px; font-family:'IBM Plex Mono',monospace; font-size:13px; outline:none; cursor:pointer;">
-        ${[2,3,4,6,8,12].map(n=>`<option value="${n}" ${n===menuState.count?'selected':''}>${n} players</option>`).join('')}
-    </select>`;
+    const opts = [2, 3, 4, 5, 6, 8];
+    if (!opts.includes(menuState.count)) menuState.count = 4;
+    
+    cr.innerHTML = `
+    <div class="custom-select" data-value="${menuState.count}" onclick="toggleCustomSelect(this)">
+        <div class="custom-select-trigger"><span>${menuState.count} Players</span> <span class="arrow">▼</span></div>
+        <div class="custom-select-options">
+            ${opts.map(n => `<div class="custom-option ${n===menuState.count?'selected':''}" data-value="${n}" onclick="selectCustomOption(event, this, 'trainingMode', ${n})">${n} Players</div>`).join('')}
+        </div>
+    </div>`;
   }
 }
 function pickSkin(i){ menuState.skinIdx=i; buildMenu(); }
@@ -3359,7 +3449,24 @@ if(window.DoDAuth){
                 // Ensure the player is actually in this match's seats array
                 const isSeated = data.seats.some(s => s.uid === profile.uid);
                 
-                if (isSeated && (data.status === 'waiting' || data.status === 'starting')) {
+                // SHOW POST-MATCH RESULTS IF GAME ENDED WHILE OFFLINE
+                if (isSeated && data.gameState && data.gameState.over) {
+                    currentMatchId = savedMatchId;
+                    document.getElementById('introOverlay').style.display = 'none';
+                    menu.style.display = 'none';
+                    document.getElementById('game').style.display = 'flex';
+                    
+                    // Mock the state so the endgame modal can render the leaderboard safely
+                    state = { players: data.gameState.players, over: true };
+                    
+                    // Trigger the finale display, then clear the match from memory
+                    setTimeout(() => {
+                        endGame(null, false); 
+                        localStorage.removeItem('dod_active_match');
+                    }, 1000);
+                    return; // Stop hub loading
+                }
+                else if (isSeated && (data.status === 'waiting' || data.status === 'starting')) {
                     // Reconnect to Lobby
                     currentMatchId = savedMatchId;
                     document.getElementById('introOverlay').style.display = 'none';
@@ -3374,11 +3481,25 @@ if(window.DoDAuth){
                     return; // Stop hub loading
                 } 
                 else if (isSeated && data.status === 'active') {
-                    // Reconnect to Active Game
-                    currentMatchId = savedMatchId;
-                    document.getElementById('introOverlay').style.display = 'none';
-                    menu.style.display = 'none';
-                    document.getElementById('game').style.display = 'flex';
+                            // SECURE TIMEOUT CHECK: Don't reconnect if the match is mathematically dead!
+                            if (data.gameState && data.gameState.gameExpiresAt && Date.now() > data.gameState.gameExpiresAt + 10000) {
+                                localStorage.removeItem('dod_active_match');
+                                // Fall through to load the main menu Hub normally
+                            } else {
+                                // Reconnect to Active Game
+                                currentMatchId = savedMatchId;
+                                document.getElementById('introOverlay').style.display = 'none';
+                                menu.style.display = 'none';
+                                document.getElementById('game').style.display = 'flex';
+                                
+                                // BUG FIX: Initialize match stats so actions don't crash after a mid-game refresh!
+                                window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, peeks:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
+                                
+                                // BUG FIX: Restore the seats array so the Host knows they are the Host and wakes up the bots!
+                                window.onlineMatchSeats = data.seats;
+                                
+                                // Initialize social features so they are ready if you leave
+                        }
                     
                     // Initialize social features so they are ready if you leave
                     if (typeof initFriendsList === 'function') initFriendsList();
@@ -3409,7 +3530,7 @@ if(window.DoDAuth){
     // --- NORMAL HUB LOADING ---
     if(loading) loading.style.display='none';
     if(buttons) buttons.style.display='flex';
-    if(badge) badge.style.display='inline-block';
+    if(badge) badge.style.display='flex';
     const hud = document.getElementById('pubgHud');
     if(hud) hud.style.display='block';
     if (typeof initFriendsList === 'function') initFriendsList();
@@ -3558,11 +3679,11 @@ showMenuScreen = function(name) {
 const LOADING_LINES = ["Shuffling the deck…","Setting the table…","Counting the coins…","Dealing hands…","Almost ready…"];
 const GAME_TIPS = [
   "Holding too many cards at the end of the match will destroy your score. Play them or burn them!",
-  "A successful Deception guess rewards you with 15 coins. A wrong guess means instant elimination.",
-  "Power cards drain coins to the bank. Steal cards transfer coins directly to your pocket.",
-  "Watch your rivals' coins. If someone is broke, they might trigger a Deception showdown soon.",
+  "A successful Deception guess rewards you with 15 Pixel Coins (PC). A wrong guess means instant elimination.",
+  "Power cards drain PC to the bank. Steal cards transfer PC directly to your pocket.",
+  "Watch your rivals' PC. If someone is broke, they might trigger a Deception showdown soon.",
   "Use Insurance to safely discard a dud card drawn during a Forced Buy.",
-  "You can only use Wild cards if you can afford the 2-coin cost.",
+  "You can only use Wild cards if you can afford the 2 PC cost.",
   "Pay attention to the timer. The player with the highest score when the clock hits zero wins.",
   "Peek lets you see the next player's hand. Use it before calling the required number!",
   "Reverse flips the table order, which is the perfect way to pass the burden onto someone else."
@@ -3863,7 +3984,7 @@ function startGame() {
             let players = [{
                 id: 0, name: DoDAuth.getProfile().displayName || "You", isHuman: true, hand: [], shop: START_SHOP, out: false, 
                 uid: DoDAuth.getProfile().uid, deceptionStrike: false, 
-                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile()), title: getEquippedTitle(DoDAuth.getProfile()), deckSkin: getEquippedBackImg(DoDAuth.getProfile())
+                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile()), title: getEquippedTitle(DoDAuth.getProfile()), deckSkin: getEquippedBackImg(DoDAuth.getProfile()), tier: profile.tier || 'Apprentice', level: profile.level || 1, equippedTable: profile.equippedTable || 'tb_default'
             }];
             
             for (let i = 0; i < count - 1; i++) {
@@ -3883,10 +4004,29 @@ function startGame() {
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
                       buyLoop:null, uiState: 'IDLE', peekResult: null, deception: null, turnTimeLeft: 30 };
             
+            // Offline Global Table Calculation
+            const TIERS_ORDER = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+            let bestPlayer = players[0];
+            let bestScore = -1;
+            players.forEach(p => {
+                 const tIdx = Math.max(0, TIERS_ORDER.indexOf(p.tier || 'Apprentice'));
+                 const lvl = parseInt(p.level) || 1;
+                 const score = (tIdx * 1000) + lvl + Math.random(); // Add random factor to resolve ties
+                 if (score > bestScore) { bestScore = score; bestPlayer = p; }
+            });
+            state.globalTable = {
+                id: bestPlayer.equippedTable || 'tb_default',
+                ownerName: bestPlayer.name,
+                ownerTier: bestPlayer.tier || 'Apprentice',
+                ownerLevel: bestPlayer.level || 1
+            };
+            applyGlobalTable(state.globalTable.id);
+
             log('Offline Training. Play a number, then call what the next player needs.','ok');
             layoutRing();
             renderAll();
             dealAnimation();
+            setTimeout(() => { showSystemToast(`👑 ${state.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(tick,1000);
             if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
@@ -3980,7 +4120,7 @@ function listenToGameState() {
             direction: serverState.direction,
             over: serverState.over || false,
             timeLeft: computedTimeLeft, 
-            timeUp: computedTimeLeft <= 0,
+            timeUp: false, /* BUG FIX: Force false so the tick() loop catches the timeout! */
             requiredValue: serverState.requiredValue,
             lastEffectiveValue: serverState.lastEffectiveValue,
             lastPlayedCardLabel: serverState.lastPlayedCardLabel,
@@ -3991,8 +4131,25 @@ function listenToGameState() {
             deception: serverState.deception || null,
             gameExpiresAt: serverState.gameExpiresAt || (serverState.startedAtMs + (GAME_DURATION_SEC * 1000)),
             turnExpiresAt: localExpiresAt,
-            turnTimeLeft: computedTurnTimeLeft
+            turnTimeLeft: computedTurnTimeLeft,
+            presence: data.presence || {}
         };
+
+        // --- START SECURE HEARTBEAT PING ---
+        if (!window.presenceIntervalId && currentMatchId) {
+            // Immediately ping on join
+            firebase.firestore().collection('matches').doc(currentMatchId).update({ [`presence.${myUid}`]: Date.now() }).catch(()=>{});
+            
+            window.presenceIntervalId = setInterval(() => {
+                if (currentMatchId) {
+                    firebase.firestore().collection('matches').doc(currentMatchId)
+                        .update({ [`presence.${myUid}`]: Date.now() }).catch(()=>{});
+                } else {
+                    clearInterval(window.presenceIntervalId);
+                    window.presenceIntervalId = null;
+                }
+            }, 15000); // Ping every 15 seconds
+        }
 
         // 4. RENDER THE GAME — rAF-batched so rapid Firestore snapshots never
         //    trigger back-to-back synchronous layout+paint on the main thread.
@@ -4082,6 +4239,11 @@ function listenToGameState() {
             handleOnlineDeceptionHostLogic(serverState);
         }
         
+        // Setup Global Table Visuals
+        if (serverState.globalTable) {
+            applyGlobalTable(serverState.globalTable.id);
+        }
+
         // 7. INITIAL DEAL
         if (!initialDealDone) {
             initialDealDone = true;
@@ -4089,6 +4251,10 @@ function listenToGameState() {
             dealAnimation();
             if (timerInterval) clearInterval(timerInterval);
             timerInterval = setInterval(tick, 1000);
+            
+            if (serverState.globalTable) {
+                setTimeout(() => { showSystemToast(`👑 ${serverState.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
+            }
         }
     });
 }
@@ -4105,8 +4271,12 @@ function tick() {
     if (state.timeLeft <= 0 && !state.timeUp) {
         state.timeUp = true;
         if (currentMatchId) {
-            // Securely tell server to end game
-            secureServerCall('triggerGameTimeout', {}).catch(()=>{});
+            // BUG FIX: Only the host should trigger the server timeout to prevent API spam!
+            const myUid = DoDAuth.getProfile().uid;
+            const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+            if (isHost) {
+                secureServerCall('triggerGameTimeout', {}).catch(()=>{});
+            }
         } else {
             finalizeGame();
         }
@@ -4120,6 +4290,103 @@ function tick() {
         disp.classList.toggle('low', state.timeLeft <= 60);
     }
     
+    // --- HOST MIGRATION & DISCONNECT MONITOR ---
+    if (currentMatchId && state.presence) {
+        const myUid = DoDAuth.getProfile().uid;
+        const nowMs = Date.now();
+        const seats = window.onlineMatchSeats || [];
+        const hostUid = seats.length > 0 ? seats[0].uid : null;
+        const isHost = hostUid === myUid;
+
+        // 1. Host Migration (If host drops connection for 25s, next human claims the Host seat)
+        if (!isHost && hostUid && !hostUid.startsWith('bot_')) {
+            const hostPing = state.presence[hostUid] || nowMs;
+            if (nowMs - hostPing > 25000) {
+                const humans = seats.filter(s => !s.isBot);
+                const myHumanIdx = humans.findIndex(s => s.uid === myUid);
+                const hostHumanIdx = humans.findIndex(s => s.uid === hostUid);
+                
+                // If I am next in line (or host is missing and I'm index 0)
+                if (myHumanIdx === hostHumanIdx + 1 || (hostHumanIdx === -1 && myHumanIdx === 0)) {
+                    if (!window.claimingHost) {
+                        window.claimingHost = true;
+                        secureServerCall('claimHost', {}).finally(() => { 
+                            setTimeout(() => { window.claimingHost = false; }, 5000); 
+                        });
+                    }
+                }
+            }
+        }
+
+        // 2. Player Disconnect Elimination (Host monitors everyone)
+        if (isHost) {
+            state.players.forEach(p => {
+                if (!p.out && !p.isBot && p.uid !== myUid) {
+                    const lastPing = state.presence[p.uid] || nowMs;
+                    const elapsed = nowMs - lastPing;
+                    
+                    // Show warning badge on their seat
+                    const seatEl = document.getElementById('rmeta-' + p.id);
+                    if (seatEl && elapsed > 15000 && elapsed <= 60000) {
+                        seatEl.innerHTML = `<div class="stat-pill" style="color:var(--danger-bright); font-size:7px;">Reconnecting ${Math.ceil((60000-elapsed)/1000)}s</div>`;
+                    }
+                    
+                    // Permanently eliminate them if offline for 60 seconds
+                    if (elapsed > 60000 && !(window.eliminatingPlayers && window.eliminatingPlayers[p.uid])) {
+                        window.eliminatingPlayers = window.eliminatingPlayers || {};
+                        window.eliminatingPlayers[p.uid] = true;
+                        secureServerCall('timeoutPlayer', { targetUid: p.uid }).catch(()=>{ 
+                            delete window.eliminatingPlayers[p.uid]; 
+                        });
+                    }
+                }
+            });
+        }
+    }
+
+    // --- DECEPTION AFK TIMER (Forces missing votes so table never deadlocks) ---
+    if (state.deception && state.deception.expiresAt) {
+        const dLeft = Math.max(0, Math.floor((state.deception.expiresAt - now) / 1000));
+        const turnInd = document.getElementById('turnIndicator');
+        if (turnInd) {
+            turnInd.textContent = `Deception showdown... (${dLeft}s)`;
+            turnInd.style.color = dLeft <= 10 ? 'var(--danger-bright)' : 'var(--brass-bright)';
+        }
+        
+        if (currentMatchId && dLeft <= 0) {
+            const myUid = DoDAuth.getProfile().uid;
+            const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+            
+            // Only the Host pushes the AFK overrides to prevent network spam
+            if (isHost && !window.dodDeceptionAfkRunning) {
+                window.dodDeceptionAfkRunning = true;
+                let updates = {};
+                const dec = state.deception;
+                
+                if (dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM') {
+                    const field = dec.phase === 'VOTE_REAL' ? 'realStances' : 'claimStances';
+                    const stances = dec[field] || {};
+                    dec.richUids.forEach(uid => {
+                        if (!(uid in stances)) updates[`gameState.deception.${field}.${uid}`] = 1 + Math.floor(Math.random() * 9);
+                    });
+                } else if (dec.phase === 'ANSWER') {
+                    const responses = dec.responses || {};
+                    dec.brokeUids.forEach(uid => {
+                        if (!(uid in responses)) updates[`gameState.deception.responses.${uid}`] = { believe: true, guess: null };
+                    });
+                }
+                
+                if (Object.keys(updates).length > 0) {
+                    secureServerCall('hostSyncDeception', { updates }).finally(() => { 
+                        setTimeout(() => { window.dodDeceptionAfkRunning = false; }, 2000); 
+                    });
+                } else {
+                    window.dodDeceptionAfkRunning = false;
+                }
+            }
+        }
+    }
+
     // 2. SECURE TURN TIMER (Online)
     if (currentMatchId && !state.deception && state.uiState !== 'ANIMATING' && state.turnExpiresAt) {
         if (window.dodCenterIsLocked) {
@@ -4780,13 +5047,22 @@ function renderAll(){
   renderDeceptionOverlay();
   const cur=state.players[state.turn];
   let turnText = cur.isHuman ? 'Your turn' : `${cur.name} is playing…`;
-  if (state.turnTimeLeft !== undefined && !state.deception && state.uiState !== 'ANIMATING') {
+  
+  if (state.deception && state.deception.expiresAt) {
+      const dLeft = Math.max(0, Math.floor((state.deception.expiresAt - Date.now()) / 1000));
+      turnText = `Deception showdown... (${dLeft}s)`;
+  } else if (state.turnTimeLeft !== undefined && !state.deception && state.uiState !== 'ANIMATING') {
       turnText += ` (${state.turnTimeLeft}s)`;
   }
+  
   const turnInd = document.getElementById('turnIndicator');
   turnInd.textContent = turnText;
-  if (state.turnTimeLeft !== undefined && state.turnTimeLeft <= 10 && !state.deception && state.uiState !== 'ANIMATING') {
+  
+  if ((state.turnTimeLeft !== undefined && state.turnTimeLeft <= 10 && !state.deception && state.uiState !== 'ANIMATING') || 
+      (state.deception && state.deception.expiresAt && Math.max(0, Math.floor((state.deception.expiresAt - Date.now()) / 1000)) <= 10)) {
       turnInd.style.color = 'var(--danger-bright)';
+  } else if (state.deception) {
+      turnInd.style.color = 'var(--brass-bright)';
   } else {
       turnInd.style.color = '';
   }
@@ -4866,7 +5142,7 @@ function renderAll(){
                 </div>
               </div>
               <div class="ap-details">
-                  <div class="ap-name" style="line-height:1;">${cur.name} <span style="color:var(--brass-bright);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-left:4px">${cur.shop}c</span></div>
+                  <div class="ap-name" style="line-height:1;">${cur.name} <span style="color:var(--brass-bright);font-size:11px;font-family:'IBM Plex Mono',monospace;margin-left:4px">${cur.shop} PC</span></div>
                   <div class="ap-cards" style="width:${dynWidth}px; height:${dynHeight}px; min-height:0; display:block;">${deckFanHtml}</div>
               </div>
           `;
@@ -5114,7 +5390,7 @@ function renderActionBar(){
   if(you.shop >= BUY_COST){
       const btn=document.createElement('button');
       btn.className = hasMatch ? 'btn ghost' : 'btn'; // Ghost style if optional, solid if forced
-      btn.textContent = hasMatch ? `Optional Draw (${BUY_COST}c) ↗` : `No match — Forced Buy (${BUY_COST}c) ↗`;
+      btn.textContent = hasMatch ? `Optional Draw (${BUY_COST} PC) ↗` : `No match — Forced Buy (${BUY_COST} PC) ↗`;
       btn.onclick=() => { startForcedBuySelf('BUY'); };
       bar.appendChild(btn);
   } else if (!hasMatch) {
@@ -6030,10 +6306,10 @@ async function startDeceptionPhaseOnline(curPlayer){
   if(rich.length === 0){
     const realNumber = 1 + Math.floor(Math.random()*9);
     const claimNumber = 1 + Math.floor(Math.random()*9);
-    dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{} };
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{}, expiresAt: Date.now() + 25000 };
   } else {
     const proposer = rich[Math.floor(Math.random()*rich.length)];
-    dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{} };
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{}, expiresAt: Date.now() + 25000 };
     if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
   }
   
@@ -6082,12 +6358,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
             secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.realNumber': resolved,
               'gameState.deception.phase': 'VOTE_CLAIM',
+              'gameState.deception.expiresAt': Date.now() + 25000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table locked in a real secret number ${reasonStr} (kept hidden).` }
             }}).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
           } else {
             secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.claimNumber': resolved,
               'gameState.deception.phase': 'ANSWER',
+              'gameState.deception.expiresAt': Date.now() + 25000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved} ${reasonStr}.` }
             }}).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
           }
@@ -6863,13 +7141,14 @@ async function confirmLeaveGame(){
         showMenuScreen('hub');
         if (typeof revertCamera === 'function') revertCamera();
         document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+        applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
 
         const accountLoadingEl = document.getElementById('accountLoading');
         const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
         const hubBadgeEl = document.getElementById('hubCurrencyBadge');
         if (accountLoadingEl) accountLoadingEl.style.display = 'none';
         if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-        if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+        if (hubBadgeEl) hubBadgeEl.style.display = 'flex';
         if (window.DoDAuth && DoDAuth.getProfile()) {
             const hubCurrencyEl = document.getElementById('hubCurrency');
             if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
@@ -7040,7 +7319,7 @@ async function endGame(winner, byScore) {
       const isMe = p.id === you.id;
       const isWinner = rank === 1;
       const sc = score(p);
-      const stats = p.out ? 'Eliminated' : `${p.shop} Coins / ${p.hand.length} Cards`;
+      const stats = p.out ? 'Eliminated' : `${p.shop} PC / ${p.hand.length} Cards`;
       
       listHtml += `
         <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
@@ -7055,7 +7334,7 @@ async function endGame(winner, byScore) {
 
   // Safely grab the coins without crashing if the server hiccuped
   const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
-  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${earnedCoins} Coins Earned</div>`;
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
   
   let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
@@ -7230,6 +7509,7 @@ function returnToMenuFromEndgame() {
             showMenuScreen('hub');
             if (typeof revertCamera === 'function') revertCamera();
             document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+            applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
         }
 
         // Restore HUB ui
@@ -7368,7 +7648,7 @@ async function endGame(winner, byScore) {
       const isMe = p.id === you.id;
       const isWinner = rank === 1;
       const sc = score(p);
-      const stats = p.out ? 'Eliminated' : `${p.shop} Coins / ${p.hand.length} Cards`;
+      const stats = p.out ? 'Eliminated' : `${p.shop} PC / ${p.hand.length} Cards`;
       
       listHtml += `
         <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
@@ -7383,7 +7663,7 @@ async function endGame(winner, byScore) {
 
   // Safely grab the coins without crashing if the server hiccuped
   const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
-  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright);">🪙 +${earnedCoins} Coins Earned</div>`;
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
   
   let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
@@ -7649,7 +7929,7 @@ async function createParty() {
         leader: myProfile.uid,
         matchId: null,
         tableSize: pubgTableSize,
-        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile) }]
+        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile), tier: myProfile.tier || 'Apprentice', level: myProfile.level || 1, equippedTable: myProfile.equippedTable || 'tb_default' }]
     });
 
     document.getElementById('btnCreateParty').style.display = 'none';
@@ -7724,15 +8004,15 @@ async function leaveParty() {
     // Re-enable PLAY + mode select — they may have been locked while we were a
     // non-host member of the squad.
     const playBtn = document.getElementById('pubgPlayBtn');
-    const modeSelect = document.getElementById('pubgModeSelect');
-    const privateSelect = document.getElementById('privateModeSelect');
+    const modeSelect = document.getElementById('customPubgSelect');
+    const privateSelect = document.getElementById('customPrivateSelect');
     if (playBtn) { playBtn.disabled = false; playBtn.style.opacity = '1'; playBtn.style.pointerEvents = 'all'; }
     if (modeSelect) { 
-        modeSelect.disabled = false; modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; 
-        Array.from(modeSelect.options).forEach(opt => opt.disabled = false);
+        modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; 
+        modeSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('disabled-opt'));
     }
     if (privateSelect) {
-        Array.from(privateSelect.options).forEach(opt => opt.disabled = false);
+        privateSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('disabled-opt'));
     }
 
     if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
@@ -7799,34 +8079,43 @@ function listenToParty(partyId) {
         // Only the host can start the match. Everyone else gets a disabled
         // PLAY button + mode dropdown and just waits for the host to start.
         const playBtn = document.getElementById('pubgPlayBtn');
-        const modeSelect = document.getElementById('pubgModeSelect');
+        const modeSelect = document.getElementById('customPubgSelect');
         if (playBtn) { 
             playBtn.disabled = !isPartyLeader; 
             playBtn.style.opacity = isPartyLeader ? '1' : '0.35';
             playBtn.style.pointerEvents = isPartyLeader ? 'all' : 'none';
         }
         if (modeSelect) { 
-            modeSelect.disabled = !isPartyLeader;
             modeSelect.style.opacity = isPartyLeader ? '1' : '0.35';
             modeSelect.style.pointerEvents = isPartyLeader ? 'all' : 'none';
         }
 
         // Lock dropdown options so host can't set table size smaller than current squad
         const currentCount = data.members.length;
-        [document.getElementById('pubgModeSelect'), document.getElementById('privateModeSelect')].forEach(select => {
+        [document.getElementById('customPubgSelect'), document.getElementById('customPrivateSelect')].forEach(select => {
             if (!select) return;
-            Array.from(select.options).forEach(opt => {
-                const val = parseInt(opt.value);
-                opt.disabled = val < currentCount;
+            const options = select.querySelectorAll('.custom-option');
+            options.forEach(opt => {
+                if (parseInt(opt.getAttribute('data-value')) < currentCount) {
+                    opt.classList.add('disabled-opt');
+                } else {
+                    opt.classList.remove('disabled-opt');
+                }
             });
             
-            // If currently selected value is now disabled (e.g. was 2, but 3 players joined), bump it up
-            if (parseInt(select.value) < currentCount) {
-                const firstValid = Array.from(select.options).find(o => !o.disabled);
+            const currentVal = parseInt(select.getAttribute('data-value'));
+            if (currentVal < currentCount) {
+                const firstValid = Array.from(options).find(o => !o.classList.contains('disabled-opt'));
                 if (firstValid) {
-                    select.value = firstValid.value;
-                    if (select.id === 'pubgModeSelect') pickPubgMode(parseInt(select.value));
-                    else pickMpCount(parseInt(select.value));
+                    const newVal = parseInt(firstValid.getAttribute('data-value'));
+                    select.setAttribute('data-value', newVal);
+                    select.querySelector('.custom-select-trigger span:first-child').textContent = firstValid.textContent;
+                    
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    firstValid.classList.add('selected');
+                    
+                    if (select.id === 'customPubgSelect') pickPubgMode(newVal);
+                    else pickMpCount(newVal);
                 }
             }
         });
@@ -7845,8 +8134,14 @@ function listenToParty(partyId) {
             if (!isPartyLeader) {
                 pubgTableSize = sharedTableSize;
                 mpTableSize = sharedTableSize;
-                const sel = document.getElementById('pubgModeSelect');
-                if (sel) sel.value = sharedTableSize;
+                const sel = document.getElementById('customPubgSelect');
+                if (sel) {
+                    sel.setAttribute('data-value', sharedTableSize);
+                    sel.querySelector('.custom-select-trigger span:first-child').textContent = sharedTableSize + ' Players';
+                    sel.querySelectorAll('.custom-option').forEach(opt => {
+                        opt.classList.toggle('selected', parseInt(opt.getAttribute('data-value')) === sharedTableSize);
+                    });
+                }
             }
 
             showPartyLobbyCinematic();
@@ -8146,6 +8441,40 @@ function pickPubgMode(size) {
     }
 }
 
+// --- Custom Dropdown Logic ---
+function toggleCustomSelect(element) {
+    try { sfx.uiClick(); } catch(e){}
+    document.querySelectorAll('.custom-select').forEach(el => {
+        if (el !== element) el.classList.remove('open');
+    });
+    element.classList.toggle('open');
+}
+
+function selectCustomOption(event, optionEl, targetAction, val) {
+    event.stopPropagation();
+    try { sfx.uiClick(); } catch(e){}
+    const parent = optionEl.closest('.custom-select');
+    const triggerSpan = parent.querySelector('.custom-select-trigger span:first-child');
+    
+    parent.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('selected'));
+    optionEl.classList.add('selected');
+    triggerSpan.textContent = optionEl.textContent;
+    parent.setAttribute('data-value', val);
+    parent.classList.remove('open');
+    
+    if (targetAction === 'pubgMode') pickPubgMode(val);
+    else if (targetAction === 'privateMode') pickMpCount(val);
+    else if (targetAction === 'onlineMode') pickMpCount(val);
+    else if (targetAction === 'trainingMode') pickCount(val);
+}
+
+// Close dropdowns if clicking anywhere outside of them
+document.addEventListener('click', (e) => {
+    if (!e.target.closest('.custom-select')) {
+        document.querySelectorAll('.custom-select').forEach(el => el.classList.remove('open'));
+    }
+});
+
 // --- Search panel ---
 function openPubgSearchPanel() {
     try { sfx.uiClick(); } catch(e){}
@@ -8368,10 +8697,10 @@ function hideLobbyView() {
 function resetPubgPlayBtn() {
     const btn = document.getElementById('pubgPlayBtn');
     const cancelBtn = document.getElementById('pubgCancelBtn');
-    const modeSelectEl = document.getElementById('pubgModeSelect');
+    const modeSelectEl = document.getElementById('customPubgSelect');
     if (btn) { btn.classList.remove('searching'); btn.innerHTML = 'PLAY ↗'; }
     if (cancelBtn) cancelBtn.style.display = 'none';
-    if (modeSelectEl) modeSelectEl.style.display = '';
+    if (modeSelectEl) modeSelectEl.style.display = 'block';
     window._pubgLobbyCount = 0;
 }
 
@@ -8395,7 +8724,7 @@ async function startMatchmakingPubg() {
     mpTableSize = pubgTableSize;
 
     const cancelBtn = document.getElementById('pubgCancelBtn');
-    const modeSelectEl = document.getElementById('pubgModeSelect');
+    const modeSelectEl = document.getElementById('customPubgSelect');
     if (cancelBtn) cancelBtn.style.display = 'block';
     if (modeSelectEl) modeSelectEl.style.display = 'none';
 
@@ -8492,17 +8821,29 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
 
         // Fix 5: lock dropdown options that can't accommodate the current seated count
         const humanCount = data.seats.filter(s => !s.isBot).length;
-        const modeSelEl = document.getElementById('pubgModeSelect');
+        const modeSelEl = document.getElementById('customPubgSelect');
         if (modeSelEl) {
-            Array.from(modeSelEl.options).forEach(opt => {
-                opt.disabled = parseInt(opt.value) < humanCount;
+            const options = modeSelEl.querySelectorAll('.custom-option');
+            options.forEach(opt => {
+                if (parseInt(opt.getAttribute('data-value')) < humanCount) {
+                    opt.classList.add('disabled-opt');
+                } else {
+                    opt.classList.remove('disabled-opt');
+                }
             });
             // Auto-bump selected value up if it's now below the seated count
-            if (parseInt(modeSelEl.value) < humanCount) {
-                const firstValid = Array.from(modeSelEl.options).find(o => !o.disabled);
+            const currentVal = parseInt(modeSelEl.getAttribute('data-value'));
+            if (currentVal < humanCount) {
+                const firstValid = Array.from(options).find(o => !o.classList.contains('disabled-opt'));
                 if (firstValid) {
-                    modeSelEl.value = firstValid.value;
-                    pickPubgMode(parseInt(firstValid.value));
+                    const newVal = parseInt(firstValid.getAttribute('data-value'));
+                    modeSelEl.setAttribute('data-value', newVal);
+                    modeSelEl.querySelector('.custom-select-trigger span:first-child').textContent = firstValid.textContent;
+                    
+                    options.forEach(opt => opt.classList.remove('selected'));
+                    firstValid.classList.add('selected');
+                    
+                    pickPubgMode(newVal);
                 }
             }
         }
@@ -8889,9 +9230,9 @@ async function executeLuckySpin() {
 
         // Animate Spin Visually
         let rolls = 0;
-        const icons = ["🪙", "📦", "🔮", "🧰", "❌"];
+        const icons = [`<img src="Coins/Coins.png" style="width:54px;height:54px;vertical-align:middle;">`, "📦", "🔮", "🧰", "❌"];
         const spinAnim = setInterval(() => {
-            resultBox.textContent = icons[rolls % icons.length];
+            resultBox.innerHTML = icons[rolls % icons.length];
             rolls++;
         }, 100);
         
@@ -8905,7 +9246,11 @@ async function executeLuckySpin() {
 
             try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
             
-            resultBox.innerHTML = `<div style="font-size:54px;">${rollData.icon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${rollData.msg}</div>`;
+            // Intercept Server Response to inject custom Coin image and PC naming
+            let finalIcon = rollData.icon === "🪙" ? `<img src="Coins/Coins.png" style="width:54px;height:54px;vertical-align:middle;filter:drop-shadow(0 0 10px rgba(226,189,74,0.6));">` : rollData.icon;
+            let finalMsg = rollData.msg.replace(/Coins/g, "PC").replace(/Coin/g, "PC");
+            
+            resultBox.innerHTML = `<div style="font-size:54px;">${finalIcon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${finalMsg}</div>`;
             btn.textContent = "COME BACK TOMORROW";
             btn.className = "btn ghost";
             
@@ -8946,8 +9291,12 @@ async function openChest(tier) {
         setTimeout(async () => {
             try { sfx.win(); } catch(e){}
             
-            icon.textContent = rollData.icon;
-            text.textContent = rollData.msg;
+            // Intercept Server Response to inject custom Coin image and PC naming
+            let finalIcon = rollData.icon === "🪙" ? `<img src="Coins/Coins.png" style="width:64px;height:64px;vertical-align:middle;filter:drop-shadow(0 0 10px rgba(226,189,74,0.6));">` : rollData.icon;
+            let finalMsg = rollData.msg.replace(/Coins/g, "PC").replace(/Coin/g, "PC");
+            
+            icon.innerHTML = finalIcon;
+            text.innerHTML = finalMsg;
 
             // Sync Local Cache with Server Truth
             profile.chests = res.newChests;
@@ -9279,23 +9628,29 @@ function switchCustomTab(tabName, btnElement) {
     updateEquipButtonState();
 }
 
+function applyGlobalTable(tableId) {
+    const tableDef = SHOP_DB.tables.find(t => t.id === tableId) || SHOP_DB.tables[0];
+    const tableUrl = `url('Tables/${encodeURIComponent(tableDef.img)}')`;
+    const tableGlow = tableDef.color || '30, 74, 61';
+    document.documentElement.style.setProperty('--my-table', tableUrl);
+    document.documentElement.style.setProperty('--table-glow', tableGlow);
+}
+
 function applyEquippedSkins(profile) {
     if (!profile) return;
     const eqBack = profile.equippedBack || 'cb_default';
     const eqTable = profile.equippedTable || 'tb_default';
     
     const backDef = SHOP_DB.cardBacks.find(c => c.id === eqBack) || SHOP_DB.cardBacks[0];
-    const tableDef = SHOP_DB.tables.find(t => t.id === eqTable) || SHOP_DB.tables[0];
-    
     const backUrl = `url('CardstoBuy/${encodeURIComponent(backDef.img)}')`;
-    const tableUrl = `url('Tables/${encodeURIComponent(tableDef.img)}')`;
-    
     document.documentElement.style.setProperty('--my-deck', backUrl);
-    document.documentElement.style.setProperty('--my-table', tableUrl);
-    
-    // Save to local storage to prevent the default skin from flashing on the loading screen
     localStorage.setItem('dod_cached_deck', backUrl);
-    localStorage.setItem('dod_cached_table', tableUrl);
+
+    applyGlobalTable(eqTable);
+    
+    const tableDef = SHOP_DB.tables.find(t => t.id === eqTable) || SHOP_DB.tables[0];
+    localStorage.setItem('dod_cached_table', `url('Tables/${encodeURIComponent(tableDef.img)}')`);
+    localStorage.setItem('dod_cached_glow', tableDef.color || '30, 74, 61');
 }
 
 // Hook into DoDAuth profile ready event to automatically update UI on load
@@ -9654,17 +10009,17 @@ const SHOP_DB = {
         { id: 'cb_legend', name: 'The Legend', method: 'tier', unlockTier: 'Legend', img: 'LegendCard.png' }
     ],
     tables: [
-        { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.png' },
-        { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.png' },
-        { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.png' },
-        { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.png' },
-        { id: 'tb_clockwork', name: 'Clockwork Brass', method: 'spin', desc: 'Steampunk gears and heavy brass.', img: 'ClockworkBrass.png' },
-        { id: 'tb_cyber', name: 'Cyber Matrix', method: 'spin', desc: 'Glowing neon hex grid plating.', img: 'CyberMatrix.png' },
-        { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.png' },
-        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'Dragon\'sLair.png' },
-        { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.png' },
-        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.png' },
-        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.png' }
+        { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.png', color: '30, 74, 61' },
+        { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.png', color: '74, 21, 27' },
+        { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.png', color: '22, 36, 66' },
+        { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.png', color: '53, 28, 77' },
+        { id: 'tb_clockwork', name: 'Clockwork Brass', method: 'spin', desc: 'Steampunk gears and heavy brass.', img: 'ClockworkBrass.png', color: '71, 45, 22' },
+        { id: 'tb_cyber', name: 'Cyber Matrix', method: 'spin', desc: 'Glowing neon hex grid plating.', img: 'CyberMatrix.png', color: '15, 56, 54' },
+        { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.png', color: '77, 58, 28' },
+        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'Dragon\'sLair.png', color: '24, 56, 33' },
+        { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.png', color: '28, 21, 51' },
+        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.png', color: '39, 56, 69' },
+        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.png', color: '69, 64, 39' }
     ],
     vfx: [
         { id: 'vfx_default', name: 'Standard Spark', price: 0, desc: 'Basic card impact sparks.' },
@@ -9673,10 +10028,10 @@ const SHOP_DB = {
         { id: 'vfx_void', name: 'Void Portal', price: 10000, desc: 'Summon cards from the void.' }
     ],
     coins: [
-        { id: 'iap_1', name: 'Handful of Coins', price: '$0.99', reward: 1000 },
-        { id: 'iap_2', name: 'Coin Pouch', price: '$4.99', reward: 5500 },
-        { id: 'iap_3', name: 'Treasure Chest', price: '$9.99', reward: 12000 },
-        { id: 'iap_4', name: 'Bank Vault', price: '$19.99', reward: 30000 }
+        { id: 'iap_1', name: 'Handful of PC', price: '$0.99', reward: 1000, img: 'Coins/Handfulofcoins.png' },
+        { id: 'iap_2', name: 'PC Pouch', price: '$4.99', reward: 5500, img: 'Coins/Coinpouch.png' },
+        { id: 'iap_3', name: 'Treasure Chest', price: '$9.99', reward: 12000, img: 'Coins/Cointreasure.png' },
+        { id: 'iap_4', name: 'Bank Vault', price: '$19.99', reward: 30000, img: 'Coins/Coinbankvault.png' }
     ]
 };
 
@@ -9729,7 +10084,10 @@ function renderShopItems() {
         } else if (currentShopTab === 'vfx') {
             visualHtml = `<div style="font-size:24px; margin:10px 0;">✨</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
         } else if (currentShopTab === 'coins') {
-            visualHtml = `<div style="font-size:28px; margin:10px 0; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6));">🪙</div><div style="font-size:12px; color:var(--ok); font-weight:bold; font-family:'IBM Plex Mono',monospace; margin-bottom:10px;">+${item.reward}</div>`;
+            const iconHtml = item.img 
+                ? `<img src="${item.img}" style="width:clamp(65px, 12vh, 90px); height:clamp(65px, 12vh, 90px); object-fit:contain; margin:10px auto; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.6)); display:block;" alt="${item.name}">`
+                : `<img src="Coins/Coins.png" style="width:40px; height:40px; margin:10px auto; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6)); display:block;" alt="PC">`;
+            visualHtml = `${iconHtml}<div style="font-size:13px; color:var(--ok); font-weight:bold; font-family:'IBM Plex Mono',monospace; margin-bottom:10px;">+${item.reward} PC</div>`;
         }
 
         // Build the Preview button (Hidden for Coins and VFX)
@@ -9753,7 +10111,7 @@ function renderShopItems() {
                            <div style="font-size:9.5px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:6px; background:rgba(0,0,0,0.5); padding:2px; border-radius:3px;">Copies: ${shards}/${item.shardsNeeded}</div>`;
             } else {
                 let canAfford = (profile.currency || 0) >= item.price;
-                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event)">${item.price} Coins</button>`;
+                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event)">${item.price} PC</button>`;
             }
         } else if (item.method === 'tier') {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Unlocks at ${item.unlockTier}</button>`;
