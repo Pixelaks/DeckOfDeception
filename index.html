@@ -3154,99 +3154,78 @@ document.addEventListener("visibilitychange", function() {
 });
 
 // ============================================================
-// ROBUST FULLSCREEN + LANDSCAPE SYSTEM
+// ROBUST FULLSCREEN + LANDSCAPE SYSTEM (SYNCHRONOUS FIX)
 // ============================================================
 
-async function forceEnterFullscreen(e) {
-    console.group("[DEBUG] forceEnterFullscreen Triggered");
-    console.log("Trigger Event:", e ? e.type : "Direct Code Call");
-    console.log("User Activation State:", navigator.userActivation ? `HasBeenActive: ${navigator.userActivation.hasBeenActive}, IsActive: ${navigator.userActivation.isActive}` : "Not Supported");
-
+function forceEnterFullscreen() {
     const doc = document.documentElement;
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
 
+    let fsPromise = null;
     try {
-        const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-        console.log("Current Fullscreen Element:", isFs);
-
         if (!isFs) {
-            console.log("Requesting Document Fullscreen...");
             if (doc.requestFullscreen) {
-                await doc.requestFullscreen();
-                console.log("✓ doc.requestFullscreen() resolved successfully.");
+                fsPromise = doc.requestFullscreen();
             } else if (doc.webkitRequestFullscreen) {
-                await doc.webkitRequestFullscreen();
-                console.log("✓ doc.webkitRequestFullscreen() resolved successfully.");
-            } else {
-                console.warn("⚠ Fullscreen API not found on documentElement.");
+                fsPromise = doc.webkitRequestFullscreen();
+            } else if (doc.mozRequestFullScreen) {
+                fsPromise = doc.mozRequestFullScreen();
+            } else if (doc.msRequestFullscreen) {
+                fsPromise = doc.msRequestFullscreen();
             }
         } else {
-            console.log("ℹ Already in Fullscreen mode.");
+            fsPromise = Promise.resolve();
         }
 
-        if (screen.orientation && screen.orientation.lock) {
-            console.log("Attempting screen.orientation.lock('landscape')...");
-            try {
-                await screen.orientation.lock('landscape');
-                console.log("✓ Landscape orientation lock succeeded.");
-            } catch (orErr) {
-                console.error("✗ Orientation Lock Failed:", orErr.name, "-", orErr.message);
-            }
+        if (fsPromise && typeof fsPromise.then === 'function') {
+            fsPromise.then(() => {
+                if (screen.orientation && screen.orientation.lock) {
+                    screen.orientation.lock('landscape').catch(e => console.warn("Orientation lock ignored:", e));
+                }
+                updateFullscreenIcons();
+            }).catch(err => console.warn("Fullscreen Request Rejected:", err));
         } else {
-            console.warn("⚠ screen.orientation.lock API not supported on this browser.");
+            if (screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(e => console.warn(e));
+            }
+            updateFullscreenIcons();
         }
     } catch (err) {
-        console.error("✗ Fullscreen Request Rejected by Browser:", err.name, "-", err.message);
-    } finally {
-        updateFullscreenIcons();
-        console.groupEnd();
+        console.error("Error in forceEnterFullscreen:", err);
     }
 }
 
-
-// Toggle function for the UI buttons
-async function toggleFullscreen(e) {
-    const isFs =
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement;
+function toggleFullscreen(e) {
+    if (e) e.stopPropagation();
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
 
     if (!isFs) {
-        await forceEnterFullscreen(e);
+        forceEnterFullscreen();
     } else {
         try {
             if (document.exitFullscreen) {
-                await document.exitFullscreen();
+                document.exitFullscreen();
             } else if (document.webkitExitFullscreen) {
                 document.webkitExitFullscreen();
             } else if (document.mozCancelFullScreen) {
-                await document.mozCancelFullScreen();
+                document.mozCancelFullScreen();
             } else if (document.msExitFullscreen) {
                 document.msExitFullscreen();
             }
         } catch (err) {
             console.warn("Fullscreen exit failed:", err);
         }
-
-        updateFullscreenIcons();
+        setTimeout(updateFullscreenIcons, 150);
     }
 }
 
-
 function updateFullscreenIcons() {
-    const isFs =
-        document.fullscreenElement ||
-        document.webkitFullscreenElement ||
-        document.mozFullScreenElement ||
-        document.msFullscreenElement;
-
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
         btn.textContent = isFs ? '✖' : '⛶';
     });
 }
 
-
-// Keep the UI synchronized with the REAL browser fullscreen state.
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
 document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
@@ -3258,20 +3237,9 @@ window.addEventListener('resize', updateFullscreenIcons);
 // ONLY use click. Do not use touchstart for fullscreen.
 document.addEventListener('DOMContentLoaded', () => {
     const rotateOverlay = document.getElementById('rotate-device-overlay');
-
     if (rotateOverlay) {
         rotateOverlay.addEventListener('click', function(e) {
-            console.log("[DEBUG] Rotate Overlay Clicked");
-            
-            // Fire the fullscreen request, and as soon as it's done, BOOT THE GAME.
-            forceEnterFullscreen(e).finally(() => {
-                const intro = document.getElementById('introOverlay');
-                if (intro) {
-                    console.log("[DEBUG] Booting game from Rotate Screen...");
-                    intro.dataset.booted = 'true';
-                    proceedWithBoot(intro);
-                }
-            });
+            forceEnterFullscreen();
         });
     }
 });
@@ -3309,17 +3277,13 @@ function proceedWithBoot(overlayEl) {
 }
 
 introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true') return;
-    if (this.dataset.waitingForMic === 'true') return;
-
-    console.log("[DEBUG] Intro screen clicked. Mic resolved state:", this.dataset.micResolved);
+    if (this.dataset.booted === 'true' || this.dataset.waitingForMic === 'true') return;
 
     // Tap #2 (After mic allowed/denied)
     if (this.dataset.micResolved === 'true') {
         this.dataset.booted = 'true';
-        forceEnterFullscreen(e).finally(() => {
-            proceedWithBoot(this);
-        });
+        forceEnterFullscreen(); 
+        proceedWithBoot(this);
         return;
     }
 
@@ -3335,21 +3299,19 @@ introOverlay.addEventListener('click', function(e) {
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter the game!";
+                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
             })
             .catch(err => {
-                console.warn("[DEBUG] Microphone denied.", err);
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter the game!";
+                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
             });
     } else {
         // Returning user
         this.dataset.booted = 'true';
-        forceEnterFullscreen(e).finally(() => {
-            proceedWithBoot(this);
-        });
+        forceEnterFullscreen(); 
+        proceedWithBoot(this);
     }
 });
 
