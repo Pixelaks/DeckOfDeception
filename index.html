@@ -3261,7 +3261,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (rotateOverlay) {
         rotateOverlay.addEventListener('click', function(e) {
-            forceEnterFullscreen(e);
+            console.log("[DEBUG] Rotate Overlay Clicked");
+            
+            // Fire the fullscreen request, and as soon as it's done, BOOT THE GAME.
+            forceEnterFullscreen(e).finally(() => {
+                const intro = document.getElementById('introOverlay');
+                if (intro) {
+                    console.log("[DEBUG] Booting game from Rotate Screen...");
+                    intro.dataset.booted = 'true';
+                    proceedWithBoot(intro);
+                }
+            });
         });
     }
 });
@@ -3299,69 +3309,46 @@ function proceedWithBoot(overlayEl) {
 }
 
 introOverlay.addEventListener('click', function(e) {
-    console.group("[DEBUG] introOverlay Clicked");
-    console.log("dataset.booted:", this.dataset.booted);
-    console.log("dataset.waitingForMic:", this.dataset.waitingForMic);
-    console.log("dataset.micResolved:", this.dataset.micResolved);
-    console.log("localStorage dod_mic_asked:", localStorage.getItem('dod_mic_asked'));
+    if (this.dataset.booted === 'true') return;
+    if (this.dataset.waitingForMic === 'true') return;
 
-    if (this.dataset.booted === 'true') {
-        console.log("Already booted, ignoring click.");
-        console.groupEnd();
-        return;
-    }
-    if (this.dataset.waitingForMic === 'true') {
-        console.log("Waiting on mic prompt, ignoring click.");
-        console.groupEnd();
-        return;
-    }
+    console.log("[DEBUG] Intro screen clicked. Mic resolved state:", this.dataset.micResolved);
 
     // Tap #2 (After mic allowed/denied)
     if (this.dataset.micResolved === 'true') {
-        console.log("Proceeding with Tap #2 (Post-Mic Fullscreen & Boot)...");
         this.dataset.booted = 'true';
-
         forceEnterFullscreen(e).finally(() => {
-            console.log("Booting game after Tap #2...");
             proceedWithBoot(this);
-            console.groupEnd();
         });
         return;
     }
 
     // Tap #1 (First visit - Ask for Microphone)
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        console.log("Requesting microphone permission for the first time...");
         this.dataset.waitingForMic = 'true';
         const statusText = document.getElementById('introStatusText');
         if (statusText) statusText.textContent = "Please allow microphone access...";
         
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
-                console.log("✓ Microphone access GRANTED by user.");
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
-                console.groupEnd();
+                if (statusText) statusText.textContent = "Tap anywhere to enter the game!";
             })
             .catch(err => {
-                console.warn("✗ Microphone access DENIED or dismissed by user:", err.name, err.message);
+                console.warn("[DEBUG] Microphone denied.", err);
                 localStorage.setItem('dod_mic_asked', 'true');
                 this.dataset.waitingForMic = 'false';
                 this.dataset.micResolved = 'true';
-                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
-                console.groupEnd();
+                if (statusText) statusText.textContent = "Tap anywhere to enter the game!";
             });
     } else {
         // Returning user
-        console.log("Returning user detected (mic already resolved in past session).");
         this.dataset.booted = 'true';
         forceEnterFullscreen(e).finally(() => {
-            console.log("Booting game for returning player...");
             proceedWithBoot(this);
-            console.groupEnd();
         });
     }
 });
