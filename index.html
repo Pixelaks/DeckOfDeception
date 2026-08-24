@@ -3153,34 +3153,46 @@ document.addEventListener("visibilitychange", function() {
 function forceEnterFullscreen() {
   const doc = document.documentElement;
   
-  // 1. Try locking orientation FIRST. Mobile browsers prefer this.
   if (screen.orientation && screen.orientation.lock) {
       screen.orientation.lock('landscape').catch(() => {});
   }
 
-  // 2. Request Fullscreen (Must be purely synchronous, NO async/await)
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  if (!isFs) {
       if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
       else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
+      else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
+      else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
   }
+  
+  setTimeout(updateFullscreenIcons, 300);
 }
 
 // Toggle function for the UI buttons
 function toggleFullscreen() {
-  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+  if (!isFs) {
       forceEnterFullscreen();
   } else {
       if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
       else if (document.webkitExitFullscreen) { document.webkitExitFullscreen().catch(()=>{}); }
-      
-      // Removed screen.orientation.unlock() so the game stays in landscape 
-      // even if the user exits fullscreen mode!
+      else if (document.mozCancelFullScreen) { document.mozCancelFullScreen().catch(()=>{}); }
+      else if (document.msExitFullscreen) { document.msExitFullscreen().catch(()=>{}); }
   }
+  setTimeout(updateFullscreenIcons, 300);
 }
 
-// Update icons automatically if player uses ESC key
+function updateFullscreenIcons() {
+    const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
+        btn.textContent = isFs ? '✖' : '⛶'; 
+    });
+}
+
+// Ensure the button state fixes itself if Google Auth or Mic popups break the screen state
 document.addEventListener('fullscreenchange', updateFullscreenIcons);
 document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
+window.addEventListener('resize', updateFullscreenIcons);
 
 // Make the Rotate Screen fallback clickable to force landscape
 document.addEventListener('DOMContentLoaded', () => {
@@ -3191,24 +3203,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-function updateFullscreenIcons() {
-    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-    document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
-        btn.textContent = isFs ? '✖' : '⛶'; // Changes to X when in fullscreen
-    });
-}
-
 window.minimumBootTimePassed = false;
 
 function proceedWithBoot(overlayEl) {
-    // Trigger rotation and fullscreen AFTER permission is handled
     forceEnterFullscreen();
 
-    // Hide the "Tap to start" overlay so we can see the 3D animation
     overlayEl.style.opacity = '0';
     setTimeout(() => overlayEl.style.display = 'none', 800);
     
-    // Start the music immediately while the animation plays
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
@@ -3223,14 +3225,10 @@ function proceedWithBoot(overlayEl) {
         startAmbientPad();
     }
 
-    // If the user has visited before and has cached assets, cut down the 3D boot wait time
     const bootTime = localStorage.getItem('dod_assets_cached') ? 800 : 2500;
     
-    // Show the 3D Bootstrap animation sequence
     setTimeout(() => {
         window.minimumBootTimePassed = true;
-        
-        // Now fade in the main menu (or tutorial)
         if (localStorage.getItem('dod_seen_tutorial')) {
             menu.classList.add('menu-visible');
         } else {
@@ -3241,23 +3239,42 @@ function proceedWithBoot(overlayEl) {
 
 ['click', 'touchend'].forEach(eventName => {
     introOverlay.addEventListener(eventName, function(e) {
-        if (this.dataset.booted) return; // Prevent double-firing from touch + click
         if (eventName === 'touchend') e.preventDefault(); 
-        this.dataset.booted = 'true';
+        
+        if (this.dataset.booted === 'true') return;
+        if (this.dataset.waitingForMic === 'true') return;
 
-        // Request microphone permission at the VERY FIRST tap
-        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        // If mic permission is resolved, this tap guarantees full screen execution!
+        if (this.dataset.micResolved === 'true') {
+            this.dataset.booted = 'true';
+            proceedWithBoot(this);
+            return;
+        }
+
+        // FIRST TAP: Ask for microphone
+        if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
+            this.dataset.waitingForMic = 'true';
+            const statusText = document.getElementById('introStatusText');
+            if (statusText) statusText.textContent = "Please allow microphone access...";
+            
             navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    // Immediately stop tracks, we just needed the permission granted
                     stream.getTracks().forEach(track => track.stop());
-                    proceedWithBoot(this);
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    this.dataset.waitingForMic = 'false';
+                    this.dataset.micResolved = 'true';
+                    if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
                 })
                 .catch(err => {
-                    console.warn("Microphone permission denied or ignored.", err);
-                    proceedWithBoot(this);
+                    console.warn("Microphone denied.", err);
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    this.dataset.waitingForMic = 'false';
+                    this.dataset.micResolved = 'true';
+                    if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
                 });
         } else {
+            // Already asked before, just boot normally
+            this.dataset.booted = 'true';
             proceedWithBoot(this);
         }
     });
@@ -3834,9 +3851,9 @@ const VoiceChat = {
             
             await Promise.race([connectPromise, timeoutPromise]);
 
-            await this.room.localParticipant.setMicrophoneEnabled(true);
+            // FIX: Do not automatically enable the microphone! 
+            // Keep it completely disabled until the player clicks the mic icon.
             this.isMuted = true;
-            await this.room.localParticipant.setMicrophoneEnabled(false);
 
             if (typeof setMicActive === 'function') setMicActive(false); 
             this.updateMuteButtonUI();
@@ -9726,8 +9743,11 @@ async function linkGuestToGoogleAccount() {
     if (!user) return;
     
     try {
-        // Safe account up-linking transaction: transfers all Firestore coins, skins, level progress cleanly to verified credentials
         const credential = await user.linkWithPopup(provider);
+        
+        // Instantly recover the screen orientation!
+        if (typeof forceEnterFullscreen === 'function') forceEnterFullscreen();
+        
         showSystemToast("Account successfully linked to Google!");
         
         if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
@@ -9737,6 +9757,10 @@ async function linkGuestToGoogleAccount() {
         }
     } catch (error) {
         console.error("Linking failed: ", error);
+        
+        // Recover the screen orientation even if they cancelled!
+        if (typeof forceEnterFullscreen === 'function') forceEnterFullscreen();
+        
         if (error.code === 'auth/credential-already-in-use') {
             showSystemToast("This Google account is already linked to another player!");
         } else {
