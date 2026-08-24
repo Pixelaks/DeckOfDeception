@@ -3290,19 +3290,25 @@ introOverlay.addEventListener('click', function(e) {
                 stream.getTracks().forEach(track => track.stop());
                 localStorage.setItem('dod_mic_asked', 'true');
                 
-                // THE REFRESH WORKAROUND: Force a page reload so the browser resets its buggy fullscreen state
-                if (statusText) statusText.textContent = "Permission saved! Reloading game...";
-                setTimeout(() => window.location.reload(), 400);
+                if (statusText) statusText.textContent = "Permission saved! Rebooting game...";
+                
+                // THE HARD RESTART: Tricks Brave into destroying the tab's memory entirely, clearing the glitch
+                setTimeout(() => {
+                    window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now());
+                }, 500);
             })
             .catch(err => {
                 localStorage.setItem('dod_mic_asked', 'true');
                 
-                // THE REFRESH WORKAROUND: Do the same even if they denied it
-                if (statusText) statusText.textContent = "Settings saved! Reloading game...";
-                setTimeout(() => window.location.reload(), 400);
+                if (statusText) statusText.textContent = "Settings saved! Rebooting game...";
+                
+                // THE HARD RESTART (Even on denial)
+                setTimeout(() => {
+                    window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now());
+                }, 500);
             });
     } else {
-        // Returning user (Permission was already handled in a previous load)
+        // Returning user (Mic prompt handled, tab is fresh)
         this.dataset.booted = 'true';
         forceEnterFullscreen(); 
         proceedWithBoot(this);
