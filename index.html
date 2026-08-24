@@ -911,7 +911,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pubg-play-zone,
 #pubgLeaveLobbyBtn {
   transform: translateZ(0);
-  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 /* Force hardware rasterization for panning scene */
@@ -948,7 +949,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   #menu h1, .finale-status, h2 {
     animation: titleReveal 3s cubic-bezier(0.2, 1, 0.3, 1) 0.5s backwards !important; 
     background-size: 100% auto !important; 
-    transform: translateZ(0);
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
   }
   .menu-camera {
     width: 140vw !important; height: 140vh !important; left: -20vw !important; top: -20vh !important;
@@ -1354,7 +1356,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* iOS Portrait Fallback Screen */
 #rotate-device-overlay {
   display: none; position: fixed; inset: 0; background: var(--felt-dark);
-  z-index: 99999; color: var(--brass-bright); align-items: center; justify-content: center;
+  z-index: 400000; color: var(--brass-bright); align-items: center; justify-content: center;
   text-align: center;
 }
 .rotate-content { display: flex; flex-direction: column; gap: 16px; align-items: center; }
@@ -3181,9 +3183,8 @@ function toggleFullscreen() {
       if (document.exitFullscreen) { document.exitFullscreen().catch(()=>{}); }
       else if (document.webkitExitFullscreen) { document.webkitExitFullscreen().catch(()=>{}); }
       
-      if (screen.orientation && screen.orientation.unlock) { 
-          screen.orientation.unlock(); 
-      }
+      // Removed screen.orientation.unlock() so the game stays in landscape 
+      // even if the user exits fullscreen mode!
   }
 }
 
