@@ -97,8 +97,17 @@ dodAuth.onAuthStateChanged(function(user){
 
 function dodSignInWithGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
-  dodAuth.signInWithPopup(provider).catch(function(error){
-    console.error("Google Sign-In Error:", error);
+  dodAuth.signInWithPopup(provider).then(function(result) {
+      // The exact second they sign in, force the screen back to landscape!
+      if (typeof forceEnterFullscreen === 'function') {
+          forceEnterFullscreen();
+      }
+  }).catch(function(error){
+      console.error("Google Sign-In Error:", error);
+      // Even if they hit "cancel" or the back button, fix the screen!
+      if (typeof forceEnterFullscreen === 'function') {
+          forceEnterFullscreen();
+      }
   });
 }
 
