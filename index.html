@@ -3149,58 +3149,6 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
-// ============================================================
-// ON-SCREEN DEBUG CONSOLE (temporary — remove once bug is fixed)
-// Mirrors console.log/warn/error into a visible box on the phone screen.
-// ============================================================
-(function setupOnScreenDebugConsole() {
-    const box = document.createElement('div');
-    box.id = 'dodDebugConsole';
-    box.style.cssText = `
-        position: fixed; bottom: 0; left: 0; right: 0; height: 40vh;
-        background: rgba(0,0,0,0.9); color: #0f0; font-family: monospace;
-        font-size: 11px; line-height: 1.4; overflow-y: auto; z-index: 999999;
-        padding: 8px; box-sizing: border-box; white-space: pre-wrap;
-        word-break: break-all; border-top: 2px solid #0f0; display: none;
-    `;
-    document.body.appendChild(box);
-
-    const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = 'DBG';
-    toggleBtn.style.cssText = `
-        position: fixed; bottom: 8px; right: 8px; z-index: 1000000;
-        background: #0f0; color: #000; border: none; border-radius: 4px;
-        padding: 6px 10px; font-family: monospace; font-weight: bold; font-size: 12px;
-    `;
-    toggleBtn.addEventListener('click', () => {
-        box.style.display = box.style.display === 'none' ? 'block' : 'none';
-    });
-    document.body.appendChild(toggleBtn);
-
-    function logToBox(level, args) {
-        const line = document.createElement('div');
-        line.style.color = level === 'warn' ? '#ff0' : level === 'error' ? '#f55' : '#0f0';
-        const msg = args.map(a => {
-            try { return typeof a === 'object' ? JSON.stringify(a) : String(a); }
-            catch(e) { return String(a); }
-        }).join(' ');
-        line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
-        box.appendChild(line);
-        box.scrollTop = box.scrollHeight;
-    }
-
-    const origLog = console.log.bind(console);
-    const origWarn = console.warn.bind(console);
-    const origError = console.error.bind(console);
-    console.log = function(...args) { origLog(...args); logToBox('log', args); };
-    console.warn = function(...args) { origWarn(...args); logToBox('warn', args); };
-    console.error = function(...args) { origError(...args); logToBox('error', args); };
-
-    window.addEventListener('error', (e) => {
-        logToBox('error', ['UNCAUGHT: ' + e.message + ' @ ' + e.filename + ':' + e.lineno]);
-    });
-})();
-
 // The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
   const doc = document.documentElement;
@@ -3256,6 +3204,10 @@ document.addEventListener('DOMContentLoaded', () => {
     if (rotateOverlay) {
         const handleRotateTap = function(e) {
             forceEnterFullscreen();
+            // Hide the overlay instantly so the user sees the game behind it, 
+            // bypassing CSS media query delays while the screen physically rotates
+            rotateOverlay.style.display = 'none';
+            setTimeout(() => { rotateOverlay.style.display = ''; }, 1500);
         };
         // Rely purely on 'click' to securely pass the user-gesture token for requestFullscreen
         rotateOverlay.addEventListener('click', handleRotateTap);
@@ -3298,30 +3250,36 @@ function proceedWithBoot(overlayEl) {
 
 // Use ONLY 'click' so the browser securely registers the user gesture for Fullscreen API
 introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true') return;
+    if (this.dataset.booted === 'true') {
+        // Failsafe: if the UI got stuck and this overlay is still visible after the mic prompt,
+        // tapping it again will aggressively force fullscreen and rigorously hide it.
+        forceEnterFullscreen();
+        this.style.opacity = '0';
+        this.style.pointerEvents = 'none';
+        setTimeout(() => this.style.display = 'none', 300);
+        return;
+    }
 
-    // Enter fullscreen + boot RIGHT NOW, on this exact tap — the same tap that already
-    // works fine for the rotate-overlay. We no longer wait on the mic permission dialog
-    // before doing this, because that dialog reliably breaks Android's fullscreen/immersive
-    // state, and re-requesting fullscreen on a LATER tap (after the dialog closes) does not
-    // reliably recover it. Ask first, act second — never the other way around.
+    // Enter fullscreen + boot RIGHT NOW, on this exact tap.
     this.dataset.booted = 'true';
     proceedWithBoot(this);
 
-    // Ask for microphone permission in the BACKGROUND, after fullscreen is already
-    // in motion. This doesn't block boot and doesn't require a second tap — if the
-    // native dialog knocks fullscreen out, forceEnterFullscreen() already ran once
-    // successfully off this gesture and the game is proceeding regardless.
+    // Ask for microphone permission, but DELAY IT by 800ms.
+    // This guarantees the browser has fully entered fullscreen and the CSS fade-out
+    // animations have finished BEFORE the native OS permission dialog steals focus 
+    // and freezes the page layout.
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
-                localStorage.setItem('dod_mic_asked', 'true');
-            })
-            .catch(err => {
-                console.warn("Microphone denied.", err);
-                localStorage.setItem('dod_mic_asked', 'true');
-            });
+        setTimeout(() => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    localStorage.setItem('dod_mic_asked', 'true');
+                })
+                .catch(err => {
+                    console.warn("Microphone denied.", err);
+                    localStorage.setItem('dod_mic_asked', 'true');
+                });
+        }, 800);
     }
 });
 
