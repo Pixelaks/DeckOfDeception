@@ -3150,6 +3150,7 @@ document.addEventListener("visibilitychange", function() {
 });
 
 // The Screen Rotation Function (Forced on initial tap)
+// The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
   const doc = document.documentElement;
 
@@ -3248,6 +3249,13 @@ function proceedWithBoot(overlayEl) {
     overlayEl.style.opacity = '0';
     setTimeout(() => overlayEl.style.display = 'none', 800);
     
+    // FIX: Hide the "Connecting to Table..." bootstrap overlay!
+    const bootOverlay = document.getElementById('bootstrapOverlay');
+    if (bootOverlay) {
+        bootOverlay.style.opacity = '0';
+        setTimeout(() => bootOverlay.style.display = 'none', 800);
+    }
+    
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
@@ -3276,36 +3284,41 @@ function proceedWithBoot(overlayEl) {
 
 // Use ONLY 'click' so the browser securely registers the user gesture for Fullscreen API
 introOverlay.addEventListener('click', function(e) {
-    if (this.dataset.booted === 'true') {
-        // Failsafe: if the UI got stuck and this overlay is still visible after the mic prompt,
-        // tapping it again will aggressively force fullscreen and rigorously hide it.
-        forceEnterFullscreen();
-        this.style.opacity = '0';
-        this.style.pointerEvents = 'none';
-        setTimeout(() => this.style.display = 'none', 300);
+    if (this.dataset.booted === 'true') return;
+    if (this.dataset.waitingForMic === 'true') return;
+
+    // If mic permission is resolved, this tap guarantees full screen execution!
+    if (this.dataset.micResolved === 'true') {
+        this.dataset.booted = 'true';
+        proceedWithBoot(this);
         return;
     }
 
-    // Enter fullscreen + boot RIGHT NOW, on this exact tap.
-    this.dataset.booted = 'true';
-    proceedWithBoot(this);
-
-    // Ask for microphone permission, but DELAY IT by 800ms.
-    // This guarantees the browser has fully entered fullscreen and the CSS fade-out
-    // animations have finished BEFORE the native OS permission dialog steals focus 
-    // and freezes the page layout.
+    // FIRST TAP: Ask for microphone
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        setTimeout(() => {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    stream.getTracks().forEach(track => track.stop());
-                    localStorage.setItem('dod_mic_asked', 'true');
-                })
-                .catch(err => {
-                    console.warn("Microphone denied.", err);
-                    localStorage.setItem('dod_mic_asked', 'true');
-                });
-        }, 800);
+        this.dataset.waitingForMic = 'true';
+        const statusText = document.getElementById('introStatusText');
+        if (statusText) statusText.textContent = "Please allow microphone access...";
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                stream.getTracks().forEach(track => track.stop());
+                localStorage.setItem('dod_mic_asked', 'true');
+                this.dataset.waitingForMic = 'false';
+                this.dataset.micResolved = 'true';
+                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+            })
+            .catch(err => {
+                console.warn("Microphone denied.", err);
+                localStorage.setItem('dod_mic_asked', 'true');
+                this.dataset.waitingForMic = 'false';
+                this.dataset.micResolved = 'true';
+                if (statusText) statusText.textContent = "Tap anywhere to enter full screen!";
+            });
+    } else {
+        // Already asked before, just boot normally
+        this.dataset.booted = 'true';
+        proceedWithBoot(this);
     }
 });
 
