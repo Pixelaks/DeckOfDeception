@@ -3153,16 +3153,19 @@ document.addEventListener("visibilitychange", function() {
 function forceEnterFullscreen() {
   const doc = document.documentElement;
   
-  if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
-  }
-
+  // 1. Ask for Fullscreen FIRST! 
+  // If we lock orientation first, Android triggers a layout redraw that drops the fullscreen request.
   const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
   if (!isFs) {
       if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
       else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
       else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
       else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
+  }
+
+  // 2. Lock Orientation SECOND.
+  if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
   }
   
   setTimeout(updateFullscreenIcons, 300);
@@ -3198,8 +3201,13 @@ window.addEventListener('resize', updateFullscreenIcons);
 document.addEventListener('DOMContentLoaded', () => {
     const rotateOverlay = document.getElementById('rotate-device-overlay');
     if (rotateOverlay) {
-        rotateOverlay.addEventListener('click', forceEnterFullscreen);
-        rotateOverlay.addEventListener('touchstart', forceEnterFullscreen);
+        const handleRotateTap = function(e) {
+            // Prevent mobile browsers from firing touchstart AND click sequentially!
+            if (e.type === 'touchstart') e.preventDefault(); 
+            forceEnterFullscreen();
+        };
+        rotateOverlay.addEventListener('click', handleRotateTap);
+        rotateOverlay.addEventListener('touchstart', handleRotateTap, { passive: false });
     }
 });
 
