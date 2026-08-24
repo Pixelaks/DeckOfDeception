@@ -3149,47 +3149,42 @@ document.addEventListener("visibilitychange", function() {
     }
 });
 
+let fsRequestPending = false; // Anti-spam lock
+
 // The Screen Rotation Function (Forced on initial tap)
 function forceEnterFullscreen() {
-  const doc = document.documentElement;
+  if (fsRequestPending) return; // Prevent touchstart & click from firing at the exact same time
   
-  if (typeof showSystemToast === 'function') showSystemToast("Sending Fullscreen Request...");
-
-  if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch((e) => console.log("Orientation block:", e));
-  }
-
+  const doc = document.documentElement;
   let req = null;
+  
+  // 1. Request fullscreen FIRST to guarantee it consumes the user's tap gesture
   if (doc.requestFullscreen) { req = doc.requestFullscreen(); }
   else if (doc.webkitRequestFullscreen) { req = doc.webkitRequestFullscreen(); }
   else if (doc.mozRequestFullScreen) { req = doc.mozRequestFullScreen(); }
   else if (doc.msRequestFullscreen) { req = doc.msRequestFullscreen(); }
   
-  // Catch and display the exact reason the browser rejects the fullscreen attempt
   if (req && req.catch) {
-      req.catch(err => {
-          if (typeof showSystemToast === 'function') showSystemToast("FS Blocked: " + err.message);
-      });
+      fsRequestPending = true;
+      req.then(() => { fsRequestPending = false; }).catch(() => { fsRequestPending = false; });
+  }
+
+  // 2. Lock Orientation second
+  if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock('landscape').catch(() => {});
   }
   
-  setTimeout(updateFullscreenIcons, 300);
+  setTimeout(updateFullscreenIcons, 500);
 }
 
 // Toggle function for the UI buttons
 function toggleFullscreen() {
   let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
-  let wH = window.innerHeight;
-  let sH = window.screen.height;
   
-  let debugMsg = `State FS: ${!!isFs} | wH: ${wH} | sH: ${sH}`;
-  
-  if (isFs && wH < sH - 100) {
+  // FIX: Detect if the browser dropped out of fullscreen (due to a mic popup) but failed to update its internal state
+  if (isFs && window.innerHeight < window.screen.height - 100) {
       isFs = null;
-      debugMsg += " -> Fixed Desync";
   }
-
-  // Print the state calculation to the screen
-  if (typeof showSystemToast === 'function') showSystemToast(debugMsg);
 
   if (!isFs) {
       forceEnterFullscreen();
@@ -3199,14 +3194,16 @@ function toggleFullscreen() {
       else if (document.mozCancelFullScreen) { document.mozCancelFullScreen().catch(()=>{}); }
       else if (document.msExitFullscreen) { document.msExitFullscreen().catch(()=>{}); }
   }
-  setTimeout(updateFullscreenIcons, 300);
+  setTimeout(updateFullscreenIcons, 500);
 }
 
 function updateFullscreenIcons() {
     let isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+    
     if (isFs && window.innerHeight < window.screen.height - 100) {
         isFs = null;
     }
+    
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
         btn.textContent = isFs ? '✖' : '⛶'; 
     });
