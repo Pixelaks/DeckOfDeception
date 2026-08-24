@@ -3153,20 +3153,34 @@ document.addEventListener("visibilitychange", function() {
 function forceEnterFullscreen() {
   const doc = document.documentElement;
 
-  // 1. ALWAYS attempt fullscreen — do NOT gate this on document.fullscreenElement.
-  // On Android, the mic/getUserMedia permission dialog silently kicks the page OUT
-  // of fullscreen without firing 'fullscreenchange', so that flag goes stale and
-  // reports "still fullscreen" forever after — which was causing every tap after the
-  // mic prompt to skip requestFullscreen() entirely. Calling it when already fullscreen
-  // is a harmless no-op per spec, so it's always safe to just try.
-  if (doc.requestFullscreen) { doc.requestFullscreen().catch(err => console.warn('requestFullscreen failed:', err)); }
-  else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(err => console.warn('webkitRequestFullscreen failed:', err)); }
-  else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(err => console.warn('mozRequestFullScreen failed:', err)); }
-  else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(err => console.warn('msRequestFullscreen failed:', err)); }
+  const requestFS = () => {
+      if (doc.requestFullscreen) { doc.requestFullscreen().catch(()=>{}); }
+      else if (doc.webkitRequestFullscreen) { doc.webkitRequestFullscreen().catch(()=>{}); }
+      else if (doc.mozRequestFullScreen) { doc.mozRequestFullScreen().catch(()=>{}); }
+      else if (doc.msRequestFullscreen) { doc.msRequestFullscreen().catch(()=>{}); }
+      
+      if (screen.orientation && screen.orientation.lock) {
+          screen.orientation.lock('landscape').catch(() => {});
+      }
+  };
 
-  // 2. Lock Orientation SECOND.
-  if (screen.orientation && screen.orientation.lock) {
-      screen.orientation.lock('landscape').catch(() => {});
+  // ANDROID CHROME IMMERSIVE BUG FIX:
+  // If the mic dialog dropped us out of fullscreen, Chrome still thinks it's in fullscreen.
+  // Calling requestFullscreen() in this state is a "no-op" (it does nothing).
+  // We check if the DOM thinks it's fullscreen BUT the window height is physically smaller 
+  // than the screen (meaning the URL bar is visible).
+  const isStuck = document.fullscreenElement && (window.innerHeight < window.screen.height * 0.85);
+
+  if (isStuck) {
+      // Force exit the broken state, then immediately re-request it
+      document.exitFullscreen().then(() => {
+          requestFS();
+      }).catch(() => {
+          requestFS();
+      });
+  } else {
+      // Standard entry
+      requestFS();
   }
   
   setTimeout(updateFullscreenIcons, 300);
@@ -3203,13 +3217,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const rotateOverlay = document.getElementById('rotate-device-overlay');
     if (rotateOverlay) {
         const handleRotateTap = function(e) {
+            e.preventDefault(); // Prevent double-firing if using touch
             forceEnterFullscreen();
-            // Hide the overlay instantly so the user sees the game behind it, 
-            // bypassing CSS media query delays while the screen physically rotates
+            
+            // Hide the overlay instantly so the user sees the game behind it
             rotateOverlay.style.display = 'none';
+            
+            // Failsafe: if the Pixilaks Logo intro screen got stuck during the mic prompt, kill it too
+            const intro = document.getElementById('introOverlay');
+            if (intro && intro.style.display !== 'none') {
+                intro.style.opacity = '0';
+                intro.style.pointerEvents = 'none';
+                setTimeout(() => intro.style.display = 'none', 300);
+            }
+            
             setTimeout(() => { rotateOverlay.style.display = ''; }, 1500);
         };
-        // Rely purely on 'click' to securely pass the user-gesture token for requestFullscreen
+        
+        // Bind to touchend for faster response on mobile, fallback to click
+        rotateOverlay.addEventListener('touchend', handleRotateTap, { passive: false });
         rotateOverlay.addEventListener('click', handleRotateTap);
     }
 });
