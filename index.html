@@ -890,11 +890,57 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   pointer-events: none; z-index: 0;
 }
 
+/* TIER PARTICLES */
+.rank-particles { position: absolute; inset: 0; overflow: hidden; border-radius: 8px; pointer-events: none; z-index: 0; }
+.rank-ember {
+  position: absolute; bottom: -20px; border-radius: 50%;
+  filter: blur(0.5px); opacity: 0;
+  /* Animation is now injected by JS so each tier can have a different style */
+}
+
+/* Style 1: Basic Slow Float (Apprentice, Oracle) */
+@keyframes rankFloatBasic {
+  0% { transform: translateY(0) scale(1) translateX(0); opacity: 0; }
+  20% { opacity: 0.6; }
+  80% { opacity: 0.6; }
+  100% { transform: translateY(-250px) scale(0.2) translateX(20px); opacity: 0; }
+}
+
+/* Style 2: Mysterious Sway (Trickster, Phantom) */
+@keyframes rankFloatSway {
+  0% { transform: translateY(0) scale(1) translateX(0); opacity: 0; }
+  25% { transform: translateY(-60px) scale(1.2) translateX(-15px); opacity: 0.7; }
+  50% { transform: translateY(-120px) scale(1) translateX(15px); opacity: 0.7; }
+  100% { transform: translateY(-250px) scale(0.3) translateX(-20px); opacity: 0; }
+}
+
+/* Style 3: Fast & Aggressive (Mastermind) */
+@keyframes rankFloatFast {
+  0% { transform: translateY(0) scale(1); opacity: 0; }
+  15% { opacity: 0.9; }
+  70% { opacity: 0.9; }
+  100% { transform: translateY(-300px) scale(0.1); opacity: 0; }
+}
+
+/* Style 4: Intense Shimmer Explosion (Legend) */
+@keyframes rankFloatShimmer {
+  0% { transform: translateY(0) scale(1) rotate(0deg); opacity: 0; }
+  20% { opacity: 1; transform: translateY(-40px) scale(1.6) rotate(45deg); }
+  80% { opacity: 1; transform: translateY(-200px) scale(1.3) rotate(180deg); }
+  100% { transform: translateY(-250px) scale(0.1) rotate(270deg); opacity: 0; }
+}
+
 .rank-item:hover { transform: translateY(-5px); border-color: rgba(201,162,39,0.5); }
 .rank-item.current { border-color: var(--brass-bright); box-shadow: 0 0 24px rgba(226,189,74,0.3), inset 0 0 20px rgba(226,189,74,0.1); transform: scale(1.05); z-index: 10; margin: 0 10px; }
 .rank-item.current::after { background: linear-gradient(0deg, rgba(226,189,74,0.2) 0%, transparent 100%); }
 .rank-item.current::before { content: 'CURRENT'; position: absolute; top: 0; left: 50%; transform: translateX(-50%); background: var(--brass-bright); color: #000; font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: bold; padding: 3px 14px; border-bottom-left-radius: 4px; border-bottom-right-radius: 4px; z-index: 2; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-.rank-item.locked { opacity: 0.5; filter: grayscale(0.8); }
+.rank-item.locked { /* No longer grayed out */ }
+.rank-item .lock-badge {
+  position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.85);
+  border-radius: 50%; width: 26px; height: 26px; font-size: 13px;
+  display: flex; align-items: center; justify-content: center; z-index: 5;
+  border: 1px solid rgba(255,255,255,0.3); box-shadow: 0 4px 10px rgba(0,0,0,0.8);
+}
 
 /* Elements scale fluidly based on screen height (vh) */
 .rank-item .r-icon { width: clamp(50px, 12vh, 80px); height: clamp(50px, 12vh, 80px); margin-bottom: 2vh; z-index: 1; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s; flex-shrink: 0; }
@@ -951,6 +997,61 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 @keyframes fadeUpIn { 0% { opacity: 0; transform: translateY(15px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes pulseSpinIn { 0% { opacity: 0; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.1); } 100% { opacity: 1; transform: scale(1); } }
 @keyframes slamDown { 0% { opacity: 0; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
+
+/* THE DEALER'S DRAW (Interactive Daily Cards) */
+.dd-container { display: flex; gap: 20px; justify-content: center; margin: 20px 0; perspective: 1000px; min-height: 180px; }
+.dd-card-wrapper { transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dd-card {
+  width: 100px; height: 144px; position: relative; cursor: pointer;
+  transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.dd-card-wrapper:hover:not(.locked) .dd-card { transform: translateY(-16px) rotateZ(3deg); box-shadow: 0 15px 40px rgba(226,189,74,0.5); }
+.dd-card.flipped { transform: rotateY(180deg) scale(1.35); z-index: 10; }
+.dd-card-wrapper.fade-out { opacity: 0; transform: scale(0.5) translateY(50px); pointer-events: none; filter: blur(5px); }
+.dd-face {
+  position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
+  border-radius: 8px; border: 2px solid var(--brass-bright); box-shadow: 0 8px 20px rgba(0,0,0,0.9);
+}
+
+/* ANTI-ALIASING TRICK: Render background at 200% and scale down to fix texture noise */
+.dd-front {
+  background-color: var(--felt-dark);
+  overflow: hidden;
+}
+.dd-front::before {
+  content: ''; position: absolute; top: 0; left: 0;
+  width: 200%; height: 200%; transform-origin: top left; transform: scale(0.5);
+  background-image: url('Cards/LuckyCard.png') !important;
+  background-size: 100% 100%; background-position: center;
+  image-rendering: high-quality; border-radius: 14px;
+}
+
+/* Dynamic front for Inventory Reward Cards */
+.rc-front-basic::before { background-image: url('Cards/BasicCard.png') !important; border-radius: 12px !important; }
+.rc-front-mythic::before { background-image: url('Cards/MythicCard.png') !important; border-radius: 12px !important; }
+.rc-front-legendary::before { background-image: url('Cards/LegendaryCard.png') !important; border-radius: 12px !important; }
+
+.dd-back {
+  background: radial-gradient(circle at center, #2b1a24, #060709);
+  transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  padding: 10px; border-color: var(--ok); box-shadow: 0 0 40px rgba(47,110,82,0.8);
+}
+.dd-reward-icon { font-size: 46px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8)); margin-bottom: 5px; }
+.dd-reward-text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: bold; color: #fff; line-height: 1.3; }
+
+/* Cinematic Background VFX */
+.dd-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
+.dd-ember {
+  position: absolute; bottom: -20px; width: 4.5px; height: 4.5px; background: #f5dd8a;
+  box-shadow: 0 0 12px 2px rgba(226,189,74,0.8); border-radius: 50%;
+  filter: blur(0.5px); opacity: 0; animation: ddEmberFloat 5s infinite ease-in;
+}
+@keyframes ddEmberFloat {
+  0% { transform: translateY(0) scale(1) translateX(0); opacity: 0; }
+  20% { opacity: 0.7; }
+  80% { opacity: 0.7; }
+  100% { transform: translateY(-600px) scale(0.2) translateX(40px); opacity: 0; }
+}
 
 /* Red Deception Particles */
 .deception > * { position: relative; z-index: 1; }
@@ -2187,6 +2288,7 @@ window.dodImagesLoaded = false;
     'Cards/Decks.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
     'Cards/SteelCard.png', 'Cards/ReverseCard.png', 'Cards/PeekCard.png',
     'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Coins/Coins.png', 'Cards/Table.jpg',
+    'Cards/BasicCard.png', 'Cards/MythicCard.png', 'Cards/LegendaryCard.png', 'Cards/LuckyCard.png',
     'Tiers/Apprentice.png', 'Tiers/Trickster.png', 'Tiers/Phantom.png',
     'Tiers/Mastermind.png', 'Tiers/Oracle.png', 'Tiers/Legend.png',
     'Avatars/Apprentice.png', 'Avatars/Trickster.png', 'Avatars/Phantom.png',
@@ -2407,8 +2509,8 @@ window.dodImagesLoaded = false;
     </div>
     <!-- Right side Events & Chests -->
     <div class="pubg-events-zone" id="pubgEventsZone">
-      <div class="event-banner" onclick="openLuckySpin()">
-        <div class="event-text">LUCKY SPIN</div>
+      <div class="event-banner" onclick="openDailyDraw()">
+        <div class="event-text" id="dailyDrawBannerText">DAILY DRAW</div>
         <div id="spinRedDot" class="red-dot" style="top:5px; right:5px;"></div>
       </div>
       <div class="chest-inventory" id="chestInventoryList">
@@ -2494,7 +2596,6 @@ window.dodImagesLoaded = false;
       <button class="pubg-subtab-btn active" onclick="switchShopTab('cardFaces', this)">Faces</button>
       <button class="pubg-subtab-btn" onclick="switchShopTab('cardBacks', this)">Backs</button>
       <button class="pubg-subtab-btn" onclick="switchShopTab('tables', this)">Tables</button>
-      <button class="pubg-subtab-btn" onclick="switchShopTab('vfx', this)">VFX</button>
       <button class="pubg-subtab-btn" onclick="switchShopTab('coins', this)">Coins</button>
     </div>
     
@@ -2979,24 +3080,58 @@ async function submitUniqueNameWithId() {
 }
 </script>
 
-<!-- LUCKY SPIN MODAL -->
-<div class="modal-bg" id="spinModalOverlay" style="z-index: 6500;">
-  <div class="modal" style="text-align:center; background:rgba(12,14,16,0.98); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
-    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Daily Lucky Spin</h3>
-    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Test your luck once a day to win Coins, Chests, or exclusive skins!</p>
-    <div id="spinResultBox" style="font-size:54px; margin-bottom:20px; min-height:60px; filter:drop-shadow(0 0 10px rgba(226,189,74,0.4));">🎰</div>
-    <button class="btn" id="btnDoSpin" style="width:100%;" onclick="executeLuckySpin()">SPIN NOW</button>
-    <button class="btn ghost" style="width:100%; margin-top:10px;" onclick="document.getElementById('spinModalOverlay').classList.remove('show')">Close</button>
+<!-- THE DEALER'S DRAW MODAL (Full Screen Cinematic) -->
+<div class="modal-bg" id="dailyDrawModalOverlay" style="z-index: 6500; background: radial-gradient(circle at center, rgba(15,10,8,0.98) 0%, rgba(6,5,5,1) 100%);">
+  <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+    
+    <!-- BACK BUTTON -->
+    <button class="btn ghost small" onclick="document.getElementById('dailyDrawModalOverlay').classList.remove('show')" style="position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
+
+    <!-- Cinematic Sweeping Spotlight & Embers -->
+    <div class="ts-spotlight-beam" style="opacity: 0.4;"></div>
+    <div class="dd-particles" id="ddParticles"></div>
+    
+    <div style="z-index: 2; position: relative; text-align:center; width: 100%; max-width: 600px; padding: 20px;">
+        <div style="font-size:clamp(36px, 8vh, 54px); margin-bottom: 10px; animation: pulseIn 1s infinite alternate;">🃏</div>
+        <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:clamp(28px, 6vw, 42px); text-shadow: 0 4px 20px rgba(224,189,74,0.5); letter-spacing: 2px;">The Dealer's Draw</h3>
+        <p id="ddSubtitle" class="mono" style="font-size:14px; color:rgba(242,234,216,0.7); margin-bottom:40px;">The Dealer offers you a choice. Pick wisely...</p>
+        
+        <div class="dd-container" id="ddCardContainer">
+            <!-- Cards injected by JS -->
+        </div>
+        
+        <button class="btn ghost" style="width:220px; margin-top:40px; font-size: 14px; padding: 12px 0;" onclick="document.getElementById('dailyDrawModalOverlay').classList.remove('show')">Close</button>
+    </div>
   </div>
 </div>
 
-<!-- CHEST OPEN MODAL -->
-<div class="modal-bg" id="chestModalOverlay" style="z-index: 6600;">
-  <div class="modal" style="text-align:center; background:radial-gradient(circle at center, rgba(43,26,36,0.95), rgba(6,7,9,0.98)); border:1px solid var(--brass); padding:40px 30px; border-radius:12px; max-width:450px; width:90%; box-shadow:0 0 50px rgba(226,189,74,0.2);">
-    <h3 id="chestTitle" style="font-family:'Cinzel Decorative',serif; color:#fff; font-size:22px; margin-bottom:20px;">Opening Chest...</h3>
-    <div id="chestRewardIcon" style="font-size:72px; margin:20px 0; animation: pulseIn 0.5s ease;">🎁</div>
-    <div id="chestRewardText" style="font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--brass-bright); font-weight:bold; margin-bottom:30px; min-height:20px;"></div>
-    <button class="btn" style="width:100%;" onclick="document.getElementById('chestModalOverlay').classList.remove('show')">Awesome!</button>
+<!-- REWARD CARD OPEN MODAL (Replaces Chest Modal) -->
+<div class="modal-bg" id="rewardCardModalOverlay" style="z-index: 6600; background: radial-gradient(circle at center, rgba(15,10,8,0.98) 0%, rgba(6,5,5,1) 100%);">
+  <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+    
+    <div class="ts-spotlight-beam" style="opacity: 0.4;"></div>
+    <div class="dd-particles" id="rcParticles"></div>
+    
+    <div style="z-index: 2; position: relative; text-align:center; width: 100%; max-width: 600px; padding: 20px;">
+        <h3 id="rcTitle" style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:clamp(28px, 6vw, 42px); text-shadow: 0 4px 20px rgba(224,189,74,0.5); letter-spacing: 2px;">Basic Card</h3>
+        <p id="rcSubtitle" class="mono" style="font-size:14px; color:rgba(242,234,216,0.7); margin-bottom:40px;">Tap the card to reveal your reward...</p>
+        
+        <div class="dd-container" style="min-height: 220px;">
+            <div class="dd-card-wrapper" id="rcWrap">
+                <div class="dd-card" id="rcCard" style="width: 140px; height: 200px;" onclick="executeRewardCardOpen()">
+                    <div class="dd-face dd-front" id="rcFront" style="border:none; box-shadow: 0 10px 30px rgba(0,0,0,0.9);">
+                        <!-- Image injected via CSS -->
+                    </div>
+                    <div class="dd-face dd-back" id="rcBack" style="border-color:var(--brass-bright);">
+                        <div class="dd-reward-icon" id="rcRewardIcon">🎁</div>
+                        <div class="dd-reward-text" id="rcRewardText" style="font-size:14px;">Unlocking...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <button id="rcCloseBtn" class="btn ghost" style="width:220px; margin-top:40px; font-size: 14px; padding: 12px 0; opacity: 0; pointer-events: none; transition: opacity 0.5s;" onclick="document.getElementById('rewardCardModalOverlay').classList.remove('show')">Awesome!</button>
+    </div>
   </div>
 </div>
 
@@ -3090,29 +3225,119 @@ async function submitUniqueNameWithId() {
            </div>
         </div>
 
-        <!-- NEW: STATISTICS TAB -->
-        <div id="pane-stats" class="pubg-main-pane" style="display:none; flex:1; flex-direction:column; min-height:0; padding-right:10px;">
-           <h3 style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-top:0;">Career Statistics</h3>
-           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:16px; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
-               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Matches Played</div>
-                   <div id="statMatches" style="color:#fff; font-size:24px; font-weight:bold;">0</div>
+        <!-- FULL DETAILED: STATISTICS TAB -->
+        <div id="pane-stats" class="pubg-main-pane" style="display:none; flex:1; flex-direction:column; min-height:0; padding-right:10px; overflow-y:auto;">
+           <h3 style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-top:0; flex-shrink:0;">Career Statistics</h3>
+           
+           <!-- 1. Match Performance -->
+           <div class="ts-roster-label" style="margin-top:10px;">Match Performance</div>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Matches / Wins</div>
+                   <div style="color:#fff; font-size:16px; font-weight:bold;"><span id="statMatches">0</span> <span style="color:rgba(255,255,255,0.2);">|</span> <span id="statWins" style="color:var(--ok);">0</span></div>
                </div>
-               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Victories</div>
-                   <div id="statWins" style="color:var(--ok); font-size:24px; font-weight:bold;">0</div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Total Losses</div>
+                   <div id="statLosses" style="color:var(--danger-bright); font-size:16px; font-weight:bold;">0</div>
                </div>
-               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Win Rate</div>
-                   <div id="statWinRate" style="color:#fff; font-size:24px; font-weight:bold;">0%</div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Win Rate</div>
+                   <div id="statWinRate" style="color:#fff; font-size:16px; font-weight:bold;">0%</div>
                </div>
-               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Total Score</div>
-                   <div id="statTotalScore" style="color:var(--brass-bright); font-size:24px; font-weight:bold;">0</div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Win Streak (Cur / Max)</div>
+                   <div style="color:var(--brass-bright); font-size:16px; font-weight:bold;"><span id="statStreak">0</span> <span style="color:rgba(255,255,255,0.2);">|</span> <span id="statMaxStreak">0</span></div>
                </div>
-               <div style="background:rgba(0,0,0,0.4); padding:12px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
-                   <div style="color:rgba(255,255,255,0.4); font-size:10px; text-transform:uppercase; margin-bottom:4px;">Copies Collected</div>
-                   <div id="statCopies" style="color:var(--ok); font-size:24px; font-weight:bold;">0</div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Podiums (Top 3)</div>
+                   <div id="statPodiums" style="color:var(--ok); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Avg Placement</div>
+                   <div id="statAvgPlace" style="color:#fff; font-size:16px; font-weight:bold;">0.0</div>
+               </div>
+           </div>
+
+           <!-- 2. The Art of Deception -->
+           <div class="ts-roster-label" style="margin-top:20px;">The Art of Deception</div>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Deceptions Survived</div>
+                   <div id="statDeceptions" style="color:var(--ok); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Triggered (Broke)</div>
+                   <div id="statDecTriggered" style="color:var(--danger-bright); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Perfect Guesses</div>
+                   <div id="statDecPerfect" style="color:var(--brass-bright); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Master Bluffer</div>
+                   <div id="statDecBluffs" style="color:#fff; font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Survival Rate</div>
+                   <div id="statDecRate" style="color:#fff; font-size:16px; font-weight:bold;">0%</div>
+               </div>
+           </div>
+
+           <!-- 3. Playstyle & Card Mastery -->
+           <div class="ts-roster-label" style="margin-top:20px;">Playstyle & Card Mastery</div>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px;">
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Favorite Action Card</div>
+                   <div id="statFavCard" style="color:var(--brass-bright); font-size:16px; font-weight:bold;">None</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Coins Stolen (STL)</div>
+                   <div id="statStolen" style="color:var(--ok); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Coins Drained (PWR)</div>
+                   <div id="statDrained" style="color:var(--danger-bright); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Clutch Insurances</div>
+                   <div id="statInsurances" style="color:#fff; font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Forced Buys</div>
+                   <div id="statBuys" style="color:#fff; font-size:16px; font-weight:bold;">0</div>
+               </div>
+           </div>
+           
+           <!-- 4. Economy & Wealth -->
+           <div class="ts-roster-label" style="margin-top:20px;">Economy & Wealth</div>
+           <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(130px, 1fr)); gap:8px; font-family:'IBM Plex Mono',monospace; font-size:12px; margin-bottom: 20px;">
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Max Coins (1 Match)</div>
+                   <div id="statMaxCoins" style="color:var(--ok); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Total Score</div>
+                   <div id="statTotalScore" style="color:var(--brass-bright); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">PC Spent (Shop)</div>
+                   <div id="statSpent" style="color:#fff; font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Chests Opened</div>
+                   <div id="statChestsOpened" style="color:var(--purple); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Lucky Spins</div>
+                   <div id="statSpins" style="color:#fff; font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Cosmetics Owned</div>
+                   <div id="statCosmetics" style="color:var(--ok); font-size:16px; font-weight:bold;">0</div>
+               </div>
+               <div style="background:rgba(0,0,0,0.4); padding:10px; border-radius:4px; border:1px solid rgba(255,255,255,0.05); text-align:center;">
+                   <div style="color:rgba(255,255,255,0.4); font-size:9px; text-transform:uppercase; margin-bottom:4px;">Titles Unlocked</div>
+                   <div id="statTitles" style="color:var(--brass-bright); font-size:16px; font-weight:bold;">0</div>
                </div>
            </div>
         </div>
@@ -3962,13 +4187,48 @@ function buildRanksScreen() {
   const currentTier = profile ? (profile.tier || 'Apprentice') : 'Apprentice';
   const cIdx = TIERS.indexOf(currentTier) >= 0 ? TIERS.indexOf(currentTier) : 0;
 
+  // Define unique particle configs, scaling up intensity and size for higher ranks
+  const tierConfig = {
+    'Apprentice': { core: '#c9a227', glow: 'rgba(201,162,39,0.5)', count: 6,  size: 3, anim: 'rankFloatBasic' },
+    'Trickster':  { core: '#3ca25e', glow: 'rgba(60,162,94,0.6)',  count: 10, size: 4, anim: 'rankFloatSway' },
+    'Phantom':    { core: '#8b3dff', glow: 'rgba(139,61,255,0.7)', count: 14, size: 5, anim: 'rankFloatSway' },
+    'Mastermind': { core: '#ff6b7a', glow: 'rgba(194,59,74,0.8)',  count: 22, size: 5, anim: 'rankFloatFast' },
+    'Oracle':     { core: '#3c7fb2', glow: 'rgba(60,127,178,0.9)', count: 28, size: 6, anim: 'rankFloatBasic' },
+    'Legend':     { core: '#ffffff', glow: 'rgba(245,221,138,1)',  count: 40, size: 7, anim: 'rankFloatShimmer' } // Blinding white core, intense gold glow
+  };
+
   container.innerHTML = TIER_REWARDS.map((t, idx) => {
     let classes = 'rank-item';
     if (idx === cIdx) classes += ' current';
     else if (idx > cIdx) classes += ' locked';
     
+    let config = tierConfig[t.name] || tierConfig['Apprentice'];
+    
+    // Generate the magical floating particles for this specific box
+    let particleHtml = `<div class="rank-particles">`;
+    for(let i=0; i<config.count; i++) {
+        let left = Math.random() * 100 + '%';
+        let dur = (Math.random() * 2.5 + 1.5) + 's';
+        let del = (Math.random() * 2) + 's';
+        let pSize = (Math.random() * config.size + 2) + 'px'; // Dynamic scaling
+        
+        particleHtml += `<div class="rank-ember" style="
+            left:${left}; 
+            width:${pSize}; height:${pSize};
+            animation: ${config.anim} ${dur} infinite ease-in ${del}; 
+            background:${config.core}; 
+            box-shadow:0 0 12px 3px ${config.glow};
+        "></div>`;
+    }
+    particleHtml += `</div>`;
+    
+    // Add the lock badge if this rank is higher than the player's current rank
+    let lockHtml = (idx > cIdx) ? '<div class="lock-badge">🔒</div>' : '';
+
     return `
       <div class="${classes}">
+        ${lockHtml}
+        ${particleHtml}
         <div class="r-icon"><img src="Tiers/${t.name}.png" class="tier-img" alt="${t.name}"></div>
         <div class="r-info">
           <h4 class="r-name">${t.name}</h4>
@@ -7539,6 +7799,7 @@ async function confirmLeaveGame(){
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
 
     // Store the ID safely here before we clear it, so both Cloudflare and VoiceChat can use it!
+    window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     const matchToLeave = currentMatchId;
 
     if (matchToLeave) {
@@ -7552,6 +7813,7 @@ async function confirmLeaveGame(){
     }
 
     localStorage.removeItem('dod_active_match');
+    window.onlineMatchSeats = null; // Clear seats so friends list updates properly
     state = null;
     initialDealDone = false;
     localLastTurnUid = null;
@@ -7565,10 +7827,23 @@ async function confirmLeaveGame(){
         menu.style.display = 'flex';
         menu.style.opacity = '1';
         menu.classList.add('menu-visible');
-        showMenuScreen('hub');
-        if (typeof revertCamera === 'function') revertCamera();
-        document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
-        applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
+        
+        // If in a party, restore the party lobby view directly instead of standard hub
+        if (currentPartyId) {
+            showMenuScreen('hub');
+            showPartyLobbyCinematic();
+            if (window.firebase) {
+                firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
+                    if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
+                }).catch(()=>{});
+            }
+        } else {
+            // Solo players revert normally
+            showMenuScreen('hub');
+            if (typeof revertCamera === 'function') revertCamera();
+            document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
+            applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
+        }
 
         const accountLoadingEl = document.getElementById('accountLoading');
         const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
@@ -7905,8 +8180,10 @@ function returnToMenuFromEndgame() {
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
 
+    window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     localStorage.removeItem('dod_active_match');
     currentMatchId = null;
+    window.onlineMatchSeats = null; // Clear seats so friends list updates properly
     state = null;
     initialDealDone = false;
     localLastTurnUid = null;
@@ -8528,7 +8805,7 @@ function listenToParty(partyId) {
                             <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
                         </div>
                         <div style="display:flex; flex-direction:column; justify-content:center;">
-                            <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}</span>
+                            <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}${data.matchId ? ' <span style="color:var(--danger-bright); font-size:9px;">[In Match]</span>' : ''}</span>
                             ${titleHtml}
                         </div>
                     </div>`;
@@ -8620,7 +8897,7 @@ function listenToParty(partyId) {
         }
         
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
-        if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId) {
+        if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId && data.matchId !== window._lastCancelledMatchId) {
             currentMatchId = data.matchId;
             pubgCancelFlag = false; // FIX: Force reset the flag so the client doesn't instantly delete the new match!
             listenToPubgMatchFilling(
@@ -9399,7 +9676,10 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
                     frame: botP.frame,
                     tier: botP.tier,
                     level: botP.level,
-                    title: botP.title
+                    title: botP.title,
+                    deckSkin: botP.deckSkin,
+                    equippedTable: botP.equippedTable,
+                    points: 0
                 });
                 pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
             }
@@ -9461,6 +9741,7 @@ function cancelMatchmakingPubg() {
         window._lastCancelledMatchId = currentMatchId; 
         const matchToCancel = currentMatchId;
         currentMatchId = null; 
+        window.onlineMatchSeats = null; // Clear seats so friends list updates properly
 
         // Send to Cloudflare to safely leave and pass host
         secureServerCall('leaveMatch', { matchId: matchToCancel }).catch(e => console.error("Error leaving match:", e));
@@ -9651,19 +9932,58 @@ function updateProfileWidget(profile) {
     // Populate Statistics Tab Data
     const mp = profile.matchesPlayed || 0;
     const w = profile.wins || 0;
+    const losses = Math.max(0, mp - w);
     const wr = mp > 0 ? Math.round((w / mp) * 100) : 0;
     
-    const sMatches = document.getElementById('statMatches');
-    const sWins = document.getElementById('statWins');
-    const sWinRate = document.getElementById('statWinRate');
-    const sTotalScore = document.getElementById('statTotalScore');
-    const sCopies = document.getElementById('statCopies');
+    // 1. Match Performance
+    if (document.getElementById('statMatches')) document.getElementById('statMatches').textContent = mp;
+    if (document.getElementById('statWins')) document.getElementById('statWins').textContent = w;
+    if (document.getElementById('statLosses')) document.getElementById('statLosses').textContent = losses;
+    if (document.getElementById('statWinRate')) document.getElementById('statWinRate').textContent = wr + '%';
+    if (document.getElementById('statStreak')) document.getElementById('statStreak').textContent = profile.winStreak || 0;
+    if (document.getElementById('statMaxStreak')) document.getElementById('statMaxStreak').textContent = profile.maxWinStreak || profile.winStreak || 0;
+    if (document.getElementById('statPodiums')) document.getElementById('statPodiums').textContent = profile.podiumFinishes || w; // Default to wins if backend missing
+    if (document.getElementById('statAvgPlace')) document.getElementById('statAvgPlace').textContent = profile.avgPlacement ? parseFloat(profile.avgPlacement).toFixed(1) : (mp > 0 ? 'N/A' : '0.0');
+
+    // 2. The Art of Deception
+    const decSurvived = profile.deceptionsSurvived || 0;
+    const decFaced = profile.deceptionsFaced || decSurvived; // Default fallback
+    const decRate = decFaced > 0 ? Math.round((decSurvived / decFaced) * 100) : 0;
     
-    if (sMatches) sMatches.textContent = mp;
-    if (sWins) sWins.textContent = w;
-    if (sWinRate) sWinRate.textContent = wr + '%';
-    if (sTotalScore) sTotalScore.textContent = profile.totalScore || 0;
-    if (sCopies) sCopies.textContent = profile.totalCopies || 0;
+    if (document.getElementById('statDeceptions')) document.getElementById('statDeceptions').textContent = decSurvived;
+    if (document.getElementById('statDecTriggered')) document.getElementById('statDecTriggered').textContent = profile.deceptionsTriggered || 0;
+    if (document.getElementById('statDecPerfect')) document.getElementById('statDecPerfect').textContent = profile.perfectGuesses || 0;
+    if (document.getElementById('statDecBluffs')) document.getElementById('statDecBluffs').textContent = profile.masterBluffs || 0;
+    if (document.getElementById('statDecRate')) document.getElementById('statDecRate').textContent = decRate + '%';
+
+    // 3. Playstyle & Card Mastery
+    const uses = [
+        { name: 'Steal', count: profile.steals || 0 },
+        { name: 'Power', count: profile.powers || 0 },
+        { name: 'Wild', count: profile.wilds || 0 },
+        { name: 'Reverse', count: profile.reverses || 0 },
+        { name: 'Peek', count: profile.peeks || 0 }
+    ].sort((a,b) => b.count - a.count);
+    
+    let favCard = uses[0].count > 0 ? uses[0].name : 'None';
+    
+    if (document.getElementById('statFavCard')) document.getElementById('statFavCard').textContent = favCard;
+    if (document.getElementById('statSteals')) document.getElementById('statSteals').textContent = profile.coinsStolen || 0;
+    if (document.getElementById('statDrained')) document.getElementById('statDrained').textContent = profile.coinsDrained || 0;
+    if (document.getElementById('statInsurances')) document.getElementById('statInsurances').textContent = profile.insurances || 0;
+    if (document.getElementById('statBuys')) document.getElementById('statBuys').textContent = profile.forcedBuys || 0;
+
+    // 4. Economy & Wealth
+    const totalCosmetics = SHOP_DB.cardFaces.length + SHOP_DB.cardBacks.length + SHOP_DB.tables.length;
+    const ownedCosmetics = profile.inventory ? profile.inventory.length : 0;
+    
+    if (document.getElementById('statMaxCoins')) document.getElementById('statMaxCoins').textContent = profile.maxCoinsMatch || 0;
+    if (document.getElementById('statTotalScore')) document.getElementById('statTotalScore').textContent = profile.totalScore || 0;
+    if (document.getElementById('statSpent')) document.getElementById('statSpent').textContent = profile.totalPCSpent || 0;
+    if (document.getElementById('statChestsOpened')) document.getElementById('statChestsOpened').textContent = profile.totalChestsOpened || 0;
+    if (document.getElementById('statSpins')) document.getElementById('statSpins').textContent = profile.totalLuckySpins || 0;
+    if (document.getElementById('statCosmetics')) document.getElementById('statCosmetics').textContent = `${ownedCosmetics} / ${totalCosmetics}`;
+    if (document.getElementById('statTitles')) document.getElementById('statTitles').textContent = (profile.seenTitles ? profile.seenTitles.length : 0) + ' / ' + TITLES_DB.length;
 
     // Constantly monitor for newly earned unlocked titles!
     checkNewlyUnlockedTitles(profile);
@@ -9673,156 +9993,320 @@ function updateProfileWidget(profile) {
 }
 
 // --- ACHIEVEMENT NOTIFICATION LOGIC ---
+let _dailyDrawTimer = null;
+
 function renderEventsHub(profile) {
     if (!profile) return;
     const today = new Date().toDateString();
     const hasSpun = profile.lastSpinDate === today;
     const dot = document.getElementById('spinRedDot');
+    
     if (dot) {
         if (!hasSpun) dot.classList.add('show');
         else dot.classList.remove('show');
+    }
+    
+    const bannerText = document.getElementById('dailyDrawBannerText');
+    if (bannerText) {
+        if (hasSpun) {
+            if (_dailyDrawTimer) clearInterval(_dailyDrawTimer);
+            const updateTimer = () => {
+                const now = new Date();
+                // Calculate time until next midnight
+                const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+                const diff = tomorrow - now;
+                
+                if (diff <= 0) {
+                    clearInterval(_dailyDrawTimer);
+                    bannerText.innerHTML = "DAILY DRAW";
+                    if (dot) dot.classList.add('show');
+                    profile.lastSpinDate = null; // locally reset
+                } else {
+                    const h = Math.floor(diff / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((diff % (1000 * 60)) / 1000);
+                    bannerText.innerHTML = `<span style="font-size:9px; color:rgba(255,255,255,0.5); display:block; line-height:1; font-family:'Inter',sans-serif; letter-spacing:1px;">NEXT DRAW IN</span><span style="font-family:'IBM Plex Mono',monospace; font-size:14px; color:var(--brass-bright); display:block; margin-top:2px;">${h.toString().padStart(2,'0')}:${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}</span>`;
+                }
+            };
+            updateTimer();
+            _dailyDrawTimer = setInterval(updateTimer, 1000);
+        } else {
+            if (_dailyDrawTimer) clearInterval(_dailyDrawTimer);
+            bannerText.innerHTML = "DAILY DRAW";
+        }
     }
     
     const list = document.getElementById('chestInventoryList');
     if (list) {
         let html = '';
         const chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
-        if (chests.legendary > 0) html += `<div class="chest-item" onclick="openChest('legendary')"><span style="font-size:24px;">🧰</span><div style="text-align:right;"><div style="color:#f5dd8a; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Legendary</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.legendary}</div></div></div>`;
-        if (chests.mythic > 0) html += `<div class="chest-item" onclick="openChest('mythic')"><span style="font-size:24px;">🔮</span><div style="text-align:right;"><div style="color:#d094ff; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Mythic</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.mythic}</div></div></div>`;
-        if (chests.base > 0) html += `<div class="chest-item" onclick="openChest('base')"><span style="font-size:24px;">📦</span><div style="text-align:right;"><div style="color:#e4d8bd; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Base Chest</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.base}</div></div></div>`;
+        if (chests.legendary > 0) html += `<div class="chest-item" onclick="openRewardCard('legendary')"><img src="Cards/LegendaryCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#f5dd8a; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Legendary Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.legendary}</div></div></div>`;
+        if (chests.mythic > 0) html += `<div class="chest-item" onclick="openRewardCard('mythic')"><img src="Cards/MythicCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#d094ff; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Mythic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.mythic}</div></div></div>`;
+        if (chests.base > 0) html += `<div class="chest-item" onclick="openRewardCard('base')"><img src="Cards/BasicCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#e4d8bd; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Basic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.base}</div></div></div>`;
         list.innerHTML = html;
     }
 }
 
-function openLuckySpin() {
+function openDailyDraw() {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
     try { sfx.uiClick(); } catch(e){}
     
+    // Spawn Background VFX
+    const pContainer = document.getElementById('ddParticles');
+    if (pContainer) {
+        pContainer.innerHTML = '';
+        for(let i=0; i<30; i++) {
+            let ember = document.createElement('div');
+            ember.className = 'dd-ember';
+            ember.style.left = Math.random() * 100 + '%';
+            ember.style.animationDuration = (Math.random() * 4 + 3) + 's';
+            ember.style.animationDelay = (Math.random() * 2) + 's';
+            pContainer.appendChild(ember);
+        }
+    }
+
     const today = new Date().toDateString();
-    const hasSpun = profile.lastSpinDate === today;
+    const hasDrawn = profile.lastSpinDate === today;
     
-    const btn = document.getElementById('btnDoSpin');
-    const resultBox = document.getElementById('spinResultBox');
+    const subtitle = document.getElementById('ddSubtitle');
+    const container = document.getElementById('ddCardContainer');
+    container.innerHTML = '';
     
-    if (hasSpun) {
-        btn.disabled = true;
-        btn.textContent = "COME BACK TOMORROW";
-        btn.className = "btn ghost";
-        resultBox.textContent = "⏳";
+    if (hasDrawn) {
+        subtitle.textContent = "You have already claimed your reward today. Come back tomorrow!";
+        subtitle.style.color = "var(--danger-bright)";
+        
+        // Show one grayed out, flipped card
+        container.innerHTML = `
+            <div class="dd-card-wrapper locked" style="opacity:0.6; filter:grayscale(0.8);">
+                <div class="dd-card flipped">
+                    <div class="dd-face dd-back" style="border-color:var(--brass-bright); box-shadow:none;">
+                        <div class="dd-reward-icon">⏳</div>
+                        <div class="dd-reward-text">Check Back Tomorrow</div>
+                    </div>
+                </div>
+            </div>`;
     } else {
-        btn.disabled = false;
-        btn.textContent = "SPIN NOW";
-        btn.className = "btn";
-        resultBox.textContent = "🎰";
+        subtitle.textContent = "The Dealer offers you a choice. Pick wisely...";
+        subtitle.style.color = "rgba(242,234,216,0.7)";
+        
+        // Generate 4 interactive face-down cards
+        for (let i = 0; i < 4; i++) {
+            container.innerHTML += `
+                <div class="dd-card-wrapper" id="ddWrap_${i}">
+                    <div class="dd-card" id="ddCard_${i}" onclick="executeDailyDraw(${i})">
+                        <div class="dd-face dd-front"></div>
+                        <div class="dd-face dd-back" id="ddBack_${i}">
+                            <!-- Reward injected here -->
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
     
-    document.getElementById('spinModalOverlay').classList.add('show');
+    document.getElementById('dailyDrawModalOverlay').classList.add('show');
 }
 
-async function executeLuckySpin() {
+async function executeDailyDraw(selectedIndex) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
     
     const today = new Date().toDateString();
     if (profile.lastSpinDate === today) return;
     
-    try { sfx.uiClick(); } catch(e){}
-    const btn = document.getElementById('btnDoSpin');
-    const resultBox = document.getElementById('spinResultBox');
-    btn.disabled = true;
+    try { sfx.card(); } catch(e){}
+    
+    // 1. Lock all cards from further clicks
+    for (let i = 0; i < 4; i++) {
+        document.getElementById(`ddWrap_${i}`).classList.add('locked');
+        document.getElementById(`ddCard_${i}`).onclick = null;
+    }
+
+    // 2. Fade out the unselected cards with a burn particle effect
+    for (let i = 0; i < 4; i++) {
+        if (i !== selectedIndex) {
+            const wrap = document.getElementById(`ddWrap_${i}`);
+            const rect = wrap.getBoundingClientRect();
+            burstParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#c23b4a', 10, 'spark');
+            wrap.classList.add('fade-out');
+        }
+    }
+
+    const selectedCard = document.getElementById(`ddCard_${selectedIndex}`);
+    const selectedBack = document.getElementById(`ddBack_${selectedIndex}`);
+    const subtitle = document.getElementById('ddSubtitle');
+    
+    subtitle.textContent = "Revealing your fate...";
+    subtitle.style.color = "var(--brass-bright)";
 
     try {
         // Securely fetch result from Cloudflare
         const res = await secureServerCall('economy/spin', {});
         const rollData = res.result;
 
-        // Animate Spin Visually
-        let rolls = 0;
-        const icons = [`<img src="Coins/Coins.png" style="width:54px;height:54px;vertical-align:middle;">`, "📦", "🔮", "🧰", "❌"];
-        const spinAnim = setInterval(() => {
-            resultBox.innerHTML = icons[rolls % icons.length];
-            rolls++;
-        }, 100);
-        
-        setTimeout(async () => {
-            clearInterval(spinAnim);
-            
-            // Sync Local Cache with Server Truth
-            profile.lastSpinDate = rollData.date;
-            if (res.newCurrency !== undefined) profile.currency = res.newCurrency;
-            if (res.newChests !== undefined) profile.chests = res.newChests;
+        // Sync Local Cache with Server Truth
+        profile.lastSpinDate = rollData.date;
+        if (res.newCurrency !== undefined) profile.currency = res.newCurrency;
+        if (res.newChests !== undefined) profile.chests = res.newChests;
 
+        // Directly apply the styled HTML sent by the secure Cloudflare server
+        selectedBack.innerHTML = `
+            <div class="dd-reward-icon">${rollData.icon}</div>
+            <div class="dd-reward-text">${rollData.msg}</div>
+        `;
+        
+        // Wait a beat for suspense, then flip the card!
+        setTimeout(() => {
             try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
+            if (rollData.rewardType !== 'none') triggerNotificationVfx('gold');
             
-            // Intercept Server Response to inject custom Coin image and PC naming
-            let finalIcon = rollData.icon === "🪙" ? `<img src="Coins/Coins.png" style="width:54px;height:54px;vertical-align:middle;filter:drop-shadow(0 0 10px rgba(226,189,74,0.6));">` : rollData.icon;
-            let finalMsg = rollData.msg.replace(/Coins/g, "PC").replace(/Coin/g, "PC");
-            
-            resultBox.innerHTML = `<div style="font-size:54px;">${finalIcon}</div><div style="font-family:'IBM Plex Mono',monospace; font-size:16px; color:#fff; margin-top:10px;">${finalMsg}</div>`;
-            btn.textContent = "COME BACK TOMORROW";
-            btn.className = "btn ghost";
+            selectedCard.classList.add('flipped');
+            subtitle.textContent = "Reward Claimed!";
+            subtitle.style.color = "var(--ok)";
             
             // Refresh Hub UI
             const hubCur = document.getElementById('hubCurrency');
             if (hubCur) hubCur.textContent = profile.currency || 0;
             renderEventsHub(profile);
-            
-        }, 2000);
+        }, 600);
+
     } catch(e) {
-        console.error("Spin failed:", e);
-        btn.disabled = false;
+        console.error("Draw failed:", e);
+        subtitle.textContent = "The Dealer encountered an error. Try again later.";
+        subtitle.style.color = "var(--danger-bright)";
+        // Unlock if it failed so they can try again
+        for (let i = 0; i < 4; i++) {
+            document.getElementById(`ddWrap_${i}`).classList.remove('locked');
+            document.getElementById(`ddWrap_${i}`).classList.remove('fade-out');
+            document.getElementById(`ddCard_${i}`).onclick = () => executeDailyDraw(i);
+        }
     }
 }
 
-async function openChest(tier) {
+let currentRewardTier = '';
+
+function openRewardCard(tier) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || !profile.chests || profile.chests[tier] <= 0) return;
     
     try { sfx.uiClick(); } catch(e){}
+    currentRewardTier = tier;
     
-    const modal = document.getElementById('chestModalOverlay');
-    const title = document.getElementById('chestTitle');
-    const icon = document.getElementById('chestRewardIcon');
-    const text = document.getElementById('chestRewardText');
+    const modal = document.getElementById('rewardCardModalOverlay');
+    const title = document.getElementById('rcTitle');
+    const subtitle = document.getElementById('rcSubtitle');
+    const card = document.getElementById('rcCard');
+    const front = document.getElementById('rcFront');
+    const back = document.getElementById('rcBack');
+    const closeBtn = document.getElementById('rcCloseBtn');
+    const wrap = document.getElementById('rcWrap');
     
-    title.textContent = `Opening ${tier.charAt(0).toUpperCase() + tier.slice(1)} Chest...`;
-    icon.textContent = "🎁";
-    text.textContent = "Unlocking...";
+    // Reset state
+    card.classList.remove('flipped');
+    wrap.classList.remove('locked');
+    card.onclick = () => executeRewardCardOpen();
+    closeBtn.style.opacity = '0';
+    closeBtn.style.pointerEvents = 'none';
+    
+    // Set Titles & Images based on tier
+    front.className = 'dd-face dd-front'; // reset
+    if (tier === 'legendary') {
+        title.textContent = "Legendary Card";
+        title.style.color = "#f5dd8a";
+        front.classList.add('rc-front-legendary');
+        back.style.borderColor = "#f5dd8a";
+    } else if (tier === 'mythic') {
+        title.textContent = "Mythic Card";
+        title.style.color = "#d094ff";
+        front.classList.add('rc-front-mythic');
+        back.style.borderColor = "#d094ff";
+    } else {
+        title.textContent = "Basic Card";
+        title.style.color = "#e4d8bd";
+        front.classList.add('rc-front-basic');
+        back.style.borderColor = "#e4d8bd";
+    }
+    
+    subtitle.textContent = "Tap the card to reveal your reward...";
+    subtitle.style.color = "rgba(242,234,216,0.7)";
+    
+    // Particles
+    const pContainer = document.getElementById('rcParticles');
+    if (pContainer) {
+        pContainer.innerHTML = '';
+        for(let i=0; i<30; i++) {
+            let ember = document.createElement('div');
+            ember.className = 'dd-ember';
+            ember.style.left = Math.random() * 100 + '%';
+            ember.style.animationDuration = (Math.random() * 4 + 3) + 's';
+            ember.style.animationDelay = (Math.random() * 2) + 's';
+            if (tier === 'mythic') ember.style.background = '#d094ff';
+            if (tier === 'legendary') ember.style.background = '#f5dd8a';
+            pContainer.appendChild(ember);
+        }
+    }
+
     modal.classList.add('show');
+}
+
+async function executeRewardCardOpen() {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
     
+    const card = document.getElementById('rcCard');
+    const wrap = document.getElementById('rcWrap');
+    const subtitle = document.getElementById('rcSubtitle');
+    const icon = document.getElementById('rcRewardIcon');
+    const text = document.getElementById('rcRewardText');
+    const closeBtn = document.getElementById('rcCloseBtn');
+    
+    // Lock to prevent double click
+    wrap.classList.add('locked');
+    card.onclick = null;
+    subtitle.textContent = "Unlocking...";
+    subtitle.style.color = "var(--brass-bright)";
+    try { sfx.card(); } catch(e){}
+
     try {
         // Securely fetch result from Cloudflare
-        const res = await secureServerCall('economy/openChest', { tier });
+        const res = await secureServerCall('economy/openChest', { tier: currentRewardTier });
         const rollData = res.result;
 
-        // Simulate Opening Delay
-        setTimeout(async () => {
-            try { sfx.win(); } catch(e){}
-            
-            // Intercept Server Response to inject custom Coin image and PC naming
-            let finalIcon = rollData.icon === "🪙" ? `<img src="Coins/Coins.png" style="width:64px;height:64px;vertical-align:middle;filter:drop-shadow(0 0 10px rgba(226,189,74,0.6));">` : rollData.icon;
-            let finalMsg = rollData.msg.replace(/Coins/g, "PC").replace(/Coin/g, "PC");
-            
-            icon.innerHTML = finalIcon;
-            text.innerHTML = finalMsg;
+        icon.innerHTML = rollData.icon;
+        text.innerHTML = rollData.msg;
 
-            // Sync Local Cache with Server Truth
-            profile.chests = res.newChests;
-            profile.currency = rollData.newCurrency;
-            profile.shards = rollData.newShards;
-            profile.inventory = rollData.newInventory;
-            profile.totalCopies = rollData.totalCopies;
+        // Sync Local Cache with Server Truth
+        profile.chests = res.newChests;
+        profile.currency = rollData.newCurrency;
+        profile.shards = rollData.newShards;
+        profile.inventory = rollData.newInventory;
+        profile.totalCopies = rollData.totalCopies;
+
+        // Flip the card and play the success effects!
+        setTimeout(() => {
+            try { sfx.win(); } catch(e){}
+            triggerNotificationVfx('gold'); 
             
+            card.classList.add('flipped');
+            subtitle.textContent = "Reward Claimed!";
+            subtitle.style.color = "var(--ok)";
+            closeBtn.style.opacity = '1';
+            closeBtn.style.pointerEvents = 'all';
+
             const hubCur = document.getElementById('hubCurrency');
             if (hubCur) hubCur.textContent = profile.currency || 0;
             renderEventsHub(profile);
             if (typeof renderShopItems === 'function') renderShopItems();
-            
-        }, 1500);
+        }, 600);
+
     } catch(e) {
-        console.error("Chest error:", e);
-        modal.classList.remove('show');
+        console.error("Card open error:", e);
+        subtitle.textContent = "Error communicating with the Dealer. Try again later.";
+        subtitle.style.color = "var(--danger-bright)";
+        wrap.classList.remove('locked');
+        card.onclick = () => executeRewardCardOpen();
     }
 }
 
@@ -10532,16 +11016,10 @@ const SHOP_DB = {
         { id: 'tb_clockwork', name: 'Clockwork Brass', method: 'spin', desc: 'Steampunk gears and heavy brass.', img: 'ClockworkBrass.png', color: '71, 45, 22' },
         { id: 'tb_cyber', name: 'Cyber Matrix', method: 'spin', desc: 'Glowing neon hex grid plating.', img: 'CyberMatrix.png', color: '15, 56, 54' },
         { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.png', color: '77, 58, 28' },
-        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'Dragon\'sLair.png', color: '24, 56, 33' },
+        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'DragonsLair.png', color: '24, 56, 33' },
         { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.png', color: '28, 21, 51' },
         { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.png', color: '39, 56, 69' },
         { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.png', color: '69, 64, 39' }
-    ],
-    vfx: [
-        { id: 'vfx_default', name: 'Standard Spark', price: 0, desc: 'Basic card impact sparks.' },
-        { id: 'vfx_fire', name: 'Hellfire Trail', price: 2500, desc: 'Cards leave a trail of fire.' },
-        { id: 'vfx_lightning', name: 'Storm Strike', price: 4000, desc: 'Electric shock on play.' },
-        { id: 'vfx_void', name: 'Void Portal', price: 10000, desc: 'Summon cards from the void.' }
     ],
     coins: [
         { id: 'iap_1', name: 'Handful of PC', price: '$0.99', reward: 1000, img: 'Coins/Handfulofcoins.png' },
@@ -10849,7 +11327,6 @@ async function equipShopItem(itemId, category, event) {
     if (category === 'cardFaces') { updateField = 'equippedFace'; profile.equippedFace = itemId; }
     else if (category === 'cardBacks') { updateField = 'equippedBack'; profile.equippedBack = itemId; }
     else if (category === 'tables') { updateField = 'equippedTable'; profile.equippedTable = itemId; }
-    else if (category === 'vfx') { updateField = 'equippedVfx'; profile.equippedVfx = itemId; }
 
     if (updateField) {
         await firebase.firestore().collection('users').doc(profile.uid).update({
@@ -10865,48 +11342,78 @@ async function purchaseIAP(itemId, rewardAmount, event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
 
-    // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
-    const backupCurrency = profile.currency || 0;
+    try { sfx.uiClick(); } catch(e){}
 
-    // --- 1. INSTANT OPTIMISTIC UI ---
-    profile.currency = backupCurrency + rewardAmount;
-    
-    try { sfx.coin(); } catch(e){}
-    if (event) triggerNotificationVfx('equip', event);
-    try { sfx.win(); } catch(e){}
-    
-    if (typeof confetti !== 'undefined') {
-        const duration = 2000;
-        const end = Date.now() + duration;
-        (function frame() {
-            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-            if (Date.now() < end) requestAnimationFrame(frame);
-        }());
-    }
-    
-    const shopCur = document.getElementById('shopCurrency');
-    const hubCur = document.getElementById('hubCurrency');
-    if (shopCur) shopCur.textContent = profile.currency;
-    if (hubCur) hubCur.textContent = profile.currency;
-    
-    renderShopItems();
-    showSystemToast("Purchase successful! +" + rewardAmount + " Coins");
+    // Ensure your app's actual Android Package Name is set here
+    const PACKAGE_NAME = "com.pixelaks.deckofdeception"; 
+    let purchaseToken = null;
 
-    // --- 2. BACKGROUND SERVER SYNC ---
+    showSystemToast("Opening Google Play...");
+
     try {
-        const res = await secureServerCall('economy/iap', { rewardAmount });
-        profile.currency = res.newCurrency;
-    } catch(e) {
-        console.error("IAP failed:", e);
+        // ==============================================================
+        // NATIVE IAP TRIGGER (Using Capacitor/Cordova plugin)
+        // E.g., Using cordova-plugin-purchase or a custom bridge:
+        // const purchase = await store.order(itemId);
+        // purchaseToken = purchase.transaction.id; 
+        // ==============================================================
         
-        // --- 3. ROLLBACK ON FAILURE ---
-        profile.currency = backupCurrency;
+        // TEMPORARY MOCK FOR BROWSER TESTING:
+        // If testing in a browser without Play Store access, you can simulate a token.
+        // In actual production, replace this with your plugin's purchase logic!
+        const isNative = typeof store !== 'undefined' || window.cordova || window.Capacitor;
+        if (!isNative) {
+            console.warn("Native IAP SDK not found. Simulating purchase for development.");
+            purchaseToken = "test_dev_token_" + Math.random().toString(36).substring(7);
+        } else {
+            // Wait for your actual plugin logic here
+            throw new Error("Native IAP Plugin not configured yet.");
+        }
+        
+    } catch (err) {
+        showSystemToast("Purchase cancelled or failed.");
+        console.error(err);
+        return; // Halt if they closed the Google Play window
+    }
+
+    // 1. Tell Cloudflare to verify the token with Google
+    showSystemToast("Verifying payment securely...");
+    
+    try {
+        const res = await secureServerCall('economy/iap', { 
+            itemId: itemId, 
+            purchaseToken: purchaseToken,
+            packageName: PACKAGE_NAME 
+        });
+
+        // 2. SUCCESS! Server validated the receipt and gave us the new balance
+        profile.currency = res.newCurrency;
+        
+        try { sfx.coin(); } catch(e){}
+        if (event) triggerNotificationVfx('equip', event);
+        try { sfx.win(); } catch(e){}
+        
+        if (typeof confetti !== 'undefined') {
+            const duration = 2000;
+            const end = Date.now() + duration;
+            (function frame() {
+                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+        
+        const shopCur = document.getElementById('shopCurrency');
+        const hubCur = document.getElementById('hubCurrency');
         if (shopCur) shopCur.textContent = profile.currency;
         if (hubCur) hubCur.textContent = profile.currency;
-        renderShopItems();
         
-        showSystemToast("Transaction rejected by server.");
+        renderShopItems();
+        showSystemToast("Purchase Verified! PC added to your vault.");
+
+    } catch(e) {
+        console.error("IAP Server Verification failed:", e);
+        showSystemToast("Verification failed. If charged, contact support.");
     }
 }
 </script>
