@@ -4316,7 +4316,7 @@ function listenToGameState() {
             lastEffectiveValue: serverState.lastEffectiveValue,
             lastPlayedCardLabel: serverState.lastPlayedCardLabel,
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
-            uiState: serverState.turnUid === myUid ? serverState.uiState : 'IDLE',
+            uiState: serverState.uiState === 'DECEPTION' ? 'DECEPTION' : (serverState.turnUid === myUid ? serverState.uiState : 'IDLE'),
             buyLoop: preservedBuyLoop,
             peekResult: preservedPeek,
             deception: serverState.deception || null,
@@ -6497,15 +6497,16 @@ async function startDeceptionPhaseOnline(curPlayer){
   if(rich.length === 0){
     const realNumber = 1 + Math.floor(Math.random()*9);
     const claimNumber = 1 + Math.floor(Math.random()*9);
-    dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{}, expiresAt: Date.now() + 25000 };
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: claimNumber, phase:'ANSWER', responses:{}, expiresAt: Date.now() + 60000 };
   } else {
     const proposer = rich[Math.floor(Math.random()*rich.length)];
-    dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{}, expiresAt: Date.now() + 25000 };
+    dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{}, expiresAt: Date.now() + 60000 };
     if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
   }
   
   // Optimistic UI
   state.deception = dec;
+  state.uiState = 'DECEPTION'; // Safely lock the UI immediately
   renderAll();
 
   await secureServerCall('startDeception', { deceptionObj: dec });
@@ -6549,14 +6550,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
             secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.realNumber': resolved,
               'gameState.deception.phase': 'VOTE_CLAIM',
-              'gameState.deception.expiresAt': Date.now() + 25000,
+              'gameState.deception.expiresAt': Date.now() + 60000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table locked in a real secret number ${reasonStr} (kept hidden).` }
             }}).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
           } else {
             secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.claimNumber': resolved,
               'gameState.deception.phase': 'ANSWER',
-              'gameState.deception.expiresAt': Date.now() + 25000,
+              'gameState.deception.expiresAt': Date.now() + 60000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved} ${reasonStr}.` }
             }}).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
           }
