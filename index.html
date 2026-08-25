@@ -3158,35 +3158,30 @@ document.addEventListener("visibilitychange", function() {
 // ============================================================
 
 // ============================================================
-// ROBUST FULLSCREEN + LANDSCAPE SYSTEM (INSTANT SYNC FIX)
+// THE FINAL BULLETPROOF ANDROID FULLSCREEN FIX
 // ============================================================
 
-function forceEnterFullscreen() {
+async function forceEnterFullscreen() {
     const doc = document.documentElement;
-
     try {
-        // 1. Fire Fullscreen instantly (No delays, no await)
+        // 1. Enter Fullscreen cleanly.
         if (doc.requestFullscreen) {
-            doc.requestFullscreen().catch(err => console.warn("FS block:", err));
+            await doc.requestFullscreen();
         } else if (doc.webkitRequestFullscreen) {
-            doc.webkitRequestFullscreen();
-        } else if (doc.mozRequestFullScreen) {
-            doc.mozRequestFullScreen();
-        } else if (doc.msRequestFullscreen) {
-            doc.msRequestFullscreen();
+            await doc.webkitRequestFullscreen();
         }
 
-        // 2. Fire Orientation Lock instantly 
-        // Because we removed the delay, the browser still trusts the user's tap!
-        if (screen.orientation && screen.orientation.lock) {
-            screen.orientation.lock('landscape').catch(err => console.warn("Lock block:", err));
-        }
+        // 2. WE REMOVED THE ORIENTATION LOCK!
+        // Forcing rotation via JS is what crashes Brave and Chrome.
+        // Instead, your existing CSS will automatically show the "Rotate Device" 
+        // overlay if they are holding it in portrait, naturally prompting them 
+        // to turn their phone physically!
 
-        // 3. Android address bar shove
+    } catch (err) {
+        console.warn("Fullscreen safely ignored by browser:", err);
+    } finally {
         window.scrollTo(0, 1);
         updateFullscreenIcons();
-    } catch (err) {
-        console.error("Fullscreen/Orientation error:", err);
     }
 }
 
