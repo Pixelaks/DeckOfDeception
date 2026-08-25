@@ -3263,21 +3263,40 @@ function handleGameBoot(e) {
         intro.dataset.waitingForMic = 'true';
         const statusText = document.getElementById('introStatusText');
         if (statusText) statusText.textContent = "Please allow microphone access...";
-        
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(stream => {
-                stream.getTracks().forEach(track => track.stop());
-                localStorage.setItem('dod_mic_asked', 'true');
-                if (statusText) statusText.textContent = "Permission saved! Rebooting game...";
-                setTimeout(() => { window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now()); }, 500);
-            })
-            .catch(err => {
-                localStorage.setItem('dod_mic_asked', 'true');
-                if (statusText) statusText.textContent = "Settings saved! Rebooting game...";
-                setTimeout(() => { window.location.replace(window.location.href.split('?')[0] + '?reboot=' + Date.now()); }, 500);
-            });
+
+        // THE FIX: If they tapped the "Rotate" overlay earlier, they are already in fullscreen.
+        // Popping a system permission dialog WHILE in fullscreen permanently breaks Chromium on Android.
+        // We must gracefully exit fullscreen manually first!
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+        if (isFs) {
+            try {
+                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+            } catch(err){}
+        }
+
+        // Wait 300ms for the browser to cleanly drop out of fullscreen before asking for the mic
+        setTimeout(() => {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    stream.getTracks().forEach(track => track.stop());
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    
+                    // Unlock the screen for the final tap! No reboot needed.
+                    intro.dataset.waitingForMic = 'false'; 
+                    if (statusText) statusText.textContent = "Permission saved! Tap anywhere to start.";
+                })
+                .catch(err => {
+                    localStorage.setItem('dod_mic_asked', 'true');
+                    
+                    // Unlock the screen for the final tap! No reboot needed.
+                    intro.dataset.waitingForMic = 'false'; 
+                    if (statusText) statusText.textContent = "Settings saved! Tap anywhere to start.";
+                });
+        }, 300);
+
     } else {
-        // Returning user (Mic prompt handled, tab is fresh)
+        // Tap #2 (Or Returning User)
         intro.dataset.booted = 'true';
         forceEnterFullscreen(); 
         proceedWithBoot(intro);
