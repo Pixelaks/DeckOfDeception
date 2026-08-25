@@ -1157,7 +1157,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   opacity: 0; pointer-events: none;
   transition: opacity .7s ease;
 }
-.lobby-table-view.show { opacity: 1; pointer-events: auto; }
+.lobby-table-view.show { opacity: 1; pointer-events: none; }
 .lobby-seat-ring {
   width: min(500px, 88vw, 72vh); height: min(500px, 88vw, 72vh); position: relative; border-radius: 50%;
   border: 2px dashed rgba(201,162,39,0.22);
@@ -1181,7 +1181,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 .lobby-seat {
   position: absolute; display: flex; flex-direction: column; align-items: center; gap: 4px;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, -50%); pointer-events: auto;
 }
 .lobby-seat .ls-avatar {
   width: 42px; height: 42px; border-radius: 4px;
@@ -2223,7 +2223,7 @@ window.dodImagesLoaded = false;
 
 <div id="menu">
   <!-- GLOBAL BACK BUTTON -->
-  <button class="btn ghost small dod-hud-el" id="globalBackBtn" onclick="showMenuScreen('hub')" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
+  <button class="btn ghost small" id="globalBackBtn" onclick="showMenuScreen('hub')" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
   <!-- FULLSCREEN TOGGLE BUTTON -->
   <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
@@ -2311,7 +2311,7 @@ window.dodImagesLoaded = false;
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
       <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Ranks">👑<span class="ib-label">Ranks</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('training')" title="Training">⚔️<span class="ib-label">Train</span></button>
+      <button id="navBtnTraining" class="pubg-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">⚔️<span class="ib-label">Train</span></button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">💎<span class="ib-label">Shop</span></button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">🗝️<span class="ib-label">Settings</span></button>
     </div>
@@ -3792,7 +3792,9 @@ function showMenuScreen(name){
   const profileW = document.getElementById('pubgProfileWidget');
   if(name === 'hub') {
       if(backBtn) backBtn.style.display = 'none';
-      if(profileW && window.DoDAuth && DoDAuth.getProfile()) profileW.style.display = 'flex';
+      if(profileW && window.DoDAuth && DoDAuth.getProfile()) {
+          profileW.style.display = (typeof partyLobbyCinematicActive !== 'undefined' && partyLobbyCinematicActive) ? 'none' : 'flex';
+      }
   } else {
       if(backBtn) backBtn.style.display = 'flex';
       if(profileW) profileW.style.display = 'none';
@@ -7994,9 +7996,19 @@ async function initFriendsList() {
                     if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
                 }
 
+                let isAlreadyInLobby = false;
+                if (currentPartyId && window.currentPartyMembers && window.currentPartyMembers.some(m => m.uid === f.id)) {
+                    isAlreadyInLobby = true;
+                }
+                if (window.onlineMatchSeats && window.onlineMatchSeats.some(s => s.uid === f.id)) {
+                    isAlreadyInLobby = true;
+                }
+
                 let actionHtml = '';
                 if (f.status === 'pending') {
                     actionHtml = `<button class="btn small" style="background:var(--ok); color:#fff; padding:4px 8px;" onclick="acceptFriend('${f.id}', '${f.displayName}')">Accept</button>`;
+                } else if (isAlreadyInLobby) {
+                    actionHtml = `<span class="mono" style="font-size:10px; color:#9fd9b8;">In Lobby</span>`;
                 } else {
                     if (currentPartyId && isPartyLeader) {
                         actionHtml = `<button class="btn small" style="padding:4px 8px;" onclick="inviteToParty('${f.id}', '${f.displayName}')">Invite to Party</button>`;
@@ -8030,9 +8042,19 @@ async function initFriendsList() {
                     if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
                 }
 
+                let isAlreadyInLobby = false;
+                if (currentPartyId && window.currentPartyMembers && window.currentPartyMembers.some(m => m.uid === f.id)) {
+                    isAlreadyInLobby = true;
+                }
+                if (window.onlineMatchSeats && window.onlineMatchSeats.some(s => s.uid === f.id)) {
+                    isAlreadyInLobby = true;
+                }
+
                 let actionHtml = '';
                 if (f.status === 'pending') {
                     actionHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${f.id}','${f.displayName}')">Accept</button>`;
+                } else if (isAlreadyInLobby) {
+                    actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed; background:rgba(47,110,82,0.25); color:#9fd9b8; border:1px solid rgba(47,110,82,0.4);">In Lobby</button>`;
                 } else {
                     if (currentPartyId && !isPartyLeader) {
                         actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Invite</button>`;
@@ -8182,6 +8204,7 @@ async function leaveParty() {
     
     currentPartyId = null;
     isPartyLeader = true; 
+    window.currentPartyMembers = []; // Clear members on leave 
     
     document.getElementById('btnCreateParty').style.display = 'inline-block';
     document.getElementById('btnLeaveParty').style.display = 'none';
@@ -8203,6 +8226,9 @@ async function leaveParty() {
     if (privateSelect) {
         privateSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('disabled-opt'));
     }
+    
+    const trainBtn = document.getElementById('navBtnTraining');
+    if (trainBtn) { trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
 
     if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
 
@@ -8234,6 +8260,8 @@ function listenToParty(partyId) {
     partyListenerUnsub = db.collection('parties').doc(partyId).onSnapshot(doc => {
         if (!doc.exists) { leaveParty(); return; }
         const data = doc.data();
+        
+        window.currentPartyMembers = data.members || []; // Store globally to check invites
         
         // Update UI Squad List
         const listEl = document.getElementById('partyMemberList');
@@ -8814,6 +8842,9 @@ function showPartyLobbyCinematic() {
     if (partyLobbyCinematicActive) return; // already panned in — just let updateLobbyView() refresh seats
     partyLobbyCinematicActive = true;
 
+    const trainBtn = document.getElementById('navBtnTraining');
+    if (trainBtn) { trainBtn.style.opacity = '0.35'; trainBtn.style.pointerEvents = 'none'; }
+
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
 
     clearTimeout(pubgCinematicTimer1);
@@ -8901,6 +8932,9 @@ function resetPubgPlayBtn() {
     if (cancelBtn) cancelBtn.style.display = 'none';
     if (modeSelectEl) modeSelectEl.style.display = 'block';
     window._pubgLobbyCount = 0;
+    
+    const trainBtn = document.getElementById('navBtnTraining');
+    if (trainBtn) { trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
 }
 
 // Timing constants for the cinematic Play sequence (kept in sync with the CSS
@@ -8926,6 +8960,9 @@ async function startMatchmakingPubg() {
     const modeSelectEl = document.getElementById('customPubgSelect');
     if (cancelBtn) cancelBtn.style.display = 'block';
     if (modeSelectEl) modeSelectEl.style.display = 'none';
+    
+    const trainBtn = document.getElementById('navBtnTraining');
+    if (trainBtn) { trainBtn.style.opacity = '0.35'; trainBtn.style.pointerEvents = 'none'; }
 
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
 
