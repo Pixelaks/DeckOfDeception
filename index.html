@@ -887,15 +887,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   100% { transform: translate(var(--tx), var(--ty)) rotate(calc(var(--rot) - 20deg)) scaleY(0.5); opacity: 0; }
 }
 
-/* 1. Only actual 3D background objects get preserve-3d */
+/* Prevent 3D Z-fighting and subpixel flickering - Desktop gets the smooth original code */
 .menu-camera,
 .menu-bg-card,
-.menu-bg-coin {
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-}
-
-/* 2. FIX CHROME UI FLICKERING: Force UI elements into flat, hardware-accelerated 2D layers */
+.menu-bg-coin,
 .ringseat,
 .minicard,
 .card,
@@ -905,17 +900,45 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pubg-icon-btn,
 .pubg-mode-select,
 .pubg-friends-panel,
-.pubg-play-zone,
-#pubgLeaveLobbyBtn,
-.dod-hud-el,
-.menu-box,
-.menu-screen {
+.pubg-play-zone {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  transform: translateZ(0); /* Promotes to a safe GPU layer */
-  -webkit-transform-style: flat !important; /* Forces Chrome to stop calculating 3D depth for UI */
-  transform-style: flat !important;
-  outline: 1px solid transparent; /* Smoothes edges */
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+  outline: 1px solid transparent; 
+}
+
+.pubg-play-btn,
+.pubg-icon-btn,
+.pubg-mode-select,
+.pubg-friends-panel,
+.pubg-play-zone,
+#pubgLeaveLobbyBtn {
+  transform: translateZ(0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+/* MOBILE ONLY FIX: Flatten the UI to stop Android Chrome from flickering */
+@media (max-width: 840px) {
+  .ringseat,
+  .minicard,
+  .card,
+  .btn,
+  .countbtn,
+  .pubg-play-btn,
+  .pubg-icon-btn,
+  .pubg-mode-select,
+  .pubg-friends-panel,
+  .pubg-play-zone,
+  #pubgLeaveLobbyBtn,
+  .dod-hud-el,
+  .menu-box,
+  .menu-screen {
+    transform: translateZ(0);
+    -webkit-transform-style: flat !important;
+    transform-style: flat !important;
+  }
 }
 
 /* Force hardware rasterization for panning scene */
@@ -3971,12 +3994,43 @@ const VoiceChat = {
         }
     },
 
-    toggleMute() {
+    async toggleMute() {
         if (!this.room) return;
+
+        // If we are trying to UNMUTE, check if the browser is going to throw a popup
+        if (this.isMuted) {
+            try {
+                const perm = await navigator.permissions.query({ name: 'microphone' });
+                if (perm.state === 'prompt') {
+                    // A popup IS coming. Gracefully exit fullscreen first to prevent state corruption!
+                    const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+                    if (isFs) {
+                        if (document.exitFullscreen) await document.exitFullscreen().catch(()=>{});
+                        else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                        
+                        // Give the browser 300ms to finish closing fullscreen before triggering the mic
+                        await new Promise(r => setTimeout(r, 300));
+                    }
+                }
+            } catch (e) {
+                console.warn("Permissions API not supported, proceeding safely", e);
+            }
+        }
+
         this.isMuted = !this.isMuted;
-        this.room.localParticipant.setMicrophoneEnabled(!this.isMuted);
-        if (typeof setMicActive === 'function') setMicActive(!this.isMuted);
-        this.updateMuteButtonUI();
+        
+        try {
+            // Tell LiveKit to turn on the mic (which triggers the browser prompt if needed)
+            await this.room.localParticipant.setMicrophoneEnabled(!this.isMuted);
+            if (typeof setMicActive === 'function') setMicActive(!this.isMuted);
+            this.updateMuteButtonUI();
+        } catch (err) {
+            console.warn("Microphone access denied or failed:", err);
+            // If the user clicked "Deny" on the popup, revert the button back to the muted state
+            this.isMuted = true;
+            this.updateMuteButtonUI();
+            if (typeof showSystemToast === 'function') showSystemToast("Microphone access denied.");
+        }
     },
 
     updateMuteButtonUI() {
