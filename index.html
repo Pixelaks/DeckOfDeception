@@ -40,6 +40,12 @@
 <link rel="preload" as="image" href="Cards/InsuranceCard.png">
 <!-- Open-source MIT particle engine for VFX -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<!-- Razorpay Web Checkout SDK -->
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+// Detect India by timezone — used only for price display, real price is always server-side
+window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata') ? 'IN' : 'OTHER';
+</script>
 
 <!-- Preload Firebase so it starts downloading during HTML parse -->
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js">
@@ -2509,6 +2515,15 @@ window.dodImagesLoaded = false;
     </div>
     <!-- Right side Events & Chests -->
     <div class="pubg-events-zone" id="pubgEventsZone">
+      
+      <!-- ADVERTISEMENT CONTAINER -->
+      <div style="width: 100%; min-height: 50px; max-height: 90px; background: rgba(0,0,0,0.4); border: 1px dashed rgba(255,255,255,0.2); border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; margin-bottom: 5px;">
+        <span style="position: absolute; top: -8px; left: 4px; background: #000; color: rgba(255,255,255,0.5); font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 0 4px; letter-spacing: 1px;">ADVERTISEMENT</span>
+        
+        <!-- PASTE YOUR GOOGLE ADSENSE/ADMOB SCRIPT TAG HERE -->
+        <div id="ad-placeholder" style="color: rgba(255,255,255,0.3); font-family: 'IBM Plex Mono', monospace; font-size: 10px;">Ad Space</div>
+      </div>
+
       <div class="event-banner" onclick="openDailyDraw()">
         <div class="event-text" id="dailyDrawBannerText">DAILY DRAW</div>
         <div id="spinRedDot" class="red-dot" style="top:5px; right:5px;"></div>
@@ -11022,10 +11037,10 @@ const SHOP_DB = {
         { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.png', color: '69, 64, 39' }
     ],
     coins: [
-        { id: 'iap_1', name: 'Handful of PC', price: '$0.99', reward: 1000, img: 'Coins/Handfulofcoins.png' },
-        { id: 'iap_2', name: 'PC Pouch', price: '$4.99', reward: 5500, img: 'Coins/Coinpouch.png' },
-        { id: 'iap_3', name: 'Treasure Chest', price: '$9.99', reward: 12000, img: 'Coins/Cointreasure.png' },
-        { id: 'iap_4', name: 'Bank Vault', price: '$19.99', reward: 30000, img: 'Coins/Coinbankvault.png' }
+        { id: 'iap_1', name: 'Handful of PC', price: '₹49', reward: 1000, img: 'Coins/Handfulofcoins.png' },
+        { id: 'iap_2', name: 'PC Pouch', price: '₹249', reward: 5500, img: 'Coins/Coinpouch.png' },
+        { id: 'iap_3', name: 'Treasure Chest', price: '₹499', reward: 12000, img: 'Coins/Cointreasure.png' },
+        { id: 'iap_4', name: 'Bank Vault', price: '₹999', reward: 30000, img: 'Coins/Coinbankvault.png' }
     ]
 };
 
@@ -11343,77 +11358,80 @@ async function purchaseIAP(itemId, rewardAmount, event) {
     if (!profile) return;
 
     try { sfx.uiClick(); } catch(e){}
-
-    // Ensure your app's actual Android Package Name is set here
-    const PACKAGE_NAME = "com.pixelaks.deckofdeception"; 
-    let purchaseToken = null;
-
-    showSystemToast("Opening Google Play...");
+    showSystemToast("Initializing secure checkout...");
 
     try {
-        // ==============================================================
-        // NATIVE IAP TRIGGER (Using Capacitor/Cordova plugin)
-        // E.g., Using cordova-plugin-purchase or a custom bridge:
-        // const purchase = await store.order(itemId);
-        // purchaseToken = purchase.transaction.id; 
-        // ==============================================================
+        // 1. Ask Cloudflare to securely generate a Razorpay Order
+        const orderRes = await secureServerCall('economy/createRazorpayOrder', { packId: itemId });
         
-        // TEMPORARY MOCK FOR BROWSER TESTING:
-        // If testing in a browser without Play Store access, you can simulate a token.
-        // In actual production, replace this with your plugin's purchase logic!
-        const isNative = typeof store !== 'undefined' || window.cordova || window.Capacitor;
-        if (!isNative) {
-            console.warn("Native IAP SDK not found. Simulating purchase for development.");
-            purchaseToken = "test_dev_token_" + Math.random().toString(36).substring(7);
-        } else {
-            // Wait for your actual plugin logic here
-            throw new Error("Native IAP Plugin not configured yet.");
-        }
-        
-    } catch (err) {
-        showSystemToast("Purchase cancelled or failed.");
-        console.error(err);
-        return; // Halt if they closed the Google Play window
-    }
+        // 2. Configure the Razorpay Checkout Modal
+        const options = {
+            key: orderRes.keyId,
+            amount: orderRes.amount,
+            currency: orderRes.currency,
+            name: "Deck of Deception",
+            description: `Purchase ${rewardAmount} PC`,
+            image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.png",
+            order_id: orderRes.orderId, // Connects payment to the server order
+            theme: { color: "#c9a227" }, // Matches your brass UI theme
+            handler: async function (response) {
+                showSystemToast("Verifying payment...");
+                try {
+                    // 3. Send the signature back to Cloudflare for strict validation
+                    const verifyRes = await secureServerCall('economy/verifyRazorpayPayment', {
+                        packId: itemId,
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature
+                    });
 
-    // 1. Tell Cloudflare to verify the token with Google
-    showSystemToast("Verifying payment securely...");
-    
-    try {
-        const res = await secureServerCall('economy/iap', { 
-            itemId: itemId, 
-            purchaseToken: purchaseToken,
-            packageName: PACKAGE_NAME 
+                    // 4. Success! Grant the coins visually
+                    profile.currency = verifyRes.newCurrency;
+                    
+                    try { sfx.coin(); } catch(e){}
+                    if (event) triggerNotificationVfx('equip', event);
+                    try { sfx.win(); } catch(e){}
+                    
+                    if (typeof confetti !== 'undefined') {
+                        const duration = 2000;
+                        const end = Date.now() + duration;
+                        (function frame() {
+                            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                            if (Date.now() < end) requestAnimationFrame(frame);
+                        }());
+                    }
+                    
+                    const shopCur = document.getElementById('shopCurrency');
+                    const hubCur = document.getElementById('hubCurrency');
+                    if (shopCur) shopCur.textContent = profile.currency;
+                    if (hubCur) hubCur.textContent = profile.currency;
+                    
+                    renderShopItems();
+                    showSystemToast("Purchase Verified! PC added to your vault.");
+                } catch (err) {
+                    console.error("Verification error:", err);
+                    showSystemToast("Verification failed. If charged, contact support.");
+                }
+            },
+            modal: {
+                ondismiss: function() {
+                    showSystemToast("Checkout cancelled.");
+                }
+            }
+        };
+
+        // 5. Open the Razorpay UI
+        const rzp = new window.Razorpay(options);
+        rzp.on('payment.failed', function (response){
+            console.error(response.error);
+            showSystemToast("Payment failed: " + response.error.description);
         });
+        rzp.open();
 
-        // 2. SUCCESS! Server validated the receipt and gave us the new balance
-        profile.currency = res.newCurrency;
-        
-        try { sfx.coin(); } catch(e){}
-        if (event) triggerNotificationVfx('equip', event);
-        try { sfx.win(); } catch(e){}
-        
-        if (typeof confetti !== 'undefined') {
-            const duration = 2000;
-            const end = Date.now() + duration;
-            (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
-        }
-        
-        const shopCur = document.getElementById('shopCurrency');
-        const hubCur = document.getElementById('hubCurrency');
-        if (shopCur) shopCur.textContent = profile.currency;
-        if (hubCur) hubCur.textContent = profile.currency;
-        
-        renderShopItems();
-        showSystemToast("Purchase Verified! PC added to your vault.");
-
-    } catch(e) {
-        console.error("IAP Server Verification failed:", e);
-        showSystemToast("Verification failed. If charged, contact support.");
+    } catch (e) {
+        console.error("Order creation failed:", e);
+        showSystemToast("Could not start checkout. Try again later.");
     }
 }
 </script>
