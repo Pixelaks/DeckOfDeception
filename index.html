@@ -887,10 +887,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   100% { transform: translate(var(--tx), var(--ty)) rotate(calc(var(--rot) - 20deg)) scaleY(0.5); opacity: 0; }
 }
 
-/* Prevent 3D Z-fighting and subpixel flickering */
+/* 1. Only actual 3D background objects get preserve-3d */
 .menu-camera,
 .menu-bg-card,
-.menu-bg-coin,
+.menu-bg-coin {
+  -webkit-transform-style: preserve-3d;
+  transform-style: preserve-3d;
+}
+
+/* 2. FIX CHROME UI FLICKERING: Force UI elements into flat, hardware-accelerated 2D layers */
 .ringseat,
 .minicard,
 .card,
@@ -900,23 +905,17 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pubg-icon-btn,
 .pubg-mode-select,
 .pubg-friends-panel,
-.pubg-play-zone {
-  -webkit-backface-visibility: hidden;
-  backface-visibility: hidden;
-  -webkit-transform-style: preserve-3d;
-  transform-style: preserve-3d;
-  outline: 1px solid transparent; /* Smoothes edges during rotation */
-}
-
-.pubg-play-btn,
-.pubg-icon-btn,
-.pubg-mode-select,
-.pubg-friends-panel,
 .pubg-play-zone,
-#pubgLeaveLobbyBtn {
-  transform: translateZ(0);
+#pubgLeaveLobbyBtn,
+.dod-hud-el,
+.menu-box,
+.menu-screen {
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  transform: translateZ(0); /* Promotes to a safe GPU layer */
+  -webkit-transform-style: flat !important; /* Forces Chrome to stop calculating 3D depth for UI */
+  transform-style: flat !important;
+  outline: 1px solid transparent; /* Smoothes edges */
 }
 
 /* Force hardware rasterization for panning scene */
