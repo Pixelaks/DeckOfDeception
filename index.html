@@ -6134,15 +6134,18 @@ function renderDeceptionOverlay(){
       const waitingOn = dec.richUids.filter(u => !(u in stances));
       html += `<div class="dec-sub">Waiting on ${waitingOn.map(nameOf).join(', ') || 'the table'} to lock in ${isClaimRound ? 'what to tell the broke players' : 'the real number'}…</div>`;
       
-      let voteDetails = dec.richUids.map(uid => {
-          let v = stances[uid];
-          return `<span style="color:${v ? 'var(--ok)' : 'var(--danger-bright)'}">${nameOf(uid)}: ${v ? `<b style="font-size:14px;">${v}</b>` : '?'}</span>`;
-      }).join(' <span style="color:rgba(255,255,255,0.2);">|</span> ');
-      
-      html += `<div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(242,234,216,0.9); margin-top:16px; padding:12px; background:linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(122,31,46,0.2) 100%); border:1px solid rgba(194,59,74,0.4); border-radius:8px; line-height:1.6; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
-        <b style="color:var(--danger-bright); text-transform:uppercase; letter-spacing:1px; font-size:10px; display:block; margin-bottom:6px;">Current Votes</b>
-        ${voteDetails}
-      </div>`;
+      // FIX: Completely hide live vote numbers from broke players!
+      if (!dec.brokeUids.includes(myUid)) {
+          let voteDetails = dec.richUids.map(uid => {
+              let v = stances[uid];
+              return `<span style="color:${v ? 'var(--ok)' : 'var(--danger-bright)'}">${nameOf(uid)}: ${v ? `<b style="font-size:14px;">${v}</b>` : '?'}</span>`;
+          }).join(' <span style="color:rgba(255,255,255,0.2);">|</span> ');
+          
+          html += `<div style="font-family:'IBM Plex Mono',monospace; font-size:12px; color:rgba(242,234,216,0.9); margin-top:16px; padding:12px; background:linear-gradient(180deg, rgba(0,0,0,0.6) 0%, rgba(122,31,46,0.2) 100%); border:1px solid rgba(194,59,74,0.4); border-radius:8px; line-height:1.6; box-shadow: inset 0 0 10px rgba(0,0,0,0.8);">
+            <b style="color:var(--danger-bright); text-transform:uppercase; letter-spacing:1px; font-size:10px; display:block; margin-bottom:6px;">Current Votes</b>
+            ${voteDetails}
+          </div>`;
+      }
       
       html += `<div class="dec-status">${Object.keys(stances).length}/${dec.richUids.length} responded</div>`;
     }
@@ -6153,10 +6156,17 @@ function renderDeceptionOverlay(){
     
     html += `<div class="dec-sub" style="font-size:18px; color:var(--brass-bright);">Voting Complete!</div>`;
     html += `<div class="tension-box">`;
-    Object.entries(stances).forEach(([uid, val]) => {
-        html += `<div class="tension-vote" style="animation: none; opacity: 1;">${nameOf(uid)} chose <b style="font-size:18px; color:var(--brass-bright);">${val}</b></div>`;
-    });
-    html += `<div class="tension-final" style="animation: none; opacity: 1; margin-top: 15px;">Final ${isClaim ? 'Claim' : 'Real Number'}: <span>${resolved}</span></div>`;
+    
+    // FIX: Hide the final Real Number reveal from broke players (but let them see the Claim reveal!)
+    if (!dec.brokeUids.includes(myUid) || isClaim) {
+        Object.entries(stances).forEach(([uid, val]) => {
+            html += `<div class="tension-vote" style="animation: none; opacity: 1;">${nameOf(uid)} chose <b style="font-size:18px; color:var(--brass-bright);">${val}</b></div>`;
+        });
+        html += `<div class="tension-final" style="animation: none; opacity: 1; margin-top: 15px;">Final ${isClaim ? 'Claim' : 'Real Number'}: <span>${resolved}</span></div>`;
+    } else {
+        html += `<div class="tension-vote" style="animation: none; opacity: 1; color: rgba(242,234,216,0.7);">The real number has been chosen and is kept hidden.</div>`;
+    }
+    
     html += `</div>`;
   } else if(dec.phase === 'ANSWER'){
     const iAmBroke = dec.brokeUids.includes(myUid);
