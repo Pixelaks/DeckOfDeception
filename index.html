@@ -46,6 +46,114 @@
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js">
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js">
 <style>
+
+/* ============================================================
+   PUBG-STYLE AIRPLANE / TABLE SHOWCASE OVERLAY
+   ============================================================ */
+#tableShowcaseOverlay {
+  position: fixed; inset: 0; z-index: 9500;
+  display: none; align-items: center; justify-content: center;
+  background: radial-gradient(circle at center, rgba(15, 12, 18, 0.88) 0%, rgba(5, 3, 6, 0.98) 100%);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  pointer-events: none; opacity: 0;
+  transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+#tableShowcaseOverlay.show {
+  display: flex; opacity: 1;
+}
+
+.ts-spotlight-beam {
+  position: absolute; top: -50%; left: 50%; width: 120vmax; height: 120vmax;
+  transform: translateX(-50%);
+  background: conic-gradient(from 180deg at 50% 50%, transparent 40deg, rgba(232, 196, 84, 0.12) 60deg, rgba(255, 255, 255, 0.25) 90deg, rgba(232, 196, 84, 0.12) 120deg, transparent 140deg);
+  animation: tsBeamSweep 4s ease-in-out infinite alternate;
+  pointer-events: none; z-index: 1;
+}
+@keyframes tsBeamSweep {
+  0% { transform: translateX(-50%) rotate(-15deg); }
+  100% { transform: translateX(-50%) rotate(15deg); }
+}
+
+.ts-container {
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center;
+  width: 90%; max-width: 680px; text-align: center;
+  animation: tsSlamIn 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+}
+@keyframes tsSlamIn {
+  0% { transform: scale(0.7) translateY(-40px); opacity: 0; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.ts-badge {
+  font-family: 'Cinzel Decorative', serif; font-size: 11px; font-weight: 700;
+  color: #150c12; background: linear-gradient(90deg, #f5dd8a, #c9a227);
+  padding: 4px 16px; border-radius: 20px; letter-spacing: 2px;
+  box-shadow: 0 0 15px rgba(232, 196, 84, 0.6); display: inline-block; margin-bottom: 8px;
+}
+.ts-title {
+  font-family: 'Cinzel Decorative', serif; font-size: clamp(24px, 5vw, 36px);
+  color: var(--brass-bright); letter-spacing: 3px; text-transform: uppercase;
+  margin: 0 0 16px 0; text-shadow: 0 4px 20px rgba(224, 189, 74, 0.5);
+}
+
+/* Master Dominator Card */
+.ts-leader-card {
+  display: flex; align-items: center; gap: 16px;
+  background: linear-gradient(135deg, rgba(35, 25, 18, 0.95), rgba(12, 10, 15, 0.95));
+  border: 2px solid var(--brass-bright); border-radius: 12px;
+  padding: 14px 22px; width: 100%; max-width: 480px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 162, 39, 0.3);
+  margin-bottom: 22px; position: relative; overflow: hidden;
+}
+.ts-leader-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+  transform: skewX(-25deg) translateX(-150%);
+  animation: tsCardShimmer 2.5s infinite;
+}
+@keyframes tsCardShimmer {
+  0% { transform: skewX(-25deg) translateX(-150%); }
+  50%, 100% { transform: skewX(-25deg) translateX(200%); }
+}
+
+.ts-avatar-wrap {
+  width: 58px; height: 58px; position: relative; flex-shrink: 0;
+}
+.ts-leader-info {
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; flex: 1; min-width: 0;
+}
+.ts-leader-name {
+  font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+}
+.ts-leader-tier {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--brass-bright); font-weight: 600;
+}
+.ts-table-used {
+  font-family: 'Inter', sans-serif; font-size: 10.5px; color: rgba(255, 255, 255, 0.7); margin-top: 2px;
+}
+
+/* Participants Roster */
+.ts-roster-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(242, 234, 216, 0.5);
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.ts-roster {
+  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%;
+}
+.ts-roster-item {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 12px; border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+}
+.ts-roster-item.ts-is-leader {
+  border-color: var(--brass); background: rgba(201, 162, 39, 0.15);
+}
+.ts-roster-item .ts-mini-avatar {
+  width: 24px; height: 24px; position: relative;
+}
+
+
 :root{
   --felt:#2b1a24; --felt-dark:#150c12; --felt-line:rgba(255,255,255,0.07);
   --paper:#f2ead8; --paper-dark:#e4d8bd; --ink:#20190f; --ink-soft:#5a5140;
@@ -2540,6 +2648,22 @@ window.dodImagesLoaded = false;
     <div id="elimDetails" style="font-family:'IBM Plex Mono', monospace; font-size:clamp(12px, 2.5vh, 16px); color:rgba(255,255,255,0.85); max-width:600px; width:100%; line-height:1.6; padding: 0 20px; max-height: 50vh; overflow-y: auto;"></div>
 </div>
 
+<!-- PUBG-STYLE TABLE SHOWCASE CINEMATIC -->
+<div id="tableShowcaseOverlay">
+  <div class="ts-spotlight-beam"></div>
+  <div class="ts-container">
+    <div class="ts-badge">👑 TABLE DOMINATOR</div>
+    <h2 class="ts-title">TABLE SHOWCASE</h2>
+    <div class="ts-leader-card" id="tsLeaderCard">
+      <!-- Dynamic Leader Card -->
+    </div>
+    <div class="ts-roster-label">MATCH PARTICIPANTS RANKING</div>
+    <div class="ts-roster" id="tsRosterList">
+      <!-- Dynamic Roster List -->
+    </div>
+  </div>
+</div>
+
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
@@ -2639,6 +2763,100 @@ window.dodImagesLoaded = false;
 </div>
 
 <script>
+
+// --- TABLE REGISTRY: MAPS IDS TO TEXTURES AND GLOWS ---
+const TABLES_DB = {
+  'tb_default':   { name: 'Classic Green Felt', img: 'Tables/GreenWood.png', glow: '30, 74, 61' },
+  'tb_bloodwood': { name: 'Bloodwood Velvet',   img: 'Tables/BloodWood.png', glow: '122, 31, 46' },
+  'tb_midnight':  { name: 'Midnight Obsidian',  img: 'Tables/Midnight.png',  glow: '32, 45, 78' },
+  'tb_amethyst':  { name: 'Royal Amethyst',    img: 'Tables/Amethyst.png',  glow: '107, 63, 138' },
+  'tb_clockwork': { name: 'Clockwork Brass',   img: 'Tables/Clockwork.png', glow: '201, 162, 39' },
+  'tb_cyber':     { name: 'Cyber Matrix',      img: 'Tables/Cyber.png',     glow: '47, 169, 161' },
+  'tb_mirage':    { name: 'Desert Mirage',     img: 'Tables/Mirage.png',    glow: '201, 106, 39' },
+  'tb_dragon':    { name: "Dragon's Lair",     img: 'Tables/Dragon.png',    glow: '178, 69, 94' },
+  'tb_void':      { name: 'Void Magic',        img: 'Tables/Void.png',      glow: '139, 61, 255' }
+};
+
+function applyGlobalTable(tableId) {
+  const table = TABLES_DB[tableId] || TABLES_DB['tb_default'];
+  document.documentElement.style.setProperty('--my-table', `url('${table.img}')`);
+  document.documentElement.style.setProperty('--table-glow', table.glow);
+}
+
+// --- CINEMATIC PUBG TABLE SHOWCASE OVERLAY ---
+function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
+  const overlay = document.getElementById('tableShowcaseOverlay');
+  const leaderCard = document.getElementById('tsLeaderCard');
+  const rosterList = document.getElementById('tsRosterList');
+  if (!overlay || !leaderCard || !rosterList || !globalTable) {
+    if (onComplete) onComplete();
+    return;
+  }
+
+  const tableDef = TABLES_DB[globalTable.id] || TABLES_DB['tb_default'];
+  const av = globalTable.ownerAvatar || 'Apprentice';
+  const fr = globalTable.ownerFrame || 'Apprentice';
+
+  // Leader Title Badge
+  let titleBadge = '';
+  if (globalTable.ownerTitle && typeof TITLES_DB !== 'undefined') {
+    const tDef = TITLES_DB.find(x => x.id === globalTable.ownerTitle);
+    if (tDef) titleBadge = `<div class="player-title title-${tDef.rarity}" style="height:14px; font-size:7px; padding:0 6px 0 3px; margin-top:2px;"><span>${tDef.name}</span></div>`;
+  }
+
+  leaderCard.innerHTML = `
+    <div class="ts-avatar-wrap">
+      <div class="avatar-frame-wrap" style="width:100%; height:100%;">
+        <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+        <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+      </div>
+    </div>
+    <div class="ts-leader-info">
+      <div class="ts-leader-name">${globalTable.ownerName}</div>
+      <div class="ts-leader-tier">👑 ${globalTable.ownerTier} • Level ${globalTable.ownerLevel}</div>
+      ${titleBadge}
+      <div class="ts-table-used">Equipped Table: <b style="color:var(--brass-bright);">${tableDef.name}</b></div>
+    </div>
+  `;
+
+  // Sort roster players by Rank Weight
+  const TIERS_RANK = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+  const sortedRoster = [...allPlayers].sort((a, b) => {
+    const sA = (Math.max(0, TIERS_RANK.indexOf(a.tier || 'Apprentice')) * 1000) + (parseInt(a.level, 10) || 1) * 100;
+    const sB = (Math.max(0, TIERS_RANK.indexOf(b.tier || 'Apprentice')) * 1000) + (parseInt(b.level, 10) || 1) * 100;
+    return sB - sA;
+  });
+
+  rosterList.innerHTML = sortedRoster.map(p => {
+    const pAv = p.avatar || 'Apprentice';
+    const pFr = p.frame || 'Apprentice';
+    const isLeader = p.uid === globalTable.ownerUid || p.name === globalTable.ownerName;
+    return `
+      <div class="ts-roster-item ${isLeader ? 'ts-is-leader' : ''}">
+        <div class="ts-mini-avatar">
+          <div class="avatar-frame-wrap" style="width:100%; height:100%;">
+            <img src="Avatars/${pAv}.png" class="af-avatar" alt="Avatar">
+            <img src="Frames/${pFr}.png" class="af-frame" alt="Frame">
+          </div>
+        </div>
+        <div>
+          <span style="color:${isLeader ? 'var(--brass-bright)' : '#fff'}; font-weight:600;">${p.name}</span>
+          <span style="color:rgba(255,255,255,0.45); font-size:9.5px; margin-left:4px;">${p.tier || 'Apprentice'} Lvl ${p.level || 1}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  // Show Overlay
+  overlay.classList.add('show');
+  try { sfx.uiEquip(); } catch(e){}
+
+  // Auto-dismiss after 3.8 seconds so players jump right into the game
+  setTimeout(() => {
+    overlay.classList.remove('show');
+    if (onComplete) onComplete();
+  }, 3800);
+}
 
 function handleAuthClick(type) {
     try { sfx.uiClick(); } catch(e){}
@@ -4435,16 +4653,23 @@ function listenToGameState() {
             applyGlobalTable(serverState.globalTable.id);
         }
 
-        // 7. INITIAL DEAL
+        // 7. INITIAL DEAL + PUBG TABLE SHOWCASE
         if (!initialDealDone) {
             initialDealDone = true;
-            log('Table is live! Play a number, then call what the next player needs.', 'ok');
-            dealAnimation();
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(tick, 1000);
             
             if (serverState.globalTable) {
-                setTimeout(() => { showSystemToast(`👑 ${serverState.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
+                applyGlobalTable(serverState.globalTable.id);
+                triggerTableShowcaseCinematic(serverState.globalTable, serverState.players, () => {
+                    log(`👑 ${serverState.globalTable.ownerName}'s table is active! Play a number to open the chain.`, 'ok');
+                    dealAnimation();
+                    if (timerInterval) clearInterval(timerInterval);
+                    timerInterval = setInterval(tick, 1000);
+                });
+            } else {
+                log('Table is live! Play a number, then call what the next player needs.', 'ok');
+                dealAnimation();
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(tick, 1000);
             }
         }
     });
@@ -7927,7 +8152,11 @@ function listenForPartyInvites() {
                             title: myProfile.title || null,
                             avatar: getEquippedAvatar(myProfile),
                             frame: getEquippedFrame(myProfile),
-                            deckSkin: getEquippedBackImg(myProfile)
+                            deckSkin: getEquippedBackImg(myProfile),
+                            tier: myProfile.tier || 'Apprentice',
+                            level: myProfile.level || 1,
+                            points: myProfile.points || 0,
+                            equippedTable: myProfile.equippedTable || 'tb_default'
                         })
                     });
                 } catch(e) {
@@ -8151,7 +8380,7 @@ async function createParty() {
         leader: myProfile.uid,
         matchId: null,
         tableSize: pubgTableSize,
-        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile), tier: myProfile.tier || 'Apprentice', level: myProfile.level || 1, equippedTable: myProfile.equippedTable || 'tb_default' }]
+        members: [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile), tier: myProfile.tier || 'Apprentice', level: myProfile.level || 1, points: myProfile.points || 0, equippedTable: myProfile.equippedTable || 'tb_default' }]
     });
 
     document.getElementById('btnCreateParty').style.display = 'none';
@@ -8241,7 +8470,10 @@ async function leaveParty() {
     const trainBtn = document.getElementById('navBtnTraining');
     if (trainBtn) { trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
 
-    if (!currentMatchId) dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
+    if (!currentMatchId) {
+        dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
+        applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
+    }
 
     initFriendsList(); // Refresh UI
 }
@@ -8273,6 +8505,12 @@ function listenToParty(partyId) {
         const data = doc.data();
         
         window.currentPartyMembers = data.members || []; // Store globally to check invites
+        
+        // FORCE HOST'S TABLE SKIN IN LOBBY
+        const leaderObj = data.members.find(m => m.uid === data.leader);
+        if (leaderObj && leaderObj.equippedTable) {
+            applyGlobalTable(leaderObj.equippedTable);
+        }
         
         // Update UI Squad List
         const listEl = document.getElementById('partyMemberList');
@@ -8413,7 +8651,7 @@ async function startOnlineMatchmaking() {
     const db = firebase.firestore();
     const myProfile = DoDAuth.getProfile();
     
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), title: myProfile.title || null, deckSkin: getEquippedBackImg(myProfile) }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), title: myProfile.title || null, deckSkin: getEquippedBackImg(myProfile), tier: myProfile.tier || 'Apprentice', level: myProfile.level || 1, points: myProfile.points || 0, equippedTable: myProfile.equippedTable || 'tb_default' }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get();
         if (partyDoc.exists) joiningSquad = partyDoc.data().members;
@@ -8491,6 +8729,12 @@ function listenToMatchLobby(matchId) {
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
         if (!doc.exists) { leaveMatchLobby(); return; }
         const data = doc.data();
+        
+        // FORCE HOST'S TABLE SKIN IN LOBBY
+        if (data.seats && data.seats.length > 0) {
+            const hostSeat = data.seats[0];
+            applyGlobalTable(hostSeat.equippedTable || 'tb_default');
+        }
         
         const listEl = document.getElementById('matchLobbyPlayers');
         document.getElementById('matchLobbyCount').textContent = `${data.seats.length}/${data.tableSize}`;
@@ -8641,6 +8885,7 @@ async function leaveMatchLobby() {
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     
     showMenuScreen('social');
+    applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
 }
 
 // ============================================================
@@ -9013,7 +9258,7 @@ async function startMatchmakingPubg() {
     }, DOD_HUD_FADE_MS + DOD_CAMERA_MOVE_MS);
 
     const db = firebase.firestore();
-    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile) }];
+    let joiningSquad = [{ uid: myProfile.uid, displayName: myProfile.displayName, title: myProfile.title || null, avatar: getEquippedAvatar(myProfile), frame: getEquippedFrame(myProfile), deckSkin: getEquippedBackImg(myProfile), tier: myProfile.tier || 'Apprentice', level: myProfile.level || 1, points: myProfile.points || 0, equippedTable: myProfile.equippedTable || 'tb_default' }];
     if (currentPartyId) {
         const partyDoc = await db.collection('parties').doc(currentPartyId).get().catch(() => null);
         if (partyDoc && partyDoc.exists) joiningSquad = partyDoc.data().members;
@@ -9058,6 +9303,12 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
         if (pubgCancelFlag || !doc.exists || doc.data().status === 'cancelled') { cancelMatchmakingPubg(); return; }
         const data = doc.data();
+
+        // FORCE HOST'S TABLE SKIN IN LOBBY
+        if (data.seats && data.seats.length > 0) {
+            const hostSeat = data.seats[0];
+            applyGlobalTable(hostSeat.equippedTable || 'tb_default');
+        }
 
         updateLobbyView(data.seats, data.tableSize);
         if (statusEl) statusEl.textContent = `Players: ${data.seats.length} / ${data.tableSize}`;
@@ -9193,11 +9444,17 @@ function cancelMatchmakingPubg() {
         
         if (window.firebase) {
              firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
-                 if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
+                 if (doc.exists) {
+                     const members = doc.data().members;
+                     const leaderObj = members.find(m => m.uid === doc.data().leader);
+                     if (leaderObj && leaderObj.equippedTable) applyGlobalTable(leaderObj.equippedTable);
+                     updateLobbyView(members, doc.data().tableSize || pubgTableSize);
+                 }
              }).catch(()=>{});
         }
     } else {
         dodResetCinematicMenu();
+        applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
     }
     
     if (currentMatchId && window.DoDAuth && DoDAuth.getProfile()) {
