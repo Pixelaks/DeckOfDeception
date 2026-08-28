@@ -54,7 +54,7 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
 <style>
 
 /* ============================================================
-   PUBG-STYLE AIRPLANE / TABLE SHOWCASE OVERLAY
+   PUBG-STYLE AIRPLANE / TABLE SHOWCASE OVERLAY (RESPONSIVE)
    ============================================================ */
 #tableShowcaseOverlay {
   position: fixed; inset: 0; z-index: 9500;
@@ -63,6 +63,7 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
   backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
   pointer-events: none; opacity: 0;
   transition: opacity 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding: 8px;
 }
 #tableShowcaseOverlay.show {
   display: flex; opacity: 1;
@@ -81,35 +82,35 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
 }
 
 .ts-container {
-  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center;
-  width: 90%; max-width: 680px; text-align: center;
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  width: 95%; max-width: 760px; max-height: 98vh; text-align: center;
   animation: tsSlamIn 0.6s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
 }
 @keyframes tsSlamIn {
-  0% { transform: scale(0.7) translateY(-40px); opacity: 0; }
+  0% { transform: scale(0.7) translateY(-30px); opacity: 0; }
   100% { transform: scale(1) translateY(0); opacity: 1; }
 }
 
 .ts-badge {
-  font-family: 'Cinzel Decorative', serif; font-size: 11px; font-weight: 700;
+  font-family: 'Cinzel Decorative', serif; font-size: clamp(8px, 1.8vh, 11px); font-weight: 700;
   color: #150c12; background: linear-gradient(90deg, #f5dd8a, #c9a227);
-  padding: 4px 16px; border-radius: 20px; letter-spacing: 2px;
-  box-shadow: 0 0 15px rgba(232, 196, 84, 0.6); display: inline-block; margin-bottom: 8px;
+  padding: clamp(2px, 0.6vh, 4px) clamp(10px, 2vw, 16px); border-radius: 20px; letter-spacing: 1.5px;
+  box-shadow: 0 0 12px rgba(232, 196, 84, 0.6); display: inline-block; margin-bottom: clamp(2px, 0.8vh, 6px);
 }
 .ts-title {
-  font-family: 'Cinzel Decorative', serif; font-size: clamp(24px, 5vw, 36px);
-  color: var(--brass-bright); letter-spacing: 3px; text-transform: uppercase;
-  margin: 0 0 16px 0; text-shadow: 0 4px 20px rgba(224, 189, 74, 0.5);
+  font-family: 'Cinzel Decorative', serif; font-size: clamp(16px, 4.5vh, 32px);
+  color: var(--brass-bright); letter-spacing: clamp(1.5px, 0.5vw, 3px); text-transform: uppercase;
+  margin: 0 0 clamp(4px, 1.2vh, 12px) 0; text-shadow: 0 3px 15px rgba(224, 189, 74, 0.5); line-height: 1.1;
 }
 
 /* Master Dominator Card */
 .ts-leader-card {
-  display: flex; align-items: center; gap: 16px;
+  display: flex; align-items: center; gap: clamp(8px, 2vw, 14px);
   background: linear-gradient(135deg, rgba(35, 25, 18, 0.95), rgba(12, 10, 15, 0.95));
-  border: 2px solid var(--brass-bright); border-radius: 12px;
-  padding: 14px 22px; width: 100%; max-width: 480px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 25px rgba(201, 162, 39, 0.3);
-  margin-bottom: 22px; position: relative; overflow: hidden;
+  border: 1.5px solid var(--brass-bright); border-radius: 8px;
+  padding: clamp(6px, 1.4vh, 12px) clamp(12px, 2.5vw, 20px); width: 100%; max-width: clamp(320px, 65vw, 460px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.8), 0 0 20px rgba(201, 162, 39, 0.3);
+  margin-bottom: clamp(6px, 1.4vh, 14px); position: relative; overflow: hidden;
 }
 .ts-leader-card::after {
   content: ''; position: absolute; inset: 0;
@@ -123,40 +124,41 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
 }
 
 .ts-avatar-wrap {
-  width: 58px; height: 58px; position: relative; flex-shrink: 0;
+  width: clamp(34px, 8vh, 52px); height: clamp(34px, 8vh, 52px); position: relative; flex-shrink: 0;
 }
 .ts-leader-info {
-  display: flex; flex-direction: column; align-items: flex-start; text-align: left; flex: 1; min-width: 0;
+  display: flex; flex-direction: column; align-items: flex-start; text-align: left; flex: 1; min-width: 0; gap: 1px;
 }
 .ts-leader-name {
-  font-family: 'Cinzel', serif; font-size: 18px; font-weight: 700; color: #fff;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;
+  font-family: 'Cinzel', serif; font-size: clamp(12px, 2.8vh, 17px); font-weight: 700; color: #fff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; line-height: 1.2;
 }
 .ts-leader-tier {
-  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--brass-bright); font-weight: 600;
+  font-family: 'IBM Plex Mono', monospace; font-size: clamp(8.5px, 1.8vh, 11px); color: var(--brass-bright); font-weight: 600; line-height: 1.2;
 }
 .ts-table-used {
-  font-family: 'Inter', sans-serif; font-size: 10.5px; color: rgba(255, 255, 255, 0.7); margin-top: 2px;
+  font-family: 'Inter', sans-serif; font-size: clamp(8px, 1.6vh, 10.5px); color: rgba(255, 255, 255, 0.7); line-height: 1.2;
 }
 
 /* Participants Roster */
 .ts-roster-label {
-  font-family: 'IBM Plex Mono', monospace; font-size: 10px; color: rgba(242, 234, 216, 0.5);
-  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+  font-family: 'IBM Plex Mono', monospace; font-size: clamp(7.5px, 1.5vh, 9.5px); color: rgba(242, 234, 216, 0.5);
+  letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: clamp(2px, 0.8vh, 6px);
 }
 .ts-roster {
-  display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; width: 100%;
+  display: flex; gap: clamp(4px, 1vw, 8px); justify-content: center; flex-wrap: wrap; width: 100%; max-width: 95vw;
 }
 .ts-roster-item {
-  display: flex; align-items: center; gap: 8px;
-  background: rgba(0, 0, 0, 0.6); border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 6px 12px; border-radius: 6px; font-family: 'IBM Plex Mono', monospace; font-size: 11px;
+  display: flex; align-items: center; gap: clamp(4px, 1vw, 6px);
+  background: rgba(0, 0, 0, 0.65); border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: clamp(2px, 0.7vh, 5px) clamp(6px, 1.2vw, 10px); border-radius: 4px;
+  font-family: 'IBM Plex Mono', monospace; font-size: clamp(8px, 1.8vh, 10px);
 }
 .ts-roster-item.ts-is-leader {
-  border-color: var(--brass); background: rgba(201, 162, 39, 0.15);
+  border-color: var(--brass); background: rgba(201, 162, 39, 0.2);
 }
 .ts-roster-item .ts-mini-avatar {
-  width: 24px; height: 24px; position: relative;
+  width: clamp(16px, 3.5vh, 22px); height: clamp(16px, 3.5vh, 22px); position: relative; flex-shrink: 0;
 }
 
 
@@ -553,8 +555,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .center-row { flex-direction: row; max-height: 85px; }
   .deckpile { width: 90px !important; overflow: visible; }
   /* Moderate scale adjustments since base size is safe again */
-  .deck-3d { transform: scale(0.85); transform-origin: top center; margin-bottom: -6px; margin-top: 0; }
-  .deckpile:hover .deck-3d { transform: scale(0.85); }
+  .deck-3d { transform: scale(0.85); transform-origin: top center; margin-bottom: -6px; margin-top: 0; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .deckpile:hover .deck-3d, .deckpile.touch-active .deck-3d { transform: translateY(-12px) scale(1.25); z-index: 10; }
   .log { height: 85px; }
 }
 
@@ -680,7 +682,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 
 /* Pop up significantly on hover so desktop players can inspect the crisp details */
-.deckpile:hover .deck-3d { transform: translateY(-6px) scale(1.3); z-index: 10; }
+.deckpile:hover .deck-3d, .deckpile.touch-active .deck-3d { transform: translateY(-6px) scale(1.3); z-index: 10; }
 .deck-3d .layer-1{transform:translate(0, 0);z-index:2;display:flex;align-items:center;justify-content:center;color:transparent;font-family:'Cinzel',serif;font-size:18px; font-weight:700;box-shadow:1px 1px 6px rgba(0,0,0,0.4)}
 .deckpile .label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.5px;color:rgba(242,234,216,0.55);text-transform:uppercase;text-align:center}
 
@@ -1005,14 +1007,47 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 @keyframes slamDown { 0% { opacity: 0; transform: scale(1.5); } 100% { opacity: 1; transform: scale(1); } }
 
 /* THE DEALER'S DRAW (Interactive Daily Cards) */
-.dd-container { display: flex; gap: 20px; justify-content: center; margin: 20px 0; perspective: 1000px; min-height: 180px; }
-.dd-card-wrapper { transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); }
+.dd-container { 
+  display: flex; 
+  gap: clamp(10px, 2.5vw, 24px); 
+  justify-content: center; 
+  align-items: center;
+  margin: 0 auto; 
+  perspective: 1000px; 
+  width: 100%;
+  max-width: 95vw;
+}
+.dd-card-wrapper { 
+  transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
+  flex-shrink: 0;
+}
 .dd-card {
-  width: 100px; height: 144px; position: relative; cursor: pointer;
-  transform-style: preserve-3d; transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  width: clamp(72px, 14vw, 110px); 
+  height: clamp(104px, 20vw, 158px); 
+  max-height: 48vh;
+  aspect-ratio: 100 / 144;
+  position: relative; 
+  cursor: pointer;
+  transform-style: preserve-3d; 
+  transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 .dd-card-wrapper:hover:not(.locked) .dd-card { transform: translateY(-16px) rotateZ(3deg); box-shadow: 0 15px 40px rgba(226,189,74,0.5); }
-.dd-card.flipped { transform: rotateY(180deg) scale(1.35); z-index: 10; }
+/* Fly to the center, push down 40px to clear text, and scale up */
+.dd-card.flipped { 
+    transform: translateX(var(--target-x, 0)) translateY(var(--target-y, 40px)) rotateY(180deg) scale(1.4); 
+    z-index: 10; 
+    box-shadow: 0 0 40px rgba(226,189,74,0.6);
+}
+
+/* Add a floating/rotating animation after the flip finishes */
+.dd-card.flipped.animating {
+    animation: luckyCardFloat 4s ease-in-out infinite alternate;
+}
+
+@keyframes luckyCardFloat {
+    0% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) + 0px)) rotateY(180deg) scale(1.4) rotateZ(-2deg); }
+    100% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) - 15px)) rotateY(180deg) scale(1.45) rotateZ(2deg); box-shadow: 0 0 60px rgba(226,189,74,1); }
+}
 .dd-card-wrapper.fade-out { opacity: 0; transform: scale(0.5) translateY(50px); pointer-events: none; filter: blur(5px); }
 .dd-face {
   position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden;
@@ -1315,6 +1350,14 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .custom-select.open .custom-select-trigger { border-color: var(--brass-bright); box-shadow: 0 0 8px rgba(201,162,39,0.3); }
 .custom-select-options { position: absolute; bottom: calc(100% + 4px); top: auto; left: 0; right: 0; background: rgba(12,14,16,0.98); border: 1px solid var(--brass); border-radius: 4px; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; max-height: 220px; overflow-y: auto; z-index: 100; }
 .custom-select.open .custom-select-options { display: flex; animation: fadeUp 0.2s ease; }
+
+/* FIX: Dropdowns in the middle of the screen (Training, Play, Party) open downwards and scroll */
+.menu-screen .custom-select-options {
+    top: calc(100% + 4px);
+    bottom: auto;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+    max-height: 40vh; /* Fits perfectly on small mobile screens */
+}
 .custom-option { padding: 10px 12px; color: rgba(242,234,216,0.8); cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s, color 0.2s; }
 .custom-option:last-child { border-bottom: none; }
 .custom-option:hover, .custom-option.selected { background: rgba(201,162,39,0.15); color: var(--brass-bright); font-weight: bold; }
@@ -1549,6 +1592,22 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .title-row.active { border-color:var(--brass-bright); background:rgba(232,196,84,0.1); }
 .title-row.locked { opacity:0.4; filter:grayscale(0.8); cursor:not-allowed; }
 .title-desc { font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); margin-top:4px; }
+
+/* --- LIVING LEADERBOARD --- */
+.lb-row { display: flex; align-items: center; justify-content: space-between; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08); padding: 8px 12px; border-radius: 8px; transition: transform 0.2s, background 0.2s; }
+.lb-row:hover { background: rgba(255,255,255,0.05); transform: translateX(4px); border-color: rgba(201,162,39,0.3); }
+
+/* FIX: Solid dark background to prevent scroll overlap, and a reversed drop-shadow to pop it off the page */
+.lb-row.is-me { background: #0c0e12; background-image: linear-gradient(90deg, rgba(40,30,10,0.98), rgba(12,14,18,0.98)); border: 1px solid var(--brass-bright); box-shadow: inset 0 0 20px rgba(232,196,84,0.1), 0 -6px 20px rgba(0,0,0,0.85); position: sticky; bottom: -1px; z-index: 10; margin-top: 10px; }
+
+/* FIX: Widened to 70px to easily fit 3-digit and 4-digit ranks without hitting the avatar */
+.lb-rank { font-family: 'Cinzel Decorative', serif; font-size: clamp(16px, 3vw, 22px); color: rgba(255,255,255,0.3); width: 70px; text-align: center; font-weight: bold; flex-shrink: 0; }
+.lb-row.is-me .lb-rank { color: var(--brass-bright); text-shadow: 0 2px 10px rgba(0,0,0,0.8); }
+.lb-row.top-3 .lb-rank { color: var(--brass-bright); text-shadow: 0 0 10px rgba(232,196,84,0.8); font-size: 26px; }
+.lb-player { display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0; overflow: hidden; }
+.lb-score-col { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; flex-shrink: 0; }
+.lb-tier-text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--brass-bright); font-weight: bold; text-transform: uppercase; }
+
 
 /* --- PUBG EVENTS & CHESTS --- */
 .pubg-events-zone { position:absolute; top:90px; right:28px; display:flex; flex-direction:column; gap:10px; width:180px; align-items:flex-end; pointer-events:none; }
@@ -1792,8 +1851,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .center-row { max-height: none !important; }
   .deckpile { width: 80px !important; padding: 4px; gap: 4px; }
   /* Moderate scale for landscape mobile */
-  .deck-3d { transform: scale(0.7); transform-origin: top center; margin-bottom: -16px; margin-top: 0; }
-  .deckpile:hover .deck-3d { transform: scale(0.7); }
+  .deck-3d { transform: scale(0.7); transform-origin: top center; margin-bottom: -16px; margin-top: 0; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); }
+  .deckpile:hover .deck-3d, .deckpile.touch-active .deck-3d { transform: translateY(-15px) scale(1.15); z-index: 10; }
   
   /* Compress the Chat Log and Message Bubbles to fit Fold Phones */
   .log { min-height: 60px !important; max-height: 85px !important; padding: 4px !important; gap: 4px !important; }
@@ -2210,6 +2269,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   width:16px; height:16px; border-radius:50%; background:var(--brass-bright); border:2px solid #1a120a; cursor:pointer;
 }
 
+/* AAA SETTINGS TOGGLES & BATTERY SAVER */
+.toggle-switch { width: 36px; height: 18px; background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; position: relative; transition: all 0.2s; pointer-events: none; }
+.toggle-switch::after { content: ''; position: absolute; top: 1px; left: 1px; width: 14px; height: 14px; background: rgba(255,255,255,0.5); border-radius: 50%; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+.toggle-switch.active { background: var(--ok); border-color: #5faa82; }
+.toggle-switch.active::after { left: 19px; background: #fff; }
+
+/* Battery Saver Mode overrides - Kills expensive GPU renders */
+body.low-power-mode * { filter: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; text-shadow: none !important; }
+body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power-mode .dd-particles, body.low-power-mode .dec-particles, body.low-power-mode .rank-particles { display: none !important; }
+
 /* Profile modal: refined glass panel */
 #pubgProfileWidget{ padding:4px !important; border-radius:12px; }
 #profileModal { padding: 0 !important; background: rgba(0,0,0,0.2) !important; }
@@ -2412,17 +2481,26 @@ window.dodImagesLoaded = false;
     </div>
 </div>
 
-<!-- HOW TO PLAY TUTORIAL -->
-<div id="tutorialOverlay">
-  <div class="tut-card">
-    <button class="tut-skip" onclick="skipTutorial()">Skip ✕</button>
-    <div id="tutSlideContent"></div>
-    <div class="tut-dots" id="tutDots"></div>
-    <div class="tut-nav">
-      <button class="btn ghost" id="tutBackBtn" onclick="tutorialPrev()">← Back</button>
-      <button class="btn" id="tutNextBtn" onclick="tutorialNext()">Next →</button>
-    </div>
+<!-- INTERACTIVE TUTORIAL ENGINE -->
+<style>
+  #tutOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; pointer-events: auto; }
+  /* FIX: Moved showcase slightly higher to leave room for the horizontal text box below it */
+  #tutShowcase { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 10001; gap: 6px; align-items: center; justify-content: center; pointer-events: none; width: 100%; max-width: 90vw; flex-wrap: wrap; }
+  /* FIX: Made the dialogue box padding tighter and width fluid so JavaScript can transform it dynamically! */
+  #tutDialogue { position: absolute; z-index: 10002; background: linear-gradient(135deg, rgba(20,15,10,0.98), rgba(6,4,3,0.98)); border: 2px solid var(--brass-bright); border-radius: 8px; padding: 16px 20px; width: 90%; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(232,196,84,0.2); display: none; flex-direction: column; gap: 10px; color: #fff; transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); pointer-events: auto; }
+  .tut-focused { z-index: 10001 !important; pointer-events: auto !important; box-shadow: 0 0 0 4px var(--brass-bright), 0 0 30px rgba(232,196,84,0.5) !important; border-radius: 8px; animation: tutPulse 1.5s infinite alternate; }
+  .tut-focused * { pointer-events: auto !important; }
+  @keyframes tutPulse { 0% { box-shadow: 0 0 0 4px var(--brass-bright), 0 0 20px rgba(232,196,84,0.4); } 100% { box-shadow: 0 0 0 6px var(--brass-bright), 0 0 40px rgba(232,196,84,0.8); } }
+</style>
+<div id="tutOverlay"></div>
+<div id="tutShowcase"></div>
+<div id="tutDialogue">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:20px;">The Dealer</div>
+      <button onclick="endInteractiveTutorial()" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;">Skip ✕</button>
   </div>
+  <div id="tutText" style="font-family:'Inter',sans-serif; font-size:14px; line-height:1.6; color:rgba(242,234,216,0.9);"></div>
+  <button id="tutBtn" class="btn small" style="margin-top:10px; padding:10px 0; font-size:13px;" onclick="tutNext()">Continue</button>
 </div>
 
 <!-- ACHIEVEMENT POPUP -->
@@ -2535,7 +2613,8 @@ window.dodImagesLoaded = false;
     
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
-      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Ranks">👑<span class="ib-label">Ranks</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">🏆<span class="ib-label">Top 100</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Tiers">👑<span class="ib-label">Tiers</span></button>
       <button id="navBtnTraining" class="pubg-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">⚔️<span class="ib-label">Train</span></button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">💎<span class="ib-label">Shop</span></button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">🗝️<span class="ib-label">Settings</span></button>
@@ -2551,6 +2630,10 @@ window.dodImagesLoaded = false;
     <!-- Lobby seat ring -->
     <div id="pubgLobbyView" class="lobby-table-view">
       <div class="lobby-action-bar">
+        <div style="display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:15px; border:1px solid rgba(201,162,39,0.3); margin-right:4px;">
+          <span style="font-size:11px; color:var(--brass-bright);">🎵</span>
+          <input type="range" id="lobbyMusicVol" min="0" max="100" value="15" style="width:60px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
+        </div>
         <button id="lobbyMicToggleBtn" class="btn ghost small lobby-action-btn" style="color:var(--brass-bright); display:none;" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
         <button id="pubgLeaveLobbyBtn" class="btn ghost small lobby-action-btn" onclick="leavePartyLobby()">LEAVE LOBBY</button>
       </div>
@@ -2584,6 +2667,23 @@ window.dodImagesLoaded = false;
     </div>
     <div class="screen-footer">
       <button class="btn" id="searchMatchBtn" style="width:100%; max-width:320px" onclick="startOnlineMatchmaking()">Search Match ↗</button>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD SCREEN -->
+  <div class="menu-screen hidden" id="screen-leaderboard" style="max-width: 900px; width: 100%;">
+    <div class="screen-header">
+      <div class="screen-title">Global Rankings</div>
+    </div>
+    <div class="screen-content" style="padding: 0 10px; width: 100%;">
+      <p class="blurb" style="text-align:center; margin-top:0;">Compete against the world. Only the Top 100 agents are displayed.</p>
+      <div style="display:flex; justify-content:space-between; padding: 0 16px 8px; border-bottom:1px solid rgba(201,162,39,0.3); margin-bottom: 8px; width:100%;">
+          <span class="mono" style="color:var(--brass-bright); font-size:10px;">RANK & AGENT</span>
+          <span class="mono" style="color:var(--brass-bright); font-size:10px;">TIER & SCORE</span>
+      </div>
+      <div id="leaderboardList" style="width: 100%; display: flex; flex-direction: column; gap: 4px; padding-bottom: 20px;">
+        <!-- Populated by JS -->
+      </div>
     </div>
   </div>
 
@@ -2650,15 +2750,21 @@ window.dodImagesLoaded = false;
       <div class="screen-title">Settings</div>
     </div>
     <div class="screen-content">
-      <div class="settings-row"><span>Ambient music</span><input type="range" id="musicVol" min="0" max="100" value="15" oninput="setMusicVolume(this.value)"></div>
-      <div class="settings-row"><span>Sound effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
-      
-      <div class="section-label" style="margin-top:30px;">Account Management</div>
-      <div id="settingsAccountArea" style="width:100%; max-width:340px; margin-top:14px; display:flex; flex-direction:column; gap:10px;">
-          </div>
+      <div class="section-label" style="margin-top:0;">Audio & Voice</div>
+      <div class="settings-row"><span>Ambient Music</span><input type="range" id="musicVol" min="0" max="100" value="15" oninput="setMusicVolume(this.value)"></div>
+      <div class="settings-row"><span>Sound Effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
+      <div class="settings-row"><span>Voice Chat Master</span><input type="range" id="voiceVol" min="0" max="100" value="80" oninput="setVoiceVolume(this.value)"></div>
+
+      <div class="section-label" style="margin-top:20px;">Display & Gameplay</div>
+      <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('power')"><span>Battery Saver (Low VFX)</span><div class="toggle-switch" id="toggle-power"></div></div>
+      <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('sort')"><span>Auto-Sort Hand</span><div class="toggle-switch" id="toggle-sort"></div></div>
+
+      <div class="section-label" style="margin-top:20px;">Account Management</div>
+      <div class="settings-row" style="cursor:pointer; border-color:var(--brass-bright); background:rgba(201,162,39,0.1);" onclick="copyPlayerId()"><span>Copy My Player ID</span><span style="color:var(--brass-bright); font-size:14px;">📋</span></div>
+      <div id="settingsAccountArea" style="width:100%; max-width:340px; margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>
     </div>
     <div class="screen-footer">
-      <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play</button>
+      <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play Guide</button>
     </div>
   </div>
 
@@ -2783,7 +2889,17 @@ window.dodImagesLoaded = false;
 <div id="game">
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
-    <div class="right"><span id="turnIndicator">—</span><span class="timer" id="timerDisplay">20:00</span><button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button><button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button><button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button></div>
+    <div class="right">
+      <span id="turnIndicator">—</span>
+      <span class="timer" id="timerDisplay">20:00</span>
+      <div style="display:flex; align-items:center; gap:4px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:12px; border:1px solid rgba(255,255,255,0.15);">
+        <span style="font-size:10px; color:var(--brass-bright);">🎵</span>
+        <input type="range" id="gameMusicVol" min="0" max="100" value="15" style="width:45px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
+      </div>
+      <button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
+      <button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button>
+      <button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button>
+    </div>
   </div>
 
   <!-- ACTIVE PLAYER PANEL -->
@@ -2798,7 +2914,8 @@ window.dodImagesLoaded = false;
     
     <div class="game-right">
       <div class="center-row">
-        <div class="deckpile" id="deckpile">
+        <!-- FIX: Added pointer events to trigger the CSS pop-up on mobile touches! -->
+        <div class="deckpile" id="deckpile" onpointerdown="this.classList.add('touch-active')" onpointerup="this.classList.remove('touch-active')" onpointercancel="this.classList.remove('touch-active')" onpointerleave="this.classList.remove('touch-active')">
           <div class="deck-3d">
             <div class="stack layer-3"></div>
             <div class="stack layer-2"></div>
@@ -2809,7 +2926,8 @@ window.dodImagesLoaded = false;
         <div class="log" id="log"></div>
       </div>
       <div class="chainbox" id="chainBox"></div>
-      <div class="hand-wrap">
+      <!-- FIX: Added id="hand-wrap" so the tutorial script can actually target it! -->
+      <div class="hand-wrap" id="hand-wrap">
         <div class="hand-label">Your hand</div>
         <div class="hand" id="hand"></div>
         <div class="actionbar" id="actionbar"></div>
@@ -2853,19 +2971,30 @@ window.dodImagesLoaded = false;
   </div>
 </div>
 
-<!-- LOGIN CHOICE MODAL (Solid background for clean UI) -->
-<div class="modal-bg" id="loginChoiceOverlay" style="background: var(--felt-dark); z-index: 6000;">
-  <div class="modal" style="text-align:center; background:rgba(0,0,0,0.4); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%;">
-    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Welcome To Deception</h3>
+<!-- LOGIN CHOICE MODAL (2D Cinematic Background) -->
+<div class="modal-bg" id="loginChoiceOverlay" style="background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table); background-size: cover; background-position: center; z-index: 6000; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
+  <!-- Glowing spinning halo from the loading screen -->
+  <div class="ls-halo" style="z-index: 0; opacity: 0.6;"></div>
+  
+  <!-- Huge Cinematic Title -->
+  <h1 class="ls-title" style="position: relative; z-index: 2; margin-bottom: 40px; font-size: clamp(32px, 8vw, 64px);">DECK OF DECEPTION</h1>
+  
+  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Sign In</h3>
     <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
     <button id="btnGoogleLogin" class="btn" style="width:100%; margin-bottom:14px; background:#e8c454; color:#150c12; font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0;" onclick="handleAuthClick('google')">Sign in with Google</button>
     <button id="btnGuestLogin" class="btn ghost" style="width:100%; font-family:'Inter', sans-serif; font-size:14px; letter-spacing:0;" onclick="handleAuthClick('guest')">Play as Guest</button>
   </div>
 </div>
 
-<!-- NAME SETUP MODAL (Solid background for clean UI) -->
-<div class="modal-bg" id="nameSetupOverlay" style="background: var(--felt-dark); z-index: 6000;">
-  <div class="modal" style="text-align:center; max-width:400px; width:90%;">
+<!-- NAME SETUP MODAL (2D Cinematic Background) -->
+<div class="modal-bg" id="nameSetupOverlay" style="background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table); background-size: cover; background-position: center; z-index: 6000; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
+  <div class="ls-halo" style="z-index: 0; opacity: 0.6;"></div>
+  
+  <!-- Huge Cinematic Title -->
+  <h1 class="ls-title" style="position: relative; z-index: 2; margin-bottom: 40px; font-size: clamp(32px, 8vw, 64px);">DECK OF DECEPTION</h1>
+  
+  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright);">Choose your name</h3>
     <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:10px;">This is permanent. It's how others will see you.</p>
     <div id="nameSetupError" class="mono" style="color:var(--danger-bright); font-size:11px; margin-bottom:10px; display:none;"></div>
@@ -3097,25 +3226,22 @@ async function submitUniqueNameWithId() {
 
 <!-- THE DEALER'S DRAW MODAL (Full Screen Cinematic) -->
 <div class="modal-bg" id="dailyDrawModalOverlay" style="z-index: 6500; background: radial-gradient(circle at center, rgba(15,10,8,0.98) 0%, rgba(6,5,5,1) 100%);">
-  <div style="width: 100vw; height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden;">
+  <div style="width: 100vw; height: 100vh; height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; overflow: hidden; padding: clamp(10px, 3vh, 24px);">
     
     <!-- BACK BUTTON -->
-    <button class="btn ghost small" onclick="document.getElementById('dailyDrawModalOverlay').classList.remove('show')" style="position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
+    <button class="btn ghost small" onclick="document.getElementById('dailyDrawModalOverlay').classList.remove('show')" style="position:absolute; top: clamp(10px, 2.5vh, 20px); left: clamp(10px, 2.5vw, 20px); z-index:100; padding: clamp(6px, 1.2vh, 8px) clamp(10px, 2vw, 14px); font-size: clamp(10px, 2vh, 12px); background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
     <!-- Cinematic Sweeping Spotlight & Embers -->
     <div class="ts-spotlight-beam" style="opacity: 0.4;"></div>
     <div class="dd-particles" id="ddParticles"></div>
     
-    <div style="z-index: 2; position: relative; text-align:center; width: 100%; max-width: 600px; padding: 20px;">
-        <div style="font-size:clamp(36px, 8vh, 54px); margin-bottom: 10px; animation: pulseIn 1s infinite alternate;">🃏</div>
-        <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:clamp(28px, 6vw, 42px); text-shadow: 0 4px 20px rgba(224,189,74,0.5); letter-spacing: 2px;">The Dealer's Draw</h3>
-        <p id="ddSubtitle" class="mono" style="font-size:14px; color:rgba(242,234,216,0.7); margin-bottom:40px;">The Dealer offers you a choice. Pick wisely...</p>
+    <div style="z-index: 2; position: relative; text-align:center; width: 100%; max-width: 820px; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin: 0 0 clamp(4px, 1.2vh, 8px) 0; font-size: clamp(20px, 5.5vh, 36px); text-shadow: 0 4px 20px rgba(224,189,74,0.5); letter-spacing: 2px;">The Dealer's Draw</h3>
+        <p id="ddSubtitle" class="mono" style="font-size: clamp(11px, 2.2vh, 13px); color:rgba(242,234,216,0.7); margin: 0 0 clamp(14px, 3.5vh, 28px) 0;">The Dealer offers you a choice. Pick wisely...</p>
         
         <div class="dd-container" id="ddCardContainer">
             <!-- Cards injected by JS -->
         </div>
-        
-        <button class="btn ghost" style="width:220px; margin-top:40px; font-size: 14px; padding: 12px 0;" onclick="document.getElementById('dailyDrawModalOverlay').classList.remove('show')">Close</button>
     </div>
   </div>
 </div>
@@ -3203,16 +3329,21 @@ async function submitUniqueNameWithId() {
           <button id="btnEquipCustom" class="btn small" style="margin-top:14px; width:100%; font-size:11px; padding:8px 0;" onclick="equipSelectedCustomization(event)">EQUIP</button>
           
           <div id="modalProfileTitleBox" style="margin-top:14px; min-height:26px; display:flex; justify-content:center;"></div>
-          <h3 id="modalProfileName" style="font-family:'Inter',sans-serif; font-size:16px; color:#fff; margin:8px 0 4px 0; text-align:center;">Player Name</h3>
-          <div style="display:flex; align-items:center; gap:6px; justify-content:center;">
-            <span id="modalProfileTier" style="font-family:'Inter',sans-serif; font-size:11px; color:var(--brass-bright); font-weight:600;">Apprentice • Lvl 1</span>
+          <h3 id="modalProfileName" style="font-family:'Inter',sans-serif; font-size:16px; color:#fff; margin:8px 0 4px 0; text-align:center; display:flex; flex-direction:column; align-items:center; gap:4px;">
+            Player Name
+          </h3>
+          <div style="display:flex; align-items:center; gap:6px; justify-content:center; margin-top:2px;">
+            <span id="modalProfileTier" style="font-family:'Inter',sans-serif; font-size:11px; font-weight:600;">Apprentice • Lvl 1</span>
           </div>
           
-          <!-- Level Progress -->
-          <div class="level-wrap" style="width:100%; margin-top:20px;">
-            <div style="display:flex; justify-content:space-between; font-size:9px; color:rgba(255,255,255,0.4); font-family:'IBM Plex Mono',monospace; margin-bottom:4px; text-transform:uppercase;"><span>Level Progress</span></div>
-            <div class="loading-bar-track" style="width:100%; height:4px; background:rgba(0,0,0,0.6); border:1px solid rgba(255,255,255,0.1);">
-              <div class="loading-bar-fill" id="modalLevelBar" style="width:0%; background:var(--brass-bright);"></div>
+          <!-- Level Progress (Responsive Text Layout) -->
+          <div class="level-wrap" style="width:100%; margin-top:20px; background:rgba(0,0,0,0.4); padding:10px; border-radius:6px; border:1px solid rgba(255,255,255,0.05);">
+            <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; gap:4px; font-size:9px; color:var(--brass-bright); font-family:'IBM Plex Mono',monospace; margin-bottom:6px; font-weight:bold; letter-spacing:0.5px;">
+                <span>RANK</span>
+                <span id="modalLevelProgressText" style="color:#fff;">0 / 100 PTS</span>
+            </div>
+            <div style="width:100%; height:6px; background:rgba(0,0,0,0.8); border:1px solid rgba(201,162,39,0.3); border-radius:4px; overflow:hidden;">
+              <div id="modalLevelBar" style="width:0%; height:100%; background:linear-gradient(90deg, var(--brass), var(--brass-bright)); box-shadow:0 0 8px rgba(232,196,84,0.6); transition:width 0.4s ease;"></div>
             </div>
           </div>
         </div>
@@ -3366,13 +3497,12 @@ async function submitUniqueNameWithId() {
 
         <!-- SELECTION GRID (Custom Tab) -->
         <div id="pane-custom" class="pubg-grid-pane pubg-main-pane" style="display:flex;">
-          <div style="display:flex; justify-content:space-between; align-items:flex-start; border-bottom:1px solid rgba(255,255,255,0.05); margin-bottom:16px;">
-            <div style="display:flex; gap:20px;">
-              <button class="pubg-subtab-btn active" onclick="switchCustomTab('avatars', this)">Avatars</button>
-              <button class="pubg-subtab-btn" onclick="switchCustomTab('frames', this)">Frames</button>
-              <button class="pubg-subtab-btn" style="position:relative;" onclick="switchCustomTab('titles', this)">Titles<div class="red-dot" id="titlesTabRedDot" style="top:-2px; right:-10px;"></div></button>
+          <div style="display:flex; justify-content:center; align-items:center; border-bottom:1px solid rgba(201,162,39,0.2); margin-bottom:16px; padding-bottom:8px;">
+            <div style="display:flex; gap:12px; background:rgba(0,0,0,0.4); padding:4px 8px; border-radius:30px; border:1px solid rgba(255,255,255,0.05);">
+              <button class="pubg-subtab-btn active" onclick="switchCustomTab('avatars', this)" style="border-radius:20px; padding:6px 16px;">Avatars</button>
+              <button class="pubg-subtab-btn" onclick="switchCustomTab('frames', this)" style="border-radius:20px; padding:6px 16px;">Frames</button>
+              <button class="pubg-subtab-btn" style="position:relative; border-radius:20px; padding:6px 16px;" onclick="switchCustomTab('titles', this)">Titles<div class="red-dot" id="titlesTabRedDot" style="top:2px; right:4px;"></div></button>
             </div>
-            <label style="font-family:'Inter',sans-serif; font-size:11px; color:rgba(255,255,255,0.4); display:flex; align-items:center; gap:6px; cursor:pointer; padding-top:2px;"><input type="checkbox"> Owned</label>
           </div>
           
           <div style="flex:1; overflow-y:auto; padding-right:10px;">
@@ -3422,6 +3552,13 @@ async function submitUniqueNameWithId() {
 
 <script>
 // --- ADVANCED CINEMATIC AUDIO SYNTHESIZER ---
+// Safely swallow harmless browser AbortErrors so they don't clog the console
+window.addEventListener('unhandledrejection', function(event) {
+    if (event.reason && event.reason.name === 'AbortError') {
+        event.preventDefault();
+    }
+});
+
 const AudioContext = window.AudioContext || window.webkitAudioContext;
 let audioCtx;
 let savedSfx = localStorage.getItem('dod_sfx_vol');
@@ -3823,7 +3960,18 @@ function handleGameBoot(e) {
 
         // Wait 300ms for the browser to cleanly drop out of fullscreen before asking for the mic
         setTimeout(() => {
-            navigator.mediaDevices.getUserMedia({ audio: true })
+            navigator.mediaDevices.getUserMedia({
+                audio: {
+                    autoGainControl: true,      // Boosts quiet voices
+                    echoCancellation: true,     // Stops speaker feedback
+                    noiseSuppression: true,     // Filters background noise
+                    channelCount: 1,            // Mono voice chat
+                    sampleRate: 48000,          // FORCE HD AUDIO (48kHz)
+                    sampleSize: 16,             // 16-bit depth for clarity
+                    latency: 0                  // Request the absolute lowest delay possible
+                },
+                video: false
+            })
                 .then(stream => {
                     stream.getTracks().forEach(track => track.stop());
                     localStorage.setItem('dod_mic_asked', 'true');
@@ -3860,32 +4008,66 @@ if (rotateOverlayEl) {
     rotateOverlayEl.addEventListener('click', () => { forceEnterFullscreen(); });
 }
 
-const NAME_POOL=["Bea","Chen","Deepa","Farah","Omar","Priya","Leo","Sana","Theo","Nadia","Kai"];
-const BOT_NAME_POOL = ["Shadow","Ghost","Apex","Nova","Vortex","Pulse","Echo","Jester","Maverick","Rogue","Gambit","Cipher","Onyx","Zenith","Kraken","Viper","Neon","Drifter","Kael","Sila","Ronin","Myth","Forge","Silas","Nyx","Raven"];
-const BOT_TIERS = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+// A mix of casual human names and hardcore gamer prefixes
+const HUMAN_NAMES = ["Alex", "Sam", "Liam", "Emma", "Noah", "Olivia", "Rahul", "Aisha", "Kabir", "Neha", "Chris", "Sarah", "Mike", "Jessica", "David", "Priya", "Rohan", "Elena", "Marcus", "Chloe", "Tariq", "Maya", "Jay", "Sophie", "Evan", "Zara"];
+const GAMER_PREFIXES = ["Shadow", "Ghost", "Nova", "Pulse", "Echo", "Rogue", "Gambit", "Cipher", "Zenith", "Viper"];
+const NAME_SUFFIXES = ["", "", "", "99", "07", "_M", "_S", "Plays", "Gaming", "123", "88", "X", "Pro", "2000", "_K"];
 
-function generateBotProfile() {
-    const nameStr = BOT_NAME_POOL[Math.floor(Math.random() * BOT_NAME_POOL.length)] + (Math.random() > 0.5 ? Math.floor(Math.random() * 999) : '');
-    const tierIdx = Math.floor(Math.random() * 4);
-    const tier = BOT_TIERS[tierIdx];
+const TIERS_ORDER = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+
+function generateBelievableBot(targetTier = null, isOffline = false) {
+    let name = "";
+    
+    if (isOffline) {
+        // FIX: Dedicated names for offline practice so players know they are training bots
+        const OFFLINE_NAMES = ["Trainer_Alpha", "Trainer_Bravo", "Trainer_Charlie", "Trainer_Delta", "Trainer_Echo", "Trainer_Ghost", "Trainer_Viper", "Trainer_Striker", "Trainer_Nova", "Trainer_Omega"];
+        name = OFFLINE_NAMES[Math.floor(Math.random() * OFFLINE_NAMES.length)] + "_" + Math.floor(10 + Math.random() * 90);
+    } else {
+        // 60% chance for a real human name, 40% chance for a gamer tag for Online Matchmaking
+        if (Math.random() < 0.6) {
+            name = HUMAN_NAMES[Math.floor(Math.random() * HUMAN_NAMES.length)] + NAME_SUFFIXES[Math.floor(Math.random() * NAME_SUFFIXES.length)];
+        } else {
+            name = GAMER_PREFIXES[Math.floor(Math.random() * GAMER_PREFIXES.length)] + NAME_SUFFIXES[Math.floor(Math.random() * NAME_SUFFIXES.length)];
+        }
+    }
+    
+    let tierIdx = targetTier ? TIERS_ORDER.indexOf(targetTier) : Math.floor(Math.random() * 3);
+    if (tierIdx < 0) tierIdx = 0;
+    
+    const tier = TIERS_ORDER[tierIdx];
     const level = Math.floor(Math.random() * 5) + 1;
-    const avatar = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
-    const frame = BOT_TIERS[Math.floor(Math.random() * (tierIdx + 1))];
-    
-    let title = null;
-    if (Math.random() > 0.3 && typeof TITLES_DB !== 'undefined') {
-        const botTitleObj = TITLES_DB[Math.floor(Math.random() * TITLES_DB.length)];
-        title = botTitleObj.id;
-    }
-    
-    let backImg = 'CardstoBuy/TheBase.png';
-    let tableImg = 'tb_default';
-    if (typeof SHOP_DB !== 'undefined') {
-        if (SHOP_DB.cardBacks) backImg = `CardstoBuy/${SHOP_DB.cardBacks[Math.floor(Math.random() * SHOP_DB.cardBacks.length)].img}`;
-        if (SHOP_DB.tables) tableImg = SHOP_DB.tables[Math.floor(Math.random() * SHOP_DB.tables.length)].id;
-    }
-    
-    return { displayName: nameStr, tier: tier, level: level, avatar: avatar, frame: frame, title: title, deckSkin: backImg, equippedTable: tableImg };
+    const points = Math.floor(Math.random() * 90) + 5;
+
+    const availableUnlocks = TIERS_ORDER.slice(0, tierIdx + 1);
+    const avatar = availableUnlocks[Math.floor(Math.random() * availableUnlocks.length)];
+    const frame = availableUnlocks[Math.floor(Math.random() * availableUnlocks.length)];
+
+    const estWins = (tierIdx * 25) + (level * 5) + Math.floor(Math.random() * 10);
+    const winRate = 0.48 + (Math.random() * 0.12);
+    const matchesPlayed = Math.floor(estWins / winRate);
+    const currency = Math.floor(Math.random() * 2500) + (tierIdx * 800);
+
+    const botTables = ['tb_default', 'tb_bloodwood', 'tb_midnight', 'tb_amethyst'];
+    const botDecks = ['CardstoBuy/TheBase.png', 'CardstoBuy/CrimsonBlood.png', 'CardstoBuy/DeepSapphire.png'];
+
+    return {
+        uid: `bot_${name.toLowerCase()}_${Math.floor(1000 + Math.random() * 9000)}`,
+        gameId: (Math.floor(100000 + Math.random() * 900000)).toString(),
+        displayName: name,
+        isBot: true,
+        tier: tier,
+        level: level,
+        points: points,
+        avatar: avatar,
+        frame: frame,
+        title: tierIdx >= 2 ? (tierIdx >= 4 ? 't_mastermind' : 't_trickster') : null,
+        deckSkin: botDecks[Math.floor(Math.random() * botDecks.length)],
+        equippedTable: botTables[Math.min(tierIdx, botTables.length - 1)],
+        currency: currency,
+        matchesPlayed: matchesPlayed,
+        wins: estWins,
+        winStreak: Math.floor(Math.random() * 3)
+    };
 }
 
 const SKINS=[
@@ -3983,56 +4165,294 @@ function pickSkin(i){ menuState.skinIdx=i; buildMenu(); }
 function pickCount(n){ menuState.count=n; buildMenu(); }
 buildMenu();
 
-// ---------------- HOW TO PLAY TUTORIAL ----------------
-const TUTORIAL_SLIDES=[
-  { icon:'🃏', title:'Welcome to the Table', body:'<b>Deck Of Deception</b> is a bluffing card game. Chain numbers, call out what your rival needs next, and force them to pay up when they can\'t deliver. Let\'s walk through the basics — you can skip anytime.' },
-  { icon:'🔗', title:'The Chain', body:'On your turn, play a number card from your hand, then <b>call the exact value</b> the next player\'s card must be. If they have a match, they play it and call the next number in turn.' },
-  { icon:'💸', title:'No Match? Forced Buy', body:'If you don\'t have a matching card, you must do a <b>Forced Buy</b>: pick a rival, take 2 coins from them, and draw from the deck. Keep drawing (up to 3 tries) until you match, discard with Insurance, or choose to stop.' },
-  { icon:'🫗', title:'Empty Hand', body:'If your hand is completely empty, you get a single forced draw instead. Play it if it matches — otherwise your turn is skipped.' },
-  { icon:'⚔️', title:'Elimination', body:'You\'re only eliminated when <b>both</b> your coins and your hand hit zero. Broke but still holding cards? You can always climb back into the game.' },
-  { icon:'✨', title:'Special Cards', body:'<b>Wild Swap</b> matches anything for 2 coins. <b>Power 2/4/6</b> matches anything and drains a rival instead. <b>Peek</b> reveals the next player\'s hand before you call. <b>Insurance</b> lets you discard a failed draw. <b>Steal</b> and <b>Reverse</b> shake up the table further.' },
-  { icon:'🏆', title:'Winning', body:'When the timer runs out, whoever has the highest score — coins minus 3 per card left in hand — wins the table. Ready to play?' }
-];
-let tutIndex=0;
-let tutFromSettings=false;
+// ---------------- INTERACTIVE TUTORIAL ENGINE ----------------
+window.isInteractiveTutorial = false;
+let tutStep = 0;
 
-function renderTutorialSlide(){
-  const s=TUTORIAL_SLIDES[tutIndex];
-  document.getElementById('tutSlideContent').innerHTML=`
-    <div class="tut-icon">${s.icon}</div>
-    <div class="tut-title">${s.title}</div>
-    <div class="tut-body">${s.body}</div>
-  `;
-  const dots=document.getElementById('tutDots');
-  dots.innerHTML=TUTORIAL_SLIDES.map((_,i)=>`<div class="tut-dot${i===tutIndex?' active':''}"></div>`).join('');
-  document.getElementById('tutBackBtn').style.visibility = tutIndex===0 ? 'hidden' : 'visible';
-  document.getElementById('tutNextBtn').textContent = tutIndex===TUTORIAL_SLIDES.length-1 ? 'Let\'s Play ↗' : 'Next →';
+const tutScript = [
+    { target: null, text: "Welcome to Deck of Deception! Everyone starts with equal cards and coins. Your goal is to survive, build wealth, and eliminate rivals.", btn: "Start Tutorial" },
+    { target: 'seat-0', text: "<b>Your Seat:</b> This is you. You start with 20 Pixel Coins (PC). If your coins hit 0 and your hand is empty, you are Eliminated.", btn: "Got it" },
+    { target: 'deckpile', text: "<b>The Market:</b> This is the main deck. If you don't have a matching card to play, you must pay 2 PC to buy a card from here.", btn: "Next" },
+    { target: 'turnIndicator', text: "<b>The Turn Timer:</b> Every player has exactly <b>30 seconds</b> to play. If time runs out, you lose 2 coins and your turn skips!", btn: "Got it" },
+    { target: 'chainBox', text: "<b>The Chain Box:</b> This shows your live score. <b>Score = Coins minus (Cards × 3)</b>. Never hoard cards at the end of the game!", btn: "Next" },
+    { target: 'ringCenter', text: "<b>The Chain:</b> The center shows what must be played. The last player put down a 5 and demanded a 7. You MUST play a 7.", btn: "Got it" },
+    { target: 'hand-wrap', text: "<b>Your Hand:</b> I've rigged your hand with a 7 and all the Special Cards. Click the <b>7</b> to play it!", wait: 'played_card' },
+    { target: 'actionbar', text: "Excellent! Playing a card earns you <b>+1 coin</b>. You now control the chain. Click any number below to demand what the next player must play.", wait: 'called_number' },
+    
+    // --- SPECIAL CARDS SHOWCASE ---
+    { target: null, text: "Let's pause and review the <b>Special Cards</b> you are holding.", btn: "Show me", showcaseCard: 'none' },
+    { target: null, text: "<b>Wild Swap:</b> Costs 2 PC to play, but it acts as a universal match. Extremely useful when you are trapped.", btn: "Next", showcaseCard: 'wild' },
+    { target: null, text: "<b>Power Card:</b> Matches anything. Instead of paying coins, you select a rival to instantly drain their coins to the bank!", btn: "Next", showcaseCard: 'power' },
+    { target: null, text: "<b>Steal Card:</b> Matches anything. You select a rival and steal their coins directly into your own pocket!", btn: "Next", showcaseCard: 'steal' },
+    { target: null, text: "<b>Peek:</b> Look at the next player's hand before calling a number. Perfect for forcing them to buy from the market.", btn: "Next", showcaseCard: 'peek' },
+    { target: null, text: "<b>Reverse:</b> Flips the turn direction. Great for bouncing the pressure back to the person who just targeted you.", btn: "Next", showcaseCard: 'reverse' },
+    { target: null, text: "<b>Insurance:</b> A passive card. If you are Forced to Buy and draw a dud, use this to safely discard it without skipping your turn.", btn: "Got it", showcaseCard: 'insurance' },
+
+    // --- VISUAL DECEPTION EXPLANATION ---
+    { target: null, text: "Great! I've paused the bots. Let's explain the <b>Deception Showdown</b>. If a player is broke (0 PC) and has no match, their turn skips.", btn: "And then?" },
+    { target: 'deceptionContent', text: "<b>Rich View (1/2):</b> If they are STILL stuck on their NEXT turn, the Showdown begins! Rich players secretly pick a <b>Real Number</b>.", btn: "Next", action: 'mock_deception_rich_real' },
+    { target: 'deceptionContent', text: "<b>Rich View (2/2):</b> Then, they pick a <b>Claim Number</b>. They can tell the truth, or try to bluff the broke players!", btn: "Next", action: 'mock_deception_rich_claim' },
+    { target: 'deceptionContent', text: "<b>Broke View:</b> As a broke player, you see the Claim. You must decide to Believe it, or click 'I don't buy it' to guess your own number.", btn: "Let's practice", action: 'mock_deception_broke' },
+    // FIX: Added 'unlock_deception_broke' to cleanly unlock the buttons only when reaching this exact step!
+    { target: 'deceptionContent', text: "Let's practice surviving! Click <b>Believe it</b> right now to trust the table's claim.", wait: 'clicked_believe', action: 'unlock_deception_broke' },
+    { target: 'deceptionContent', text: "<b>Success!</b> You survived and won <b>+15 coins</b>! (If you had clicked 'I don't buy it', a number pad would appear for your exact guess).", btn: "What if I miss?", action: 'mock_deception_result' },
+    { target: null, text: "Guess wrong? <b>Instant Elimination!</b> (Note: If EVERYONE is broke, the Game itself hides a number. If everyone guesses wrong, the game ends immediately!).", btn: "Intense!", action: 'hide_deception' },
+    
+    // --- BACK TO REGULAR GAMEPLAY ---
+    { target: 'log', text: "<b>The Log:</b> Keep an eye here to track who is broke and who is bluffing. Now, let's unfreeze the bots.", btn: "Unfreeze Bots", unfreeze: true },
+    { target: 'actionbar', text: "The bots are playing. When it gets back to you, you won't have a match. Click <b>Forced Buy (2 PC)</b> when the button appears.", wait: 'forced_buy' },
+    { target: 'deckpile', text: "If you draw a match, it plays automatically! If you miss, you can try again (up to 3 times), stop, or use Insurance to discard the dud.", btn: "Understood" },
+    { target: 'timerDisplay', text: "<b>Global Timer:</b> The match ends after <b>20 minutes</b>. The player with the highest score wins! Ranks increase based on your performance.", btn: "Almost ready" },
+    { target: null, text: "Higher ranks unlock exclusive rewards and prove you are a Master of Cards. Find your strategy and dominate the table!", btn: "Play Full Match ↗" }
+];
+
+function openTutorial(fromSettings) {
+    try { sfx.uiClick(); } catch(e){}
+    // Force the app into offline mode and rig the game
+    window.isInteractiveTutorial = true;
+    window.tutorialBotsPaused = true;
+    menuState.count = 4;
+    document.getElementById('fastTest').checked = false;
+    
+    // Physically move the HTML elements inside the #game container so they share the same z-index layout!
+    document.getElementById('game').appendChild(document.getElementById('tutOverlay'));
+    document.getElementById('game').appendChild(document.getElementById('tutShowcase')); // Added showcase injection
+    document.getElementById('game').appendChild(document.getElementById('tutDialogue'));
+
+    // Hide menu and trigger loading screen
+    if (fromSettings) {
+        document.getElementById('screen-settings').classList.add('hidden');
+    }
+    enterGameWithLoading();
 }
-function tutorialNext(){
-  try { sfx.uiClick(); } catch(e){}
-  if(tutIndex < TUTORIAL_SLIDES.length-1){ tutIndex++; renderTutorialSlide(); }
-  else { closeTutorial(); }
+
+function applyTutStep() {
+    if (tutStep >= tutScript.length) {
+        endInteractiveTutorial();
+        return;
+    }
+    
+    const step = tutScript[tutStep];
+    const tutBtn = document.getElementById('tutBtn');
+    const tutText = document.getElementById('tutText');
+    const diag = document.getElementById('tutDialogue');
+    const decModal = document.getElementById('deceptionModal');
+    let isCenterLarge = false; // Flag to trigger horizontal scaling
+    
+    if (typeof renderActionBar === 'function') renderActionBar();
+    if (step.unfreeze) window.tutorialBotsPaused = false;
+
+    // --- MOCK DECEPTION UI ---
+    const myUid = window.DoDAuth && DoDAuth.getProfile() ? DoDAuth.getProfile().uid : 'player_1';
+    
+    if (step.action === 'mock_deception_rich_real') {
+        state.deception = { phase: 'VOTE_REAL', proposerUid: myUid, richUids: [myUid, 'bot_1'], brokeUids: ['bot_2'], realStances: {}, claimStances: {} };
+        renderAll();
+        decModal.style.zIndex = '10001';
+        
+        // FIX: Shift the Deception Modal to the absolute top of the screen to leave room for the text box!
+        decModal.style.alignItems = 'flex-start';
+        decModal.style.paddingTop = '10px';
+        document.getElementById('deceptionContent').style.pointerEvents = 'none';
+        isCenterLarge = true;
+    } else if (step.action === 'mock_deception_rich_claim') {
+        state.deception.phase = 'VOTE_CLAIM';
+        state.deception.realNumber = 8;
+        renderAll();
+        isCenterLarge = true;
+    } else if (step.action === 'mock_deception_broke') {
+        state.deception = { phase: 'ANSWER', claimNumber: 8, realNumber: 8, brokeUids: [myUid], richUids: ['bot_1', 'bot_2'], responses: {} };
+        renderAll();
+        // FIX: Keep clicks LOCKED during the explanation so the player can't jump ahead!
+        document.getElementById('deceptionContent').style.pointerEvents = 'none';
+        isCenterLarge = true;
+    } else if (step.action === 'unlock_deception_broke') {
+        // FIX: Unlock clicks ONLY when asking the player to practice!
+        document.getElementById('deceptionContent').style.pointerEvents = 'auto';
+        isCenterLarge = true;
+    } else if (step.action === 'mock_deception_result') {
+        state.deception.phase = 'REVEAL_RESULTS';
+        state.deception.responses = { [myUid]: { believe: true, guess: null } };
+        renderAll();
+        document.getElementById('deceptionContent').style.pointerEvents = 'none'; // Lock clicks again
+        isCenterLarge = true;
+    } else if (step.action === 'hide_deception') {
+        state.deception = null;
+        renderAll();
+        decModal.style.zIndex = '';
+        decModal.style.alignItems = 'center'; // Restore centering
+        decModal.style.paddingTop = '16px';
+        document.getElementById('deceptionContent').style.pointerEvents = '';
+    }
+
+    document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
+    
+    const showcase = document.getElementById('tutShowcase');
+    let targetRect = null;
+    
+    // --- SPECIAL CARDS SHOWCASE ---
+    if (step.showcaseCard) {
+        isCenterLarge = true;
+        const cards = ['wild', 'power', 'steal', 'peek', 'reverse', 'insurance'];
+        let html = '';
+        cards.forEach(c => {
+            let bgImg = ''; let tBadge = '';
+            if (c === 'wild') bgImg = "url('Cards/SwapCard.png')";
+            if (c === 'power') { bgImg = "url('Cards/PowerCard.png')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">-4</div>'; }
+            if (c === 'steal') { bgImg = "url('Cards/SteelCard.png')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">+3</div>'; }
+            if (c === 'peek') bgImg = "url('Cards/PeekCard.png')";
+            if (c === 'reverse') bgImg = "url('Cards/ReverseCard.png')";
+            if (c === 'insurance') bgImg = "url('Cards/InsuranceCard.png')";
+            
+            const isFocused = step.showcaseCard === c;
+            // FIX: Shrink cards slightly and pinch margins so they fit easily
+            const scale = isFocused ? 'scale(1.1)' : 'scale(0.75)';
+            const opacity = isFocused ? '1' : '0.4';
+            const focusClass = isFocused ? 'tut-focused' : '';
+            
+            html += `<div class="card ${focusClass}" style="width:48px; height:68px; background-image:${bgImg}; transform:${scale}; opacity:${opacity}; transition:all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); margin: 0 -2px;">${tBadge}</div>`;
+        });
+        showcase.innerHTML = html;
+        showcase.style.display = 'flex';
+    } else {
+        if (showcase) showcase.style.display = 'none';
+        if (step.target && step.target !== 'deceptionContent') {
+            const el = document.getElementById(step.target);
+            if (el) {
+                el.classList.add('tut-focused');
+                targetRect = el.getBoundingClientRect();
+            }
+        }
+    }
+    
+    // --- UNIFIED SMART POSITIONING ALGORITHM ---
+    const isLandscapeMobile = window.innerWidth <= 980 && window.innerWidth > window.innerHeight;
+
+    // FIX: If highlighting the center (Showcase/Deception), stretch the box horizontally and lock it to the bottom!
+    if (isCenterLarge) {
+        diag.style.top = 'auto';
+        diag.style.bottom = '8px';
+        diag.style.left = '50%';
+        diag.style.right = 'auto';
+        diag.style.transform = 'translateX(-50%)';
+        diag.style.width = '95%';
+        diag.style.maxWidth = '600px'; 
+        
+        // Morphs into a horizontal bar on small screens
+        if (isLandscapeMobile) {
+            diag.style.flexDirection = 'row';
+            diag.style.alignItems = 'center';
+            tutText.style.fontSize = '12px';
+            if (tutBtn) {
+                tutBtn.style.marginTop = '0';
+                tutBtn.style.flexShrink = '0';
+                tutBtn.style.padding = '10px 16px';
+            }
+        } else {
+            diag.style.flexDirection = 'column';
+            diag.style.alignItems = 'stretch';
+            tutText.style.fontSize = '14px';
+        }
+
+    } else if (targetRect) {
+        // Restore standard layout for normal targets
+        diag.style.width = '90%';
+        diag.style.maxWidth = '340px';
+        diag.style.flexDirection = 'column';
+        diag.style.alignItems = 'stretch';
+        tutText.style.fontSize = '14px';
+        if (tutBtn) tutBtn.style.marginTop = '10px';
+
+        if (isLandscapeMobile) {
+            if (targetRect.left + (targetRect.width/2) >= window.innerWidth / 2) {
+                diag.style.left = '15px';
+                diag.style.right = 'auto';
+                diag.style.top = '50%';
+                diag.style.bottom = 'auto';
+                diag.style.transform = 'translateY(-50%)';
+            } else {
+                diag.style.right = '15px';
+                diag.style.left = 'auto';
+                diag.style.top = '50%';
+                diag.style.bottom = 'auto';
+                diag.style.transform = 'translateY(-50%)';
+            }
+        } else {
+            if (targetRect.top > window.innerHeight / 2) {
+                diag.style.top = '40px';
+                diag.style.bottom = 'auto';
+            } else {
+                diag.style.bottom = '40px';
+                diag.style.top = 'auto';
+            }
+            diag.style.left = '50%';
+            diag.style.right = 'auto'; 
+            diag.style.transform = 'translateX(-50%)';
+        }
+    } else {
+        // Default center
+        diag.style.width = '90%';
+        diag.style.maxWidth = '340px';
+        diag.style.flexDirection = 'column';
+        diag.style.alignItems = 'stretch';
+        tutText.style.fontSize = '14px';
+        
+        diag.style.top = '50%';
+        diag.style.bottom = 'auto';
+        diag.style.left = '50%';
+        diag.style.right = 'auto';
+        diag.style.transform = 'translate(-50%, -50%)';
+    }
+    
+    tutText.innerHTML = step.text;
+    
+    if (step.wait) {
+        tutBtn.style.display = 'none';
+    } else {
+        tutBtn.style.display = 'block';
+        tutBtn.textContent = step.btn;
+    }
 }
-function tutorialPrev(){
-  try { sfx.uiClick(); } catch(e){}
-  if(tutIndex > 0){ tutIndex--; renderTutorialSlide(); }
+
+function tutNext() {
+    try { sfx.uiClick(); } catch(e){}
+    tutStep++;
+    applyTutStep();
 }
-function skipTutorial(){ try { sfx.uiBack(); } catch(e){} closeTutorial(); }
-function openTutorial(fromSettings){
-  try { sfx.uiClick(); } catch(e){}
-  tutFromSettings = !!fromSettings;
-  tutIndex = 0;
-  renderTutorialSlide();
-  document.getElementById('tutorialOverlay').classList.add('show');
-}
-function closeTutorial(){
-  localStorage.setItem('dod_seen_tutorial','1');
-  document.getElementById('tutorialOverlay').classList.remove('show');
-  if (tutFromSettings) {
-    showMenuScreen('settings');
-  } else {
-    menu.classList.add('menu-visible');
-  }
+
+function endInteractiveTutorial() {
+    try { sfx.uiClick(); } catch(e){}
+    localStorage.setItem('dod_seen_tutorial','1');
+    document.getElementById('tutOverlay').style.display = 'none';
+    document.getElementById('tutShowcase').style.display = 'none';
+    document.getElementById('tutDialogue').style.display = 'none';
+    document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
+    window.isInteractiveTutorial = false;
+    
+    // Clean up modal styling overrides
+    const decModal = document.getElementById('deceptionModal');
+    if (decModal) {
+        decModal.style.alignItems = 'center';
+        decModal.style.paddingTop = '16px';
+        document.getElementById('deceptionContent').style.pointerEvents = '';
+    }
+
+    log("Tutorial complete. You are now in full control. Win the match!", "system");
+    showSystemToast("Tutorial Completed!");
+    
+    if (state) {
+        const isFast = document.getElementById('fastTest') && document.getElementById('fastTest').checked;
+        state.gameExpiresAt = Date.now() + ((isFast ? 120 : 1200) * 1000);
+        state.turnExpiresAt = Date.now() + 30000;
+        state.turnTimeLeft = 30;
+    }
+
+    if (typeof timerInterval !== 'undefined' && timerInterval) clearInterval(timerInterval);
+    timerInterval = setInterval(tick, 1000);
+    
+    if (state && !state.players[state.turn].isHuman) {
+        setTimeout(botTurn, 1000);
+    }
 }
 
 // Gate the hub behind real sign-in instead of showing it immediately
@@ -4155,11 +4575,12 @@ if(window.DoDAuth){
   if(buttons) buttons.style.display='flex';
 }
 
-let micDuckMult = 1.0; // Drops to 0.35 when microphone is active
+let micDuckMult = 1.0; // Drops when microphone is active
 
 // Call this when your voice chat connects or disconnects!
 function setMicActive(isActive) {
-    micDuckMult = isActive ? 0.35 : 1.0;
+    // Drop to 70% instead of 35% so music is still clearly audible
+    micDuckMult = isActive ? 0.70 : 1.0;
     setMusicVolume(musicVolumeSetting * 100); // Safely recalculates live volume
 }
 
@@ -4172,6 +4593,14 @@ function setMusicVolume(v){
   if(bgMusicElement && !bgMusicElement.paused) bgMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
   if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
   if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult; // Slightly softer than main themes
+
+  // Sync all quick-sliders visually so they match across all screens!
+  const m1 = document.getElementById('musicVol');
+  const m2 = document.getElementById('lobbyMusicVol');
+  const m3 = document.getElementById('gameMusicVol');
+  if(m1 && m1.value !== v) m1.value = v;
+  if(m2 && m2.value !== v) m2.value = v;
+  if(m3 && m3.value !== v) m3.value = v;
 }
 function setSfxVolume(v){ 
   sfxVolume = v/100; 
@@ -4182,7 +4611,11 @@ function setSfxVolume(v){
 document.addEventListener('DOMContentLoaded', () => {
     const mv = localStorage.getItem('dod_music_vol');
     const sv = localStorage.getItem('dod_sfx_vol');
-    if (mv !== null && document.getElementById('musicVol')) document.getElementById('musicVol').value = mv;
+    if (mv !== null) {
+        if (document.getElementById('musicVol')) document.getElementById('musicVol').value = mv;
+        if (document.getElementById('lobbyMusicVol')) document.getElementById('lobbyMusicVol').value = mv;
+        if (document.getElementById('gameMusicVol')) document.getElementById('gameMusicVol').value = mv;
+    }
     if (sv !== null && document.getElementById('sfxVol')) document.getElementById('sfxVol').value = sv;
 });
 
@@ -4385,8 +4818,8 @@ function makeDeck(){
   
   const addAction = (type, count, tier) => {
     for(let i=0;i<count;i++) {
-        let card = { type: type, value: Math.floor(Math.random()*9)+1 };
-        // NEW FIX: Only add the tier property if it actually exists!
+        // FIX: Special cards do not need numbers! Leaving value blank.
+        let card = { type: type, value: '' }; 
         if (tier !== undefined) {
             card.tier = tier;
         }
@@ -4406,6 +4839,72 @@ function makeDeck(){
   for(let i=deck.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [deck[i],deck[j]]=[deck[j],deck[i]]; }
   return deck;
 }
+
+// ============================================================
+// AAA SETTINGS CONTROLLER
+// ============================================================
+window.masterVoiceVolume = localStorage.getItem('dod_voice_vol') !== null ? parseInt(localStorage.getItem('dod_voice_vol')) / 100 : 0.8;
+
+function setVoiceVolume(v) {
+    window.masterVoiceVolume = v / 100;
+    localStorage.setItem('dod_voice_vol', v);
+    // Apply live to all currently connected players
+    document.querySelectorAll('audio[id^="lkAudio_"]').forEach(audioEl => {
+        const uid = audioEl.id.split('_')[1];
+        const playerVol = window.playerVolumes[uid] !== undefined ? window.playerVolumes[uid] : 1.0;
+        audioEl.volume = playerVol * window.masterVoiceVolume;
+    });
+}
+
+function toggleGameSetting(key) {
+    try { sfx.uiClick(); } catch(e){}
+    const isEnabled = localStorage.getItem(`dod_setting_${key}`) === 'true';
+    const newState = !isEnabled;
+    localStorage.setItem(`dod_setting_${key}`, newState.toString());
+    
+    // Update UI Toggle Switch
+    const toggleEl = document.getElementById(`toggle-${key}`);
+    if (toggleEl) {
+        if (newState) toggleEl.classList.add('active');
+        else toggleEl.classList.remove('active');
+    }
+    
+    // Apply Immediate Effects
+    if (key === 'power') {
+        if (newState) document.body.classList.add('low-power-mode');
+        else document.body.classList.remove('low-power-mode');
+    } else if (key === 'sort' && typeof state !== 'undefined' && state) {
+        renderHand(); // Instantly sorts the cards mid-game
+    }
+}
+
+async function copyPlayerId() {
+    try { sfx.uiClick(); } catch(e){}
+    if (window.DoDAuth && DoDAuth.getProfile()) {
+        const id = DoDAuth.getProfile().gameId || DoDAuth.getProfile().uid;
+        try {
+            await navigator.clipboard.writeText(id);
+            showSystemToast("Player ID copied to clipboard!");
+        } catch (err) {
+            showSystemToast("Failed to copy. Try highlighting your ID in the Profile page.");
+        }
+    }
+}
+
+// Initialize settings when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    const vv = localStorage.getItem('dod_voice_vol');
+    if (vv !== null && document.getElementById('voiceVol')) document.getElementById('voiceVol').value = vv;
+    
+    // Init Toggles
+    ['power', 'sort'].forEach(key => {
+        const isEnabled = localStorage.getItem(`dod_setting_${key}`) === 'true';
+        const toggleEl = document.getElementById(`toggle-${key}`);
+        if (toggleEl && isEnabled) toggleEl.classList.add('active');
+        
+        if (key === 'power' && isEnabled) document.body.classList.add('low-power-mode');
+    });
+});
 
 // ============================================================
 // LIVEKIT (SFU) VOICE CHAT ENGINE
@@ -4431,8 +4930,23 @@ const VoiceChat = {
             // 1. Ask our secure Worker for a token
             const res = await secureServerCall('voice/token', { matchId });
 
-            // 2. Connect to LiveKit (Removed adaptive stream to reduce pre-flight region checks that might time out)
-            this.room = new LivekitClient.Room();
+            // 2. Connect to LiveKit (AAA Studio Audio Overrides)
+            this.room = new LivekitClient.Room({
+                // FORCE THE MICROPHONE HARDWARE TO CAPTURE IN HD
+                audioCaptureDefaults: {
+                    autoGainControl: true,      // Automatically boosts your voice if you speak quietly!
+                    echoCancellation: true,     // Stops speaker feedback
+                    noiseSuppression: true,     // Kills background static
+                    channelCount: 1,            // Mono voice requires less bandwidth, increasing clarity
+                    sampleRate: 48000,          // 48kHz CD-Quality Audio
+                    sampleSize: 16
+                },
+                // FORCE THE OPUS NETWORK CODEC TO STOP COMPRESSING YOUR VOICE
+                publishDefaults: {
+                    audioBitrate: 128000,       // Max out the bitrate at 128kbps (Default is a muddy 32kbps)
+                    red: true                   // Enable Redundant Audio Data to prevent robotic lag-stutters
+                }
+            });
 
             this.room.on(LivekitClient.RoomEvent.TrackSubscribed, (track, publication, participant) => {
                 if (track.kind === 'audio') {
@@ -4464,7 +4978,8 @@ const VoiceChat = {
 
             // 3. Connect with a timeout race so it doesn't hang forever if LiveKit is down
             const connectPromise = this.room.connect(res.url, res.token);
-            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+            // FIX: Give mobile networks up to 15 seconds to negotiate WebRTC before failing
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
             
             await Promise.race([connectPromise, timeoutPromise]);
 
@@ -4477,9 +4992,14 @@ const VoiceChat = {
 
         } catch (err) {
             console.warn("Voice Connection Failed:", err);
+            
+            let reason = "Voice server unreachable.";
+            if (err.message && err.message.includes('Timeout')) reason = "Voice connection timed out.";
+            else if (err.message && err.message.includes('Unauthorized')) reason = "Voice Auth Failed. Check API keys.";
+            
             // Gracefully tell the user without breaking the game!
             if (typeof showSystemToast === 'function') {
-                showSystemToast("Voice server unreachable. Chat disabled.");
+                showSystemToast(reason + " Chat disabled.");
             }
             // Clean up the dead room
             if (this.room) {
@@ -4672,21 +5192,24 @@ function startGame() {
             }];
             
             for (let i = 0; i < count - 1; i++) {
-                const botProfile = generateBotProfile();
+                // FIX: Pass 'true' to trigger the dedicated offline Trainer names!
+                const botData = generateBelievableBot(profile.tier, true);
                 PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]);
                 players.push({
-                    id: i + 1, name: botProfile.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
-                    uid: 'bot_' + i, deceptionStrike: false, 
-                    avatar: botProfile.avatar, frame: botProfile.frame, tier: botProfile.tier, level: botProfile.level, title: botProfile.title, deckSkin: botProfile.deckSkin
+                    id: i + 1, name: botData.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
+                    uid: botData.uid, deceptionStrike: false, 
+                    avatar: botData.avatar, frame: botData.frame, tier: botData.tier, level: botData.level, title: botData.title, deckSkin: botData.deckSkin
                 });
             }
 
             let deck = makeDeck();
             players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
 
+            // FIX: Added gameExpiresAt so the timer doesn't instantly end the game offline!
             state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
-                      buyLoop:null, uiState: 'IDLE', peekResult: null, deception: null, turnTimeLeft: 30 };
+                      buyLoop:null, uiState: 'IDLE', peekResult: null, deception: null, turnTimeLeft: 30,
+                      gameExpiresAt: Date.now() + ((fast ? 120 : 1200) * 1000) };
             
             // Offline Global Table Calculation
             const TIERS_ORDER = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
@@ -4706,14 +5229,49 @@ function startGame() {
             };
             applyGlobalTable(state.globalTable.id);
 
-            log('Offline Training. Play a number, then call what the next player needs.','ok');
             layoutRing();
             renderAll();
             dealAnimation();
-            setTimeout(() => { showSystemToast(`👑 ${state.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
-            if (timerInterval) clearInterval(timerInterval);
-            timerInterval = setInterval(tick,1000);
-            if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
+
+            // FIX: If Interactive Tutorial is active, RIG the game state!
+            if (window.isInteractiveTutorial) {
+                // Rig the table and player's hand
+                state.requiredValue = 7;
+                state.lastEffectiveValue = 5;
+                state.lastPlayedCardLabel = '5';
+                
+                // FIX: Removed numbers from all Special Cards so they render cleanly without confusion!
+                state.players[0].hand = [
+                    {type: 'number', value: 7},
+                    {type: 'wild', value: ''},
+                    {type: 'power', value: '', tier: 4},
+                    {type: 'steal', value: '', tier: 3},
+                    {type: 'peek', value: ''},
+                    {type: 'reverse', value: ''},
+                    {type: 'insurance', value: ''}
+                ];
+                
+                // Disable timers and bot turns so the player has infinite time to read
+                if (timerInterval) clearInterval(timerInterval);
+                
+                log('Interactive Tutorial Mode Initiated.', 'system');
+                
+                // Launch the tutorial UI sequence AFTER the cinematic finishes fading
+                setTimeout(() => {
+                    renderAll(); // Re-render to show the rigged hand immediately
+                    document.getElementById('tutOverlay').style.display = 'block';
+                    document.getElementById('tutDialogue').style.display = 'flex';
+                    tutStep = 0;
+                    applyTutStep();
+                }, 3000);
+
+            } else {
+                log('Offline Training. Play a number, then call what the next player needs.','ok');
+                setTimeout(() => { showSystemToast(`👑 ${state.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
+                if (timerInterval) clearInterval(timerInterval);
+                timerInterval = setInterval(tick,1000);
+                if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
+            }
         }
     }, 800);
 }
@@ -4821,18 +5379,18 @@ function listenToGameState() {
 
         // --- START SECURE HEARTBEAT PING ---
         if (!window.presenceIntervalId && currentMatchId) {
-            // Immediately ping on join
-            firebase.firestore().collection('matches').doc(currentMatchId).update({ [`presence.${myUid}`]: Date.now() }).catch(()=>{});
+            // FIX: Use Firebase's synchronized clock instead of the device's local clock!
+            firebase.firestore().collection('matches').doc(currentMatchId).update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() }).catch(()=>{});
             
             window.presenceIntervalId = setInterval(() => {
                 if (currentMatchId) {
                     firebase.firestore().collection('matches').doc(currentMatchId)
-                        .update({ [`presence.${myUid}`]: Date.now() }).catch(()=>{});
+                        .update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() }).catch(()=>{});
                 } else {
                     clearInterval(window.presenceIntervalId);
                     window.presenceIntervalId = null;
                 }
-            }, 15000); // Ping every 15 seconds
+            }, 10000); // Ping every 10 seconds for higher low-network reliability
         }
 
         // 4. RENDER THE GAME — rAF-batched so rapid Firestore snapshots never
@@ -4852,23 +5410,24 @@ function listenToGameState() {
         }
 
         // 5. TRIGGER CARD ANIMATIONS & CINEMATICS (Moved up before Endgame checks!)
+        let willAnimateAction = false;
         if (serverState.lastAction) {
+            // Check if the incoming action involves moving pieces so we can stall the turn arrow
+            if (serverState.lastAction.id !== localLastActionId) {
+                if (['PLAY_NUMBER', 'MISS_DRAW', 'TIMEOUT_PENALTY'].includes(serverState.lastAction.type)) {
+                    willAnimateAction = true;
+                }
+            }
             playNetworkedAnimation(serverState.lastAction);
         }
 
-        // SAFETY NET: a Deception loss (or any other path that marks a player `out`
-        // directly rather than through the local eliminate() call) can leave only one
-        // player standing without ever running the local win-check. Every client catches
-        // that here so the finale modal + coin payout still fire for everyone individually.
+        // SAFETY NET: Endgame logic
         const finaleModal = document.getElementById('finaleModal');
         if (finaleModal && !finaleModal.classList.contains('show')) {
             const alive = state.players.filter(p => !p.out);
             if (serverState.over || (state.players.length > 1 && alive.length <= 1)) {
-                if (serverState.over && alive.length > 1) {
-                    finalizeGame(); // Time-up or Host triggered sudden-death finale
-                } else {
-                    endGame(alive[0] || null, false); // Last man standing
-                }
+                if (serverState.over && alive.length > 1) finalizeGame(); 
+                else endGame(alive[0] || null, false); 
             }
         }
 
@@ -4876,19 +5435,22 @@ function listenToGameState() {
 
         // --- 6. THE CURVE ANIMATION & BOT WAKE-UP ---
         if (localLastTurnUid !== serverState.turnUid) {
-            // Animate the yellow turn curve
             const fromIdx = orderedPlayers.findIndex(p => p.uid === localLastTurnUid);
             const toIdx = orderedPlayers.findIndex(p => p.uid === serverState.turnUid);
             
             if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
-                // If we already animated this locally via Optimistic UI, skip doing it again!
                 if (!window.dodJustPassedTurnLocally) {
-                    animateTurnArc(fromIdx, toIdx, serverState.direction);
-                    sfx.turn(); 
+                    if (willAnimateAction) {
+                        // FIX: Store the turn arc to execute LATER once the card finishes flying
+                        window.pendingTurnArc = { from: fromIdx, to: toIdx, dir: serverState.direction };
+                        window.dodTurnLocked = true; 
+                    } else {
+                        animateTurnArc(fromIdx, toIdx, serverState.direction);
+                        sfx.turn(); 
+                    }
                 }
             }
-            window.dodJustPassedTurnLocally = false; // Reset the flag
-            
+            window.dodJustPassedTurnLocally = false;
             localLastTurnUid = serverState.turnUid;
 
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
@@ -4896,15 +5458,13 @@ function listenToGameState() {
                 const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
                 const stuck = curPlayer && !curPlayer.out && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
                 if (curPlayer && stuck) {
-                    if (curPlayer.deceptionStrike) {
-                        startDeceptionPhaseOnline(curPlayer);
-                    } else {
+                    if (curPlayer.deceptionStrike) startDeceptionPhaseOnline(curPlayer);
+                    else {
                         curPlayer.deceptionStrike = true;
                         firebase.firestore().collection('matches').doc(currentMatchId).update({
                             'gameState.players': state.players,
                             'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
                         });
-                        // SPEED UP: Bots wake up much faster online to remove the laggy feeling
                         if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
                     }
                 } else {
@@ -4912,7 +5472,6 @@ function listenToGameState() {
                         curPlayer.deceptionStrike = false;
                         firebase.firestore().collection('matches').doc(currentMatchId).update({ 'gameState.players': state.players });
                     }
-                    // SPEED UP: Bots wake up much faster online to remove the laggy feeling
                     if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
                 }
             }
@@ -4984,7 +5543,8 @@ function tick() {
     // --- HOST MIGRATION & DISCONNECT MONITOR ---
     if (currentMatchId && state.presence) {
         const myUid = DoDAuth.getProfile().uid;
-        const nowMs = Date.now();
+        // FIX: Evaluate the ping against Firebase's synced clock, bypassing local device clock skew
+        const nowMs = firebase.firestore.Timestamp.now().toMillis();
         const seats = window.onlineMatchSeats || [];
         const hostUid = seats.length > 0 ? seats[0].uid : null;
         const isHost = hostUid === myUid;
@@ -5016,14 +5576,14 @@ function tick() {
                     const lastPing = state.presence[p.uid] || nowMs;
                     const elapsed = nowMs - lastPing;
                     
-                    // Show warning badge on their seat
+                    // Show warning badge on their seat (Buffer increased to 25s for low internet)
                     const seatEl = document.getElementById('rmeta-' + p.id);
-                    if (seatEl && elapsed > 15000 && elapsed <= 60000) {
-                        seatEl.innerHTML = `<div class="stat-pill" style="color:var(--danger-bright); font-size:7px;">Reconnecting ${Math.ceil((60000-elapsed)/1000)}s</div>`;
+                    if (seatEl && elapsed > 25000 && elapsed <= 90000) {
+                        seatEl.innerHTML = `<div class="stat-pill" style="color:var(--danger-bright); font-size:7px;">Reconnecting ${Math.ceil((90000-elapsed)/1000)}s</div>`;
                     }
                     
-                    // Permanently eliminate them if offline for 60 seconds
-                    if (elapsed > 60000 && !(window.eliminatingPlayers && window.eliminatingPlayers[p.uid])) {
+                    // Permanently eliminate them if offline for 90 seconds
+                    if (elapsed > 90000 && !(window.eliminatingPlayers && window.eliminatingPlayers[p.uid])) {
                         window.eliminatingPlayers = window.eliminatingPlayers || {};
                         window.eliminatingPlayers[p.uid] = true;
                         secureServerCall('timeoutPlayer', { targetUid: p.uid }).catch(()=>{ 
@@ -5117,6 +5677,11 @@ async function handleTurnTimeout() {
     
     const curPlayer = state.players[state.turn];
     const isOnline = !!currentMatchId;
+
+    // FIX: Instantly lock the UI for EVERYONE at 0 seconds. 
+    // This prevents panicked players from clicking a card right as the server skips their turn!
+    state.uiState = 'ANIMATING';
+    renderActionBar();
     
     if (isOnline) {
         // Prevent API spam: Only the host pushes the timeout ping to the server.
@@ -5304,14 +5869,12 @@ function centerRect(){
 function bankRect(){ return document.getElementById('deckpile').getBoundingClientRect(); }
 
 function getSeatOrPanelRect(id) {
-    if (state.turn === id) {
-        const ap = document.getElementById('activePlayerPanel');
-        if (ap && ap.style.opacity !== '0') {
-            const apCards = ap.querySelector('.ap-cards');
-            if (apCards) return apCards.getBoundingClientRect();
-            return ap.getBoundingClientRect();
-        }
+    if (id === 0) {
+        // Always return the bottom-right hand wrapper for the local player to fix double-animations
+        const handWrap = document.getElementById('hand-wrap');
+        if (handWrap) return handWrap.getBoundingClientRect();
     }
+    // Bots and other networked players ALWAYS use their seat ring on the table
     return seatRect(id);
 }
 
@@ -5566,12 +6129,12 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
-      // Render the correct texture and structure during the flying animation
-      if (label === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = cornerHtml; }
-      else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = cornerHtml; }
-      else if (label === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = cornerHtml; }
-      else if (label === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = cornerHtml; }
-      else if (label === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = cornerHtml; }
+      // FIX: Ensure no corner HTML or inner content is applied to flying Special Cards!
+      if (label === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
+      else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
+      else if (label === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = ''; }
+      else if (label === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = ''; }
+      else if (label === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
       else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${label}</div>`; }
 
       g.style.backgroundImage = bgImg;
@@ -5736,7 +6299,11 @@ function renderAll(){
   sweepEliminations();
   if(state.over) return;
   renderDeceptionOverlay();
-  const cur=state.players[state.turn];
+  
+  // FIX: Force the UI to report the previous turn's text until the multi-draw animation finishes
+  const actualTurnIdx = (window.dodTurnLocked && window.pendingTurnArc) ? window.pendingTurnArc.from : state.turn;
+  const cur = state.players[actualTurnIdx];
+  
   let turnText = cur.isHuman ? 'Your turn' : `${cur.name} is playing…`;
   
   if (state.deception && state.deception.expiresAt) {
@@ -5759,6 +6326,14 @@ function renderAll(){
   }
   document.getElementById('deckCount').textContent = state.deck.length;
 
+  // FIX: Dynamically update the main deck's skin to match the CURRENT active player's equipped skin!
+  const deckpileEl = document.getElementById('deckpile');
+  if (deckpileEl) {
+      const currentSkin = cur.deckSkin ? `url('${cur.deckSkin}')` : 'url("CardstoBuy/TheBase.png")';
+      // Overrides the CSS variable specifically for the deck container, safely respecting global styles
+      deckpileEl.style.setProperty('--my-deck', currentSkin);
+  }
+
   const isTargeting = ['CHOOSE_TARGET_POWER', 'CHOOSE_TARGET_STEAL'].includes(state.uiState);
 
   // Render Seats
@@ -5767,7 +6342,8 @@ function renderAll(){
     if(!seat) return;
     
     const isDense = state.players.length > 8;
-    let classes = 'ringseat' + (isDense ? ' dense' : '') + (p.id===state.turn?' active':'') + (p.out?' out':'');
+    // FIX: Keep the seat highlight on the current player until their animation finishes
+    let classes = 'ringseat' + (isDense ? ' dense' : '') + (p.id===actualTurnIdx?' active':'') + (p.out?' out':'');
     
     const validTarget = isTargeting && p.id !== 0 && !p.out;
     if(validTarget) classes += ' targetable';
@@ -5865,12 +6441,12 @@ function renderAll(){
        let cornerHtml = displayVal !== null ? `<div class="act-val">${displayVal}</div><div class="act-val-right">${displayVal}</div>` : '';
        let innerContent = "";
 
-       // Match the specific action card to its graphic texture
-       if (displayLabel === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = cornerHtml; }
-       else if (displayLabel === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = cornerHtml; }
-       else if (displayLabel === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = cornerHtml; }
-       else if (displayLabel === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = cornerHtml; }
-       else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = cornerHtml; }
+       // FIX: Action cards use pure graphical textures, so they shouldn't show inner content/corners!
+       if (displayLabel === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
        else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; }
        
        lastHtml = `<div class="minicard" style="border-color:${lastColor}; background-image:${bgImg};">${innerContent}</div>`;
@@ -5927,13 +6503,32 @@ function renderHand(){
   
   const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL'].includes(state.uiState);
 
+  // AAA FEATURE: Auto-sort the hand if enabled in settings
+  if (localStorage.getItem('dod_setting_sort') === 'true') {
+      you.hand.sort((a, b) => {
+          if (a.type === 'number' && b.type === 'number') return a.value - b.value;
+          if (a.type !== b.type) return a.type.localeCompare(b.type);
+          return 0;
+      });
+  }
+
   you.hand.forEach((c,idx)=>{
     const el=document.createElement('div');
-    const isNumMatch = state.requiredValue===null || c.value===state.requiredValue;
-    const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isNumMatch;
     
-    // Put the number values in the corners for EVERY card type
-    let html = `<div class="act-val">${c.value}</div><div class="act-val-right">${c.value}</div>`;
+    let isCardMatch = false;
+    if (c.type === 'number') isCardMatch = (state.requiredValue === null || String(c.value) === String(state.requiredValue));
+    else if (c.type === 'wild' || c.type === 'reverse') isCardMatch = true;
+    else if (c.type === 'power' || c.type === 'steal') isCardMatch = state.players.some(p => !p.out && p.id !== you.id);
+    
+    const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isCardMatch;
+
+    // FIX: Only render corner numbers for actual Number cards!
+    
+    // FIX: Only render corner numbers for actual Number cards!
+    let html = '';
+    if (c.type === 'number') {
+        html = `<div class="act-val">${c.value}</div><div class="act-val-right">${c.value}</div>`;
+    }
     
     if(c.type==='number'){
       el.className='card number'+(playable?'':' disabled');
@@ -6015,8 +6610,11 @@ function renderActionBar(){
           html += `<button class="btn small" style="padding:6px 12px; min-width:unset;" onclick="confirmGuess(${i})">${i}</button>`;
       }
       if(you.hand.some(c=>c.type==='peek')) {
-          const target = nextPlayerOf(0);
-          html += `<button class="btn ghost small" onclick="usePeek(0, ${target.id})">Peek at ${target.name}</button>`;
+          // FIX: Hide the PEEK button during the 'callout' tutorial step so the player doesn't accidentally click it!
+          if (!(window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number')) {
+              const target = nextPlayerOf(0);
+              html += `<button class="btn ghost small" onclick="usePeek(0, ${target.id})">Peek at ${target.name}</button>`;
+          }
       }
       html += `</div>`;
       if (state.peekResult) {
@@ -6055,7 +6653,7 @@ function renderActionBar(){
       return;
   }
   
-  if (state.uiState === 'ANIMATING' || state.uiState === 'DECEPTION') {
+  if (state.uiState === 'ANIMATING' || state.uiState === 'DECEPTION' || window.dodTurnLocked) {
       bar.innerHTML = `<span class="hint">${state.uiState === 'DECEPTION' ? 'Deception showdown...' : 'Resolving action...'}</span>`;
       return;
   }
@@ -6077,6 +6675,15 @@ function renderActionBar(){
 
   const hasMatch = computeHasMatch(you);
   
+  // --- TUTORIAL FIX: Hide the Optional Draw button during the 'play card' step to prevent crashes! ---
+  if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'played_card') {
+      const hint=document.createElement('span');
+      hint.className='hint';
+      hint.textContent = 'Click your matching card to play it.';
+      bar.appendChild(hint);
+      return;
+  }
+
   // ALWAYS show the draw button if they have money, but style it differently if it's optional
   if(you.shop >= BUY_COST){
       const btn=document.createElement('button');
@@ -6144,11 +6751,14 @@ async function playNumberFromHand(idx, el) {
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
+    // FIX: Verify the element is actually attached and has width before trusting getBoundingClientRect()
+    const rect = el ? el.getBoundingClientRect() : null;
+    const srcRect = (rect && rect.width > 0) ? rect : getSeatOrPanelRect(0);
+    
     // --- INSTANT OPTIMISTIC UI (Applies to both Offline and Online!) ---
     myPlayerObj.hand.splice(idx, 1);
     myPlayerObj.shop += PLAY_REWARD;
 
-    // ADD THIS LINE HERE:
     log(`${myPlayerObj.name} played a ${card.value}. +${PLAY_REWARD} coin.`, 'ok', myUid);
     
     state.lastEffectiveValue = card.value;
@@ -6158,13 +6768,17 @@ async function playNumberFromHand(idx, el) {
     
     // Instantly animate the card flying and the coin dropping
     if (el) el.classList.add('card-pending');
-    renderAll(); 
-    const srcRect = el.getBoundingClientRect();
+    renderAll();
     flyCard(srcRect, centerRect(), card.value, PLAYER_COLORS[0], 18, card.value);
     flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
     
     // Instantly pop up the number pad
     triggerCalloutPhase();
+
+    // --- TUTORIAL TRIGGER ---
+    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'played_card') {
+        setTimeout(tutNext, 600);
+    }
 
     // --- SERVER SYNC ---
     if (currentMatchId) {
@@ -6212,6 +6826,10 @@ async function playWild(idx, el){
   // --- SERVER SYNC ---
   if (currentMatchId) {
       window.dodJustPlayedLocally = true;
+      // --- TUTORIAL TRIGGER ---
+    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number') {
+        setTimeout(tutNext, 600);
+    }
       try {
           await secureServerCall('playWild', { cardIndex: idx });
       } catch (e) {
@@ -6325,6 +6943,10 @@ async function confirmActionTarget(target, actionType){
 
 // ---------------- ASYNC FORCED BUY (INLINE) ----------------
 function startForcedBuySelf(mode){
+    // --- TUTORIAL TRIGGER ---
+    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'forced_buy') {
+        setTimeout(tutNext, 600);
+    }
     const you = state.players[0];
     if(mode === 'BUY'){
         state.buyLoop = { buyer: you, tries: 0 };
@@ -6524,20 +7146,20 @@ async function skipStuckHumanTurn(reasonMsg){
 // currently stuck has answered.
 function computeHasMatch(player){
   return player.hand.some(c => {
-     // 1. Strict value check (handles both numbers and strings safely)
-     const valMatch = (state.requiredValue === null || String(c.value) === String(state.requiredValue));
-     if (!valMatch) return false;
-
-     // 2. Can they legally play this specific card?
-     if (c.type === 'number' || c.type === 'reverse') return true;
+     if (c.type === 'number') {
+         return state.requiredValue === null || String(c.value) === String(state.requiredValue);
+     }
      
-     // Bots/Players can only use Wilds if they can afford the 2c cost
-     if (c.type === 'wild' && player.shop >= BUY_COST) return true; 
+     // Wilds can be played if they can afford the 2c cost
+     if (c.type === 'wild') return player.shop >= BUY_COST; 
      
-     // Steal and Power cards can always be played if there is a valid target alive
+     // Steal and Power cards can be played if there is a valid target alive
      if (c.type === 'power' || c.type === 'steal') {
          return state.players.some(p => !p.out && p.id !== player.id);
      }
+     
+     // Reverse can always be played
+     if (c.type === 'reverse') return true;
      
      // Peek and Insurance can NEVER be played into the chain
      return false; 
@@ -6777,6 +7399,12 @@ async function submitDeceptionCounter(n){
   await writeDeceptionField(`gameState.deception.${decStancesField(dec.phase)}.${myUid}`, n);
 }
 async function submitDeceptionBelieve(believe){
+  // --- TUTORIAL FIX: Intercept the click during the tutorial! ---
+  if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'clicked_believe') {
+      if (believe) setTimeout(tutNext, 400); // Only advance if they click Believe!
+      return; // Stop the real game logic from firing
+  }
+
   if(believe){
     const dec = state.deception; if(!dec) return;
     const myUid = myDeceptionUid();
@@ -7083,6 +7711,8 @@ async function handleOnlineDeceptionHostLogic(serverState){
       if (window.activeBotTimers[nextUid]) return;
       window.activeBotTimers[nextUid] = true;
       
+      const voteDelay = Math.floor(Math.random() * 2500) + 1500;
+
       setTimeout(()=>{
         let n;
         if (nextUid === dec.proposerUid) { n = 1 + Math.floor(Math.random()*9); } 
@@ -7092,7 +7722,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
         }
         secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.${stancesField}.${nextUid}`]: n } })
         .finally(() => delete window.activeBotTimers[nextUid]);
-      }, 1200);
+      }, voteDelay);
     }
   } else if(dec.phase === 'ANSWER'){
         const responses = dec.responses || {};
@@ -7151,12 +7781,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
       if (window.activeBotTimers[nextUid]) return;
       window.activeBotTimers[nextUid] = true;
       
+      const answerDelay = Math.floor(Math.random() * 2500) + 2000;
+
       setTimeout(()=>{
         const believe = Math.random() < 0.5;
         const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
         secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.responses.${nextUid}`]: r } })
         .finally(() => delete window.activeBotTimers[nextUid]);
-      }, 1200);
+      }, answerDelay);
     }
   }
 }
@@ -7290,6 +7922,11 @@ async function confirmGuess(v) {
     log(`${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`, '', myUid);
     window.dodJustPlayedLocally = true; 
 
+    // --- TUTORIAL TRIGGER ---
+    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number') {
+        setTimeout(tutNext, 600);
+    }
+
     if (currentMatchId) {
         // ONLINE: Instantly shift the turn arrow and update the table
         state.uiState = 'IDLE';
@@ -7327,7 +7964,6 @@ async function confirmGuess(v) {
 let localLastActionId = null;
 
 function playNetworkedAnimation(action) {
-    // Prevent re-playing animations we've already seen
     if (localLastActionId === action.id) return;
     localLastActionId = action.id;
 
@@ -7340,20 +7976,125 @@ function playNetworkedAnimation(action) {
     }
 
     // --- OPTIMISTIC UI UPGRADE ---
-    // If this is our own move, we ALREADY logged and animated it instantly.
-    // Return completely so we don't double-log or double-animate!
     if (action.uid === DoDAuth.getProfile().uid && window.dodJustPlayedLocally) {
         window.dodJustPlayedLocally = false;
         return;
     }
 
-    // Find the local visual seat index for the player who made the move
     const actorSeatIndex = state.players.findIndex(p => p.uid === action.uid);
     const actorColor = PLAYER_COLORS[actorSeatIndex] || 'var(--brass)';
+    const targetPlayer = state.players[actorSeatIndex];
+
+    const unlockTurn = () => {
+        if (window.pendingTurnArc) {
+            animateTurnArc(window.pendingTurnArc.from, window.pendingTurnArc.to, window.pendingTurnArc.dir);
+            sfx.turn();
+            window.pendingTurnArc = null;
+            window.dodTurnLocked = false;
+            renderAll();
+        }
+    };
 
     if (action.type === 'PLAY_NUMBER') {
-        log(action.msg, 'ok', action.uid); // Passing the exact UID to the new chat log
-        window.dodCenterIsLocked = true; // Lock the visual center before the card flies
+        log(action.msg, 'ok', action.uid); 
+        window.dodCenterIsLocked = true; 
+        
+        let actionTargetRect = null;
+        // FIX: Safely and reliably parse the victim's name directly from the action log
+        if (action.msg.includes('Steal on')) {
+            const match = action.msg.match(/Steal on (.*?),/);
+            if (match) {
+                const target = state.players.find(p => p.name === match[1]);
+                if (target) actionTargetRect = getSeatOrPanelRect(target.id);
+            }
+        } else if (action.msg.includes('Power on')) {
+            const match = action.msg.match(/Power on (.*?),/);
+            if (match) {
+                const target = state.players.find(p => p.name === match[1]);
+                if (target) actionTargetRect = getSeatOrPanelRect(target.id);
+            }
+        }
+        
+        const isDraw = action.msg.includes('drew') || action.msg.includes('draws');
+        const tryMatch = action.msg.match(/on try (\d+)/);
+        const pulls = tryMatch ? parseInt(tryMatch[1]) : (isDraw ? 1 : 0);
+
+        if (pulls > 0 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
+            const realCoins = targetPlayer.shop;
+            targetPlayer.shop = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
+            renderAll();
+
+            for (let i = 0; i < pulls - 1; i++) {
+                setTimeout(() => {
+                    targetPlayer.shop -= BUY_COST;
+                    renderAll();
+                    flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+                    const pSkin = targetPlayer.deckSkin || null;
+                    flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5, '', pSkin);
+                }, i * 1200);
+            }
+
+            setTimeout(() => {
+                targetPlayer.shop -= BUY_COST;
+                targetPlayer.shop += PLAY_REWARD;
+                renderAll();
+                flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+                
+                flyCard(bankRect(), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
+                flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
+                
+                setTimeout(unlockTurn, 430);
+            }, Math.max(0, (pulls - 1) * 1200));
+        } else {
+            const startRect = isDraw ? bankRect() : getSeatOrPanelRect(actorSeatIndex);
+            flyCard(startRect, centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
+            flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
+            
+            setTimeout(unlockTurn, 430);
+        }
+    } 
+    else if (action.type === 'CALLOUT') {
+        log(action.msg, '', action.uid); 
+    }
+    else if (action.type === 'TIMEOUT_PENALTY') {
+        log(action.msg, 'alert', action.uid);
+        if (actorSeatIndex !== -1) flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+        setTimeout(unlockTurn, 430);
+    }
+    else if (action.type === 'MISS_DRAW') {
+        log(action.msg, 'alert', action.uid); 
+        const pSkin = targetPlayer ? targetPlayer.deckSkin || null : null;
+
+        const tryMatch = action.msg.match(/on try (\d+)/);
+        const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
+
+        if (pulls > 1 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
+            const realCoins = targetPlayer.shop;
+            targetPlayer.shop = realCoins + (pulls * BUY_COST);
+            renderAll();
+
+            for (let i = 0; i < pulls; i++) {
+                setTimeout(() => {
+                    targetPlayer.shop -= BUY_COST;
+                    renderAll();
+                    flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+                    flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+                    
+                    if (i === pulls - 1) setTimeout(unlockTurn, 500);
+                }, i * 1200);
+            }
+        } else {
+            flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+            flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0); 
+            setTimeout(unlockTurn, 500);
+        }
+    }
+}
+
+function executeStandardNetworkAnimation(action, actorSeatIndex, actorColor) {
+    if (action.type === 'PLAY_NUMBER') {
+        log(action.msg, 'ok', action.uid); 
+        window.dodCenterIsLocked = true; 
         
         let actionTargetRect = null;
         if (state.lastPlayedCardLabel === 'STL' || state.lastPlayedCardLabel === 'PWR') {
@@ -7368,17 +8109,23 @@ function playNetworkedAnimation(action) {
         flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
     } 
     else if (action.type === 'CALLOUT') {
-        log(action.msg, '', action.uid); // Passing the exact UID to the new chat log
+        log(action.msg, '', action.uid); 
+        // If the callout was the result of a final missed draw, fly the last dud card and coin!
+        if (action.msg.includes("fails all tries") || action.msg.includes("stop drawing to save coins")) {
+            const actorPlayer = state.players[actorSeatIndex];
+            const pSkin = actorPlayer ? actorPlayer.deckSkin : null;
+            flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+            flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+        }
     }
     else if (action.type === 'TIMEOUT_PENALTY') {
         log(action.msg, 'alert', action.uid);
-        const targetIdx = state.players.findIndex(p => p.uid === action.uid);
-        if (targetIdx !== -1) flyCoin(getSeatOrPanelRect(targetIdx), bankRect(), 0);
+        if (actorSeatIndex !== -1) flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
     }
     else if (action.type === 'MISS_DRAW') {
-        log(action.msg, 'alert', action.uid); // Passing the exact UID to the new chat log
-        // Map card drawn directly away from the face-down marketplace pile into the drawing player's UI profiles
-        const pSkin = state.players[actorSeatIndex].deckSkin || null;
+        log(action.msg, 'alert', action.uid); 
+        const actorPlayer = state.players[actorSeatIndex];
+        const pSkin = actorPlayer ? actorPlayer.deckSkin : null;
         flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
         flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0); 
     }
@@ -7461,8 +8208,25 @@ function botTurn(){
   const bot=state.players[state.turn];
   if(bot.isHuman||state.over||bot.out) return;
   
+  // --- TUTORIAL FIX: Pause bots while explaining rules! ---
+  if (window.tutorialBotsPaused) {
+      setTimeout(botTurn, 1000); // Check again in 1 second
+      return;
+  }
+
+  // --- AAA AI: DYNAMIC THINKING SPEED ---
+  // Standard human hesitation: 1s to 3.5s
+  const baseDelay = Math.floor(Math.random() * 2500) + 1000;
+  // 25% chance the bot "snap plays" instantly (300ms - 700ms) for high tension!
+  const thinkDelay = Math.random() < 0.25 ? Math.floor(Math.random() * 400) + 300 : baseDelay;
+
   setTimeout(async ()=>{
-    if(state && state.deception) return;
+    // FIX: Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
+    if (window.dodTurnLocked || window.dodCenterIsLocked || state.uiState === 'ANIMATING') {
+        setTimeout(botTurn, 500); // Check again in 500ms
+        return;
+    }
+    if(!state || state.over || state.deception) return;
 
     // --- ONLINE SECURE BOT AI ---
     // If playing online, bypass all local logic and have Cloudflare securely calculate the bot's moves!
@@ -7502,7 +8266,7 @@ function botTurn(){
       setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
     }
     
-    const actCheck = (type) => bot.hand.findIndex(c=>c.type===type && (state.requiredValue===null || c.value===state.requiredValue));
+    const actCheck = (type) => bot.hand.findIndex(c=>c.type===type);
     
     let playIdx = actCheck('steal');
     if(playIdx>=0 && (Math.random()<0.7 || bot.shop < BUY_COST)){
@@ -7590,10 +8354,11 @@ function botTurn(){
     if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
     botBuyLoop(bot);
     
-  },650);
+  }, thinkDelay);
 }
 
 function botSingleDraw(buyer){
+  if(!state || state.over) return;
   const taken=payFromOwn(buyer,BUY_COST);
   if (!currentMatchId) flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
   sweepEliminations();
@@ -7651,84 +8416,171 @@ function botSingleDraw(buyer){
       }
     }
 
-function botBuyLoop(buyer){
-  let tries=0, success=false;
-  while(tries<MAX_TRIES && state.deck.length>0 && !buyer.out){
+async function botBuyLoop(buyer) {
+  if (!state || state.over) return;
+
+  const tiers = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
+  let tierIdx = Math.max(0, tiers.indexOf(buyer.tier || 'Apprentice'));
+  let maxPulls = 1;
+  let riskVal = Math.random();
+
+  // --- AAA BOT AI: DYNAMIC RISK & DIFFICULTY CALCULATION ---
+  if (tierIdx >= 4) { // Oracle / Legend (Conservative, calculates odds)
+      if (buyer.shop >= 12 && riskVal > 0.4) maxPulls = 2;
+      if (buyer.shop >= 20 && riskVal > 0.8) maxPulls = 3;
+  } else if (tierIdx >= 2) { // Phantom / Mastermind
+      if (buyer.shop >= 8 && riskVal > 0.3) maxPulls = 2;
+      if (buyer.shop >= 14 && riskVal > 0.7) maxPulls = 3;
+  } else { // Apprentice / Trickster
+      // 25% chance to be smart and stop at 1, otherwise they act greedy!
+      if (riskVal > 0.25) maxPulls = 2;
+      if (riskVal > 0.6) maxPulls = 3;
+  }
+
+  // Cap pulls by what they can legally afford
+  let affordablePulls = Math.floor(buyer.shop / BUY_COST);
+  maxPulls = Math.min(maxPulls, affordablePulls, MAX_TRIES);
+  if (maxPulls < 1) maxPulls = 1;
+
+  let tries = 0;
+
+  // FIX: True Sequential Pulling! The bot waits and syncs every single card visually.
+  for (let i = 0; i < maxPulls; i++) {
+    if (!state || state.over || buyer.out || state.deck.length === 0) break;
     if (buyer.shop < BUY_COST) { if (!currentMatchId) log(`${buyer.name} ran out of coins mid-loop.`); break; }
     
     tries++;
-    const taken=payFromOwn(buyer,BUY_COST);
-    if (!currentMatchId) flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), tries*110);
-    sweepEliminations();
-    if(buyer.out) break;
-    const card=state.deck.pop();
-    if(!card) break;
+    const taken = payFromOwn(buyer, BUY_COST);
     
-    const isMatch=(card.value===state.requiredValue) || (state.requiredValue===null);
-    if(isMatch){
-      let effective,label;
-      if(card.type==='number'){ effective=card.value; label=card.value; if(!currentMatchId) log(`${buyer.name} draws a match on try ${tries} (${card.value}).`,'ok'); }
+    // 1. INSTANT VISUAL SYNC: Deduct coin and show it flying FIRST
+    if (!currentMatchId) {
+        flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
+        renderAll(); // Updates the bot's coin count instantly!
+    }
+    
+    sweepEliminations();
+    if (buyer.out) break;
+    
+    const card = state.deck.pop();
+    if (!card) break;
+    
+    const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null);
+    if (isMatch) {
+      // --- MATCH FOUND ---
+      let effective, label;
+      let actionTargetRect = null;
+      if (card.type === 'number') { effective = card.value; label = card.value; }
       else { 
-          effective=state.requiredValue; 
+          effective = state.requiredValue; 
           label = card.type === 'wild' ? 'W' : card.type === 'reverse' ? 'REV' : card.type === 'steal' ? 'STL' : 'PWR';
-          if (!currentMatchId) log(`${buyer.name} draws Action match on try ${tries} (${card.value}).`,'ok');
-          if(card.type==='reverse') { state.direction *= -1; }
+          if(card.type === 'reverse') state.direction *= -1;
+          
+          // FIX: Select a victim locally so offline visual effects know where to strike!
+          if (card.type === 'steal' || card.type === 'power') {
+              const opts = state.players.filter(p => !p.out && p.id !== buyer.id);
+              if (opts.length > 0) {
+                  const target = opts.sort((a, b) => b.shop - a.shop)[0];
+                  actionTargetRect = getSeatOrPanelRect(target.id);
+                  const taken = Math.min(card.tier || (card.type === 'steal' ? 3 : 2), target.shop);
+                  target.shop = Math.max(0, target.shop - taken);
+                  if (card.type === 'steal') buyer.shop += taken;
+                  buyer._tempActionStr = `draws on try ${tries} and plays ${card.type === 'steal' ? 'Steal' : 'Power'} on ${target.name}, ${card.type === 'steal' ? 'taking' : 'draining'} ${taken}c`;
+              }
+          }
       }
-      buyer.shop+=PLAY_REWARD;
-      state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
-
-      let actStr = `draws and plays a ${label} on try ${tries}`;
-      if (label==='W') actStr = `draws and plays Wild Swap on try ${tries}`;
-      else if (label==='REV') actStr = `draws and plays Reverse on try ${tries}`;
-      else if (label==='STL') actStr = `draws and plays Steal on try ${tries}`;
-      else if (label==='PWR') actStr = `draws and plays Power on try ${tries}`;
-      buyer._tempActionStr = actStr;
+      buyer.shop += PLAY_REWARD;
+      state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = buyer.id;
       
-      const insIdx = buyer.hand.findIndex(c=>c.type==='insurance');
-      if(insIdx >= 0 && tries > 1) {
+      const insIdx = buyer.hand.findIndex(c => c.type === 'insurance');
+      if (insIdx >= 0 && tries > 1) {
           buyer.hand.splice(insIdx, 1);
           buyer.hand.pop(); 
           if (!currentMatchId) log(`${buyer.name} uses Insurance to discard a dud!`);
       }
       
-      success=true; 
-      if (!currentMatchId) {
+      if (currentMatchId) {
+          // ONLINE SYNC
+          const msg = `${buyer.name} draws a match on try ${tries} (${card.value}).`;
+          await firebase.firestore().collection('matches').doc(currentMatchId).update({
+              'gameState.deck': state.deck,
+              'gameState.players': state.players,
+              'gameState.direction': state.direction,
+              'gameState.lastEffectiveValue': effective,
+              'gameState.lastPlayedCardLabel': label,
+              'gameState.lastPlayedBy': buyer.uid,
+              'gameState.uiState': 'CHOOSE_CALL',
+              'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: buyer.uid, cardValue: card.value, msg: msg }
+          });
+      } else {
+          // OFFLINE VISUALS: Show the matching card fly out!
+          let actStr = buyer._tempActionStr || `draws a match on try ${tries} (${card.value})`;
+          log(`${buyer.name} ${actStr}.`, 'ok');
           renderAll();
-          flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
+          flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value, null, actionTargetRect);
       }
-      break;
+      
+      // Random pause before the bot calls out the required number
+      const callDelay = Math.random() < 0.3 ? 300 : Math.floor(Math.random() * 800) + 400;
+      setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : callDelay);
+      return; // END LOOP!
     } else {
+      // --- DUD DRAWN ---
       buyer.hand.push(card);
-      if (!currentMatchId) log(`${buyer.name} tries and misses on try ${tries} (${card.value}).`);
+      const msg = `${buyer.name} tries and misses on try ${tries} (${card.value}).`;
+      
+      if (currentMatchId) {
+          await firebase.firestore().collection('matches').doc(currentMatchId).update({
+              'gameState.deck': state.deck,
+              'gameState.players': state.players,
+              'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
+          });
+      } else {
+          log(msg);
+          renderAll(); // Updates UI to show the new card in their hand count
+          flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5, '', buyer.deckSkin);
+      }
+      
+      // 2. FORCE THE PAUSE: The bot literally waits ~1.5 seconds staring at its hand before drawing again!
+      if (i < maxPulls - 1 && buyer.shop >= BUY_COST && state.deck.length > 0) {
+          const pullDelay = Math.floor(Math.random() * 800) + 1200;
+          await new Promise(res => setTimeout(res, pullDelay)); 
+      }
     }
   }
-  sweepEliminations();
   
-  if(success){
-        setTimeout(()=>botDeclare(buyer), currentMatchId ? 50 : 600);
-      } else { 
-        const msg = `${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`;
-        if (currentMatchId) {
-            let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
-            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
-            
-            firebase.firestore().collection('matches').doc(currentMatchId).update({
-                'gameState.players': state.players,
-                'gameState.deck': state.deck,
-                'gameState.turnUid': state.players[nextIndex].uid,
-                'gameState.turnExpiresAt': Date.now() + 30000,
-                'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
-            });
-        } else {
-            log(msg, 'alert'); 
-            renderAll();
-            flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5, '', buyer.deckSkin);
-            setTimeout(() => advanceTurn(), 500); 
-        }
-      }
-    }
+  // --- LOOP ENDED WITHOUT A MATCH (Pass Turn) ---
+  sweepEliminations();
+
+  let stopMsg = '';
+  if (tries < MAX_TRIES && buyer.shop >= BUY_COST) {
+      stopMsg = `${buyer.name} decides to stop drawing to save coins. Requirement of ${state.requiredValue} carries on.`;
+  } else {
+      stopMsg = `${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`;
+  }
+
+  if (currentMatchId) {
+      let nextIndex = state.players.findIndex(p => p.uid === buyer.uid);
+      do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+      
+      setTimeout(async () => {
+          await firebase.firestore().collection('matches').doc(currentMatchId).update({
+              'gameState.players': state.players,
+              'gameState.turnUid': state.players[nextIndex].uid,
+              'gameState.turnExpiresAt': Date.now() + 30000,
+              'gameState.uiState': 'IDLE',
+              'gameState.lastAction': { id: Date.now().toString(), type: 'CALLOUT', uid: buyer.uid, msg: stopMsg }
+          });
+      }, currentMatchId ? 1200 : 0);
+  } else {
+      log(stopMsg, 'alert'); 
+      renderAll();
+      setTimeout(() => advanceTurn(), 800); 
+  }
+}
 
 async function botDeclare(bot) {
+    if(!state || state.over) return;
+
     // 1. Existing AI Logic: Bot picks a number
     const target = nextPlayerOf(bot.id); // Visual target for offline mode
     let chosen;
@@ -7799,6 +8651,43 @@ function leaveGame(){
 async function confirmLeaveGame(){
     try { sfx.uiBack(); } catch(e){}
     document.getElementById('leaveGameOverlay').classList.remove('show');
+
+    // --- NEW LEAVER PENALTY LOGIC ---
+    // FIX: Only apply leaver penalties to ONLINE matches (currentMatchId exists).
+    // Offline Training and Interactive Tutorials are strictly safe to leave!
+    if (state && !state.over && window.DoDAuth && currentMatchId) {
+        const profile = DoDAuth.getProfile();
+        if (profile) {
+            const me = state.players.find(p => p.uid === profile.uid);
+            if (me && !me.out) {
+                let cTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
+                const lossMultiplier = Math.min(2.0, 0.8 + (cTierIdx * 0.2));
+                const myScore = score(me);
+                
+                // Heavy penalty, mitigated by how well they were doing before leaving
+                const perfMitigation = Math.floor(myScore / 4);
+                let penalty = Math.min(0, -25 + perfMitigation); 
+                let finalDelta = Math.floor(penalty * lossMultiplier);
+                
+                if (finalDelta < 0) {
+                    let cLevel = profile.level || 1;
+                    let cPoints = profile.points || 0;
+                    let total = cPoints + finalDelta;
+                    
+                    while (total < 0) { cLevel--; if (cLevel < 1) { if (cTierIdx > 0) { cTierIdx--; cLevel = 5; total += 100; } else { cLevel = 1; total = 0; } } else { total += 100; } }
+                    
+                    profile.tier = TIERS[cTierIdx]; profile.level = cLevel; profile.points = total;
+                    
+                    if (window.firebase) {
+                        firebase.firestore().collection('users').doc(profile.uid).update({
+                            tier: profile.tier, level: profile.level, points: profile.points
+                        }).catch(()=>{});
+                    }
+                    setTimeout(() => showSystemToast(`Abandon Penalty: ${finalDelta} Rank Points.`), 1500);
+                }
+            }
+        }
+    }
 
     muteForLoading();
     renderLoadingScreenFX(); 
@@ -7935,40 +8824,20 @@ async function computeMatchProgression() {
       }
   }
 
-  // --- INSECURE OFFLINE CALCULATION (BOT TRAINING MODE) ---
-  const me = state.players.find(p => p.uid === profile.uid);
-  if (!me) return null;
-  
-  const sorted = [...state.players].sort((a,b) => {
-      if(a.out !== b.out) return a.out ? 1 : -1;
-      return score(b) - score(a);
-  });
-  const rank = sorted.findIndex(p => p.uid === profile.uid) + 1;
-  const n = state.players.length;
-  
-  let baseDelta = 0;
-  if (rank === 1) baseDelta = 20;
-  else if (rank === 2 && n >= 3) baseDelta = 5;
-  else if (rank === n) baseDelta = -10;
-  else baseDelta = -5;
-  
-  const finalDelta = baseDelta + Math.floor(score(me) / 4);
-  
-  let cTierIdx = TIERS.indexOf(profile.tier);
-  if (cTierIdx < 0) cTierIdx = 0;
+  // --- OFFLINE CALCULATION (BOT TRAINING MODE) ---
+  // Training matches yield NO rank points and NO profile changes!
+  let cTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
   let cLevel = profile.level || 1;
   let cPoints = profile.points || 0;
   
-  const oldData = { tier: TIERS[cTierIdx], level: cLevel, points: cPoints };
-  let total = cPoints + finalDelta;
+  const safeData = { tier: TIERS[cTierIdx], level: cLevel, points: cPoints };
   
-  while (total >= 100) { total -= 100; cLevel++; if (cLevel > 5) { cLevel = 1; cTierIdx++; if (cTierIdx >= TIERS.length) { cTierIdx = TIERS.length - 1; cLevel = 5; total = 100; } } }
-  while (total < 0) { cLevel--; if (cLevel < 1) { if (cTierIdx > 0) { cTierIdx--; cLevel = 5; total += 100; } else { cLevel = 1; total = 0; } } else { total += 100; } }
-  
-  const newData = { tier: TIERS[cTierIdx], level: cLevel, points: total };
-  profile.tier = newData.tier; profile.level = newData.level; profile.points = newData.points;
-  
-  return { old: oldData, new: newData, delta: finalDelta };
+  return { 
+      old: safeData, 
+      new: safeData, 
+      delta: 0, 
+      earnedCoins: 0 
+  };
 }
 
 async function endGame(winner, byScore) {
@@ -8010,12 +8879,6 @@ async function endGame(winner, byScore) {
 
   const you = state.players[0]; // Local player is always seat 0 locally
   
-  // OFFLINE ONLY: Add currency locally (Online is handled entirely by Cloudflare)
-  if(!currentMatchId && window.DoDShop){
-      const earned = Math.max(0, score(you));
-      window.DoDShop.addCurrency(earned);
-  }
-
   // Sort players to determine absolute placements
   const sorted = [...state.players].sort((a,b) => {
       if(a.out !== b.out) return a.out ? 1 : -1;
@@ -8050,8 +8913,36 @@ async function endGame(winner, byScore) {
   listHtml += `</div>`;
 
   // Safely grab the coins without crashing if the server hiccuped
-  const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
-  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
+  let earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : 0;
+  let extraRewardHtml = '';
+  
+  // If the player won the match, they get a performance-based bonus!
+  if (isMyWin) {
+      const myScore = score(you);
+      
+      // Online Mode: Trust the server's attached bonus item
+      if (currentMatchId && window._latestProgression) {
+          if (window._latestProgression.bonusType === 'card') {
+              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.png" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card</div>`;
+          } else if (window._latestProgression.bonusType === 'coins') {
+              extraRewardHtml = `<div style="color:var(--ok); margin-left:15px;">+${window._latestProgression.bonusCoins} Perf Bonus!</div>`;
+          }
+      } else {
+          // Offline Mode: Simulate the visual drop, but don't actually award it to prevent bot farming
+          const isCardReward = Math.random() > 0.5;
+          if (isCardReward) {
+              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.png" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card (Mock)</div>`;
+          } else {
+              const mockBonus = Math.floor(myScore * 2);
+              extraRewardHtml = `<div style="color:var(--ok); margin-left:15px;">+${mockBonus} Perf Bonus! (Mock)</div>`;
+          }
+      }
+  }
+
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;">
+    <div style="display:flex; align-items:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC</div>
+    ${extraRewardHtml}
+  </div>`;
   
   let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
@@ -8507,6 +9398,14 @@ async function initFriendsList() {
         // We fetch the live user profiles to get current avatar, frame, and title
         const friendsData = await Promise.all(snapshot.docs.map(async doc => {
             const relData = doc.data();
+            
+            // --- LAZY BOT AUTO-ACCEPT ENGINE ---
+            // If the realistic waiting time has passed, silently accept them!
+            if (doc.id.startsWith('bot_') && relData.status === 'sent' && relData.botAcceptTime && Date.now() > relData.botAcceptTime) {
+                relData.status = 'accepted';
+                db.collection('users').doc(uid).collection('friends').doc(doc.id).update({ status: 'accepted' }).catch(()=>{});
+            }
+
             const userDoc = await db.collection('users').doc(doc.id).get();
             const liveData = userDoc.exists ? userDoc.data() : relData;
             return {
@@ -8525,7 +9424,8 @@ async function initFriendsList() {
                 let titleHtml = '';
                 if (f.title) {
                     const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
-                    if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+                    // FIX: Allowed title to flow freely since it now sits on its own row!
+                    if (tDef) titleHtml = `<div style="margin-top:4px;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:7px; padding:0 12px 0 4px; line-height:14px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
                 }
 
                 let isAlreadyInLobby = false;
@@ -8539,6 +9439,8 @@ async function initFriendsList() {
                 let actionHtml = '';
                 if (f.status === 'pending') {
                     actionHtml = `<button class="btn small" style="background:var(--ok); color:#fff; padding:4px 8px;" onclick="acceptFriend('${f.id}', '${f.displayName}')">Accept</button>`;
+                } else if (f.status === 'sent') {
+                    actionHtml = `<button class="btn small" disabled style="background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.4); border:1px solid rgba(255,255,255,0.1); padding:4px 8px; cursor:not-allowed;">Sent ✓</button>`;
                 } else if (isAlreadyInLobby) {
                     actionHtml = `<span class="mono" style="font-size:10px; color:#9fd9b8;">In Lobby</span>`;
                 } else {
@@ -8549,18 +9451,19 @@ async function initFriendsList() {
                     }
                 }
 
-                return `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:6px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px; margin-bottom:6px;">
-                    <div style="display:flex; gap:10px; align-items:center;">
-                        <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
-                            <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
-                            <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
-                        </div>
-                        <div style="display:flex; flex-direction:column; justify-content:center;">
-                            <span class="mono" style="line-height:1; font-size:13px; font-weight:600; color:#fff;">${f.displayName}</span>
-                            ${titleHtml}
-                        </div>
+                // FIX: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
+                return `<div style="display:flex; align-items:flex-start; background:rgba(0,0,0,0.3); padding:8px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px; margin-bottom:6px; gap:10px;">
+                    <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
+                        <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
                     </div>
-                    <div>${actionHtml}</div>
+                    <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
+                            <div class="mono" style="line-height:1.2; font-size:13px; font-weight:600; color:#fff; word-break:break-word;">${f.displayName}</div>
+                            <div style="flex-shrink:0;">${actionHtml}</div>
+                        </div>
+                        ${titleHtml}
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -8571,7 +9474,8 @@ async function initFriendsList() {
                 let titleHtml = '';
                 if (f.title) {
                     const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
-                    if (tDef) titleHtml = `<div style="margin-top:2px; transform:scale(0.75); transform-origin:left center;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:8px; padding:0 8px 0 4px;"><span>${tDef.name}</span></div></div>`;
+                    // FIX: Allowed title to flow freely since it now sits on its own row!
+                    if (tDef) titleHtml = `<div style="margin-top:3px;"><div class="player-title title-${tDef.rarity}" style="height:12px; font-size:6px; padding:0 10px 0 4px; line-height:12px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
                 }
 
                 let isAlreadyInLobby = false;
@@ -8585,6 +9489,8 @@ async function initFriendsList() {
                 let actionHtml = '';
                 if (f.status === 'pending') {
                     actionHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${f.id}','${f.displayName}')">Accept</button>`;
+                } else if (f.status === 'sent') {
+                    actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Sent ✓</button>`;
                 } else if (isAlreadyInLobby) {
                     actionHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed; background:rgba(47,110,82,0.25); color:#9fd9b8; border:1px solid rgba(47,110,82,0.4);">In Lobby</button>`;
                 } else {
@@ -8595,18 +9501,19 @@ async function initFriendsList() {
                     }
                 }
 
-                return `<div class="pubg-friend-row" style="align-items:center;">
-                    <div style="display:flex; gap:8px; align-items:center;">
-                        <div class="avatar-frame-wrap" style="width:28px; height:28px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
-                            <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
-                            <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
-                        </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center;">
-                            <span class="fname" style="line-height:1;">${f.displayName}${f.status==='pending'?' <span style="color:var(--brass-bright);font-size:8px;">(req)</span>':''}</span>
-                            ${titleHtml}
-                        </div>
+                // FIX: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
+                return `<div class="pubg-friend-row" style="align-items:flex-start; padding:6px; gap:8px;">
+                    <div class="avatar-frame-wrap" style="width:26px; height:26px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
+                        <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
                     </div>
-                    <div>${actionHtml}</div>
+                    <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; gap:4px;">
+                            <div class="fname" style="line-height:1.2; word-break:break-word; margin-top:2px;">${f.displayName}${f.status==='pending'?' <span style="color:var(--brass-bright);font-size:7px;">(req)</span>':''}</div>
+                            <div style="flex-shrink:0;">${actionHtml}</div>
+                        </div>
+                        ${titleHtml}
+                    </div>
                 </div>`;
             }).join('');
         }
@@ -8644,6 +9551,7 @@ async function sendFriendRequest() {
 }
 
 async function acceptFriend(friendUid, friendName) {
+    try { sfx.uiClick(); } catch(e){} // FIX: Play SFX when accepting
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
     const myName = DoDAuth.getProfile().displayName;
@@ -8656,6 +9564,8 @@ async function acceptFriend(friendUid, friendName) {
         displayName: myName,
         status: 'accepted'
     });
+    
+    showSystemToast(friendName + " added to friends!");
 }
 
 // ---------------- 2. PARTY SYSTEM (PUBG LOBBY) ----------------
@@ -9266,63 +10176,183 @@ function closePubgSearchPanel() {
 }
 
 let _pubgSearchTimeout = null;
+
 function pubgSearchFriend() {
     clearTimeout(_pubgSearchTimeout);
     _pubgSearchTimeout = setTimeout(async () => {
-        const q = (document.getElementById('pubgSearchInput').value || '').trim();
+        const qRaw = (document.getElementById('pubgSearchInput').value || '').trim();
         const results = document.getElementById('pubgSearchResults');
-        if (q.length < 2) { results.innerHTML = ''; return; }
+        if (qRaw.length < 2) { results.innerHTML = ''; return; }
         if (!window.DoDAuth || !DoDAuth.getProfile()) return;
+        
         const myUid = DoDAuth.getProfile().uid;
         const db = firebase.firestore();
+        
+        results.innerHTML = '<div style="color:rgba(255,255,255,0.5); font-size:10px; text-align:center; padding:10px;">Searching database...</div>';
+
         try {
-            const snap = await db.collection('users')
-                .where('displayName', '>=', q)
-                .where('displayName', '<=', q + '\uf8ff')
-                .limit(6).get();
-            if (snap.empty) {
+            // 1. Clean the input
+            const qClean = qRaw.replace(/^id\s*|^#/i, '').trim();
+            const isNumeric = /^\d+$/.test(qClean);
+
+            // 2. Fetch my friends list quickly so we know who is already added!
+            const myFriendsSnap = await db.collection('users').doc(myUid).collection('friends').get();
+            const myFriends = {};
+            myFriendsSnap.forEach(d => { myFriends[d.id] = d.data().status; });
+
+            // 3. Query by Name
+            let nameQuery = db.collection('users')
+                .where('displayName', '>=', qRaw)
+                .where('displayName', '<=', qRaw + '\uf8ff')
+                .limit(8).get();
+
+            // 4. Concurrently Query by ID
+            let idQuery = Promise.resolve({ docs: [] });
+            if (isNumeric) {
+                idQuery = db.collection('users')
+                    .where('gameId', '>=', qClean)
+                    .where('gameId', '<=', qClean + '\uf8ff')
+                    .limit(8).get();
+            }
+
+            // Await both searches simultaneously
+            const [nameSnap, idSnap] = await Promise.all([nameQuery, idQuery]);
+
+            // 5. Merge results
+            const uniqueDocs = new Map();
+            nameSnap.forEach(doc => uniqueDocs.set(doc.id, doc));
+            if (idSnap.forEach) idSnap.forEach(doc => uniqueDocs.set(doc.id, doc));
+
+            if (uniqueDocs.size === 0) {
                 results.innerHTML = '<div class="pubg-search-result" style="color:rgba(242,234,216,0.4);">No players found</div>';
                 return;
             }
-            results.innerHTML = '';
-            snap.forEach(doc => {
-                if (doc.id === myUid) return;
-                const name = doc.data().displayName;
-                results.innerHTML += `<div class="pubg-search-result">
-                    <span>${name}</span>
-                    <button class="pubg-friend-action invite" onclick="sendPubgFriendRequest('${doc.id}','${name}',this)">Add</button>
+
+            let html = '';
+            uniqueDocs.forEach((doc, docId) => {
+                const data = doc.data();
+                const name = data.displayName;
+                const isBot = docId.startsWith('bot_');
+                const isMe = (docId === myUid);
+
+                let displayId = data.gameId;
+                if (!displayId || displayId === '----' || displayId === 'undefined') {
+                    let hash = 0;
+                    for(let i=0; i<docId.length; i++) hash = Math.imul(31, hash) + docId.charCodeAt(i) | 0;
+                    displayId = Math.abs(hash).toString().substring(0, 6).padEnd(6, '0');
+                }
+
+                // FIX: Use safe helper functions to prevent broken images if data is corrupted
+                const av = typeof getEquippedAvatar === 'function' ? getEquippedAvatar(data) : (data.avatar || 'Apprentice');
+                const fr = typeof getEquippedFrame === 'function' ? getEquippedFrame(data) : (data.frame || 'Apprentice');
+                
+                let titleHtml = '';
+                if (data.title) {
+                    const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === data.title) : null;
+                    if (tDef) titleHtml = `<div style="margin-top:3px;"><div class="player-title title-${tDef.rarity}" style="height:12px; font-size:6px; padding:0 10px 0 4px; line-height:12px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
+                }
+
+                // FIX: Check friends list status to render the correct button!
+                let actionBtnHtml = '';
+                if (isMe) {
+                    actionBtnHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); cursor:not-allowed;">You</span>`;
+                } else if (myFriends[docId] === 'accepted') {
+                    actionBtnHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ok); background:rgba(47,110,82,0.2); padding:4px 8px; border-radius:4px; border:1px solid rgba(47,110,82,0.4); cursor:not-allowed;">Friend ✓</span>`;
+                } else if (myFriends[docId] === 'pending') {
+                    actionBtnHtml = `<button class="pubg-friend-action accept" onclick="acceptFriend('${docId}','${name}')">Accept</button>`;
+                } else if (myFriends[docId] === 'sent') {
+                    actionBtnHtml = `<button class="pubg-friend-action sent" disabled style="cursor:not-allowed;">Sent ✓</button>`;
+                } else {
+                    actionBtnHtml = `<button class="pubg-friend-action invite" onclick="sendPubgFriendRequest('${docId}','${name}',this, ${isBot})">Add</button>`;
+                }
+                
+                html += `<div class="pubg-search-result" style="display:flex; align-items:flex-start; padding:6px; gap:8px;">
+                    <div class="avatar-frame-wrap" style="width:26px; height:26px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
+                        <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                    </div>
+                    <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; gap:4px;">
+                            <div style="display:flex; flex-direction:column; flex:1; min-width:0;">
+                                <div class="fname" style="line-height:1.2; word-break:break-word; margin-top:2px; font-weight:bold;">${name}</div>
+                                <span style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:rgba(255,255,255,0.4); margin-top:2px;">ID ${displayId}</span>
+                            </div>
+                            <div style="flex-shrink:0;">
+                                ${actionBtnHtml}
+                            </div>
+                        </div>
+                        ${titleHtml}
+                    </div>
                 </div>`;
             });
-        } catch(e) { console.error(e); }
-    }, 380);
+            
+            results.innerHTML = html || '<div class="pubg-search-result" style="color:rgba(242,234,216,0.4);">No players found</div>';
+        } catch(e) { 
+            console.error(e); 
+            results.innerHTML = '<div class="pubg-search-result" style="color:var(--danger-bright);">Search failed</div>';
+        }
+    }, 500);
 }
 
-async function sendPubgFriendRequest(targetUid, targetName, btn) {
+async function sendPubgFriendRequest(targetUid, targetName, btn, isBot) {
+    try { sfx.uiClick(); } catch(e){} // FIX: Added SFX
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
     const myProfile = DoDAuth.getProfile();
     const db = firebase.firestore();
     try {
+        if (isBot || targetUid.startsWith('bot_')) {
+            if (btn) { btn.textContent = 'Sent ✓'; btn.disabled = true; btn.className = 'pubg-friend-action sent'; }
+            showSystemToast("Friend request sent!");
+            
+            const botDoc = await db.collection('users').doc(targetUid).get();
+            const bData = botDoc.exists ? botDoc.data() : {};
+            const delayMs = Math.floor(Math.random() * (46 * 3600000)) + 7200000; 
+
+            await db.collection('users').doc(myProfile.uid).collection('friends').doc(targetUid).set({
+                displayName: targetName,
+                status: 'sent',
+                addedAt: Date.now(),
+                botAcceptTime: Date.now() + delayMs, 
+                avatar: typeof getEquippedAvatar === 'function' ? getEquippedAvatar(bData) : (bData.avatar || 'Apprentice'),
+                frame: typeof getEquippedFrame === 'function' ? getEquippedFrame(bData) : (bData.frame || 'Apprentice'),
+                tier: bData.tier || 'Apprentice',
+                level: bData.level || 1,
+                points: bData.points || 0,
+                title: bData.title || null
+            });
+            return;
+        }
+
+        // Normal Human Friend Request
+        if (btn) { btn.textContent = 'Sent ✓'; btn.disabled = true; btn.className = 'pubg-friend-action sent'; }
+        
         await db.collection('users').doc(targetUid).collection('friends').doc(myProfile.uid).set({
             displayName: myProfile.displayName,
             status: 'pending'
         });
-        if (btn) { btn.textContent = 'Sent ✓'; btn.disabled = true; btn.className = 'pubg-friend-action sent'; }
+        
+        // FIX: Save 'sent' status in our own list so the search UI remembers!
+        await db.collection('users').doc(myProfile.uid).collection('friends').doc(targetUid).set({
+            displayName: targetName,
+            status: 'sent',
+            addedAt: Date.now()
+        }, { merge: true });
+        
+        showSystemToast("Friend request sent!");
     } catch(e) { console.error(e); }
 }
 
 // --- Invite flow ---
 async function pubgInviteFriend(friendUid, friendName) {
+    try { sfx.uiClick(); } catch(e){} // FIX: Added SFX
     if (!currentPartyId) {
         await createParty();
         await new Promise(r => setTimeout(r, 600));
     }
     await inviteToParty(friendUid, friendName);
-    // Toast confirmation
-    const toast = document.createElement('div');
-    toast.style.cssText = 'position:fixed;bottom:170px;left:50%;transform:translateX(-50%);background:rgba(47,110,82,0.95);color:#fff;padding:8px 20px;border-radius:20px;font-family:"IBM Plex Mono",monospace;font-size:12px;z-index:99999;pointer-events:none;letter-spacing:1px;';
-    toast.textContent = 'Invite sent to ' + friendName;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 2600);
+    
+    // FIX: Unified floating cinematic toast
+    showSystemToast('Invite sent to ' + friendName);
 }
 
 function showPubgInvitePopup(inviterName, onAccept) {
@@ -9679,21 +10709,22 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
             if (data.seats.length > 0 && data.seats[0].uid !== myUid) return;
 
             let seats = data.seats, pSeats = data.publicSeats;
+            const hostTier = seats.length > 0 ? seats[0].tier : 'Apprentice';
             while (seats.length < data.tableSize) {
                 const idx = seats.length;
-                const botP = generateBotProfile();
+                const botData = generateBelievableBot(hostTier);
                 seats.push({ 
                     seat: idx, 
-                    uid: 'bot_'+Math.random().toString(36).substr(2,9), 
-                    displayName: botP.displayName, 
+                    uid: botData.uid, 
+                    displayName: botData.displayName, 
                     isBot: true,
-                    avatar: botP.avatar,
-                    frame: botP.frame,
-                    tier: botP.tier,
-                    level: botP.level,
-                    title: botP.title,
-                    deckSkin: botP.deckSkin,
-                    equippedTable: botP.equippedTable,
+                    avatar: botData.avatar,
+                    frame: botData.frame,
+                    tier: botData.tier,
+                    level: botData.level,
+                    title: botData.title,
+                    deckSkin: botData.deckSkin,
+                    equippedTable: botData.equippedTable,
                     points: 0
                 });
                 pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
@@ -9919,13 +10950,24 @@ function updateProfileWidget(profile) {
     const modalName = document.getElementById('modalProfileName');
     const modalTier = document.getElementById('modalProfileTier');
     const modalBar = document.getElementById('modalLevelBar');
+    const modalProgressText = document.getElementById('modalLevelProgressText');
     
-    if (modalName) modalName.textContent = profile.displayName + (profile.gameId ? ` #${profile.gameId}` : '');
-    if (modalTier) modalTier.textContent = `${profile.tier || 'Apprentice'} • Level ${profile.level || 1}`;
+    if (modalName) {
+        modalName.innerHTML = `${profile.displayName} 
+        ${profile.gameId ? `<div style="font-family:'IBM Plex Mono', monospace; font-size:10px; color:rgba(255,255,255,0.4); font-weight:normal; cursor:pointer; background:rgba(255,255,255,0.05); padding:2px 8px; border-radius:12px; display:inline-flex; align-items:center; gap:4px; margin-top:2px;" onclick="navigator.clipboard.writeText('${profile.gameId}'); showSystemToast('ID Copied!');" title="Copy ID">ID ${profile.gameId} <span style="font-size:10px;">📋</span></div>` : ''}`;
+    }
     
     const pts = profile.points || 0;
+    const currentTier = profile.tier || 'Apprentice';
+    const currentLevel = profile.level || 1;
+    
+    if (modalTier) {
+        modalTier.innerHTML = `<span style="color:#fff;">${currentTier}</span> <span style="color:rgba(255,255,255,0.4); margin:0 4px;">|</span> <span style="color:var(--brass-bright);">Level ${currentLevel}</span>`;
+    }
+    
     const pct = Math.min(100, Math.max(0, pts));
     if (modalBar) modalBar.style.width = pct + '%';
+    if (modalProgressText) modalProgressText.textContent = `${pts} / 100 PTS`;
     
     // Populate Basic Info Tab Data
     const idEl = document.getElementById('infoPlayerId');
@@ -10139,13 +11181,23 @@ async function executeDailyDraw(selectedIndex) {
         document.getElementById(`ddCard_${i}`).onclick = null;
     }
 
-    // 2. Fade out the unselected cards with a burn particle effect
+    // 2. Calculate trajectories and fade out the unselected cards
+    const container = document.getElementById('ddCardContainer');
+    const cRect = container.getBoundingClientRect();
+
     for (let i = 0; i < 4; i++) {
+        const wrap = document.getElementById(`ddWrap_${i}`);
         if (i !== selectedIndex) {
-            const wrap = document.getElementById(`ddWrap_${i}`);
             const rect = wrap.getBoundingClientRect();
             burstParticles(rect.left + rect.width/2, rect.top + rect.height/2, '#c23b4a', 10, 'spark');
             wrap.classList.add('fade-out');
+        } else {
+            // Math to dynamically pull the selected card perfectly into the center
+            const wRect = wrap.getBoundingClientRect();
+            const targetX = (cRect.width / 2) - (wRect.left - cRect.left + wRect.width / 2);
+            const cardEl = document.getElementById(`ddCard_${i}`);
+            cardEl.style.setProperty('--target-x', targetX + 'px');
+            cardEl.style.setProperty('--target-y', '40px'); // Push down to clear the title text!
         }
     }
 
@@ -10165,6 +11217,10 @@ async function executeDailyDraw(selectedIndex) {
         profile.lastSpinDate = rollData.date;
         if (res.newCurrency !== undefined) profile.currency = res.newCurrency;
         if (res.newChests !== undefined) profile.chests = res.newChests;
+        // NEW: Accept Skin Shards and Inventory Updates from the server
+        if (res.newShards !== undefined) profile.shards = res.newShards;
+        if (res.newInventory !== undefined) profile.inventory = res.newInventory;
+        if (res.totalCopies !== undefined) profile.totalCopies = res.totalCopies;
 
         // Directly apply the styled HTML sent by the secure Cloudflare server
         selectedBack.innerHTML = `
@@ -10178,6 +11234,8 @@ async function executeDailyDraw(selectedIndex) {
             if (rollData.rewardType !== 'none') triggerNotificationVfx('gold');
             
             selectedCard.classList.add('flipped');
+            // Wait for the 0.8s CSS transition to finish, then start the floating animation
+            setTimeout(() => selectedCard.classList.add('animating'), 800);
             subtitle.textContent = "Reward Claimed!";
             subtitle.style.color = "var(--ok)";
             
@@ -10454,27 +11512,30 @@ function updateEquipButtonState() {
     
     let isUnlocked = false;
     let isAlreadyEquipped = false;
-    let btnLabel = '';
+    let unlockMessage = '';
+    let equipLabel = '';
 
     if (_customCurrentTab === 'titles') {
         const tDef = TITLES_DB.find(t => t.id === _previewTitle);
         isUnlocked = tDef ? isTitleUnlocked(profile, tDef) : false;
         isAlreadyEquipped = (_previewTitle === getEquippedTitle(profile));
-        btnLabel = tDef ? "TITLE" : '';
+        unlockMessage = tDef ? tDef.desc : 'Locked';
+        equipLabel = 'TITLE';
     } else {
         const userTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
         const activeItem = (_customCurrentTab === 'avatars') ? _previewAvatar : _previewFrame;
         isUnlocked = TIERS.indexOf(activeItem) <= userTierIdx;
         isAlreadyEquipped = (activeItem === ((_customCurrentTab === 'avatars') ? getEquippedAvatar(profile) : getEquippedFrame(profile)));
-        btnLabel = activeItem;
+        unlockMessage = `Unlocks at ${activeItem} Rank`;
+        equipLabel = activeItem.toUpperCase();
     }
     
     if (!isUnlocked) {
         btn.disabled = true;
-        btn.textContent = `LOCKED (${btnLabel})`;
-        btn.style.background = "rgba(255,255,255,0.1)";
+        btn.textContent = `🔒 ${unlockMessage}`;
+        btn.style.background = "rgba(0,0,0,0.5)";
         btn.style.color = "rgba(255,255,255,0.4)";
-        btn.style.borderColor = "transparent";
+        btn.style.borderColor = "rgba(255,255,255,0.1)";
     } else if (isAlreadyEquipped) {
         btn.disabled = true;
         btn.textContent = `EQUIPPED ✓`;
@@ -10483,7 +11544,7 @@ function updateEquipButtonState() {
         btn.style.borderColor = "var(--ok)";
     } else {
         btn.disabled = false;
-        btn.textContent = `EQUIP ${activeItem.toUpperCase()}`;
+        btn.textContent = `EQUIP ${equipLabel}`;
         btn.style.background = "var(--brass)";
         btn.style.color = "var(--felt-dark)";
         btn.style.borderColor = "var(--brass-bright)";
@@ -10715,13 +11776,13 @@ async function linkGuestToGoogleAccount() {
     } catch (error) {
         console.error("Linking failed: ", error);
         
-        // Recover the screen orientation even if they cancelled!
-        // Fullscreen is restored only by an explicit user gesture.
-        
+        // FIX: Catch the specific 'already-in-use' error and tell the player!
         if (error.code === 'auth/credential-already-in-use') {
-            showSystemToast("This Google account is already linked to another player!");
+            showSystemToast("This Google account is already registered! Please use a different one.");
+        } else if (error.code === 'auth/popup-closed-by-user') {
+            showSystemToast("Sign-in cancelled.");
         } else {
-            showSystemToast("Linking cancelled or failed.");
+            showSystemToast("Failed to link account. Please try again.");
         }
     }
 }
@@ -10888,8 +11949,6 @@ function triggerNotificationVfx(type = 'gold', event = null) {
             confetti({ particleCount: 40, angle: 60, spread: 55, origin: { x: 0, y: 0.7 }, colors: ['#e8c454', '#c9a227', '#ffffff', '#f5dd8a'], zIndex: 1000000 });
             confetti({ particleCount: 40, angle: 120, spread: 55, origin: { x: 1, y: 0.7 }, colors: ['#e8c454', '#c9a227', '#ffffff', '#f5dd8a'], zIndex: 1000000 });
             setTimeout(() => { confetti({ particleCount: 60, spread: 100, origin: { x: 0.5, y: 0.5 }, colors: ['#e8c454', '#ffd700', '#ffffff'], ticks: 200, gravity: 0.8, scalar: 1.1, zIndex: 1000000 }); }, 150);
-        } else if (type === 'alert') {
-            confetti({ particleCount: 25, spread: 60, startVelocity: 40, origin: { x: 0.5, y: 0.88 }, colors: ['#c23b4a', '#e8c454', '#ffffff'], ticks: 120, gravity: 1.2, zIndex: 1000000 });
         }
     }
 }
@@ -10899,20 +11958,37 @@ function showSystemToast(msg) {
     if (existing) existing.remove();
     
     // Trigger VFX based on message content
-    if (msg.toLowerCase().includes('success') || msg.toLowerCase().includes('unlocked')) {
+    const lowerMsg = msg.toLowerCase();
+    if (lowerMsg.includes('success') || lowerMsg.includes('unlocked') || lowerMsg.includes('verified') || lowerMsg.includes('earned')) {
         triggerNotificationVfx('gold');
-    } else {
-        triggerNotificationVfx('alert');
-    }
+    } else if (lowerMsg.includes('error') || lowerMsg.includes('failed') || lowerMsg.includes('denied') || lowerMsg.includes('unreachable') || lowerMsg.includes('penalty')) {
+        try { sfx.alert(); } catch(e){} // Play warning sound, but NO confetti!
+    } 
 
     const toast = document.createElement('div');
     toast.id = 'sysToast';
-    toast.style.cssText = 'position:fixed; bottom:12%; left:50%; transform:translateX(-50%); background:rgba(6,3,5,0.9); border:1px solid var(--brass); color:#fff; padding:10px 24px; border-radius:30px; font-family:"IBM Plex Mono",monospace; font-size:12px; z-index:999999; pointer-events:none; transition:opacity 0.3s; box-shadow:0 4px 12px rgba(0,0,0,0.8); text-align:center; white-space:nowrap;';
-    toast.textContent = msg;
     
+    // FIX: Cinematic floating text with heavy shadow, no background capsule, and CSS transition targets
+    toast.style.cssText = 'position:fixed; bottom:15%; left:50%; transform:translate(-50%, 0); color:#fff; font-family:"Cinzel",serif; font-size:16px; font-weight:bold; letter-spacing:1px; z-index:999999; pointer-events:none; text-align:center; white-space:nowrap; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,1); transition: transform 2s ease-out, opacity 2s ease-in; opacity: 1;';
+    
+    // Color code positive/negative messages for the new cinematic style
+    if (lowerMsg.includes('invite') || lowerMsg.includes('friend') || lowerMsg.includes('joined') || lowerMsg.includes('copied')) {
+        toast.style.color = 'var(--brass-bright)';
+    } else if (lowerMsg.includes('error') || lowerMsg.includes('denied') || lowerMsg.includes('penalty')) {
+        toast.style.color = 'var(--danger-bright)';
+    }
+
+    toast.textContent = msg;
     document.body.appendChild(toast);
-    setTimeout(() => toast.style.opacity = '0', 1500);
-    setTimeout(() => toast.remove(), 1800);
+    
+    // Force reflow to ensure the starting position is registered by the browser before we apply the movement targets
+    void toast.offsetWidth;
+    
+    // Animate upwards and fade out
+    toast.style.transform = 'translate(-50%, -60px)';
+    toast.style.opacity = '0';
+    
+    setTimeout(() => toast.remove(), 2000);
 }
 
 window.addEventListener('popstate', function(event) {
@@ -11434,6 +12510,115 @@ async function purchaseIAP(itemId, rewardAmount, event) {
         showSystemToast("Could not start checkout. Try again later.");
     }
 }
+
+// ============================================================
+// GLOBAL LIVING LEADERBOARD ENGINE
+// ============================================================
+
+async function renderLeaderboardScreen() {
+    const listEl = document.getElementById('leaderboardList');
+    if (!listEl) return;
+    
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+
+    listEl.innerHTML = '<div class="mono" style="text-align:center; padding:40px 20px; color:var(--brass-bright); font-size:12px; animation: slowPulse 1.5s infinite alternate;">Syncing with Global Network...</div>';
+
+    try {
+        // Cloudflare now sends the pre-sorted Top 100 AND your true rank
+        const res = await secureServerCall('leaderboard', {});
+        let top100 = res.leaderboard || [];
+        let myTrueRank = res.myRank || 999; // Fallback
+
+        let html = '';
+        let iAmInTop100 = false;
+        
+        top100.forEach((p, idx) => {
+            const isMe = p.uid === profile.uid;
+            if (isMe) iAmInTop100 = true;
+            html += generateLeaderboardRowHtml(p, idx + 1, isMe);
+        });
+
+        // If I am NOT in the Top 100, append me at the bottom so I can still see my stats
+        if (!iAmInTop100) {
+            let me = {
+                uid: profile.uid,
+                gameId: profile.gameId || '',
+                displayName: profile.displayName || 'Agent',
+                avatar: getEquippedAvatar(profile),
+                frame: getEquippedFrame(profile),
+                title: getEquippedTitle(profile),
+                tier: profile.tier || 'Apprentice',
+                level: profile.level || 1,
+                points: profile.points || 0
+            };
+            html += `<div style="text-align:center; padding: 10px; opacity:0.5; color:var(--brass-bright);">•••</div>`;
+            // Use the true rank calculated by Cloudflare!
+            html += generateLeaderboardRowHtml(me, myTrueRank, true);
+        }
+
+        listEl.innerHTML = html;
+    } catch (e) {
+        console.error("Leaderboard Sync Failed:", e);
+        listEl.innerHTML = '<div class="mono" style="text-align:center; padding:40px 20px; color:var(--danger-bright); font-size:12px;">Failed to sync with global network.</div>';
+    }
+}
+
+function generateLeaderboardRowHtml(p, rankNum, isMe) {
+    let topClass = (typeof rankNum === 'number' && rankNum <= 3) ? 'top-3' : '';
+    let meClass = isMe ? 'is-me' : '';
+    
+    let titleHtml = '';
+    if (p.title) {
+        const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === p.title) : null;
+        if (tDef) {
+            titleHtml = `<div style="margin-top:6px;"><div class="player-title title-${tDef.rarity}" style="height:16px; font-size:8px; padding:0 8px 0 4px; line-height:16px;"><span>${tDef.name}</span></div></div>`;
+        }
+    }
+
+    // FIX: Show IDs for everyone. If a bot is missing an ID, deterministically generate a fake 
+    // 6-digit ID based on their uid string so it stays consistently the same every time!
+    let displayId = p.gameId;
+    if (!displayId || displayId === '----' || displayId === 'undefined') {
+        let hash = 0;
+        for(let i=0; i<p.uid.length; i++) hash = Math.imul(31, hash) + p.uid.charCodeAt(i) | 0;
+        displayId = Math.abs(hash).toString().substring(0, 6).padEnd(6, '0');
+    }
+    
+    let idHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); font-weight:normal; margin-left:8px;">ID ${displayId}</span>`;
+
+    return `
+      <div class="lb-row ${topClass} ${meClass}">
+        <div class="lb-rank">#${rankNum}</div>
+        <div class="lb-player">
+          <div class="avatar-frame-wrap" style="width:44px; height:44px; flex-shrink:0;">
+            <img src="Avatars/${p.avatar || 'Apprentice'}.png" class="af-avatar" alt="Avatar">
+            <img src="Frames/${p.frame || 'Apprentice'}.png" class="af-frame" alt="Frame">
+          </div>
+          <div style="display:flex; flex-direction:column; justify-content:center;">
+            <div style="font-family:'Inter',sans-serif; font-weight:700; font-size:14px; color:#fff; line-height:1;">
+              ${p.displayName}${idHtml}
+            </div>
+            ${titleHtml}
+          </div>
+        </div>
+        <div class="lb-score-col">
+          <div class="lb-tier-text">${p.tier || 'Apprentice'} Lvl ${p.level || 1}</div>
+          <div style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(255,255,255,0.6); margin-top:4px;">${p.points || 0} PTS</div>
+        </div>
+      </div>
+    `;
+}
+
+// Intercept showMenuScreen to trigger the render instantly
+const lbOriginalShowMenu = showMenuScreen;
+showMenuScreen = function(name) {
+    lbOriginalShowMenu(name);
+    if(name === 'leaderboard') {
+        renderLeaderboardScreen();
+    }
+};
+
 </script>
 </body>
 </html>
