@@ -1109,18 +1109,18 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   100% { transform: translateY(-400px) scale(0.2) translateX(30px); opacity: 0; }
 }
 
-.ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+.ghost-card{position:fixed;z-index:9000;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
   transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
   background-image:url('Cards/CardPhase.png');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
-  will-change: left, top, transform; transform: translateZ(0); /* Force GPU composite */
+  will-change: left, top, transform; transform: translateZ(0);
 }
-.ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
+.ghost-coin{position:fixed;z-index:9000;border-radius:50%;pointer-events:none;
   transition:left .48s ease, top .48s ease, opacity .48s;
   background-image:url('Coins/Coins.png');background-size:cover;background-position:center;
   box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
-  will-change: left, top; transform: translateZ(0); /* Force GPU composite */
+  will-change: left, top; transform: translateZ(0);
 }
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
@@ -6092,34 +6092,33 @@ function spawnSpecialGameVFX(type, x, y) {
 }
 
 function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, actionTargetRect=null){
+  if (!srcRect || !dstRect) return;
   sfx.card();
 
-  // FIX: Safely convert old database strings during animations
   if (label === 'POWER') label = 'PWR';
   if (label === 'WILD') label = 'W';
   if (label === 'STEAL') label = 'STL';
   if (label === 'REVERSE') label = 'REV';
   if (label === 'INSURANCE') label = 'INS';
   
-  // Default standard card size for flying to avatars
   let w = 42;
   let h = 60;
   
-  // Only stretch to match dstRect if it is a card placeholder (taller than it is wide)
   const isCardPlaceholder = dstRect && (dstRect.height > dstRect.width * 1.2);
   if (isCardPlaceholder) {
       w = dstRect.width;
       h = dstRect.height;
   }
   
-  const g=document.createElement('div');
-  g.className='ghost-card';
-  g.style.left=(srcRect.left+srcRect.width/2-w/2)+'px';
-  g.style.top=(srcRect.top+srcRect.height/2-h/2)+'px';
-  g.style.width=w+'px'; g.style.height=h+'px';
-  g.style.border=`2px solid ${color}`; g.style.color=color;
+  const g = document.createElement('div');
+  g.className = 'ghost-card';
+  g.style.left = (srcRect.left + srcRect.width/2 - w/2) + 'px';
+  g.style.top = (srcRect.top + srcRect.height/2 - h/2) + 'px';
+  g.style.width = w + 'px';
+  g.style.height = h + 'px';
+  g.style.border = `2px solid ${color}`;
+  g.style.color = color;
   
-  // Check if this is a face-down deal or a dud draw (label is empty or '?')
   const isFaceDown = (label === '' || label === '?');
   if (isFaceDown) {
       g.style.backgroundImage = bgSkin ? `url('${bgSkin}')` : "var(--my-deck)";
@@ -6129,7 +6128,6 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
-      // FIX: Ensure no corner HTML or inner content is applied to flying Special Cards!
       if (label === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
       else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
       else if (label === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = ''; }
@@ -6142,64 +6140,66 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
   }
   
   document.body.appendChild(g);
-  
-  requestAnimationFrame(()=>{
+  void g.offsetWidth; // Forces mobile layout engine to register origin coordinates
+
+  requestAnimationFrame(() => {
     if (isCardPlaceholder) {
-        // Drop perfectly into the center placeholder
-        g.style.left=dstRect.left+'px';
-        g.style.top=dstRect.top+'px';
+        g.style.left = dstRect.left + 'px';
+        g.style.top = dstRect.top + 'px';
     } else {
-        // Fly directly to the center of the avatar
-        g.style.left=(dstRect.left+dstRect.width/2-w/2)+'px';
-        g.style.top=(dstRect.top+dstRect.height/2-h/2)+'px';
+        g.style.left = (dstRect.left + dstRect.width/2 - w/2) + 'px';
+        g.style.top = (dstRect.top + dstRect.height/2 - h/2) + 'px';
     }
-    g.style.transform='scale(1)';
+    g.style.transform = 'scale(1)';
   });
   
-  setTimeout(()=>{
+  setTimeout(() => {
     try {
-        // If it's a steal or power, spawn the VFX on the victim instead of the center table!
         const vfxRect = ((label === 'STL' || label === 'PWR') && actionTargetRect) ? actionTargetRect : dstRect;
-        const c=rectCenter(vfxRect);
+        const c = rectCenter(vfxRect);
         if (label === 'W') {
             spawnSpecialGameVFX('WILD', c.x, c.y);
         } else if (label === 'STL' || label === 'PWR') {
-            spawnSpecialGameVFX('STEAL', c.x, c.y); // Use the same claw slash for both
+            spawnSpecialGameVFX('STEAL', c.x, c.y);
         } else {
-            // Standard cards just get the normal spark burst
             burstParticles(c.x, c.y, color, burstSize || 12, 'spark');
         }
     } catch(e) {}
     if(g && g.parentNode) g.parentNode.removeChild(g);
     
-    // Exactly when the card lands, release the visual lock and reveal the new card!
     if (isCardPlaceholder) {
         window.dodCenterIsLocked = false;
         if (state && state.uiState === 'ANIMATING') state.uiState = 'WAITING_FOR_CALLOUT'; 
         renderAll();
     }
-  },430);
+  }, 430);
 }
 
 function flyCoin(srcRect,dstRect,delay){
-  setTimeout(()=>{
+  if (!srcRect || !dstRect) return;
+  setTimeout(() => {
     sfx.coin();
-    const size=9;
-    const g=document.createElement('div');
-    g.className='ghost-coin';
-    g.style.width=size+'px'; g.style.height=size+'px';
-    const c1=rectCenter(srcRect);
-    g.style.left=(c1.x-size/2)+'px'; g.style.top=(c1.y-size/2)+'px';
+    const size = 9;
+    const g = document.createElement('div');
+    g.className = 'ghost-coin';
+    g.style.width = size + 'px';
+    g.style.height = size + 'px';
+    const c1 = rectCenter(srcRect);
+    g.style.left = (c1.x - size/2) + 'px';
+    g.style.top = (c1.y - size/2) + 'px';
     document.body.appendChild(g);
-    requestAnimationFrame(()=>{
-      const c2=rectCenter(dstRect);
-      g.style.left=(c2.x-size/2)+'px'; g.style.top=(c2.y-size/2)+'px';
-      g.style.opacity='0.15';
+    void g.offsetWidth; // Forces mobile layout engine to register origin coordinates
+
+    requestAnimationFrame(() => {
+      const c2 = rectCenter(dstRect);
+      g.style.left = (c2.x - size/2) + 'px';
+      g.style.top = (c2.y - size/2) + 'px';
+      g.style.opacity = '0.15';
     });
-    setTimeout(()=> {
+    setTimeout(() => {
         if(g && g.parentNode) g.parentNode.removeChild(g);
-    },520);
-  }, delay||0);
+    }, 520);
+  }, delay || 0);
 }
 
 function celebrateWin(){
