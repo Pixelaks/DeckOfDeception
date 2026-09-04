@@ -22,7 +22,12 @@
     }
 })();
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#060709">
+<link rel="manifest" href="manifest.json">
 <title>Deck Of Deception</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
@@ -1313,6 +1318,11 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   padding: 6px 8px; flex: 1; min-height: 0; overflow-y: auto;
   display: flex; flex-direction: column; gap: 4px;
 }
+/* Sleek dark scrollbar for the friends list */
+.pubg-friends-list::-webkit-scrollbar { width: 5px; }
+.pubg-friends-list::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.3); border-radius: 4px; }
+.pubg-friends-list::-webkit-scrollbar-thumb { background: #000; border-radius: 4px; border: 1px solid rgba(201,162,39,0.4); }
+
 .pubg-friend-row {
   display: flex; justify-content: space-between; align-items: center;
   padding: 5px 8px; border-radius: 4px;
@@ -1409,19 +1419,49 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .pubg-mode-btn.selected { background: var(--brass); color: var(--felt-dark); border-color: var(--brass); font-weight: 700; }
 .pubg-mode-btn:hover:not(.selected) { border-color: var(--brass); color: var(--brass-bright); }
 
+/* SKEWED TACTICAL GLASS DOCK (SEPARATED) */
 .pubg-icon-bar {
   position: absolute; bottom: 28px; right: 28px;
-  display: flex; gap: 10px; align-items: center;
+  display: flex; gap: 12px; /* Adds the space between the buttons */
 }
 .pubg-icon-btn {
-  width: 50px; height: 50px; border-radius: 8px;
-  background: rgba(0,0,0,0.55); border: 1px solid rgba(201,162,39,0.35);
-  color: var(--brass-bright); font-size: 22px;
-  display: flex; align-items: center; justify-content: center;
-  cursor: pointer; transition: all 0.2s; flex-direction: column; gap: 2px;
+  background: rgba(8, 5, 10, 0.85); 
+  border: 1px solid rgba(201, 162, 39, 0.35);
+  border-radius: 4px; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  padding: 8px 18px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer; transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative; overflow: hidden; gap: 4px;
+  transform: skewX(-12deg); /* Moves the tactical slant onto each individual button */
+  box-shadow: 0 6px 15px rgba(0,0,0,0.6), inset 0 0 10px rgba(0,0,0,0.5);
 }
-.pubg-icon-btn:hover { background: rgba(201,162,39,0.2); border-color: var(--brass-bright); transform: translateY(-2px); }
-.pubg-icon-btn span.ib-label { font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: rgba(242,234,216,0.6); text-transform: uppercase; }
+
+/* Bottom glow hover effect */
+.pubg-icon-btn::before {
+  content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+  background: var(--brass-bright); transform: translateY(3px); transition: transform 0.2s;
+  box-shadow: 0 -4px 12px rgba(232,196,84,0.6);
+}
+.pubg-icon-btn:hover::before { transform: translateY(0); }
+.pubg-icon-btn:hover { 
+  background: rgba(232, 196, 84, 0.15); 
+  border-color: var(--brass-bright); 
+  transform: skewX(-12deg) translateY(-4px); /* Preserves the slant while popping upwards */
+}
+
+/* Un-skew the inner content so text stays straight */
+.pubg-nav-content { transform: skewX(12deg); display: flex; flex-direction: column; align-items: center; pointer-events: none; }
+
+.pubg-nav-icon {
+  font-size: 18px; color: rgba(242,234,216,0.6); transition: all 0.3s;
+  font-family: 'Cinzel Decorative', serif; font-weight: bold; line-height: 1;
+}
+.pubg-icon-btn:hover .pubg-nav-icon { color: var(--brass-bright); transform: translateY(-2px); text-shadow: 0 0 10px rgba(232, 196, 84, 0.8); }
+
+.pubg-icon-btn span.ib-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 8px; color: rgba(242,234,216,0.4);
+  text-transform: uppercase; letter-spacing: 1px; transition: color 0.3s;
+}
+.pubg-icon-btn:hover span.ib-label { color: #fff; }
 
 .pubg-matchmaking-overlay {
   position: absolute; inset: 0; z-index: 50;
@@ -1998,9 +2038,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .chest-item { padding: 4px 8px !important; }
   .chest-item span { font-size: 16px !important; }
   
-  .pubg-icon-bar { bottom: 15px !important; right: 15px !important; gap: 6px !important; }
-  .pubg-icon-btn { width: 38px !important; height: 38px !important; font-size: 16px !important; }
-  .pubg-icon-btn span.ib-label { font-size: 6.5px !important; }
+  .pubg-icon-bar { bottom: 15px !important; right: 15px !important; }
+  .pubg-icon-btn { padding: 6px 12px !important; }
+  .pubg-nav-icon { font-size: 14px !important; }
+  .pubg-icon-btn span.ib-label { font-size: 6.5px !important; letter-spacing: 0.5px !important; }
   
   .pubg-search-panel { left: 165px !important; bottom: clamp(120px, 26vh, 140px) !important; width: 220px !important; padding: 8px !important; }
   .pubg-search-panel input { padding: 5px 8px !important; font-size: 10px !important; }
@@ -2409,9 +2450,26 @@ window.dodImagesLoaded = false;
     'Frames/Apprentice.png', 'Frames/Trickster.png', 'Frames/Phantom.png',
     'Frames/Mastermind.png', 'Frames/Oracle.png', 'Frames/Legend.png'
   ];
+
+  // FIX: Dynamically inject the user's equipped custom skins into the mandatory loading queue
+  var savedDeck = localStorage.getItem('dod_cached_deck');
+  var savedTable = localStorage.getItem('dod_cached_table');
+  
+  if (savedDeck) {
+      var deckUrl = savedDeck.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+      if (!srcs.includes(deckUrl)) srcs.push(deckUrl);
+  }
+  if (savedTable) {
+      var tableUrl = savedTable.replace(/^url\(['"]?/, '').replace(/['"]?\)$/, '');
+      if (!srcs.includes(tableUrl)) srcs.push(tableUrl);
+  }
+
   var loaded = 0;
   var total = srcs.length;
-  var isCached = localStorage.getItem('dod_assets_cached') === 'true';
+  
+  // FIX: If the user bought and equipped new skins, the total count will be higher than before.
+  // We must force the loader to wait for these new images to download, even if the cache flag was previously true!
+  var isCached = localStorage.getItem('dod_assets_cached') === 'true' && localStorage.getItem('dod_last_asset_count') == total;
 
   function updateLoaderUI() {
       var overlay = document.getElementById('introOverlay');
@@ -2442,6 +2500,7 @@ window.dodImagesLoaded = false;
           
           // Mark the local browser memory flag so next visit is instant
           localStorage.setItem('dod_assets_cached', 'true');
+          localStorage.setItem('dod_last_asset_count', total); // Save the dynamic count
       }
   }
 
@@ -2651,11 +2710,21 @@ window.dodImagesLoaded = false;
     
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
-      <button class="pubg-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">🏆<span class="ib-label">Top 100</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Tiers">👑<span class="ib-label">Tiers</span></button>
-      <button id="navBtnTraining" class="pubg-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">⚔️<span class="ib-label">Train</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">💎<span class="ib-label">Shop</span></button>
-      <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">🗝️<span class="ib-label">Settings</span></button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon">⟁</div><span class="ib-label">Top 100</span></div>
+      </button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('ranks')" title="Tiers">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon">⟡</div><span class="ib-label">Tiers</span></div>
+      </button>
+      <button id="navBtnTraining" class="pubg-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon">⌖</div><span class="ib-label">Train</span></div>
+      </button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon">⍟</div><span class="ib-label">Shop</span></div>
+      </button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('settings')" title="Settings">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon">⎔</div><span class="ib-label">Settings</span></div>
+      </button>
     </div>
     <!-- Matchmaking overlay -->
     <div id="pubgMatchmakingOverlay" class="pubg-matchmaking-overlay">
@@ -2670,7 +2739,7 @@ window.dodImagesLoaded = false;
       <div class="lobby-action-bar">
         <div style="display:flex; align-items:center; gap:6px; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:15px; border:1px solid rgba(201,162,39,0.3); margin-right:4px;">
           <span style="font-size:11px; color:var(--brass-bright);">🎵</span>
-          <input type="range" id="lobbyMusicVol" min="0" max="100" value="15" style="width:60px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
+          <input type="range" id="lobbyMusicVol" min="0" max="100" value="60" style="width:60px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
         </div>
         <button id="lobbyMicToggleBtn" class="btn ghost small lobby-action-btn" style="color:var(--brass-bright); display:none;" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
         <button id="pubgLeaveLobbyBtn" class="btn ghost small lobby-action-btn" onclick="leavePartyLobby()">LEAVE LOBBY</button>
@@ -2746,10 +2815,10 @@ window.dodImagesLoaded = false;
     
     <!-- FIXED Shop Tabs (Moved outside scrollable content) -->
     <div id="shopTabsContainer" class="shop-tabs-container">
-      <button class="pubg-subtab-btn active" onclick="switchShopTab('cardFaces', this)">Faces</button>
-      <button class="pubg-subtab-btn" onclick="switchShopTab('cardBacks', this)">Backs</button>
+      <button class="pubg-subtab-btn active" onclick="switchShopTab('cardBacks', this)">Backs</button>
       <button class="pubg-subtab-btn" onclick="switchShopTab('tables', this)">Tables</button>
       <button class="pubg-subtab-btn" onclick="switchShopTab('coins', this)">Coins</button>
+      <button class="pubg-subtab-btn" onclick="switchShopTab('cardFaces', this)">Faces</button>
     </div>
     
     <!-- SCROLLABLE Dynamic Grid -->
@@ -2789,7 +2858,7 @@ window.dodImagesLoaded = false;
     </div>
     <div class="screen-content">
       <div class="section-label" style="margin-top:0;">Audio & Voice</div>
-      <div class="settings-row"><span>Ambient Music</span><input type="range" id="musicVol" min="0" max="100" value="15" oninput="setMusicVolume(this.value)"></div>
+      <div class="settings-row"><span>Ambient Music</span><input type="range" id="musicVol" min="0" max="100" value="60" oninput="setMusicVolume(this.value)"></div>
       <div class="settings-row"><span>Sound Effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
       <div class="settings-row"><span>Voice Chat Master</span><input type="range" id="voiceVol" min="0" max="100" value="80" oninput="setVoiceVolume(this.value)"></div>
 
@@ -2932,7 +3001,7 @@ window.dodImagesLoaded = false;
       <span class="timer" id="timerDisplay">20:00</span>
       <div style="display:flex; align-items:center; gap:4px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:12px; border:1px solid rgba(255,255,255,0.15);">
         <span style="font-size:10px; color:var(--brass-bright);">🎵</span>
-        <input type="range" id="gameMusicVol" min="0" max="100" value="15" style="width:45px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
+        <input type="range" id="gameMusicVol" min="0" max="100" value="60" style="width:45px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
       </div>
       <button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
       <button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button>
@@ -3766,7 +3835,7 @@ const sfx = {
 let _ambientStarted = false;
 let ambientMasterGain = null;
 let savedMusic = localStorage.getItem('dod_music_vol');
-let musicVolumeSetting = savedMusic !== null ? parseInt(savedMusic) / 100 : 0.15; 
+let musicVolumeSetting = savedMusic !== null ? parseInt(savedMusic) / 100 : 0.60; 
 function startAmbientPad(){
   if(!audioCtx || _ambientStarted) return;
   _ambientStarted = true;
@@ -3898,11 +3967,14 @@ function forceEnterFullscreen() {
         }
     } catch (err) {
         console.error("Fullscreen error:", err);
-    } finally {
-        // 2. Android address bar shove
-        window.scrollTo(0, 1);
-        updateFullscreenIcons();
-    }
+        } finally {
+            // 2. iOS / Android address bar shove
+            // Add a tiny delay so the mobile browser has time to register the user interaction
+            setTimeout(() => {
+                window.scrollTo(0, 1);
+            }, 150);
+            updateFullscreenIcons();
+        }
 }
 
 function toggleFullscreen(e) {
@@ -3925,7 +3997,8 @@ function toggleFullscreen(e) {
 function updateFullscreenIcons() {
     const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
     document.querySelectorAll('.fs-toggle-btn').forEach(btn => {
-        btn.textContent = isFs ? '✖' : '⛶';
+        // Uses the Windows 'Restore Down' overlapping squares icon instead of the cross
+        btn.textContent = isFs ? '🗗' : '⛶'; 
     });
 }
 
@@ -3967,7 +4040,7 @@ function proceedWithBoot(overlayEl) {
     });
     
     if(bgMusicElement) {
-        bgMusicElement.volume = musicVolumeSetting * 0.35; 
+        bgMusicElement.volume = musicVolumeSetting; // FIX: Give it full requested volume!
         if(bgMusicElement.error){ startAmbientPad(); } 
         else {
             bgMusicElement.play().catch(() => startAmbientPad());
@@ -4631,8 +4704,8 @@ let micDuckMult = 1.0; // Drops when microphone is active
 
 // Call this when your voice chat connects or disconnects!
 function setMicActive(isActive) {
-    // Drop to 70% instead of 35% so music is still clearly audible
-    micDuckMult = isActive ? 0.70 : 1.0;
+    // Drop the music to 30% only when the microphone is actively being used
+    micDuckMult = isActive ? 0.30 : 1.0;
     setMusicVolume(musicVolumeSetting * 100); // Safely recalculates live volume
 }
 
@@ -4967,13 +5040,15 @@ const VoiceChat = {
     isMuted: true, // DEFAULT MIC DISABLED
     currentRoomId: null,
 
-    async joinRoom(matchId) {
+    async joinRoom(matchId, isUserInitiated = false) {
         if (!matchId) return;
         if (this.currentRoomId === matchId && this.room) return; // Already connected
         if (this.room) this.leaveRoom(); // Clean up old connection
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            console.warn("Voice chat not supported on this browser.");
+            if (isUserInitiated && typeof showSystemToast === 'function') {
+                showSystemToast("Voice chat not supported on this browser.");
+            }
             return;
         }
 
@@ -4984,19 +5059,17 @@ const VoiceChat = {
 
             // 2. Connect to LiveKit (AAA Studio Audio Overrides)
             this.room = new LivekitClient.Room({
-                // FORCE THE MICROPHONE HARDWARE TO CAPTURE IN HD
                 audioCaptureDefaults: {
-                    autoGainControl: true,      // Automatically boosts your voice if you speak quietly!
-                    echoCancellation: true,     // Stops speaker feedback
-                    noiseSuppression: true,     // Kills background static
-                    channelCount: 1,            // Mono voice requires less bandwidth, increasing clarity
-                    sampleRate: 48000,          // 48kHz CD-Quality Audio
+                    autoGainControl: true,
+                    echoCancellation: true,
+                    noiseSuppression: true,
+                    channelCount: 1,
+                    sampleRate: 48000,
                     sampleSize: 16
                 },
-                // FORCE THE OPUS NETWORK CODEC TO STOP COMPRESSING YOUR VOICE
                 publishDefaults: {
-                    audioBitrate: 128000,       // Max out the bitrate at 128kbps (Default is a muddy 32kbps)
-                    red: true                   // Enable Redundant Audio Data to prevent robotic lag-stutters
+                    audioBitrate: 128000,
+                    red: true
                 }
             });
 
@@ -5028,32 +5101,27 @@ const VoiceChat = {
                 });
             });
 
-            // 3. Connect with a timeout race so it doesn't hang forever if LiveKit is down
+            // 3. Connect with a timeout race
             const connectPromise = this.room.connect(res.url, res.token);
-            // FIX: Give mobile networks up to 15 seconds to negotiate WebRTC before failing
             const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 15000));
             
             await Promise.race([connectPromise, timeoutPromise]);
 
-            // FIX: Do not automatically enable the microphone! 
-            // Keep it completely disabled until the player clicks the mic icon.
             this.isMuted = true;
-
             if (typeof setMicActive === 'function') setMicActive(false); 
             this.updateMuteButtonUI();
 
         } catch (err) {
-            console.warn("Voice Connection Failed:", err);
+            console.warn("Voice Connection Failed (Silent Background):", err);
             
-            let reason = "Voice server unreachable.";
-            if (err.message && err.message.includes('Timeout')) reason = "Voice connection timed out.";
-            else if (err.message && err.message.includes('Unauthorized')) reason = "Voice Auth Failed. Check API keys.";
-            
-            // Gracefully tell the user without breaking the game!
-            if (typeof showSystemToast === 'function') {
+            // Only alert the user if they explicitly tried to use the microphone!
+            if (isUserInitiated && typeof showSystemToast === 'function') {
+                let reason = "Voice server unreachable.";
+                if (err.message && err.message.includes('Timeout')) reason = "Voice connection timed out.";
+                else if (err.message && err.message.includes('Unauthorized')) reason = "Voice Auth Failed.";
                 showSystemToast(reason + " Chat disabled.");
             }
-            // Clean up the dead room
+
             if (this.room) {
                 this.room.disconnect();
                 this.room = null;
@@ -5062,20 +5130,28 @@ const VoiceChat = {
     },
 
     async toggleMute() {
-        if (!this.room) return;
+        // If not connected to room yet, attempt connecting on user gesture
+        if (!this.room) {
+            const targetRoom = currentMatchId || currentPartyId;
+            if (targetRoom) {
+                if (typeof showSystemToast === 'function') showSystemToast("Connecting to voice...");
+                await this.joinRoom(targetRoom, true);
+            }
+            if (!this.room) {
+                if (typeof showSystemToast === 'function') showSystemToast("Could not connect to voice server.");
+                return;
+            }
+        }
 
-        // If we are trying to UNMUTE, check if the browser is going to throw a popup
+        // If trying to UNMUTE, handle iOS/Android fullscreen prompt conflicts safely
         if (this.isMuted) {
             try {
                 const perm = await navigator.permissions.query({ name: 'microphone' });
                 if (perm.state === 'prompt') {
-                    // A popup IS coming. Gracefully exit fullscreen first to prevent state corruption!
                     const isFs = document.fullscreenElement || document.webkitFullscreenElement;
                     if (isFs) {
                         if (document.exitFullscreen) await document.exitFullscreen().catch(()=>{});
                         else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-                        
-                        // Give the browser 300ms to finish closing fullscreen before triggering the mic
                         await new Promise(r => setTimeout(r, 300));
                     }
                 }
@@ -5087,13 +5163,11 @@ const VoiceChat = {
         this.isMuted = !this.isMuted;
         
         try {
-            // Tell LiveKit to turn on the mic (which triggers the browser prompt if needed)
             await this.room.localParticipant.setMicrophoneEnabled(!this.isMuted);
             if (typeof setMicActive === 'function') setMicActive(!this.isMuted);
             this.updateMuteButtonUI();
         } catch (err) {
             console.warn("Microphone access denied or failed:", err);
-            // If the user clicked "Deny" on the popup, revert the button back to the muted state
             this.isMuted = true;
             this.updateMuteButtonUI();
             if (typeof showSystemToast === 'function') showSystemToast("Microphone access denied.");
@@ -6758,7 +6832,7 @@ function renderHand(){
                   setTimeout(() => {
                       const targetEl = document.getElementById(`hand-card-${idx}`);
                       if (targetEl) {
-                          targetEl.style.opacity = '1';
+                          targetEl.style.opacity = ''; // Let CSS take over so .disabled works properly!
                           targetEl.classList.add('flip-reveal');
                       }
                   }, 420); // Ghost card takes ~430ms to land
@@ -6766,7 +6840,7 @@ function renderHand(){
                   if (Date.now() - window.dodDrawAnimTime < 420) {
                       el.style.opacity = '0'; // Keep hidden if DOM re-renders mid-flight
                   } else {
-                      el.style.opacity = '1';
+                      el.style.opacity = ''; // Let CSS take over so .disabled works properly!
                   }
               }
           }
@@ -8991,8 +9065,8 @@ async function confirmLeaveGame(){
     document.getElementById('leaveGameOverlay').classList.remove('show');
 
     // --- NEW LEAVER PENALTY LOGIC ---
-    // FIX: Only apply leaver penalties to ONLINE matches (currentMatchId exists).
-    // Offline Training and Interactive Tutorials are strictly safe to leave!
+    let penaltyData = null;
+
     if (state && !state.over && window.DoDAuth && currentMatchId) {
         const profile = DoDAuth.getProfile();
         if (profile) {
@@ -9002,7 +9076,6 @@ async function confirmLeaveGame(){
                 const lossMultiplier = Math.min(2.0, 0.8 + (cTierIdx * 0.2));
                 const myScore = score(me);
                 
-                // Heavy penalty, mitigated by how well they were doing before leaving
                 const perfMitigation = Math.floor(myScore / 4);
                 let penalty = Math.min(0, -25 + perfMitigation); 
                 let finalDelta = Math.floor(penalty * lossMultiplier);
@@ -9010,8 +9083,9 @@ async function confirmLeaveGame(){
                 if (finalDelta < 0) {
                     let cLevel = profile.level || 1;
                     let cPoints = profile.points || 0;
-                    let total = cPoints + finalDelta;
+                    const oldData = { tier: TIERS[cTierIdx], level: cLevel, points: cPoints };
                     
+                    let total = cPoints + finalDelta;
                     while (total < 0) { cLevel--; if (cLevel < 1) { if (cTierIdx > 0) { cTierIdx--; cLevel = 5; total += 100; } else { cLevel = 1; total = 0; } } else { total += 100; } }
                     
                     profile.tier = TIERS[cTierIdx]; profile.level = cLevel; profile.points = total;
@@ -9021,86 +9095,55 @@ async function confirmLeaveGame(){
                             tier: profile.tier, level: profile.level, points: profile.points
                         }).catch(()=>{});
                     }
-                    setTimeout(() => showSystemToast(`Abandon Penalty: ${finalDelta} Rank Points.`), 1500);
+                    
+                    // Save the progression data for the cinematic!
+                    penaltyData = {
+                        old: oldData,
+                        new: { tier: profile.tier, level: profile.level, points: profile.points },
+                        delta: finalDelta,
+                        earnedCoins: 0
+                    };
                 }
             }
         }
     }
 
-    muteForLoading();
-    renderLoadingScreenFX(); 
-    const overlay = document.getElementById('loadingScreen');
-    const fill = document.getElementById('loadingBarFill');
-    const text = document.getElementById('loadingText');
-    overlay.classList.add('show');
-    fill.style.width = '0%';
-    text.textContent = "Returning to Lobby...";
-    requestAnimationFrame(() => { fill.style.transition = `width 3500ms linear`; fill.style.width = '100%'; }); 
-
+    // Stop the match listeners & timers instantly
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
-
-    // Store the ID safely here before we clear it, so both Cloudflare and VoiceChat can use it!
+    
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     const matchToLeave = currentMatchId;
 
+    // Tell Cloudflare we are leaving
     if (matchToLeave) {
         try {
             currentMatchId = null;
-            // Securely leave match and reassign host
             secureServerCall('leaveMatch', { matchId: matchToLeave }).catch(e => console.error('Failed to notify server that you left:', e));
-        } catch(e) {
-            console.error(e);
-        }
+        } catch(e) {}
     }
+    VoiceChat.leaveRoom(matchToLeave); // disconnect audio
 
-    localStorage.removeItem('dod_active_match');
-    window.onlineMatchSeats = null; // Clear seats so friends list updates properly
-    state = null;
-    initialDealDone = false;
-    localLastTurnUid = null;
-    localLastActionId = null;
-    
-    VoiceChat.leaveRoom(matchToLeave); // This will now successfully close the audio connection
-
-    setTimeout(() => {
-        document.getElementById('finaleModal').classList.remove('show');
-        document.getElementById('game').style.display = 'none';
-        menu.style.display = 'flex';
-        menu.style.opacity = '1';
-        menu.classList.add('menu-visible');
+    if (penaltyData) {
+        // Show the progression cinematic instead of the system toast
+        window._latestProgression = penaltyData;
+        document.getElementById('game').style.display = 'none'; // Hide table immediately
         
-        // If in a party, restore the party lobby view directly instead of standard hub
-        if (currentPartyId) {
-            showMenuScreen('hub');
-            showPartyLobbyCinematic();
-            if (window.firebase) {
-                firebase.firestore().collection('parties').doc(currentPartyId).get().then(doc => {
-                    if (doc.exists) updateLobbyView(doc.data().members, doc.data().tableSize || pubgTableSize);
-                }).catch(()=>{});
-            }
-        } else {
-            // Solo players revert normally
-            showMenuScreen('hub');
-            if (typeof revertCamera === 'function') revertCamera();
-            document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.remove('dod-fade-out'));
-            applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
-        }
-
-        const accountLoadingEl = document.getElementById('accountLoading');
-        const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
-        const hubBadgeEl = document.getElementById('hubCurrencyBadge');
-        if (accountLoadingEl) accountLoadingEl.style.display = 'none';
-        if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-        if (hubBadgeEl) hubBadgeEl.style.display = 'flex';
-        if (window.DoDAuth && DoDAuth.getProfile()) {
-            const hubCurrencyEl = document.getElementById('hubCurrency');
-            if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
-        }
-
-        overlay.classList.remove('show');
-        switchToMenuMusic();
-    }, 3500); 
+        // Hide the Continue button temporarily so the user doesn't click it early
+        const progBtn = document.querySelector('.prog-continue-btn');
+        if (progBtn) progBtn.style.display = 'none';
+        
+        showProgressionScreen();
+        
+        // Wait for the animation to finish (approx 4.5 seconds), then trigger loading screen
+        setTimeout(() => {
+            if (progBtn) progBtn.style.display = 'block'; // Restore button for future endgames
+            returnToMenuFromEndgame();
+        }, 4500); 
+    } else {
+        // No penalty (e.g., offline mode or they were already eliminated), go straight back
+        returnToMenuFromEndgame();
+    }
 }
 
 // ---------------- MODALS ----------------
@@ -12413,7 +12456,7 @@ window.addEventListener('popstate', function(event) {
 // ============================================================
 // NEW MARKETPLACE ENGINE (Cards, Tables, VFX, IAP)
 // ============================================================
-let currentShopTab = 'cardFaces';
+let currentShopTab = 'cardBacks';
 
 const SHOP_DB = {
     cardFaces: [
@@ -12475,6 +12518,12 @@ function renderShopItems() {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!root || !profile) return;
     
+    // NEW: Show "Coming Soon" for the Faces tab instead of placeholders
+    if (currentShopTab === 'cardFaces') {
+        root.innerHTML = `<div style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; min-height: 250px; text-align: center; font-family: 'Cinzel Decorative', serif; color: rgba(242,234,216,0.3); font-size: clamp(24px, 4vw, 36px); letter-spacing: 4px; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">COMING SOON</div>`;
+        return;
+    }
+
     const items = SHOP_DB[currentShopTab] || [];
     const inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
     
@@ -12957,6 +13006,20 @@ showMenuScreen = function(name) {
     }
 };
 
+// Register Service Worker for Android PWA Support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js').catch((err) => {
+      console.warn('PWA Service Worker registration failed:', err);
+    });
+  });
+}
+
+// Optional: Capture the Android Install Prompt to trigger when desired
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  window.deferredInstallPrompt = e;
+});
 </script>
 </body>
 </html>
