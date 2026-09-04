@@ -741,6 +741,42 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .card.disabled{opacity:0.35;cursor:not-allowed}
 .card.disabled:hover{transform:none}
 
+@keyframes flipReveal {
+  0% { transform: perspective(600px) rotateY(-180deg) scale(1); }
+  50% { transform: perspective(600px) rotateY(-90deg) scale(1.15); box-shadow: -5px 10px 20px rgba(0,0,0,0.6); }
+  100% { transform: perspective(600px) rotateY(0deg) scale(1); box-shadow: 1px 2px 6px rgba(0,0,0,0.4); }
+}
+.card.flip-reveal {
+  animation: flipReveal 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  transition: none !important; /* CRITICAL: Stops hover transitions from stuttering the flip */
+  transform-style: preserve-3d !important;
+  -webkit-transform-style: preserve-3d !important;
+  overflow: visible !important; /* CRITICAL: overflow hidden breaks 3D transforms */
+}
+
+/* Seamless Deck Back Overlay */
+.card.flip-reveal::after {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  background-image: var(--my-deck);
+  background-size: 100% 100%;
+  background-position: center;
+  border-radius: inherit;
+  border: 1px solid rgba(0,0,0,0.5);
+  transform: rotateY(180deg) translateZ(1px); /* Flips it to face the camera when the card is backwards */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  z-index: 10;
+}
+
+/* Hide card front text when facing away */
+.card.flip-reveal > * {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(1px); /* Lift text slightly to prevent z-fighting */
+}
+
 .card.number    { background-image: url('Cards/CardPhase.png'); border: 1.5px solid var(--myskin, var(--brass)); }
 .card.wild      { background-image: url('Cards/SwapCard.png'); }
 .card.insurance { background-image: url('Cards/InsuranceCard.png'); }
@@ -752,7 +788,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .card .val, .minicard .val, .ghost-card .val { font-family: 'Cinzel Decorative', serif; font-size: 24px; font-weight: 700; color: var(--ink); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 .card .act-val, .minicard .act-val, .ghost-card .act-val { position: absolute; top: 3px; left: 4px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); line-height: 1; }
 .card .act-val-right, .minicard .act-val-right, .ghost-card .act-val-right { position: absolute; bottom: 3px; right: 4px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); transform: rotate(180deg); line-height: 1; }
-.card .tier-badge { position: absolute; top: 16px; left: 4px; font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700; color: var(--danger); background: rgba(242,234,216,0.8); border-radius: 2px; padding: 0 2px; border: 1px solid var(--danger); }
+.card .tier-badge, .minicard .tier-badge, .ghost-card .tier-badge { position: absolute; top: 16px; left: 4px; font-family: 'Cinzel', serif; font-size: 9px; font-weight: 700; color: var(--danger); background: rgba(242,234,216,0.8); border-radius: 2px; padding: 0 2px; border: 1px solid var(--danger); }
 
 .actionbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center;flex-shrink:0}
 .actionbar .hint{font-size:9.5px;color:rgba(242,234,216,0.55);font-family:'IBM Plex Mono',monospace}
@@ -1109,18 +1145,18 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   100% { transform: translateY(-400px) scale(0.2) translateX(30px); opacity: 0; }
 }
 
-.ghost-card{position:fixed;z-index:9000;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+.ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
   transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
   background-image:url('Cards/CardPhase.png');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
-  will-change: left, top, transform; transform: translateZ(0);
+  will-change: left, top, transform; transform: translateZ(0); /* Force GPU composite */
 }
-.ghost-coin{position:fixed;z-index:9000;border-radius:50%;pointer-events:none;
+.ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
   transition:left .48s ease, top .48s ease, opacity .48s;
   background-image:url('Coins/Coins.png');background-size:cover;background-position:center;
   box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
-  will-change: left, top; transform: translateZ(0);
+  will-change: left, top; transform: translateZ(0); /* Force GPU composite */
 }
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
@@ -1936,7 +1972,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .card .val, .minicard .val, .ghost-card .val { font-size: 20px; }
   .card .act-val, .minicard .act-val, .ghost-card .act-val { top: 3px; left: 4px; font-size: 10px; }
   .card .act-val-right, .minicard .act-val-right, .ghost-card .act-val-right { bottom: 3px; right: 4px; font-size: 10px; }
-  .card .tier-badge { top: 14px; font-size: 8px; padding: 0 2px; }
+  .card .tier-badge, .minicard .tier-badge, .ghost-card .tier-badge { top: 14px; font-size: 8px; padding: 0 2px; }
   
   /* 5. Keep Action Buttons easily tappable & pinned to bottom */
   .actionbar { margin-top: 6px; gap: 6px; flex-shrink: 0 !important; }
@@ -5299,6 +5335,16 @@ function listenToGameState() {
             ...serverState.players.slice(0, myIndex)
         ];
 
+        // FIX: Preserve visual coin counts if a bot multi-draw animation is actively running
+        // so that incoming network snapshots don't instantly snap the coins to the final value!
+        if (window.animatingBotCoins) {
+            orderedPlayers.forEach(p => {
+                if (window.animatingBotCoins[p.uid] !== undefined) {
+                    p.shop = window.animatingBotCoins[p.uid];
+                }
+            });
+        }
+
         // 2. SETUP COLORS AND IDs
         PLAYER_COLORS = [];
         orderedPlayers.forEach((p, i) => {
@@ -5374,7 +5420,8 @@ function listenToGameState() {
             gameExpiresAt: serverState.gameExpiresAt || (serverState.startedAtMs + (GAME_DURATION_SEC * 1000)),
             turnExpiresAt: localExpiresAt,
             turnTimeLeft: computedTurnTimeLeft,
-            presence: data.presence || {}
+            presence: data.presence || {},
+            lastAction: serverState.lastAction || null
         };
 
         // --- START SECURE HEARTBEAT PING ---
@@ -5454,26 +5501,45 @@ function listenToGameState() {
             localLastTurnUid = serverState.turnUid;
 
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
-            if (isHost && !serverState.deception) {
-                const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
-                const stuck = curPlayer && !curPlayer.out && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
-                if (curPlayer && stuck) {
-                    if (curPlayer.deceptionStrike) startDeceptionPhaseOnline(curPlayer);
-                    else {
-                        curPlayer.deceptionStrike = true;
-                        firebase.firestore().collection('matches').doc(currentMatchId).update({
-                            'gameState.players': state.players,
-                            'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
-                        });
-                        if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+            const executeHostLogic = () => {
+                if (isHost && !serverState.deception) {
+                    const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
+                    const stuck = curPlayer && !curPlayer.out && serverState.uiState === 'IDLE' && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
+                    if (curPlayer && stuck) {
+                        if (curPlayer.deceptionStrike) {
+                            startDeceptionPhaseOnline(curPlayer);
+                        } else {
+                            curPlayer.deceptionStrike = true;
+                            firebase.firestore().collection('matches').doc(currentMatchId).update({
+                                'gameState.players': state.players,
+                                'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
+                            }).then(() => {
+                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                            }).catch(() => {
+                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                            });
+                        }
+                    } else {
+                        if (curPlayer && curPlayer.deceptionStrike) {
+                            curPlayer.deceptionStrike = false;
+                            firebase.firestore().collection('matches').doc(currentMatchId).update({ 
+                                'gameState.players': state.players 
+                            }).then(() => {
+                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                            }).catch(() => {
+                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                            });
+                        } else {
+                            if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                        }
                     }
-                } else {
-                    if (curPlayer && curPlayer.deceptionStrike) {
-                        curPlayer.deceptionStrike = false;
-                        firebase.firestore().collection('matches').doc(currentMatchId).update({ 'gameState.players': state.players });
-                    }
-                    if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
                 }
+            };
+
+            if (willAnimateAction) {
+                window.pendingHostTurnLogic = executeHostLogic;
+            } else {
+                executeHostLogic();
             }
         }
 
@@ -5870,6 +5936,16 @@ function bankRect(){ return document.getElementById('deckpile').getBoundingClien
 
 function getSeatOrPanelRect(id) {
     if (id === 0) {
+        // FIX: If drawing a card, force the hand to render instantly so the new card slot exists in the DOM.
+        // This ensures the flying ghost card has the exact pixel-perfect destination to land on!
+        if (typeof state !== 'undefined' && state && state.uiState === 'RESOLVING_BUY') {
+            if (typeof renderHand === 'function') renderHand();
+            const hand = document.getElementById('hand');
+            if (hand && hand.lastElementChild) {
+                hand.scrollTop = hand.scrollHeight; // Ensure it is scrolled into view
+                return hand.lastElementChild.getBoundingClientRect();
+            }
+        }
         // Always return the bottom-right hand wrapper for the local player to fix double-animations
         const handWrap = document.getElementById('hand-wrap');
         if (handWrap) return handWrap.getBoundingClientRect();
@@ -6092,33 +6168,34 @@ function spawnSpecialGameVFX(type, x, y) {
 }
 
 function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, actionTargetRect=null){
-  if (!srcRect || !dstRect) return;
   sfx.card();
 
+  // FIX: Safely convert old database strings during animations
   if (label === 'POWER') label = 'PWR';
   if (label === 'WILD') label = 'W';
   if (label === 'STEAL') label = 'STL';
   if (label === 'REVERSE') label = 'REV';
   if (label === 'INSURANCE') label = 'INS';
   
+  // Default standard card size for flying to avatars
   let w = 42;
   let h = 60;
   
+  // Only stretch to match dstRect if it is a card placeholder (taller than it is wide)
   const isCardPlaceholder = dstRect && (dstRect.height > dstRect.width * 1.2);
   if (isCardPlaceholder) {
       w = dstRect.width;
       h = dstRect.height;
   }
   
-  const g = document.createElement('div');
-  g.className = 'ghost-card';
-  g.style.left = (srcRect.left + srcRect.width/2 - w/2) + 'px';
-  g.style.top = (srcRect.top + srcRect.height/2 - h/2) + 'px';
-  g.style.width = w + 'px';
-  g.style.height = h + 'px';
-  g.style.border = `2px solid ${color}`;
-  g.style.color = color;
+  const g=document.createElement('div');
+  g.className='ghost-card';
+  g.style.left=(srcRect.left+srcRect.width/2-w/2)+'px';
+  g.style.top=(srcRect.top+srcRect.height/2-h/2)+'px';
+  g.style.width=w+'px'; g.style.height=h+'px';
+  g.style.border=`2px solid ${color}`; g.style.color=color;
   
+  // Check if this is a face-down deal or a dud draw (label is empty or '?')
   const isFaceDown = (label === '' || label === '?');
   if (isFaceDown) {
       g.style.backgroundImage = bgSkin ? `url('${bgSkin}')` : "var(--my-deck)";
@@ -6128,10 +6205,27 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
+      // FIX: Ensure no corner HTML or inner content is applied to flying Special Cards!
       if (label === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
       else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
-      else if (label === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = ''; }
-      else if (label === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = ''; }
+      else if (label === 'STL') { 
+          bgImg = "url('Cards/SteelCard.png')"; 
+          let tBadge = '';
+          if (typeof state !== 'undefined' && state && state.lastAction && state.lastAction.msg) {
+              const m = state.lastAction.msg.match(/(taking|stealing) (\d+)/i);
+              if (m) tBadge = `<div class="tier-badge" style="top:12px; font-size:9px;">+${m[2]}</div>`;
+          }
+          innerContent = tBadge; 
+      }
+      else if (label === 'PWR') { 
+          bgImg = "url('Cards/PowerCard.png')"; 
+          let tBadge = '';
+          if (typeof state !== 'undefined' && state && state.lastAction && state.lastAction.msg) {
+              const m = state.lastAction.msg.match(/draining (\d+)/i);
+              if (m) tBadge = `<div class="tier-badge" style="top:12px; font-size:9px;">-${m[1]}</div>`;
+          }
+          innerContent = tBadge; 
+      }
       else if (label === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
       else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${label}</div>`; }
 
@@ -6140,66 +6234,78 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
   }
   
   document.body.appendChild(g);
-  void g.offsetWidth; // Forces mobile layout engine to register origin coordinates
-
-  requestAnimationFrame(() => {
+  
+  requestAnimationFrame(()=>{
     if (isCardPlaceholder) {
-        g.style.left = dstRect.left + 'px';
-        g.style.top = dstRect.top + 'px';
+        // Drop perfectly into the center placeholder
+        g.style.left=dstRect.left+'px';
+        g.style.top=dstRect.top+'px';
     } else {
-        g.style.left = (dstRect.left + dstRect.width/2 - w/2) + 'px';
-        g.style.top = (dstRect.top + dstRect.height/2 - h/2) + 'px';
+        // Fly directly to the center of the avatar
+        g.style.left=(dstRect.left+dstRect.width/2-w/2)+'px';
+        g.style.top=(dstRect.top+dstRect.height/2-h/2)+'px';
     }
-    g.style.transform = 'scale(1)';
+    g.style.transform='scale(1)';
   });
   
-  setTimeout(() => {
+  setTimeout(()=>{
     try {
+        // If it's a steal or power, spawn the VFX on the victim instead of the center table!
         const vfxRect = ((label === 'STL' || label === 'PWR') && actionTargetRect) ? actionTargetRect : dstRect;
-        const c = rectCenter(vfxRect);
+        const c=rectCenter(vfxRect);
         if (label === 'W') {
             spawnSpecialGameVFX('WILD', c.x, c.y);
         } else if (label === 'STL' || label === 'PWR') {
-            spawnSpecialGameVFX('STEAL', c.x, c.y);
+            spawnSpecialGameVFX('STEAL', c.x, c.y); // Use the same claw slash for both
+            
+            // NEW: Burst coins from the victim exactly as the claw strikes!
+            if (actionTargetRect) {
+                if (label === 'STL') {
+                    // Steal: Fly 3 coins directly to the attacker's position (srcRect)
+                    flyCoin(actionTargetRect, srcRect, 0);
+                    flyCoin(actionTargetRect, srcRect, 150);
+                    flyCoin(actionTargetRect, srcRect, 300);
+                } else if (label === 'PWR') {
+                    // Power: Fly 2 coins to the bank (deckpile)
+                    flyCoin(actionTargetRect, bankRect(), 0);
+                    flyCoin(actionTargetRect, bankRect(), 200);
+                }
+            }
         } else {
+            // Standard cards just get the normal spark burst
             burstParticles(c.x, c.y, color, burstSize || 12, 'spark');
         }
     } catch(e) {}
     if(g && g.parentNode) g.parentNode.removeChild(g);
     
+    // Exactly when the card lands, release the visual lock and reveal the new card!
     if (isCardPlaceholder) {
         window.dodCenterIsLocked = false;
         if (state && state.uiState === 'ANIMATING') state.uiState = 'WAITING_FOR_CALLOUT'; 
         renderAll();
     }
-  }, 430);
+  },430);
 }
 
 function flyCoin(srcRect,dstRect,delay){
-  if (!srcRect || !dstRect) return;
-  setTimeout(() => {
+  setTimeout(()=>{
     sfx.coin();
-    const size = 9;
-    const g = document.createElement('div');
-    g.className = 'ghost-coin';
-    g.style.width = size + 'px';
-    g.style.height = size + 'px';
-    const c1 = rectCenter(srcRect);
-    g.style.left = (c1.x - size/2) + 'px';
-    g.style.top = (c1.y - size/2) + 'px';
+    const size=9;
+    const g=document.createElement('div');
+    g.className='ghost-coin';
+    g.style.width=size+'px'; g.style.height=size+'px';
+    const c1=rectCenter(srcRect);
+    g.style.left=(c1.x-size/2)+'px'; g.style.top=(c1.y-size/2)+'px';
     document.body.appendChild(g);
-    void g.offsetWidth; // Forces mobile layout engine to register origin coordinates
-
-    requestAnimationFrame(() => {
-      const c2 = rectCenter(dstRect);
-      g.style.left = (c2.x - size/2) + 'px';
-      g.style.top = (c2.y - size/2) + 'px';
-      g.style.opacity = '0.15';
+    requestAnimationFrame(()=>{
+      const c2=rectCenter(dstRect);
+      g.style.left=(c2.x-size/2)+'px'; g.style.top=(c2.y-size/2)+'px';
+      g.style.opacity='0.15';
     });
-    setTimeout(() => {
+    setTimeout(()=> {
         if(g && g.parentNode) g.parentNode.removeChild(g);
-    }, 520);
-  }, delay || 0);
+    },520);
+  }, delay||0);
 }
 
 function celebrateWin(){
@@ -6442,10 +6548,28 @@ function renderAll(){
        let innerContent = "";
 
        // FIX: Action cards use pure graphical textures, so they shouldn't show inner content/corners!
-       if (displayLabel === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
-       else if (displayLabel === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
-       else if (displayLabel === 'STL') { bgImg = "url('Cards/SteelCard.png')"; innerContent = ''; }
-       else if (displayLabel === 'PWR') { bgImg = "url('Cards/PowerCard.png')"; innerContent = ''; }
+       if (displayLabel === 'W' || (typeof label !== 'undefined' && label === 'W')) { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'REV' || (typeof label !== 'undefined' && label === 'REV')) { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
+       else if (displayLabel === 'STL' || (typeof label !== 'undefined' && label === 'STL')) { 
+           bgImg = "url('Cards/SteelCard.png')"; 
+           let tBadge = window.cachedStlBadge || '';
+           let checkState = (typeof state !== 'undefined') ? state : null;
+           if (checkState && checkState.lastAction && checkState.lastAction.msg) {
+               const m = checkState.lastAction.msg.match(/(taking|stealing) (\d+)/i);
+               if (m) { tBadge = `<div class="tier-badge" style="top:12px; font-size:9px;">+${m[2]}</div>`; window.cachedStlBadge = tBadge; }
+           }
+           innerContent = tBadge; 
+       }
+       else if (displayLabel === 'PWR' || (typeof label !== 'undefined' && label === 'PWR')) { 
+           bgImg = "url('Cards/PowerCard.png')"; 
+           let tBadge = window.cachedPwrBadge || '';
+           let checkState = (typeof state !== 'undefined') ? state : null;
+           if (checkState && checkState.lastAction && checkState.lastAction.msg) {
+               const m = checkState.lastAction.msg.match(/draining (\d+)/i);
+               if (m) { tBadge = `<div class="tier-badge" style="top:12px; font-size:9px;">-${m[1]}</div>`; window.cachedPwrBadge = tBadge; }
+           }
+           innerContent = tBadge; 
+       }
        else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
        else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; }
        
@@ -6524,41 +6648,70 @@ function renderHand(){
 
     // FIX: Only render corner numbers for actual Number cards!
     
-    // FIX: Only render corner numbers for actual Number cards!
     let html = '';
-    if (c.type === 'number') {
-        html = `<div class="act-val">${c.value}</div><div class="act-val-right">${c.value}</div>`;
-    }
-    
-    if(c.type==='number'){
-      el.className='card number'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="val">${c.value}</div>`;
-      if(playable) el.onclick=()=>playNumberFromHand(idx, el);
-    } else if(c.type==='wild'){
-      const canPay = you.shop>=WILD_COST;
-      el.className='card wild'+(playable && canPay ?'':' disabled');
-      el.innerHTML= html; // Empty center
-      if(playable && canPay) el.onclick=()=>playWild(idx, el);
-    } else if(c.type==='power'){
-      el.className='card power'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="tier-badge">-${c.tier}</div>`;
-      if(playable) el.onclick=()=>openTargeting(idx, el, 'POWER');
-    } else if(c.type==='steal'){
-      el.className='card steal'+(playable?'':' disabled');
-      el.innerHTML= html + `<div class="tier-badge">+${c.tier}</div>`;
-      if(playable) el.onclick=()=>openTargeting(idx, el, 'STEAL');
-    } else if(c.type==='reverse'){
-      el.className='card reverse'+(playable?'':' disabled');
-      el.innerHTML= html; // Empty center
-      if(playable) el.onclick=()=>playReverse(idx, el);
-    } else if(c.type==='insurance'){
-      el.className='card insurance disabled';
-      el.innerHTML= html; // Empty center
-    } else if(c.type==='peek'){
-      el.className='card peek';
-      el.innerHTML= html; // Empty center
-    }
-    wrap.appendChild(el);
+          if (c.type === 'number') {
+              html = `<div class="act-val">${c.value}</div><div class="act-val-right">${c.value}</div>`;
+          }
+          
+          // Give the card a unique ID so the flip animation can target it flawlessly
+          el.id = `hand-card-${idx}`;
+
+          if(c.type==='number'){
+            el.className='card number'+(playable?'':' disabled');
+            el.innerHTML= html + `<div class="val">${c.value}</div>`;
+            if(playable) el.onclick=()=>playNumberFromHand(idx, el);
+          } else if(c.type==='wild'){
+            const canPay = you.shop>=WILD_COST;
+            el.className='card wild'+(playable && canPay ?'':' disabled');
+            el.innerHTML= html; // Empty center
+            if(playable && canPay) el.onclick=()=>playWild(idx, el);
+          } else if(c.type==='power'){
+            el.className='card power'+(playable?'':' disabled');
+            el.innerHTML= html + `<div class="tier-badge">-${c.tier}</div>`;
+            if(playable) el.onclick=()=>openTargeting(idx, el, 'POWER');
+          } else if(c.type==='steal'){
+            el.className='card steal'+(playable?'':' disabled');
+            el.innerHTML= html + `<div class="tier-badge">+${c.tier}</div>`;
+            if(playable) el.onclick=()=>openTargeting(idx, el, 'STEAL');
+          } else if(c.type==='reverse'){
+            el.className='card reverse'+(playable?'':' disabled');
+            el.innerHTML= html; // Empty center
+            if(playable) el.onclick=()=>playReverse(idx, el);
+          } else if(c.type==='insurance'){
+            const playableIns = isYourTurn() && (state.uiState === 'IDLE' || state.uiState === 'RESOLVING_BUY');
+            el.className='card insurance' + (playableIns ? '' : ' disabled');
+            el.innerHTML= html; // Empty center
+            if (playableIns) el.onclick = () => playInsuranceFromHand(idx, el);
+          } else if(c.type==='peek'){
+            el.className='card peek';
+            el.innerHTML= html; // Empty center
+          }
+
+          // FIX: Perfect timing sync. Hide the real card while the ghost card is flying, then flip it when it lands.
+          const isNewlyDrawn = (state.uiState === 'RESOLVING_BUY' && idx === you.hand.length - 1);
+          if (isNewlyDrawn) {
+              const drawSig = state.lastAction ? state.lastAction.id : 'draw';
+              if (window.dodDrawAnimSig !== drawSig) {
+                  window.dodDrawAnimSig = drawSig;
+                  window.dodDrawAnimTime = Date.now();
+                  el.style.opacity = '0';
+                  setTimeout(() => {
+                      const targetEl = document.getElementById(`hand-card-${idx}`);
+                      if (targetEl) {
+                          targetEl.style.opacity = '1';
+                          targetEl.classList.add('flip-reveal');
+                      }
+                  }, 420); // Ghost card takes ~430ms to land
+              } else {
+                  if (Date.now() - window.dodDrawAnimTime < 420) {
+                      el.style.opacity = '0'; // Keep hidden if DOM re-renders mid-flight
+                  } else {
+                      el.style.opacity = '1';
+                  }
+              }
+          }
+
+          wrap.appendChild(el);
   });
 }
 
@@ -6602,7 +6755,11 @@ function renderActionBar(){
   }
 
   // 1. INLINE CALLOUT PAD
-  if (state.uiState === 'CHOOSE_CALL') {
+  if (state.uiState === 'CHOOSE_CALL' || state.uiState === 'WAITING_FOR_CALLOUT') {
+      if (state.uiState === 'WAITING_FOR_CALLOUT') {
+          bar.innerHTML = `<span class="hint">Resolving action...</span>`;
+          return;
+      }
       let html = `<div style="display:flex; flex-direction:column; gap:8px; width:100%;">`;
       html += `<div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">`;
       html += `<span class="hint" style="color:var(--brass-bright); font-weight:600;">Call next number:</span>`;
@@ -6647,7 +6804,7 @@ function renderActionBar(){
       html += `<button class="btn ghost small" onclick="finishBuyLoopFailure()">Stop here</button>`;
       
       if (you.hand.some(c=>c.type==='insurance')) {
-          html += `<button class="btn small" style="background:var(--ok);color:#fff;border-color:var(--ok);" onclick="useInsurance()">Use Insurance to Discard</button>`;
+          html += `<span class="hint" style="color:var(--ok); font-weight:bold; margin-top:4px; display:block;">Click your Insurance card to discard the dud safely.</span>`;
       }
       bar.innerHTML = html;
       return;
@@ -6746,6 +6903,7 @@ async function secureServerCall(endpoint, payload) {
 // 2. THE UPDATED PLAY FUNCTION (Optimistic UI)
 async function playNumberFromHand(idx, el) {
     if(!isYourTurn()) return;
+    if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
     
     const myUid = DoDAuth.getProfile().uid;
     const myPlayerObj = state.players.find(p => p.uid === myUid);
@@ -6799,6 +6957,7 @@ async function playNumberFromHand(idx, el) {
 
 async function playWild(idx, el){
   if(!isYourTurn()) return;
+  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
   const myUid = DoDAuth.getProfile().uid;
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card = you.hand[idx];
@@ -6842,6 +7001,7 @@ async function playWild(idx, el){
 
 async function playReverse(idx, el){
   if(!isYourTurn()) return;
+  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
   const myUid = DoDAuth.getProfile().uid;
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card=you.hand[idx];
@@ -6880,6 +7040,7 @@ async function playReverse(idx, el){
 }
 
 function openTargeting(idx, el, actionType){
+  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
   state.uiState = 'CHOOSE_TARGET_' + actionType;
   state._pendingActionIdx = idx;
   state._pendingActionEl = el;
@@ -6892,7 +7053,8 @@ async function confirmActionTarget(target, actionType){
   const idx = state._pendingActionIdx;
   const card = you.hand[idx];
   const el = state._pendingActionEl;
-  const srcRect = el ? el.getBoundingClientRect() : getSeatOrPanelRect(0);
+  const rect = el ? el.getBoundingClientRect() : null;
+  const srcRect = (rect && rect.width > 0) ? rect : getSeatOrPanelRect(0);
   
   // --- INSTANT OPTIMISTIC UI ---
   you.hand.splice(idx,1);
@@ -6913,13 +7075,17 @@ async function confirmActionTarget(target, actionType){
   if(actionType === 'POWER') {
       const taken = transferToBank(target, tier); 
       label = 'PWR';
-      log(`${you.name} played Power (${card.value}) on ${target.name}, draining ${taken} coins.`, 'ok', myUid);
-      flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+      const msg = `${you.name} played Power on ${target.name}, draining ${taken} coins.`;
+      log(msg, 'ok', myUid);
+      state.lastAction = { msg: msg };
+      // The coin animation is now perfectly timed inside flyCard()
   } else if (actionType === 'STEAL') {
       const taken = transferToPlayer(target, you, tier); 
       label = 'STL';
-      log(`${you.name} played Steal (${card.value}) on ${target.name}, stealing ${taken} coins!`, 'ok', myUid);
-      flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(0), 0);
+      const msg = `${you.name} played Steal on ${target.name}, stealing ${taken} coins!`;
+      log(msg, 'ok', myUid);
+      state.lastAction = { msg: msg };
+      // The coin animation is now perfectly timed inside flyCard()
   }
   
   you.shop+=PLAY_REWARD;
@@ -6989,7 +7155,8 @@ async function doBuyDraw() {
             return;
         }
 
-        const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null);
+        let isMatch = (card.type === 'number' && card.value === state.requiredValue) || (state.requiredValue === null) || card.type === 'reverse';
+        if (card.type === 'wild' && bl.buyer.shop >= 2) { isMatch = true; bl.buyer.shop -= 2; }
 
         if (isMatch) {
             let effective, label;
@@ -7035,49 +7202,74 @@ async function doBuyDraw() {
                 });
             } else {
                 // OFFLINE
-                log(actionMsg); flyCard(bankRect(), getSeatOrPanelRect(0), label, PLAYER_COLORS[0], 5, card.value);
-                setTimeout(() => { state.uiState = 'RESOLVING_BUY'; renderAll(); }, 500);
+                log(actionMsg);
+                
+                // 1. Update state and render instantly so the new card slot is created in the DOM
+                state.uiState = 'RESOLVING_BUY';
+                renderAll();
+                
+                // 2. Find the exact element of the newly added card
+                const handEl = document.getElementById('hand');
+                const newCardEl = handEl ? handEl.lastElementChild : null;
+                const targetRect = newCardEl ? newCardEl.getBoundingClientRect() : getSeatOrPanelRect(0);
+                
+                // 3. Temporarily hide the real card so we don't see it before the ghost card arrives
+                if (newCardEl) newCardEl.style.opacity = '0';
+                
+                // 4. Fly the ghost card (face down) directly to the exact new slot
+                flyCard(bankRect(), targetRect, '', PLAYER_COLORS[0], 5, '', bl.buyer.deckSkin);
+                
+                // 5. Exactly when the ghost card lands (420ms), reveal the real card and trigger the flip
+                setTimeout(() => {
+                    if (newCardEl) {
+                        newCardEl.style.opacity = '1';
+                        newCardEl.classList.add('flip-reveal');
+                    }
+                }, 420);
             }
         }
     }, 300);
 }
 
-async function useInsurance() {
-    const you = state.players[0];
-    const card = you.hand[you.hand.length-1]; 
-    const dudIdx = you.hand.lastIndexOf(card);
-    if(dudIdx>=0) you.hand.splice(dudIdx,1);
-    const insIdx = you.hand.findIndex(c=>c.type==='insurance');
-    if(insIdx>=0) you.hand.splice(insIdx,1);
+async function playInsuranceFromHand(idx, el) {
+    if (!isYourTurn()) return;
+    if (state.uiState !== 'IDLE' && state.uiState !== 'RESOLVING_BUY') return;
+
+    const myUid = DoDAuth.getProfile().uid;
+    const you = state.players.find(p => p.uid === myUid) || state.players[0];
+    const srcRect = el ? el.getBoundingClientRect() : getSeatOrPanelRect(0);
+
+    const isResolvingBuy = state.uiState === 'RESOLVING_BUY';
+
+    you.hand.splice(idx, 1);
+    // If resolving a buy, pop the dud (which is at the end of the array)
+    if (isResolvingBuy) you.hand.pop(); 
+
     if (you.isHuman) window.matchStats.insurances++;
 
-    const msg = `Used Insurance to discard the dud card.`;
+    const msg = isResolvingBuy ? `Used Insurance to safely discard a dud card.` : `${you.name} played Insurance to safely pass the turn.`;
+    log(msg, 'ok', myUid);
+
     state.buyLoop = null;
+    state.lastEffectiveValue = state.requiredValue;
+    state.lastPlayedCardLabel = 'INS';
+    state.lastPlayedBy = 0;
+    state.uiState = 'ANIMATING';
+
+    if (el) el.classList.add('card-pending');
+    renderAll();
+    flyCard(srcRect, centerRect(), 'INS', PLAYER_COLORS[0], 20, '');
 
     if (currentMatchId) {
-        const myUid = DoDAuth.getProfile().uid;
-        state.uiState = 'ANIMATING'; 
-        renderActionBar();
-
-        let currentIndex = state.players.findIndex(p => p.uid === myUid);
-        let nextIndex = currentIndex;
-        do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
-
-        await firebase.firestore().collection('matches').doc(currentMatchId).update({
-            'gameState.players': state.players,
-            'gameState.lastEffectiveValue': state.requiredValue,
-            'gameState.lastPlayedCardLabel': 'INS',
-            'gameState.lastPlayedBy': myUid,
-            'gameState.uiState': 'IDLE',
-            'gameState.turnUid': state.players[nextIndex].uid,
-            'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: myUid, cardValue: '', msg: msg }
-        });
+        window.dodJustPlayedLocally = true;
+        try {
+            await secureServerCall('playInsurance', { isResolvingBuy: isResolvingBuy });
+        } catch(e) {
+            state.uiState = isResolvingBuy ? 'RESOLVING_BUY' : 'IDLE';
+            if (el) el.classList.remove('card-pending');
+            renderAll();
+        }
     } else {
-        log(msg, 'ok');
-        state.lastEffectiveValue = state.requiredValue;
-        state.lastPlayedCardLabel = 'INS';
-        state.lastPlayedBy = 0;
-        flyCard(getSeatOrPanelRect(0), centerRect(), 'INS', PLAYER_COLORS[0], 20, '');
         setTimeout(() => advanceTurn(), 500);
     }
 }
@@ -7114,6 +7306,7 @@ async function finishBuyLoopFailure() {
 async function skipStuckHumanTurn(reasonMsg){
   if (state && state.deception) return;
   if (state && state.uiState === 'DECEPTION') return;
+  if (state && state.uiState !== 'IDLE') return; // FIX: Abort skip if the UI state progressed past IDLE!
   const myUid = DoDAuth.getProfile().uid;
   if(currentMatchId){
     if(!isYourTurn()) return;
@@ -7901,6 +8094,7 @@ function usePeek(playerId,targetId){
 }
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
+    if(state.uiState !== 'CHOOSE_CALL') return; // FIX: Prevent double-click sending two server requests
     state.uiState = 'ANIMATING'; 
     renderActionBar();
     
@@ -7978,6 +8172,15 @@ function playNetworkedAnimation(action) {
     // --- OPTIMISTIC UI UPGRADE ---
     if (action.uid === DoDAuth.getProfile().uid && window.dodJustPlayedLocally) {
         window.dodJustPlayedLocally = false;
+        
+        // CLEAR LOCKS SO THE UI DOESN'T FREEZE ON YOUR TURN
+        window.pendingTurnArc = null;
+        window.dodTurnLocked = false;
+        if (window.pendingHostTurnLogic) {
+            window.pendingHostTurnLogic();
+            window.pendingHostTurnLogic = null;
+        }
+        renderAll();
         return;
     }
 
@@ -7992,6 +8195,11 @@ function playNetworkedAnimation(action) {
             window.pendingTurnArc = null;
             window.dodTurnLocked = false;
             renderAll();
+        }
+        // Execute pending host evaluations (like starting Deception) ONLY after animations finish!
+        if (window.pendingHostTurnLogic) {
+            window.pendingHostTurnLogic();
+            window.pendingHostTurnLogic = null;
         }
     };
 
@@ -8020,30 +8228,55 @@ function playNetworkedAnimation(action) {
         const pulls = tryMatch ? parseInt(tryMatch[1]) : (isDraw ? 1 : 0);
 
         if (pulls > 0 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
+            window.animatingBotCoins = window.animatingBotCoins || {};
             const realCoins = targetPlayer.shop;
-            targetPlayer.shop = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
+            let visualCoins = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
+            
+            window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+            targetPlayer.shop = visualCoins;
             renderAll();
 
             for (let i = 0; i < pulls - 1; i++) {
                 setTimeout(() => {
-                    targetPlayer.shop -= BUY_COST;
+                    visualCoins -= BUY_COST;
+                    window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                    const pObj = state.players.find(p => p.uid === targetPlayer.uid);
+                    if (pObj) pObj.shop = visualCoins;
+                    
                     renderAll();
                     flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
                     const pSkin = targetPlayer.deckSkin || null;
-                    flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5, '', pSkin);
+                    
+                    setTimeout(() => {
+                        flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5, '', pSkin);
+                    }, 300);
                 }, i * 1200);
             }
 
             setTimeout(() => {
-                targetPlayer.shop -= BUY_COST;
-                targetPlayer.shop += PLAY_REWARD;
+                visualCoins -= BUY_COST;
+                window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                const pObj1 = state.players.find(p => p.uid === targetPlayer.uid);
+                if (pObj1) pObj1.shop = visualCoins;
+                
                 renderAll();
                 flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
                 
-                flyCard(bankRect(), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
-                flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
-                
-                setTimeout(unlockTurn, 430);
+                setTimeout(() => {
+                    visualCoins += PLAY_REWARD;
+                    window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                    const pObj2 = state.players.find(p => p.uid === targetPlayer.uid);
+                    if (pObj2) pObj2.shop = visualCoins;
+                    
+                    renderAll();
+                    flyCard(bankRect(), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
+                    flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
+                    
+                    setTimeout(() => {
+                        delete window.animatingBotCoins[targetPlayer.uid];
+                        unlockTurn();
+                    }, 430);
+                }, 300);
             }, Math.max(0, (pulls - 1) * 1200));
         } else {
             const startRect = isDraw ? bankRect() : getSeatOrPanelRect(actorSeatIndex);
@@ -8060,15 +8293,14 @@ function playNetworkedAnimation(action) {
         log(action.msg, 'alert', action.uid);
         if (actorSeatIndex !== -1) flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
         setTimeout(unlockTurn, 430);
-    }
-    else if (action.type === 'MISS_DRAW') {
+    } else if (action.type === 'MISS_DRAW') {
         log(action.msg, 'alert', action.uid); 
         const pSkin = targetPlayer ? targetPlayer.deckSkin || null : null;
 
         const tryMatch = action.msg.match(/on try (\d+)/);
         const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
 
-        if (pulls > 1 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
+        if (pulls > 0 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
             const realCoins = targetPlayer.shop;
             targetPlayer.shop = realCoins + (pulls * BUY_COST);
             renderAll();
@@ -8078,15 +8310,37 @@ function playNetworkedAnimation(action) {
                     targetPlayer.shop -= BUY_COST;
                     renderAll();
                     flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
-                    flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
                     
-                    if (i === pulls - 1) setTimeout(unlockTurn, 500);
+                    // Delay flyCard by 300ms
+                    setTimeout(() => {
+                        flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+                        if (i === pulls - 1) setTimeout(unlockTurn, 500);
+                    }, 300);
                 }, i * 1200);
             }
         } else {
-            flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+            let targetRect = getSeatOrPanelRect(actorSeatIndex);
+            let newCardEl = null;
+
+            if (actorSeatIndex === 0) {
+                const handCards = document.getElementById('hand').children;
+                if (handCards.length > 0) {
+                    newCardEl = handCards[handCards.length - 1];
+                    targetRect = newCardEl.getBoundingClientRect();
+                    newCardEl.style.opacity = '0'; // Hide it temporarily
+                }
+            }
+
+            flyCard(bankRect(), targetRect, '?', actorColor, 8, '', pSkin);
             flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0); 
-            setTimeout(unlockTurn, 500);
+            
+            setTimeout(() => {
+                if (newCardEl) {
+                    newCardEl.style.opacity = '1';
+                    newCardEl.classList.add('flip-reveal'); // Flip and reveal!
+                }
+                unlockTurn();
+            }, 430);
         }
     }
 }
@@ -8282,7 +8536,9 @@ function botTurn(){
             
             if (!currentMatchId) {
                 flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(bot.id), 0);
-                log(`${bot.name} plays Steal (${card.value}) on ${target.name}, stealing ${taken}.`);
+                const msg = `${bot.name} plays Steal (${card.value}) on ${target.name}, stealing ${taken}.`;
+                log(msg);
+                state.lastAction = { msg: msg };
                 if(!target.out) protestFrom(target);
                 renderAll();
                 flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
@@ -8305,7 +8561,9 @@ function botTurn(){
             
             if (!currentMatchId) {
                 flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
-                log(`${bot.name} plays Power (${card.value}) on ${target.name}, draining ${taken} to bank.`);
+                const msg = `${bot.name} plays Power (${card.value}) on ${target.name}, draining ${taken} to bank.`;
+                log(msg);
+                state.lastAction = { msg: msg };
                 if(!target.out) protestFrom(target);
                 renderAll();
                 flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
@@ -8357,12 +8615,21 @@ function botTurn(){
   }, thinkDelay);
 }
 
-function botSingleDraw(buyer){
+async function botSingleDraw(buyer){
   if(!state || state.over) return;
   const taken=payFromOwn(buyer,BUY_COST);
-  if (!currentMatchId) flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
+  if (!currentMatchId) {
+      flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
+      renderAll(); // Instantly update the coin count on HUD
+  }
   sweepEliminations();
   if(buyer.out){ if (!currentMatchId) renderAll(); return; }
+  
+  // Wait exactly like a human player to sync the card animation with the coin deduction
+  if (!currentMatchId) {
+      await new Promise(res => setTimeout(res, 300));
+  }
+  
   const card=state.deck.pop();
   if(!card){ if (!currentMatchId) log(`${buyer.name} finds the market empty — turn skips.`); advanceTurn(); return; }
   
@@ -8453,15 +8720,20 @@ async function botBuyLoop(buyer) {
     const taken = payFromOwn(buyer, BUY_COST);
     
     // 1. INSTANT VISUAL SYNC: Deduct coin and show it flying FIRST
-    if (!currentMatchId) {
-        flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
-        renderAll(); // Updates the bot's coin count instantly!
-    }
-    
-    sweepEliminations();
-    if (buyer.out) break;
-    
-    const card = state.deck.pop();
+        if (!currentMatchId) {
+            flyCoin(getSeatOrPanelRect(buyer.id), bankRect(), 0);
+            renderAll(); // Updates the bot's coin count instantly!
+        }
+        
+        sweepEliminations();
+        if (buyer.out) break;
+        
+        // Wait exactly like a human player to sync the card animation with the coin deduction
+        if (!currentMatchId) {
+            await new Promise(res => setTimeout(res, 300));
+        }
+        
+        const card = state.deck.pop();
     if (!card) break;
     
     const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null);
@@ -8484,9 +8756,10 @@ async function botBuyLoop(buyer) {
                   const taken = Math.min(card.tier || (card.type === 'steal' ? 3 : 2), target.shop);
                   target.shop = Math.max(0, target.shop - taken);
                   if (card.type === 'steal') buyer.shop += taken;
-                  buyer._tempActionStr = `draws on try ${tries} and plays ${card.type === 'steal' ? 'Steal' : 'Power'} on ${target.name}, ${card.type === 'steal' ? 'taking' : 'draining'} ${taken}c`;
+                      buyer._tempActionStr = `draws on try ${tries} and plays ${card.type === 'steal' ? 'Steal' : 'Power'} on ${target.name}, ${card.type === 'steal' ? 'taking' : 'draining'} ${taken}c`;
+                      if (!currentMatchId) state.lastAction = { msg: buyer._tempActionStr };
+                  }
               }
-          }
       }
       buyer.shop += PLAY_REWARD;
       state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = buyer.id;
@@ -8552,7 +8825,9 @@ async function botBuyLoop(buyer) {
   sweepEliminations();
 
   let stopMsg = '';
-  if (tries < MAX_TRIES && buyer.shop >= BUY_COST) {
+  if (tries === 0) {
+      stopMsg = `${buyer.name} cannot afford to draw. Turn skips.`;
+  } else if (tries < MAX_TRIES && buyer.shop >= BUY_COST) {
       stopMsg = `${buyer.name} decides to stop drawing to save coins. Requirement of ${state.requiredValue} carries on.`;
   } else {
       stopMsg = `${buyer.name} fails all tries — requirement of ${state.requiredValue} carries on.`;
