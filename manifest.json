@@ -1,6 +1,6 @@
 {
   "name": "Deck of Deception",
-  "short_name": "Deception",
+  "short_name": "DOD",
   "description": "Tactical card deception multiplayer game",
   "start_url": "./index.html",
   "display": "fullscreen",
@@ -9,13 +9,13 @@
   "theme_color": "#060709",
   "icons": [
     {
-      "src": "PixelaksLogoTransparent.png",
+      "src": "DeckOfDeception_Icon.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "PixelaksLogoTransparent.png",
+      "src": "DeckOfDeception_Icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
