@@ -5353,19 +5353,26 @@ function startGame() {
 
         } else {
             // --- OFFLINE BOT MODE FALLBACK (Keeps your practice mode working) ---
-            const fast = document.getElementById('fastTest').checked;
-            const count = menuState.count;
+            const fast = document.getElementById('fastTest') && document.getElementById('fastTest').checked;
+            const count = menuState.count || 4;
             
-            const profile = DoDAuth.getProfile();
-            const eqCardId = profile.equippedFace || profile.equippedCard || 'cf_default';
+            // FIX: Safely fallback if profile is not loaded yet on mobile
+            const profile = (window.DoDAuth && typeof DoDAuth.getProfile === 'function') ? DoDAuth.getProfile() : null;
+            const eqCardId = profile ? (profile.equippedFace || profile.equippedCard || 'cf_default') : 'cf_default';
             const eqCardDef = (typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces) ? SHOP_DB.cardFaces.find(c => c.id === eqCardId) : null;
             PLAYER_COLORS = [eqCardDef ? eqCardDef.color : '#c9a227'];
             document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
             
+            const myName = (profile && profile.displayName) ? profile.displayName : "You";
+            const myUid = (profile && profile.uid) ? profile.uid : "local_player";
+            const myTier = (profile && profile.tier) ? profile.tier : 'Apprentice';
+            const myLvl = (profile && profile.level) ? profile.level : 1;
+            const myTable = (profile && profile.equippedTable) ? profile.equippedTable : 'tb_default';
+            
             let players = [{
-                id: 0, name: DoDAuth.getProfile().displayName || "You", isHuman: true, hand: [], shop: START_SHOP, out: false, 
-                uid: DoDAuth.getProfile().uid, deceptionStrike: false, 
-                avatar: getEquippedAvatar(DoDAuth.getProfile()), frame: getEquippedFrame(DoDAuth.getProfile()), title: getEquippedTitle(DoDAuth.getProfile()), deckSkin: getEquippedBackImg(DoDAuth.getProfile()), tier: profile.tier || 'Apprentice', level: profile.level || 1, equippedTable: profile.equippedTable || 'tb_default'
+                id: 0, name: myName, isHuman: true, hand: [], shop: START_SHOP, out: false, 
+                uid: myUid, deceptionStrike: false, 
+                avatar: getEquippedAvatar(profile), frame: getEquippedFrame(profile), title: getEquippedTitle(profile), deckSkin: getEquippedBackImg(profile), tier: myTier, level: myLvl, equippedTable: myTable
             }];
             
             for (let i = 0; i < count - 1; i++) {
@@ -8632,8 +8639,10 @@ async function advanceTurn() {
 
 // ---------------- BOT AI ----------------
 function botTurn(){
-  const bot=state.players[state.turn];
-  if(bot.isHuman||state.over||bot.out) return;
+  // FIX: Guard against null state or empty player lists during mobile transitions
+  if (!state || !state.players || !state.players[state.turn]) return;
+  const bot = state.players[state.turn];
+  if (bot.isHuman || state.over || bot.out) return;
   
   // --- TUTORIAL FIX: Pause bots while explaining rules! ---
   if (window.tutorialBotsPaused) {
@@ -13079,17 +13088,32 @@ function triggerPwaInstall() {
     if (modal) modal.classList.remove('show');
     
     if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                // If they install it, hide the dock button forever
-                const installBtn = document.getElementById('navBtnInstall');
-                if (installBtn) installBtn.style.display = 'none';
-            } else {
-                localStorage.setItem('dod_pwa_dismissed', 'true');
-            }
-            deferredPrompt = null;
-        });
+        // FIX: Gracefully exit fullscreen FIRST using the exact logic from the Audio Permission fix!
+        const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
+        
+        if (isFs) {
+            try {
+                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
+                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                else if (document.mozCancelFullScreen) document.mozCancelFullScreen();
+                else if (document.msExitFullscreen) document.msExitFullscreen();
+            } catch(e) {}
+        }
+
+        // Wait 300ms for the browser to smoothly close fullscreen before popping the native prompt
+        setTimeout(() => {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then((choiceResult) => {
+                if (choiceResult.outcome === 'accepted') {
+                    // If they install it, hide the dock button forever
+                    const installBtn = document.getElementById('navBtnInstall');
+                    if (installBtn) installBtn.style.display = 'none';
+                } else {
+                    localStorage.setItem('dod_pwa_dismissed', 'true');
+                }
+                deferredPrompt = null;
+            });
+        }, 300);
     }
 }
 
