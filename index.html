@@ -1868,11 +1868,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
   /* Shrink center cards heavily on mobile so left/right avatars NEVER overlap them */
 
-  /* Shrink center cards heavily on mobile so left/right avatars NEVER overlap them */
-  .ringcenter { gap: 8px !important; }
-  .minicard { width: 34px !important; height: 48px !important; font-size: 16px !important; border-width: 2px !important; }
-  .minicard .act-val { font-size: 8px !important; }
-  .miniarrow { font-size: 14px !important; }
+  /* Scale center cards so they are readable on mobile, and fix badge positioning */
+  .ringcenter { gap: 12px !important; }
+  .minicard { width: 44px !important; height: 62px !important; font-size: 20px !important; border-width: 2px !important; }
+  .minicard .act-val { font-size: 9px !important; top: 2px !important; left: 3px !important; }
+  .minicard .act-val-right { font-size: 9px !important; bottom: 2px !important; right: 3px !important; }
+  .minicard .tier-badge { top: 12px !important; left: 3px !important; font-size: 7.5px !important; padding: 0 2px !important; }
+  .miniarrow { font-size: 16px !important; }
 
   /* 2. Tuck the Active Player Panel safely and cap its scaling so vertical cards fit */
   .active-player-panel { 
@@ -3950,6 +3952,20 @@ function proceedWithBoot(overlayEl) {
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
+    // FIX: Force mobile browsers to unlock all SFX elements instantly by playing and pausing them silently on the very first screen tap!
+    ['sfxClick', 'sfxPlay', 'sfxNotification', 'sfxCoins'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.volume = 0; // Mute it
+            let p = el.play();
+            if(p !== undefined) p.then(() => { 
+                el.pause(); 
+                el.currentTime = 0; 
+                el.volume = sfxVolume; // Restore correct volume
+            }).catch(()=>{});
+        }
+    });
+    
     if(bgMusicElement) {
         bgMusicElement.volume = musicVolumeSetting * 0.35; 
         if(bgMusicElement.error){ startAmbientPad(); } 
@@ -5194,6 +5210,28 @@ function startGame() {
             const myUid = DoDAuth.getProfile().uid;
             const isHost = window.onlineMatchSeats[0].uid === myUid;
 
+            // FIX: PRE-RENDER TABLE INSTANTLY!
+            // This ensures Android players don't stare at an empty green screen while waiting for the network to fetch the Firestore game state.
+            const myIndex = window.onlineMatchSeats.findIndex(p => p.uid === myUid);
+            const orderedSeats = [
+                ...window.onlineMatchSeats.slice(myIndex),
+                ...window.onlineMatchSeats.slice(0, myIndex)
+            ];
+            
+            PLAYER_COLORS = orderedSeats.map(() => '#c9a227'); // Temp generic color
+            document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
+            
+            state = {
+                players: orderedSeats.map((s, i) => ({
+                    ...s, id: i, out: false, shop: 20, hand: [], isHuman: s.uid === myUid
+                })),
+                deck: [], turn: 0, direction: 1, uiState: 'ANIMATING', requiredValue: null,
+                gameExpiresAt: Date.now() + 1200000, turnExpiresAt: Date.now() + 30000
+            };
+            
+            layoutRing();
+            renderAll();
+
             // ONLY THE HOST SECURELY TRIGGERS INITIALIZATION ON CLOUDFLARE
             if (isHost) {
                 const eqCardId = DoDAuth.getProfile().equippedFace || DoDAuth.getProfile().equippedCard || 'cf_default';
@@ -5356,11 +5394,28 @@ function listenToGameState() {
         document.documentElement.style.setProperty('--myskin', PLAYER_COLORS[0]);
 
         // 3. PRESERVE LOCAL UI STATE & MAP SERVER DATA
+        
+        // ANTI-RUBBERBAND LOCK: If we just passed the turn, ignore delayed 'PLAY_CARD' snapshots
+        // that try to drag the UI back into the CHOOSE_CALL phase!
+        let mappedUiState = serverState.uiState === 'DECEPTION' ? 'DECEPTION' : (serverState.turnUid === myUid ? serverState.uiState : 'IDLE');
+        let mappedTurnUid = serverState.turnUid;
+        
+        if (window.dodCalloutPending) {
+            if (serverState.lastAction && serverState.lastAction.type === 'CALLOUT' && serverState.lastAction.uid === myUid) {
+                // The server finally caught up and processed our callout! Release the lock.
+                window.dodCalloutPending = false;
+            } else {
+                // Still waiting for server to catch up. Force the state to stay passed!
+                mappedUiState = 'IDLE';
+                mappedTurnUid = typeof state !== 'undefined' && state ? state.turnUid : mappedTurnUid;
+            }
+        }
+
         // We MUST save the buyLoop locally, otherwise the network sync wipes it out and breaks the retry button!
         let preservedBuyLoop = null;
         let preservedPeek = null;
         if (typeof state !== 'undefined' && state !== null) {
-            if (state.turnUid === serverState.turnUid) {
+            if (state.turnUid === mappedTurnUid) {
                 preservedBuyLoop = state.buyLoop;
                 preservedPeek = state.peekResult;
                 // FIX: buyLoop.buyer was captured from the PREVIOUS state.players array.
@@ -5403,8 +5458,8 @@ function listenToGameState() {
         state = {
             players: orderedPlayers,
             deck: serverState.deck,
-            turnUid: serverState.turnUid,
-            turn: orderedPlayers.findIndex(p => p.uid === serverState.turnUid), 
+            turnUid: mappedTurnUid,
+            turn: orderedPlayers.findIndex(p => p.uid === mappedTurnUid), 
             direction: serverState.direction,
             over: serverState.over || false,
             timeLeft: computedTimeLeft, 
@@ -5413,7 +5468,7 @@ function listenToGameState() {
             lastEffectiveValue: serverState.lastEffectiveValue,
             lastPlayedCardLabel: serverState.lastPlayedCardLabel,
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
-            uiState: serverState.uiState === 'DECEPTION' ? 'DECEPTION' : (serverState.turnUid === myUid ? serverState.uiState : 'IDLE'),
+            uiState: mappedUiState,
             buyLoop: preservedBuyLoop,
             peekResult: preservedPeek,
             deception: serverState.deception || null,
@@ -5943,6 +5998,7 @@ function getSeatOrPanelRect(id) {
             const hand = document.getElementById('hand');
             if (hand && hand.lastElementChild) {
                 hand.scrollTop = hand.scrollHeight; // Ensure it is scrolled into view
+                void hand.lastElementChild.offsetHeight; // CRITICAL: Force reflow so Android calculates coordinates
                 return hand.lastElementChild.getBoundingClientRect();
             }
         }
@@ -6234,6 +6290,10 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
   }
   
   document.body.appendChild(g);
+  
+  // FIX: Force browser reflow! Without this, Android Chrome skips the starting coordinates 
+  // and instantly teleports the card to the destination without playing the CSS transition.
+  void g.offsetWidth; 
   
   requestAnimationFrame(()=>{
     if (isCardPlaceholder) {
@@ -8122,14 +8182,17 @@ async function confirmGuess(v) {
     }
 
     if (currentMatchId) {
-        // ONLINE: Instantly shift the turn arrow and update the table
-        state.uiState = 'IDLE';
-        state.turnUid = nextPlayerObj.uid;
-        state.turn = nextIndex;
-        state.turnTimeLeft = 30; 
-        state.turnExpiresAt = Date.now() + 30000; // <--- FIX: Securely reset local timestamp immediately
-        
-        window.dodJustPassedTurnLocally = true; // Tell snapshot to skip double animation
+            // ONLINE: Instantly shift the turn arrow and update the table
+            state.uiState = 'IDLE';
+            state.turnUid = nextPlayerObj.uid;
+            state.turn = nextIndex;
+            state.turnTimeLeft = 30; 
+            state.turnExpiresAt = Date.now() + 30000; // <--- FIX: Securely reset local timestamp immediately
+            
+            window.dodJustPassedTurnLocally = true; // Tell snapshot to skip double animation
+            
+            // ANTI-RUBBERBAND LOCK: Prevent delayed Firebase snapshots from reverting the UI back to CHOOSE_CALL
+            window.dodCalloutPending = true;
         
         renderAll();
         animateTurnArc(currentIndex, nextIndex, state.direction);
