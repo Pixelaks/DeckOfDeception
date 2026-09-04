@@ -2430,8 +2430,8 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 /* ============================================================
    PWA / STANDALONE MODE TWEAKS
    ============================================================ */
-@media (display-mode: standalone), (display-mode: fullscreen) {
-  /* Hide all fullscreen toggle buttons when installed as an app */
+/* FIX: Only hide the fullscreen button on Mobile PWAs. Desktop PWAs still need it! */
+@media (display-mode: standalone) and (max-width: 840px), (display-mode: fullscreen) and (max-width: 840px) {
   .fs-toggle-btn {
     display: none !important;
   }
@@ -2721,6 +2721,10 @@ window.dodImagesLoaded = false;
     
     <!-- Bottom-right: icon buttons -->
     <div class="pubg-icon-bar" style="pointer-events:all;">
+      <!-- PWA Install Button (Hidden by default, shown via JS if supported) -->
+      <button id="navBtnInstall" class="pubg-icon-btn" onclick="triggerPwaInstall()" title="Install App" style="display: none;">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon" style="color: var(--ok);">⤓</div><span class="ib-label" style="color: var(--ok);">Install</span></div>
+      </button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">
         <div class="pubg-nav-content"><div class="pubg-nav-icon">⟁</div><span class="ib-label">Top 100</span></div>
       </button>
@@ -3075,6 +3079,20 @@ window.dodImagesLoaded = false;
     <div class="prog-bar-container"><div class="prog-bar-fill" id="prog-bar-fill"></div></div>
   </div>
   <button class="prog-continue-btn" onclick="returnToMenuFromEndgame()">Continue ↗</button>
+</div>
+
+<!-- PWA INSTALL OVERLAY -->
+<div class="modal-bg" id="pwaInstallModal" style="z-index: 9000;">
+  <div class="modal" style="text-align:center; background:rgba(15,10,12,0.95); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95);">
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:12px; font-size:24px; letter-spacing: 2px;">INSTALL GAME</h3>
+    <p class="mono" style="font-size:13px; color:rgba(242,234,216,0.85); line-height: 1.6; margin-bottom:25px;">
+      Install <b>Deck of Deception</b> to your home screen for a full-screen, high-performance native experience, or continue playing instantly in the browser.
+    </p>
+    <div style="display:flex; flex-direction:column; gap:12px;">
+      <button class="btn" onclick="triggerPwaInstall()" style="background: linear-gradient(180deg, #3d8f68, var(--ok)); color: #fff; border-color: #5faa82;">INSTALL APP ⤓</button>
+      <button class="btn ghost" onclick="dismissPwaInstall()">PLAY IN BROWSER</button>
+    </div>
+  </div>
 </div>
 
 <!-- LEAVE GAME CONFIRMATION MODAL -->
@@ -13024,7 +13042,9 @@ showMenuScreen = function(name) {
     }
 };
 
-// Register Service Worker for Android PWA Support
+// ============================================================
+// PWA SERVICE WORKER & INSTALL LOGIC
+// ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js').catch((err) => {
@@ -13033,11 +13053,52 @@ if ('serviceWorker' in navigator) {
   });
 }
 
-// Optional: Capture the Android Install Prompt to trigger when desired
+let deferredPrompt;
 window.addEventListener('beforeinstallprompt', (e) => {
+  // Prevent the default mini-infobar from appearing on mobile
   e.preventDefault();
-  window.deferredInstallPrompt = e;
+  deferredPrompt = e;
+  
+  // Show the Install button in the Tactical Dock
+  const installBtn = document.getElementById('navBtnInstall');
+  if (installBtn) installBtn.style.display = 'flex';
+
+  // If they haven't explicitly dismissed the popup before, show it automatically after 2 seconds
+  if (localStorage.getItem('dod_pwa_dismissed') !== 'true') {
+      setTimeout(() => {
+          const modal = document.getElementById('pwaInstallModal');
+          if (modal && !window.currentMatchId) { // Don't interrupt them if they are in a match!
+              modal.classList.add('show');
+          }
+      }, 2000);
+  }
 });
+
+function triggerPwaInstall() {
+    const modal = document.getElementById('pwaInstallModal');
+    if (modal) modal.classList.remove('show');
+    
+    if (deferredPrompt) {
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then((choiceResult) => {
+            if (choiceResult.outcome === 'accepted') {
+                // If they install it, hide the dock button forever
+                const installBtn = document.getElementById('navBtnInstall');
+                if (installBtn) installBtn.style.display = 'none';
+            } else {
+                localStorage.setItem('dod_pwa_dismissed', 'true');
+            }
+            deferredPrompt = null;
+        });
+    }
+}
+
+function dismissPwaInstall() {
+    const modal = document.getElementById('pwaInstallModal');
+    if (modal) modal.classList.remove('show');
+    // Save their choice so we never annoy them with the popup again
+    localStorage.setItem('dod_pwa_dismissed', 'true');
+}
 </script>
 </body>
 </html>
