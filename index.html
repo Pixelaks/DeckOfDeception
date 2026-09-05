@@ -40,11 +40,11 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <!-- Bootstrap-critical images: load these FIRST with high priority -->
-<link rel="preload" as="image" href="Cards/Decks.png" fetchpriority="high">
+<link rel="preload" as="image" href="CardstoBuy/TheBase.png" fetchpriority="high">
 <link rel="preload" as="image" href="Cards/SwapCard.png" fetchpriority="high">
 <link rel="preload" as="image" href="Cards/PowerCard.png" fetchpriority="high">
 <!-- Secondary game images -->
-<link rel="preload" as="image" href="Cards/Table.jpg">
+<link rel="preload" as="image" href="Tables/GreenWood.png">
 <link rel="preload" as="image" href="Cards/CardPhase.png">
 <link rel="preload" as="image" href="Coins/Coins.png">
 <link rel="preload" as="image" href="Cards/SteelCard.png">
@@ -2450,9 +2450,9 @@ window.dodImagesLoaded = false;
 (function dodPreloadImages() {
   var srcs = [
     'PixelaksLogoTransparent.png',
-    'Cards/Decks.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
+    'CardstoBuy/TheBase.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
     'Cards/SteelCard.png', 'Cards/ReverseCard.png', 'Cards/PeekCard.png',
-    'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Coins/Coins.png', 'Cards/Table.jpg',
+    'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Coins/Coins.png', 'Tables/GreenWood.png',
     'Cards/BasicCard.png', 'Cards/MythicCard.png', 'Cards/LegendaryCard.png', 'Cards/LuckyCard.png',
     'Tiers/Apprentice.png', 'Tiers/Trickster.png', 'Tiers/Phantom.png',
     'Tiers/Mastermind.png', 'Tiers/Oracle.png', 'Tiers/Legend.png',
@@ -2557,13 +2557,13 @@ window.dodImagesLoaded = false;
 </div>
 
 <!-- AUDIO ENGINE -->
-<audio id="bgMusic" loop>
+<audio id="bgMusic" loop preload="auto">
   <source src="DeckofDeceptionTheme.mp3" type="audio/mpeg">
 </audio>
-<audio id="inGameMusic" loop>
+<audio id="inGameMusic" loop preload="auto">
   <source src="GameBegins.mp3" type="audio/mpeg">
 </audio>
-<audio id="tensionMusic" loop>
+<audio id="tensionMusic" loop preload="auto">
   <source src="ClockroomTension.mp3" type="audio/mpeg">
 </audio>
 
