@@ -29,7 +29,7 @@
 <meta name="theme-color" content="#060709">
 
 <!-- PWA & Favicon Meta Tags -->
-<link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+<link rel="icon" type="image/webp" href="favicon-96x96.png" sizes="96x96" />
 <link rel="icon" type="image/svg+xml" href="favicon.svg" />
 <link rel="shortcut icon" href="favicon.ico" />
 <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
@@ -40,17 +40,17 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <!-- Bootstrap-critical images: load these FIRST with high priority -->
-<link rel="preload" as="image" href="CardstoBuy/TheBase.png" fetchpriority="high">
-<link rel="preload" as="image" href="Cards/SwapCard.png" fetchpriority="high">
-<link rel="preload" as="image" href="Cards/PowerCard.png" fetchpriority="high">
+<link rel="preload" as="image" href="CardstoBuy/TheBase.webp" fetchpriority="high">
+<link rel="preload" as="image" href="Cards/SwapCard.webp" fetchpriority="high">
+<link rel="preload" as="image" href="Cards/PowerCard.webp" fetchpriority="high">
 <!-- Secondary game images -->
-<link rel="preload" as="image" href="Tables/GreenWood.png">
-<link rel="preload" as="image" href="Cards/CardPhase.png">
-<link rel="preload" as="image" href="Coins/Coins.png">
-<link rel="preload" as="image" href="Cards/SteelCard.png">
-<link rel="preload" as="image" href="Cards/ReverseCard.png">
-<link rel="preload" as="image" href="Cards/PeekCard.png">
-<link rel="preload" as="image" href="Cards/InsuranceCard.png">
+<link rel="preload" as="image" href="Tables/GreenWood.webp">
+<link rel="preload" as="image" href="Cards/CardPhase.webp">
+<link rel="preload" as="image" href="Coins/Coins.webp">
+<link rel="preload" as="image" href="Cards/SteelCard.webp">
+<link rel="preload" as="image" href="Cards/ReverseCard.webp">
+<link rel="preload" as="image" href="Cards/PeekCard.webp">
+<link rel="preload" as="image" href="Cards/InsuranceCard.webp">
 <!-- Open-source MIT particle engine for VFX -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 <!-- Razorpay Web Checkout SDK -->
@@ -184,7 +184,7 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
   
   /* Dynamic Skin Variables */
   --my-table: url('Cards/Table.jpg');
-  --my-deck: url('Cards/Decks.png');
+  --my-deck: url('Cards/Decks.webp');
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
 body{margin:0;font-family:'Inter',sans-serif;background:#000;color:var(--paper);height:100vh;height:100dvh;overflow:hidden;}
@@ -423,7 +423,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   position: absolute; 
   width: 80px; height: 80px; /* 5x larger */
   border-radius: 50%; 
-  background-image: url('Coins/Coins.png'); 
+  background-image: url('Coins/Coins.webp'); 
   background-size: contain; 
   background-position: center; 
   background-repeat: no-repeat;
@@ -641,12 +641,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .stat-pill{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);
   border-radius:3px;padding:1px 4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(242,234,216,0.85)}
 .mini-skin{width:7px;height:10px;border-radius:1.5px;border:1px solid rgba(255,255,255,0.5);background-size:cover;background-position:center;}
-.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Coins/Coins.png');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
 
 /* ENLARGED CENTER CARDS */
 .ringcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:14px;z-index:2}
 .minicard{
-  width:52px;height:74px;border-radius:6px;background-image:url('Cards/CardPhase.png');background-size:100% 100%;background-repeat:no-repeat;background-position:center;image-rendering:high-quality;color:var(--ink);border:2px solid var(--paper-dark);
+  width:52px;height:74px;border-radius:6px;background-image:url('Cards/CardPhase.webp');background-size:100% 100%;background-repeat:no-repeat;background-position:center;image-rendering:high-quality;color:var(--ink);border:2px solid var(--paper-dark);
   display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:24px;font-weight:700;transition:transform .2s;position:relative;box-shadow:1px 2px 8px rgba(0,0,0,0.5);
 }
 @media(min-width: 840px) {
@@ -784,13 +784,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   transform: translateZ(1px); /* Lift text slightly to prevent z-fighting */
 }
 
-.card.number    { background-image: url('Cards/CardPhase.png'); border: 1.5px solid var(--myskin, var(--brass)); }
-.card.wild      { background-image: url('Cards/SwapCard.png'); }
-.card.insurance { background-image: url('Cards/InsuranceCard.png'); }
-.card.peek      { background-image: url('Cards/PeekCard.png'); }
-.card.power     { background-image: url('Cards/PowerCard.png'); }
-.card.reverse   { background-image: url('Cards/ReverseCard.png'); }
-.card.steal     { background-image: url('Cards/SteelCard.png'); }
+.card.number    { background-image: url('Cards/CardPhase.webp'); border: 1.5px solid var(--myskin, var(--brass)); }
+.card.wild      { background-image: url('Cards/SwapCard.webp'); }
+.card.insurance { background-image: url('Cards/InsuranceCard.webp'); }
+.card.peek      { background-image: url('Cards/PeekCard.webp'); }
+.card.power     { background-image: url('Cards/PowerCard.webp'); }
+.card.reverse   { background-image: url('Cards/ReverseCard.webp'); }
+.card.steal     { background-image: url('Cards/SteelCard.webp'); }
 
 .card .val, .minicard .val, .ghost-card .val { font-family: 'Cinzel Decorative', serif; font-size: 24px; font-weight: 700; color: var(--ink); text-shadow: 0 1px 2px rgba(255,255,255,0.5); }
 .card .act-val, .minicard .act-val, .ghost-card .act-val { position: absolute; top: 3px; left: 4px; font-family: 'Cinzel', serif; font-size: 11px; font-weight: 700; color: var(--ink); line-height: 1; }
@@ -1105,15 +1105,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .dd-front::before {
   content: ''; position: absolute; top: 0; left: 0;
   width: 200%; height: 200%; transform-origin: top left; transform: scale(0.5);
-  background-image: url('Cards/LuckyCard.png') !important;
+  background-image: url('Cards/LuckyCard.webp') !important;
   background-size: 100% 100%; background-position: center;
   image-rendering: high-quality; border-radius: 14px;
 }
 
 /* Dynamic front for Inventory Reward Cards */
-.rc-front-basic::before { background-image: url('Cards/BasicCard.png') !important; border-radius: 12px !important; }
-.rc-front-mythic::before { background-image: url('Cards/MythicCard.png') !important; border-radius: 12px !important; }
-.rc-front-legendary::before { background-image: url('Cards/LegendaryCard.png') !important; border-radius: 12px !important; }
+.rc-front-basic::before { background-image: url('Cards/BasicCard.webp') !important; border-radius: 12px !important; }
+.rc-front-mythic::before { background-image: url('Cards/MythicCard.webp') !important; border-radius: 12px !important; }
+.rc-front-legendary::before { background-image: url('Cards/LegendaryCard.webp') !important; border-radius: 12px !important; }
 
 .dd-back {
   background: radial-gradient(circle at center, #2b1a24, #060709);
@@ -1155,13 +1155,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
   transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
-  background-image:url('Cards/CardPhase.png');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
+  background-image:url('Cards/CardPhase.webp');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
   will-change: left, top, transform; transform: translateZ(0); /* Force GPU composite */
 }
 .ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
   transition:left .48s ease, top .48s ease, opacity .48s;
-  background-image:url('Coins/Coins.png');background-size:cover;background-position:center;
+  background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;
   box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
   will-change: left, top; transform: translateZ(0); /* Force GPU composite */
 }
@@ -2131,12 +2131,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 
 @keyframes wildCycle {
-  0%   { background-image: url('Cards/SwapCard.png'); }
-  20%  { background-image: url('Cards/PowerCard.png'); }
-  40%  { background-image: url('Cards/SteelCard.png'); }
-  60%  { background-image: url('Cards/ReverseCard.png'); }
-  80%  { background-image: url('Cards/PeekCard.png'); }
-  100% { background-image: url('Cards/SwapCard.png'); }
+  0%   { background-image: url('Cards/SwapCard.webp'); }
+  20%  { background-image: url('Cards/PowerCard.webp'); }
+  40%  { background-image: url('Cards/SteelCard.webp'); }
+  60%  { background-image: url('Cards/ReverseCard.webp'); }
+  80%  { background-image: url('Cards/PeekCard.webp'); }
+  100% { background-image: url('Cards/SwapCard.webp'); }
 }
 
 @keyframes bootFlip {
@@ -2379,8 +2379,8 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 .pubg-icon-btn{ border-radius:14px; }
 /* --- DYNAMIC SKIN ENGINE OVERRIDES --- */
 :root {
-  --my-table: url('Tables/GreenWood.png');
-  --my-deck: url('CardstoBuy/TheBase.png');
+  --my-table: url('Tables/GreenWood.webp');
+  --my-deck: url('CardstoBuy/TheBase.webp');
   --table-glow: 30, 74, 61;
 }
 .menu-table { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.6) 0%, rgba(0,0,0, 0.95) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
@@ -2449,17 +2449,17 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 window.dodImagesLoaded = false;
 (function dodPreloadImages() {
   var srcs = [
-    'PixelaksLogoTransparent.png',
-    'CardstoBuy/TheBase.png', 'Cards/SwapCard.png', 'Cards/PowerCard.png',
-    'Cards/SteelCard.png', 'Cards/ReverseCard.png', 'Cards/PeekCard.png',
-    'Cards/CardPhase.png', 'Cards/InsuranceCard.png', 'Coins/Coins.png', 'Tables/GreenWood.png',
-    'Cards/BasicCard.png', 'Cards/MythicCard.png', 'Cards/LegendaryCard.png', 'Cards/LuckyCard.png',
-    'Tiers/Apprentice.png', 'Tiers/Trickster.png', 'Tiers/Phantom.png',
-    'Tiers/Mastermind.png', 'Tiers/Oracle.png', 'Tiers/Legend.png',
-    'Avatars/Apprentice.png', 'Avatars/Trickster.png', 'Avatars/Phantom.png',
-    'Avatars/Mastermind.png', 'Avatars/Oracle.png', 'Avatars/Legend.png',
-    'Frames/Apprentice.png', 'Frames/Trickster.png', 'Frames/Phantom.png',
-    'Frames/Mastermind.png', 'Frames/Oracle.png', 'Frames/Legend.png'
+    'PixelaksLogoTransparent.webp',
+    'CardstoBuy/TheBase.webp', 'Cards/SwapCard.webp', 'Cards/PowerCard.webp',
+    'Cards/SteelCard.webp', 'Cards/ReverseCard.webp', 'Cards/PeekCard.webp',
+    'Cards/CardPhase.webp', 'Cards/InsuranceCard.webp', 'Coins/Coins.webp', 'Tables/GreenWood.webp',
+    'Cards/BasicCard.webp', 'Cards/MythicCard.webp', 'Cards/LegendaryCard.webp', 'Cards/LuckyCard.webp',
+    'Tiers/Apprentice.webp', 'Tiers/Trickster.webp', 'Tiers/Phantom.webp',
+    'Tiers/Mastermind.webp', 'Tiers/Oracle.webp', 'Tiers/Legend.webp',
+    'Avatars/Apprentice.webp', 'Avatars/Trickster.webp', 'Avatars/Phantom.webp',
+    'Avatars/Mastermind.webp', 'Avatars/Oracle.webp', 'Avatars/Legend.webp',
+    'Frames/Apprentice.webp', 'Frames/Trickster.webp', 'Frames/Phantom.webp',
+    'Frames/Mastermind.webp', 'Frames/Oracle.webp', 'Frames/Legend.webp'
   ];
 
   // FIX: Dynamically inject the user's equipped custom skins into the mandatory loading queue
@@ -2632,7 +2632,7 @@ window.dodImagesLoaded = false;
 
   <!-- TOP-RIGHT CURRENCY CHIP -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:6px;">
-    <img src="Coins/Coins.png" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
+    <img src="Coins/Coins.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
   </div>
 
   <!-- PUBG TOP-LEFT PROFILE WIDGET -->
@@ -3147,15 +3147,15 @@ window.dodImagesLoaded = false;
 
 // --- TABLE REGISTRY: MAPS IDS TO TEXTURES AND GLOWS ---
 const TABLES_DB = {
-  'tb_default':   { name: 'Classic Green Felt', img: 'Tables/GreenWood.png', glow: '30, 74, 61' },
-  'tb_bloodwood': { name: 'Bloodwood Velvet',   img: 'Tables/BloodWood.png', glow: '122, 31, 46' },
-  'tb_midnight':  { name: 'Midnight Obsidian',  img: 'Tables/Midnight.png',  glow: '32, 45, 78' },
-  'tb_amethyst':  { name: 'Royal Amethyst',    img: 'Tables/Amethyst.png',  glow: '107, 63, 138' },
-  'tb_clockwork': { name: 'Clockwork Brass',   img: 'Tables/Clockwork.png', glow: '201, 162, 39' },
-  'tb_cyber':     { name: 'Cyber Matrix',      img: 'Tables/Cyber.png',     glow: '47, 169, 161' },
-  'tb_mirage':    { name: 'Desert Mirage',     img: 'Tables/Mirage.png',    glow: '201, 106, 39' },
-  'tb_dragon':    { name: "Dragon's Lair",     img: 'Tables/Dragon.png',    glow: '178, 69, 94' },
-  'tb_void':      { name: 'Void Magic',        img: 'Tables/Void.png',      glow: '139, 61, 255' }
+  'tb_default':   { name: 'Classic Green Felt', img: 'Tables/GreenWood.webp', glow: '30, 74, 61' },
+  'tb_bloodwood': { name: 'Bloodwood Velvet',   img: 'Tables/BloodWood.webp', glow: '122, 31, 46' },
+  'tb_midnight':  { name: 'Midnight Obsidian',  img: 'Tables/Midnight.webp',  glow: '32, 45, 78' },
+  'tb_amethyst':  { name: 'Royal Amethyst',    img: 'Tables/Amethyst.webp',  glow: '107, 63, 138' },
+  'tb_clockwork': { name: 'Clockwork Brass',   img: 'Tables/Clockwork.webp', glow: '201, 162, 39' },
+  'tb_cyber':     { name: 'Cyber Matrix',      img: 'Tables/Cyber.webp',     glow: '47, 169, 161' },
+  'tb_mirage':    { name: 'Desert Mirage',     img: 'Tables/Mirage.webp',    glow: '201, 106, 39' },
+  'tb_dragon':    { name: "Dragon's Lair",     img: 'Tables/Dragon.webp',    glow: '178, 69, 94' },
+  'tb_void':      { name: 'Void Magic',        img: 'Tables/Void.webp',      glow: '139, 61, 255' }
 };
 
 function applyGlobalTable(tableId) {
@@ -3188,8 +3188,8 @@ function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
   leaderCard.innerHTML = `
     <div class="ts-avatar-wrap">
       <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-        <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-        <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+        <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+        <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
       </div>
     </div>
     <div class="ts-leader-info">
@@ -3216,8 +3216,8 @@ function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
       <div class="ts-roster-item ${isLeader ? 'ts-is-leader' : ''}">
         <div class="ts-mini-avatar">
           <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-            <img src="Avatars/${pAv}.png" class="af-avatar" alt="Avatar">
-            <img src="Frames/${pFr}.png" class="af-frame" alt="Frame">
+            <img src="Avatars/${pAv}.webp" class="af-avatar" alt="Avatar">
+            <img src="Frames/${pFr}.webp" class="af-frame" alt="Frame">
           </div>
         </div>
         <div>
@@ -3457,8 +3457,8 @@ async function submitUniqueNameWithId() {
         <div class="pubg-preview-pane">
           <!-- Square Avatar with Layered Frame -->
           <div id="modalAvatarBox" style="width:110px; height:110px; position:relative; background:rgba(0,0,0,0.6); border-radius:6px; display:flex; align-items:center; justify-content:center; box-shadow:0 0 20px rgba(232,196,84,0.15);">
-            <img id="previewAvatarImg" src="Avatars/Apprentice.png" style="width:82%; height:82%; object-fit:cover; border-radius:4px; position:absolute; z-index:1;">
-            <img id="previewFrameImg" src="Frames/Apprentice.png" style="width:100%; height:100%; object-fit:contain; position:absolute; inset:0; z-index:2; pointer-events:none;">
+            <img id="previewAvatarImg" src="Avatars/Apprentice.webp" style="width:82%; height:82%; object-fit:cover; border-radius:4px; position:absolute; z-index:1;">
+            <img id="previewFrameImg" src="Frames/Apprentice.webp" style="width:100%; height:100%; object-fit:contain; position:absolute; inset:0; z-index:2; pointer-events:none;">
           </div>
 
           <!-- Equip Action Button -->
@@ -4202,7 +4202,7 @@ function generateBelievableBot(targetTier = null, isOffline = false) {
     const currency = Math.floor(Math.random() * 2500) + (tierIdx * 800);
 
     const botTables = ['tb_default', 'tb_bloodwood', 'tb_midnight', 'tb_amethyst'];
-    const botDecks = ['CardstoBuy/TheBase.png', 'CardstoBuy/CrimsonBlood.png', 'CardstoBuy/DeepSapphire.png'];
+    const botDecks = ['CardstoBuy/TheBase.webp', 'CardstoBuy/CrimsonBlood.webp', 'CardstoBuy/DeepSapphire.webp'];
 
     return {
         uid: `bot_${name.toLowerCase()}_${Math.floor(1000 + Math.random() * 9000)}`,
@@ -4252,13 +4252,13 @@ function initMenuBackground() {
   // Use the CSS variable directly so the cards instantly update when you equip a new skin!
   const cardImages = [
     'var(--my-deck)', 
-    'url("Cards/CardPhase.png")', 
-    'url("Cards/SwapCard.png")',
-    'url("Cards/InsuranceCard.png")', 
-    'url("Cards/PeekCard.png")', 
-    'url("Cards/PowerCard.png")',
-    'url("Cards/ReverseCard.png")', 
-    'url("Cards/SteelCard.png")'
+    'url("Cards/CardPhase.webp")', 
+    'url("Cards/SwapCard.webp")',
+    'url("Cards/InsuranceCard.webp")', 
+    'url("Cards/PeekCard.webp")', 
+    'url("Cards/PowerCard.webp")',
+    'url("Cards/ReverseCard.webp")', 
+    'url("Cards/SteelCard.webp")'
   ];
 
   for(let i=0; i<cardCount; i++) {
@@ -4451,12 +4451,12 @@ function applyTutStep() {
         let html = '';
         cards.forEach(c => {
             let bgImg = ''; let tBadge = '';
-            if (c === 'wild') bgImg = "url('Cards/SwapCard.png')";
-            if (c === 'power') { bgImg = "url('Cards/PowerCard.png')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">-4</div>'; }
-            if (c === 'steal') { bgImg = "url('Cards/SteelCard.png')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">+3</div>'; }
-            if (c === 'peek') bgImg = "url('Cards/PeekCard.png')";
-            if (c === 'reverse') bgImg = "url('Cards/ReverseCard.png')";
-            if (c === 'insurance') bgImg = "url('Cards/InsuranceCard.png')";
+            if (c === 'wild') bgImg = "url('Cards/SwapCard.webp')";
+            if (c === 'power') { bgImg = "url('Cards/PowerCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">-4</div>'; }
+            if (c === 'steal') { bgImg = "url('Cards/SteelCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">+3</div>'; }
+            if (c === 'peek') bgImg = "url('Cards/PeekCard.webp')";
+            if (c === 'reverse') bgImg = "url('Cards/ReverseCard.webp')";
+            if (c === 'insurance') bgImg = "url('Cards/InsuranceCard.webp')";
             
             const isFocused = step.showcaseCard === c;
             // FIX: Shrink cards slightly and pinch margins so they fit easily
@@ -4831,7 +4831,7 @@ function buildRanksScreen() {
       <div class="${classes}">
         ${lockHtml}
         ${particleHtml}
-        <div class="r-icon"><img src="Tiers/${t.name}.png" class="tier-img" alt="${t.name}"></div>
+        <div class="r-icon"><img src="Tiers/${t.name}.webp" class="tier-img" alt="${t.name}"></div>
         <div class="r-info">
           <h4 class="r-name">${t.name}</h4>
           <div class="r-req">${t.req}</div>
@@ -5988,8 +5988,8 @@ function log(msg, cls, explicitUid = null){
       div.innerHTML = `
           <div class="log-profile">
               <div class="log-avatar">
-                  <img src="Avatars/${av}.png" style="width:100%;height:100%;object-fit:cover;position:absolute;z-index:1;border-radius:3px;">
-                  <img src="Frames/${fr}.png" style="width:100%;height:100%;object-fit:contain;position:absolute;z-index:2;">
+                  <img src="Avatars/${av}.webp" style="width:100%;height:100%;object-fit:cover;position:absolute;z-index:1;border-radius:3px;">
+                  <img src="Frames/${fr}.webp" style="width:100%;height:100%;object-fit:contain;position:absolute;z-index:2;">
               </div>
               <div class="log-name" style="color:${pColor}">${p.name}</div>
           </div>
@@ -6073,8 +6073,8 @@ function layoutRing(){
     seat.innerHTML=`
       <div class="avatar" id="game-avatar-${p.uid}" style="overflow:hidden; padding:0;">
         <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-          <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-          <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+          <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+          <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
         </div>
       </div>
       <div class="rname">${p.name}</div>
@@ -6367,15 +6367,15 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       g.style.backgroundImage = bgSkin ? `url('${bgSkin}')` : "var(--my-deck)";
       g.innerHTML = '';
   } else {
-      let bgImg = "url('Cards/CardPhase.png')";
+      let bgImg = "url('Cards/CardPhase.webp')";
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
       // FIX: Ensure no corner HTML or inner content is applied to flying Special Cards!
-      if (label === 'W') { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
-      else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
+      if (label === 'W') { bgImg = "url('Cards/SwapCard.webp')"; innerContent = ''; }
+      else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.webp')"; innerContent = ''; }
       else if (label === 'STL') { 
-          bgImg = "url('Cards/SteelCard.png')"; 
+          bgImg = "url('Cards/SteelCard.webp')"; 
           let tBadge = '';
           if (typeof state !== 'undefined' && state && state.lastAction && state.lastAction.msg) {
               const m = state.lastAction.msg.match(/(taking|stealing) (\d+)/i);
@@ -6384,7 +6384,7 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
           innerContent = tBadge; 
       }
       else if (label === 'PWR') { 
-          bgImg = "url('Cards/PowerCard.png')"; 
+          bgImg = "url('Cards/PowerCard.webp')"; 
           let tBadge = '';
           if (typeof state !== 'undefined' && state && state.lastAction && state.lastAction.msg) {
               const m = state.lastAction.msg.match(/draining (\d+)/i);
@@ -6392,8 +6392,8 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
           }
           innerContent = tBadge; 
       }
-      else if (label === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
-      else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${label}</div>`; }
+      else if (label === 'INS') { bgImg = "url('Cards/InsuranceCard.webp')"; innerContent = ''; }
+      else { bgImg = "url('Cards/CardPhase.webp')"; innerContent = cornerHtml + `<div class="val">${label}</div>`; }
 
       g.style.backgroundImage = bgImg;
       g.innerHTML = innerContent;
@@ -6605,7 +6605,7 @@ function renderAll(){
   // FIX: Dynamically update the main deck's skin to match the CURRENT active player's equipped skin!
   const deckpileEl = document.getElementById('deckpile');
   if (deckpileEl) {
-      const currentSkin = cur.deckSkin ? `url('${cur.deckSkin}')` : 'url("CardstoBuy/TheBase.png")';
+      const currentSkin = cur.deckSkin ? `url('${cur.deckSkin}')` : 'url("CardstoBuy/TheBase.webp")';
       // Overrides the CSS variable specifically for the deck container, safely respecting global styles
       deckpileEl.style.setProperty('--my-deck', currentSkin);
   }
@@ -6680,8 +6680,8 @@ function renderAll(){
           ap.innerHTML = `
               <div class="ap-avatar" id="ap-avatar-${cur.uid}" style="overflow:hidden; padding:0; cursor:pointer;" onclick="if('${cur.uid}' !== DoDAuth.getProfile().uid) openVolumePopup(event, '${cur.uid}', '${cur.name}')">
                 <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-                  <img src="Avatars/${cAv}.png" class="af-avatar" alt="Avatar">
-                  <img src="Frames/${cFr}.png" class="af-frame" alt="Frame">
+                  <img src="Avatars/${cAv}.webp" class="af-avatar" alt="Avatar">
+                  <img src="Frames/${cFr}.webp" class="af-frame" alt="Frame">
                 </div>
               </div>
               <div class="ap-details">
@@ -6713,15 +6713,15 @@ function renderAll(){
 
        let displayVal = state.lastEffectiveValue;
        
-       let bgImg = "url('Cards/CardPhase.png')";
+       let bgImg = "url('Cards/CardPhase.webp')";
        let cornerHtml = displayVal !== null ? `<div class="act-val">${displayVal}</div><div class="act-val-right">${displayVal}</div>` : '';
        let innerContent = "";
 
        // FIX: Action cards use pure graphical textures, so they shouldn't show inner content/corners!
-       if (displayLabel === 'W' || (typeof label !== 'undefined' && label === 'W')) { bgImg = "url('Cards/SwapCard.png')"; innerContent = ''; }
-       else if (displayLabel === 'REV' || (typeof label !== 'undefined' && label === 'REV')) { bgImg = "url('Cards/ReverseCard.png')"; innerContent = ''; }
+       if (displayLabel === 'W' || (typeof label !== 'undefined' && label === 'W')) { bgImg = "url('Cards/SwapCard.webp')"; innerContent = ''; }
+       else if (displayLabel === 'REV' || (typeof label !== 'undefined' && label === 'REV')) { bgImg = "url('Cards/ReverseCard.webp')"; innerContent = ''; }
        else if (displayLabel === 'STL' || (typeof label !== 'undefined' && label === 'STL')) { 
-           bgImg = "url('Cards/SteelCard.png')"; 
+           bgImg = "url('Cards/SteelCard.webp')"; 
            let tBadge = window.cachedStlBadge || '';
            let checkState = (typeof state !== 'undefined') ? state : null;
            if (checkState && checkState.lastAction && checkState.lastAction.msg) {
@@ -6731,7 +6731,7 @@ function renderAll(){
            innerContent = tBadge; 
        }
        else if (displayLabel === 'PWR' || (typeof label !== 'undefined' && label === 'PWR')) { 
-           bgImg = "url('Cards/PowerCard.png')"; 
+           bgImg = "url('Cards/PowerCard.webp')"; 
            let tBadge = window.cachedPwrBadge || '';
            let checkState = (typeof state !== 'undefined') ? state : null;
            if (checkState && checkState.lastAction && checkState.lastAction.msg) {
@@ -6740,8 +6740,8 @@ function renderAll(){
            }
            innerContent = tBadge; 
        }
-       else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.png')"; innerContent = ''; }
-       else { bgImg = "url('Cards/CardPhase.png')"; innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; }
+       else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.webp')"; innerContent = ''; }
+       else { bgImg = "url('Cards/CardPhase.webp')"; innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; }
        
        lastHtml = `<div class="minicard" style="border-color:${lastColor}; background-image:${bgImg};">${innerContent}</div>`;
     }
@@ -9349,7 +9349,7 @@ async function endGame(winner, byScore) {
       // Online Mode: Trust the server's attached bonus item
       if (currentMatchId && window._latestProgression) {
           if (window._latestProgression.bonusType === 'card') {
-              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.png" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card</div>`;
+              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.webp" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card</div>`;
           } else if (window._latestProgression.bonusType === 'coins') {
               extraRewardHtml = `<div style="color:var(--ok); margin-left:15px;">+${window._latestProgression.bonusCoins} Perf Bonus!</div>`;
           }
@@ -9357,7 +9357,7 @@ async function endGame(winner, byScore) {
           // Offline Mode: Simulate the visual drop, but don't actually award it to prevent bot farming
           const isCardReward = Math.random() > 0.5;
           if (isCardReward) {
-              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.png" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card (Mock)</div>`;
+              extraRewardHtml = `<div style="color:#e4d8bd; margin-left:15px; display:flex; align-items:center; gap:6px;"><img src="Cards/BasicCard.webp" style="width:14px; height:20px; border-radius:2px; box-shadow:0 2px 4px #000;"> +1 Basic Card (Mock)</div>`;
           } else {
               const mockBonus = Math.floor(myScore * 2);
               extraRewardHtml = `<div style="color:var(--ok); margin-left:15px;">+${mockBonus} Perf Bonus! (Mock)</div>`;
@@ -9366,7 +9366,7 @@ async function endGame(winner, byScore) {
   }
 
   const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;">
-    <div style="display:flex; align-items:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC</div>
+    <div style="display:flex; align-items:center; gap:6px;"><img src="Coins/Coins.webp" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC</div>
     ${extraRewardHtml}
   </div>`;
   
@@ -9385,7 +9385,7 @@ async function endGame(winner, byScore) {
 
 function getTierIconHTML(tierStr) {
   const safeTier = TIERS.includes(tierStr) ? tierStr : 'Apprentice';
-  return `<img src="Tiers/${safeTier}.png" class="tier-img" alt="${safeTier}">`;
+  return `<img src="Tiers/${safeTier}.webp" class="tier-img" alt="${safeTier}">`;
 }
 
 // Helper to smoothly count the numbers up or down
@@ -9699,7 +9699,7 @@ async function endGame(winner, byScore) {
 
   // Safely grab the coins without crashing if the server hiccuped
   const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
-  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.png" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
+  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.webp" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
   
   let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
   
@@ -9880,8 +9880,8 @@ async function initFriendsList() {
                 // FIX: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
                 return `<div style="display:flex; align-items:flex-start; background:rgba(0,0,0,0.3); padding:8px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px; margin-bottom:6px; gap:10px;">
                     <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
-                        <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
-                        <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
+                        <img src="Avatars/${f.avatar}.webp" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${f.frame}.webp" class="af-frame" alt="Frame">
                     </div>
                     <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap:8px;">
@@ -9930,8 +9930,8 @@ async function initFriendsList() {
                 // FIX: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
                 return `<div class="pubg-friend-row" style="align-items:flex-start; padding:6px; gap:8px;">
                     <div class="avatar-frame-wrap" style="width:26px; height:26px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
-                        <img src="Avatars/${f.avatar}.png" class="af-avatar" alt="Avatar">
-                        <img src="Frames/${f.frame}.png" class="af-frame" alt="Frame">
+                        <img src="Avatars/${f.avatar}.webp" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${f.frame}.webp" class="af-frame" alt="Frame">
                     </div>
                     <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; gap:4px;">
@@ -10152,8 +10152,8 @@ function listenToParty(partyId) {
             }
             return `<div style="display:flex; gap:10px; align-items:center; background:rgba(0,0,0,0.2); padding:6px 10px; border-radius:4px; margin-bottom:6px; border:1px solid rgba(255,255,255,0.05);">
                         <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
-                            <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-                            <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                            <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+                            <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
                         </div>
                         <div style="display:flex; flex-direction:column; justify-content:center;">
                             <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}${data.matchId ? ' <span style="color:var(--danger-bright); font-size:9px;">[In Match]</span>' : ''}</span>
@@ -10389,8 +10389,8 @@ function listenToMatchLobby(matchId) {
             html += `<div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.3); padding:8px 12px; border:1px solid rgba(255,255,255,0.05); border-radius:4px; margin-bottom:4px;">
                         <div style="display:flex; gap:10px; align-items:center;">
                             <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
-                                <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-                                <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                                <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+                                <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
                             </div>
                             <div style="display:flex; flex-direction:column; justify-content:center;">
                                 <span style="line-height:1; font-size:13px; font-weight:600; color:#fff;">${seat.displayName}</span>
@@ -10694,8 +10694,8 @@ function pubgSearchFriend() {
                 
                 html += `<div class="pubg-search-result" style="display:flex; align-items:flex-start; padding:6px; gap:8px;">
                     <div class="avatar-frame-wrap" style="width:26px; height:26px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
-                        <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-                        <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                        <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+                        <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
                     </div>
                     <div style="display:flex; flex-direction:column; flex:1; min-width:0; justify-content:center;">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; width:100%; gap:4px;">
@@ -10904,8 +10904,8 @@ function updateLobbyView(seats, tableSize) {
             const fr = seat.frame || ((window.DoDAuth && DoDAuth.getProfile() && DoDAuth.getProfile().uid === seat.uid) ? getEquippedFrame(DoDAuth.getProfile()) : 'Apprentice');
             avatarContent = `
               <div class="avatar-frame-wrap" style="width:100%; height:100%;">
-                <img src="Avatars/${av}.png" class="af-avatar" alt="Avatar">
-                <img src="Frames/${fr}.png" class="af-frame" alt="Frame">
+                <img src="Avatars/${av}.webp" class="af-avatar" alt="Avatar">
+                <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
               </div>
             `;
         }
@@ -11293,7 +11293,7 @@ function getEquippedTitle(profile) { return (profile && profile.title) ? profile
 function getEquippedBackImg(profile) {
     const eqBack = profile ? (profile.equippedBack || 'cb_default') : 'cb_default';
     const backDef = typeof SHOP_DB !== 'undefined' ? SHOP_DB.cardBacks.find(c => c.id === eqBack) : null;
-    return backDef ? `CardstoBuy/${backDef.img}` : 'CardstoBuy/TheBase.png';
+    return backDef ? `CardstoBuy/${backDef.img}` : 'CardstoBuy/TheBase.webp';
 }
 
 function isTitleUnlocked(profile, titleDef) {
@@ -11343,7 +11343,7 @@ function updateProfileWidget(profile) {
     if (nameEl) nameEl.textContent = profile.displayName || "Agent";
     if (tierEl) {
         const safeTier = TIERS.includes(profile.tier) ? profile.tier : 'Apprentice';
-        tierEl.innerHTML = `<img src="Tiers/${safeTier}.png" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 0 2px #000);">${profile.tier || 'Apprentice'} • Lvl ${profile.level || 1}`;
+        tierEl.innerHTML = `<img src="Tiers/${safeTier}.webp" style="width:14px; height:14px; vertical-align:middle; margin-right:4px; filter:drop-shadow(0 0 2px #000);">${profile.tier || 'Apprentice'} • Lvl ${profile.level || 1}`;
     }
     if (titleBoxEl) {
         const eqTitle = getEquippedTitle(profile);
@@ -11366,8 +11366,8 @@ function updateProfileWidget(profile) {
         const eqFrame = getEquippedFrame(profile);
         widgetFrame.innerHTML = `
           <div class="avatar-frame-wrap" style="width:44px; height:44px;">
-            <img src="Avatars/${eqAvatar}.png" class="af-avatar" alt="Avatar">
-            <img src="Frames/${eqFrame}.png" class="af-frame" alt="Frame">
+            <img src="Avatars/${eqAvatar}.webp" class="af-avatar" alt="Avatar">
+            <img src="Frames/${eqFrame}.webp" class="af-frame" alt="Frame">
           </div>
         `;
     }
@@ -11523,9 +11523,9 @@ function renderEventsHub(profile) {
     if (list) {
         let html = '';
         const chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
-        if (chests.legendary > 0) html += `<div class="chest-item" onclick="openRewardCard('legendary')"><img src="Cards/LegendaryCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#f5dd8a; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Legendary Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.legendary}</div></div></div>`;
-        if (chests.mythic > 0) html += `<div class="chest-item" onclick="openRewardCard('mythic')"><img src="Cards/MythicCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#d094ff; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Mythic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.mythic}</div></div></div>`;
-        if (chests.base > 0) html += `<div class="chest-item" onclick="openRewardCard('base')"><img src="Cards/BasicCard.png" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#e4d8bd; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Basic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.base}</div></div></div>`;
+        if (chests.legendary > 0) html += `<div class="chest-item" onclick="openRewardCard('legendary')"><img src="Cards/LegendaryCard.webp" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#f5dd8a; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Legendary Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.legendary}</div></div></div>`;
+        if (chests.mythic > 0) html += `<div class="chest-item" onclick="openRewardCard('mythic')"><img src="Cards/MythicCard.webp" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#d094ff; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Mythic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.mythic}</div></div></div>`;
+        if (chests.base > 0) html += `<div class="chest-item" onclick="openRewardCard('base')"><img src="Cards/BasicCard.webp" style="width:26px; height:38px; border-radius:3px; box-shadow:0 2px 6px #000;"><div style="text-align:right;"><div style="color:#e4d8bd; font-family:'Cinzel',serif; font-size:11px; font-weight:bold;">Basic Card</div><div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#fff;">x${chests.base}</div></div></div>`;
         list.innerHTML = html;
     }
 }
@@ -11922,8 +11922,8 @@ function openProfileCustomization() {
 function updatePreviewBox() {
     const avImg = document.getElementById('previewAvatarImg');
     const frImg = document.getElementById('previewFrameImg');
-    if (avImg) avImg.src = `Avatars/${_previewAvatar}.png`;
-    if (frImg) frImg.src = `Frames/${_previewFrame}.png`;
+    if (avImg) avImg.src = `Avatars/${_previewAvatar}.webp`;
+    if (frImg) frImg.src = `Frames/${_previewFrame}.webp`;
     
     const titleBox = document.getElementById('modalProfileTitleBox');
     if (titleBox) titleBox.innerHTML = renderTitleHTML(_previewTitle, true);
@@ -11997,7 +11997,7 @@ function renderUnlockSelectors(profile) {
         return `
           <div onclick="selectAvatarItem('${tierName}')" class="${classes}">
             ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
-            <img src="Avatars/${tierName}.png" style="width:70%; height:70%; object-fit:cover; border-radius:4px;" alt="${tierName}">
+            <img src="Avatars/${tierName}.webp" style="width:70%; height:70%; object-fit:cover; border-radius:4px;" alt="${tierName}">
             <span class="item-label">${tierName}</span>
           </div>
         `;
@@ -12013,7 +12013,7 @@ function renderUnlockSelectors(profile) {
         return `
           <div onclick="selectFrameItem('${tierName}')" class="${classes}">
             ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
-            <img src="Frames/${tierName}.png" style="width:70%; height:70%; object-fit:contain;" alt="${tierName}">
+            <img src="Frames/${tierName}.webp" style="width:70%; height:70%; object-fit:contain;" alt="${tierName}">
             <span class="item-label">${tierName}</span>
           </div>
         `;
@@ -12514,35 +12514,35 @@ const SHOP_DB = {
         { id: 'cf_diamond', name: 'Prismatic Diamond', method: 'spin', color: '#e0f7fa' }
     ],
     cardBacks: [
-        { id: 'cb_default', name: 'Brass Standard', method: 'default', img: 'TheBase.png' },
-        { id: 'cb_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'CrimsonBlood.png' },
-        { id: 'cb_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 300, shardsNeeded: 20, img: 'DeepSapphire.png' },
-        { id: 'cb_bloodwood', name: 'Bloodwood', method: 'coins', shardPrice: 400, shardsNeeded: 25, img: 'Bloodwood.png' },
-        { id: 'cb_obsidian', name: 'Obsidian Void', method: 'spin', img: 'Obsidian Void.png' },
-        { id: 'cb_trickster', name: 'The Trickster', method: 'tier', unlockTier: 'Trickster', img: 'TricksterCard.png' },
-        { id: 'cb_phantom', name: 'The Phantom', method: 'tier', unlockTier: 'Phantom', img: 'PhantomCard.png' },
-        { id: 'cb_mastermind', name: 'The Mastermind', method: 'tier', unlockTier: 'Mastermind', img: 'MastermindCard.png' },
-        { id: 'cb_oracle', name: 'The Oracle', method: 'tier', unlockTier: 'Oracle', img: 'OracleCard.png' },
-        { id: 'cb_legend', name: 'The Legend', method: 'tier', unlockTier: 'Legend', img: 'LegendCard.png' }
+        { id: 'cb_default', name: 'Brass Standard', method: 'default', img: 'TheBase.webp' },
+        { id: 'cb_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'CrimsonBlood.webp' },
+        { id: 'cb_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 300, shardsNeeded: 20, img: 'DeepSapphire.webp' },
+        { id: 'cb_bloodwood', name: 'Bloodwood', method: 'coins', shardPrice: 400, shardsNeeded: 25, img: 'Bloodwood.webp' },
+        { id: 'cb_obsidian', name: 'Obsidian Void', method: 'spin', img: 'Obsidian Void.webp' },
+        { id: 'cb_trickster', name: 'The Trickster', method: 'tier', unlockTier: 'Trickster', img: 'TricksterCard.webp' },
+        { id: 'cb_phantom', name: 'The Phantom', method: 'tier', unlockTier: 'Phantom', img: 'PhantomCard.webp' },
+        { id: 'cb_mastermind', name: 'The Mastermind', method: 'tier', unlockTier: 'Mastermind', img: 'MastermindCard.webp' },
+        { id: 'cb_oracle', name: 'The Oracle', method: 'tier', unlockTier: 'Oracle', img: 'OracleCard.webp' },
+        { id: 'cb_legend', name: 'The Legend', method: 'tier', unlockTier: 'Legend', img: 'LegendCard.webp' }
     ],
     tables: [
-        { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.png', color: '30, 74, 61' },
-        { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.png', color: '74, 21, 27' },
-        { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.png', color: '22, 36, 66' },
-        { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.png', color: '53, 28, 77' },
-        { id: 'tb_clockwork', name: 'Clockwork Brass', method: 'spin', desc: 'Steampunk gears and heavy brass.', img: 'ClockworkBrass.png', color: '71, 45, 22' },
-        { id: 'tb_cyber', name: 'Cyber Matrix', method: 'spin', desc: 'Glowing neon hex grid plating.', img: 'CyberMatrix.png', color: '15, 56, 54' },
-        { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.png', color: '77, 58, 28' },
-        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'DragonsLair.png', color: '24, 56, 33' },
-        { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.png', color: '28, 21, 51' },
-        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.png', color: '39, 56, 69' },
-        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.png', color: '69, 64, 39' }
+        { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.webp', color: '30, 74, 61' },
+        { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.webp', color: '74, 21, 27' },
+        { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.webp', color: '22, 36, 66' },
+        { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.webp', color: '53, 28, 77' },
+        { id: 'tb_clockwork', name: 'Clockwork Brass', method: 'spin', desc: 'Steampunk gears and heavy brass.', img: 'ClockworkBrass.webp', color: '71, 45, 22' },
+        { id: 'tb_cyber', name: 'Cyber Matrix', method: 'spin', desc: 'Glowing neon hex grid plating.', img: 'CyberMatrix.webp', color: '15, 56, 54' },
+        { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.webp', color: '77, 58, 28' },
+        { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'DragonsLair.webp', color: '24, 56, 33' },
+        { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.webp', color: '28, 21, 51' },
+        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.webp', color: '39, 56, 69' },
+        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.webp', color: '69, 64, 39' }
     ],
     coins: [
-        { id: 'iap_1', name: 'Handful of PC', price: '₹49', reward: 1000, img: 'Coins/Handfulofcoins.png' },
-        { id: 'iap_2', name: 'PC Pouch', price: '₹249', reward: 5500, img: 'Coins/Coinpouch.png' },
-        { id: 'iap_3', name: 'Treasure Chest', price: '₹499', reward: 12000, img: 'Coins/Cointreasure.png' },
-        { id: 'iap_4', name: 'Bank Vault', price: '₹999', reward: 30000, img: 'Coins/Coinbankvault.png' }
+        { id: 'iap_1', name: 'Handful of PC', price: '₹49', reward: 1000, img: 'Coins/Handfulofcoins.webp' },
+        { id: 'iap_2', name: 'PC Pouch', price: '₹249', reward: 5500, img: 'Coins/Coinpouch.webp' },
+        { id: 'iap_3', name: 'Treasure Chest', price: '₹499', reward: 12000, img: 'Coins/Cointreasure.webp' },
+        { id: 'iap_4', name: 'Bank Vault', price: '₹999', reward: 30000, img: 'Coins/Coinbankvault.webp' }
     ]
 };
 
@@ -12603,7 +12603,7 @@ function renderShopItems() {
         } else if (currentShopTab === 'coins') {
             const iconHtml = item.img 
                 ? `<img src="${item.img}" style="width:clamp(65px, 12vh, 90px); height:clamp(65px, 12vh, 90px); object-fit:contain; margin:10px auto; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.6)); display:block;" alt="${item.name}">`
-                : `<img src="Coins/Coins.png" style="width:40px; height:40px; margin:10px auto; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6)); display:block;" alt="PC">`;
+                : `<img src="Coins/Coins.webp" style="width:40px; height:40px; margin:10px auto; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6)); display:block;" alt="PC">`;
             visualHtml = `${iconHtml}<div style="font-size:13px; color:var(--ok); font-weight:bold; font-family:'IBM Plex Mono',monospace; margin-bottom:10px;">+${item.reward} PC</div>`;
         }
 
@@ -12681,7 +12681,7 @@ function openShopPreview(itemId, tab) {
     } else if (tab === 'cardBacks') {
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); z-index:2; position:relative;"></div>`;
     } else if (tab === 'cardFaces') {
-         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('Cards/CardPhase.png'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
+         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('Cards/CardPhase.webp'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
     }
     
     // Inject both into the visual box simultaneously
@@ -12879,7 +12879,7 @@ async function purchaseIAP(itemId, rewardAmount, event) {
             currency: orderRes.currency,
             name: "Deck of Deception",
             description: `Purchase ${rewardAmount} PC`,
-            image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.png",
+            image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.webp",
             order_id: orderRes.orderId, // Connects payment to the server order
             theme: { color: "#c9a227" }, // Matches your brass UI theme
             handler: async function (response) {
@@ -13024,8 +13024,8 @@ function generateLeaderboardRowHtml(p, rankNum, isMe) {
         <div class="lb-rank">#${rankNum}</div>
         <div class="lb-player">
           <div class="avatar-frame-wrap" style="width:44px; height:44px; flex-shrink:0;">
-            <img src="Avatars/${p.avatar || 'Apprentice'}.png" class="af-avatar" alt="Avatar">
-            <img src="Frames/${p.frame || 'Apprentice'}.png" class="af-frame" alt="Frame">
+            <img src="Avatars/${p.avatar || 'Apprentice'}.webp" class="af-avatar" alt="Avatar">
+            <img src="Frames/${p.frame || 'Apprentice'}.webp" class="af-frame" alt="Frame">
           </div>
           <div style="display:flex; flex-direction:column; justify-content:center;">
             <div style="font-family:'Inter',sans-serif; font-weight:700; font-size:14px; color:#fff; line-height:1;">
