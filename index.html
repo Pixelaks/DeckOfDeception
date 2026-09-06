@@ -3095,6 +3095,18 @@ window.dodImagesLoaded = false;
   </div>
 </div>
 
+<!-- SPECTATOR CHOICE MODAL -->
+<div class="modal-bg" id="spectatorChoiceOverlay" style="z-index: 8100;">
+  <div class="modal" style="text-align:center; background:rgba(21,12,18,0.98); border:1px solid var(--danger); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--danger-bright); margin-bottom:10px; font-size:22px;">You were eliminated</h3>
+    <p class="mono" style="font-size:13px; color:rgba(242,234,216,0.75); margin-bottom:24px; line-height:1.5;">The match is still ongoing. Would you like to spectate the rest of the game, or leave now and see your final results?</p>
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button class="btn ghost" style="flex:1;" onclick="document.getElementById('spectatorChoiceOverlay').classList.remove('show');">Spectate</button>
+      <button class="btn" style="flex:1; background:var(--danger); color:var(--paper); border-color:var(--danger-bright);" onclick="triggerEarlyExitResult()">Leave & See Results</button>
+    </div>
+  </div>
+</div>
+
 <!-- LEAVE GAME CONFIRMATION MODAL -->
 <div class="modal-bg" id="leaveGameOverlay" style="z-index: 7000;">
   <div class="modal" style="text-align:center; background:rgba(21,12,18,0.98); border:1px solid var(--danger); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
@@ -9151,6 +9163,15 @@ function leaveGame(){
     document.getElementById('leaveGameOverlay').classList.add('show');
 }
 
+function triggerEarlyExitResult() {
+    try { sfx.uiClick(); } catch(e){}
+    document.getElementById('spectatorChoiceOverlay').classList.remove('show');
+    
+    // Bypass the endgame locks and manually trigger the finale modal
+    window.isEndGameRunning = false; 
+    endGame(null, false);
+}
+
 async function confirmLeaveGame(){
     try { sfx.uiBack(); } catch(e){}
     document.getElementById('leaveGameOverlay').classList.remove('show');
@@ -9162,6 +9183,13 @@ async function confirmLeaveGame(){
         const profile = DoDAuth.getProfile();
         if (profile) {
             const me = state.players.find(p => p.uid === profile.uid);
+            
+            // If already eliminated, bypass penalty and go straight to early results!
+            if (me && me.out) {
+                triggerEarlyExitResult();
+                return;
+            }
+            
             if (me && !me.out) {
                 let cTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
                 const lossMultiplier = Math.min(2.0, 0.8 + (cTierIdx * 0.2));
@@ -9351,6 +9379,12 @@ async function endGame(winner, byScore) {
 
   const you = state.players[0]; // Local player is always seat 0 locally
   
+  // OFFLINE ONLY: Add currency locally (Online is handled entirely by Cloudflare)
+  if(!currentMatchId && window.DoDShop){
+      const earned = Math.max(0, score(you));
+      window.DoDShop.addCurrency(earned);
+  }
+
   // Sort players to determine absolute placements
   const sorted = [...state.players].sort((a,b) => {
       if(a.out !== b.out) return a.out ? 1 : -1;
@@ -9360,25 +9394,49 @@ async function endGame(winner, byScore) {
   const myRank = sorted.findIndex(p => p.id === you.id) + 1;
   const isMyWin = myRank === 1;
 
+  // FIX: Check if game is actually over, or just an early exit
+  const matchStatusText = state.over ? (byScore ? 'Time Limit Reached' : 'Match Concluded') : 'Match Ongoing (Early Exit)';
+
   let headerHtml = `<div class="finale-header">
-      <h1 class="finale-status ${isMyWin ? 'win' : 'loss'}">${isMyWin ? 'WINNER!' : `LOSS #${myRank}`}</h1>
-      <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${byScore ? 'Time Limit Reached' : 'Match Concluded'}</div>
+      <h1 class="finale-status ${isMyWin && state.over ? 'win' : 'loss'}">${isMyWin && state.over ? 'WINNER!' : `LOSS #${myRank}`}</h1>
+      <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${matchStatusText}</div>
   </div>`;
 
   let listHtml = `<div class="finale-list">`;
   sorted.forEach((p, idx) => {
+      // FIX: If the game is still ongoing, ONLY show players who have been eliminated!
+      if (!state.over && !p.out) return;
+
       const rank = idx + 1;
       const isMe = p.id === you.id;
       const isWinner = rank === 1;
-      const sc = score(p);
-      const stats = p.out ? 'Eliminated' : `${p.shop} PC / ${p.hand.length} Cards`;
       
+      // Calculate true raw score (allows negative) for brutal losses
+      const rawScore = p.shop - (SCORE_PENALTY * p.hand.length);
+      const sc = p.out ? rawScore : Math.max(0, rawScore);
+      
+      // Show PC and Cards even if eliminated
+      const pcCards = `${p.shop} PC / ${p.hand.length} Cards`;
+      const stats = p.out ? `<span style="color:var(--danger-bright);">Eliminated</span><br><span style="font-size:9px;">${pcCards}</span>` : pcCards;
+      
+      // Dynamic Performance Title
+      let perfTag = "";
+      if (isWinner && state.over) perfTag = "👑 Table Dominator";
+      else if (p.out && p.hand.length >= 6) perfTag = "🃏 Card Hoarder";
+      else if (p.out) perfTag = "💀 Bankrupt";
+      else if (p.shop >= 25) perfTag = "💰 High Roller";
+      else if (p.shop >= 10) perfTag = "⚔️ Tactical";
+      else perfTag = "🛡️ Survivor";
+
       listHtml += `
-        <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
+        <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner && state.over ? 'is-winner' : ''}">
           <div class="finale-rank">#${rank}</div>
-          <div class="finale-name">${p.name} ${isMe ? '(You)' : ''}</div>
-          <div class="finale-stats">${stats}</div>
-          <div class="finale-score">${sc}</div>
+          <div class="finale-name" style="display:flex; flex-direction:column; justify-content:center;">
+              <span style="line-height:1.2;">${p.name} ${isMe ? '(You)' : ''}</span>
+              <span style="font-size:10px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; margin-top:2px;">${perfTag}</span>
+          </div>
+          <div class="finale-stats" style="text-align:right;">${stats}</div>
+          <div class="finale-score" style="color:${sc < 0 ? 'var(--danger-bright)' : 'var(--ok)'};">${sc}</div>
         </div>
       `;
   });
@@ -9389,7 +9447,7 @@ async function endGame(winner, byScore) {
   let extraRewardHtml = '';
   
   // If the player won the match, they get a performance-based bonus!
-  if (isMyWin) {
+  if (isMyWin && state.over) {
       const myScore = score(you);
       
       // Online Mode: Trust the server's attached bonus item
@@ -9422,7 +9480,7 @@ async function endGame(winner, byScore) {
   openModal('finaleModal');
   renderAll();
   
-  if(isMyWin) {
+  if(isMyWin && state.over) {
       celebrateWin();
   } else {
       try { sfx.lose(); } catch(e){}
@@ -9659,105 +9717,17 @@ function showEliminationCinematic(deadPlayersData, realNumber, isBankrupt, onCom
                 const { winner, byScore } = window.pendingEndGame;
                 window.pendingEndGame = null;
                 endGame(winner, byScore);
+            } else if (state && !state.over) {
+                // --- SPECTATOR PROMPT ---
+                // If the local player is dead, ask them to spectate or leave
+                const myUid = window.DoDAuth ? DoDAuth.getProfile().uid : null;
+                const isMeDead = deadPlayersData.some(d => d.uid === myUid || d.name === state.players[0].name);
+                if (isMeDead) {
+                    document.getElementById('spectatorChoiceOverlay').classList.add('show');
+                }
             }
         }, 500);
     }, 4500); // Hold the screen for 4.5 seconds to ensure everyone sees it
-}
-
-async function endGame(winner, byScore) {
-  // Delay the finale if an elimination cinematic is currently dominating the screen
-  if (window.isEliminationPlaying) {
-      window.pendingEndGame = { winner, byScore };
-      return;
-  }
-
-  // --- BUG FIX: THE ASYNC LOCK ---
-  // Prevent Firebase from triggering the endgame twice while we wait for Cloudflare!
-  if (window.isEndGameRunning) return;
-  
-  const modal = document.getElementById('finaleModal');
-  if(modal && modal.classList.contains('show')) return;
-  
-  window.isEndGameRunning = true; // Lock the gates!
-
-  state.over = true;
-  clearInterval(timerInterval);
-  document.getElementById('deceptionModal').classList.remove('show');
-
-  // Spawn cinematic floating embers for the finale
-  const fContainer = document.getElementById('finaleParticles');
-  if (fContainer) {
-      fContainer.innerHTML = '';
-      for(let i=0; i<40; i++) {
-          let ember = document.createElement('div');
-          ember.className = 'ls-ember';
-          ember.style.left = Math.random() * 100 + '%';
-          ember.style.animationDuration = (Math.random() * 3 + 2) + 's';
-          ember.style.animationDelay = (Math.random() * 2) + 's';
-          fContainer.appendChild(ember);
-      }
-  }
-
-  // --- WAIT FOR SECURE CLOUDFLARE REWARDS ---
-  // The 'await' keyword here is the magic that fixes the crash!
-  window._latestProgression = await computeMatchProgression();
-
-  const you = state.players[0]; // Local player is always seat 0 locally
-  
-  // OFFLINE ONLY: Add currency locally (Online is handled entirely by Cloudflare)
-  if(!currentMatchId && window.DoDShop){
-      const earned = Math.max(0, score(you));
-      window.DoDShop.addCurrency(earned);
-  }
-
-  // Sort players to determine absolute placements
-  const sorted = [...state.players].sort((a,b) => {
-      if(a.out !== b.out) return a.out ? 1 : -1;
-      return score(b) - score(a);
-  });
-  
-  const myRank = sorted.findIndex(p => p.id === you.id) + 1;
-  const isMyWin = myRank === 1;
-
-  let headerHtml = `<div class="finale-header">
-      <h1 class="finale-status ${isMyWin ? 'win' : 'loss'}">${isMyWin ? 'WINNER!' : `LOSS #${myRank}`}</h1>
-      <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${byScore ? 'Time Limit Reached' : 'Match Concluded'}</div>
-  </div>`;
-
-  let listHtml = `<div class="finale-list">`;
-  sorted.forEach((p, idx) => {
-      const rank = idx + 1;
-      const isMe = p.id === you.id;
-      const isWinner = rank === 1;
-      const sc = score(p);
-      const stats = p.out ? 'Eliminated' : `${p.shop} PC / ${p.hand.length} Cards`;
-      
-      listHtml += `
-        <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner ? 'is-winner' : ''}">
-          <div class="finale-rank">#${rank}</div>
-          <div class="finale-name">${p.name} ${isMe ? '(You)' : ''}</div>
-          <div class="finale-stats">${stats}</div>
-          <div class="finale-score">${sc}</div>
-        </div>
-      `;
-  });
-  listHtml += `</div>`;
-
-  // Safely grab the coins without crashing if the server hiccuped
-  const earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : Math.max(0, score(you));
-  const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; gap:6px;"><img src="Coins/Coins.webp" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC Earned</div>`;
-  
-  let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
-  
-  document.getElementById('finaleContent').innerHTML=html;
-  openModal('finaleModal');
-  renderAll();
-  
-  if(isMyWin) {
-      celebrateWin();
-  } else {
-      try { sfx.lose(); } catch(e){}
-  }
 }
 // ============================================================
 // ONLINE MULTIPLAYER: FRIENDS, PARTIES, & MATCHMAKING
