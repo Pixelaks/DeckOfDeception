@@ -66,10 +66,18 @@ dodAuth.onAuthStateChanged(function(user){
       }
     } else {
       const legacy = _dodReadLocalLegacyProgress();
+      // PRODUCTION FIX: legacy values come from the player's own localStorage and are
+      // fully attacker-controlled — never trust them beyond the same defaults a brand
+      // new player would get, or anyone can hand themselves free currency/skins by
+      // editing localStorage before their first sign-in.
+      const safeLegacyCurrency = Math.min(Number(legacy.currency) || 100, 100);
+      const safeLegacyOwnedSkins = Array.isArray(legacy.ownedSkins)
+        ? legacy.ownedSkins.filter(id => SHOP_LOCKED_CATALOG.some(item => item.id === id))
+        : [];
       const newProfile = {
         displayName: null, // Always force the Name Setup prompt for new players!
-        currency: legacy.currency,
-        ownedSkins: legacy.ownedSkins,
+        currency: safeLegacyCurrency,
+        ownedSkins: safeLegacyOwnedSkins,
         // PUBG Profile & Progression Defaults
         level: 1,
         points: 0,
@@ -98,16 +106,10 @@ dodAuth.onAuthStateChanged(function(user){
 function dodSignInWithGoogle(){
   const provider = new firebase.auth.GoogleAuthProvider();
   dodAuth.signInWithPopup(provider).then(function(result) {
-      // The exact second they sign in, force the screen back to landscape!
-      if (typeof forceEnterFullscreen === 'function') {
-          forceEnterFullscreen();
-      }
+      // REMOVE forceEnterFullscreen() from here. The browser will block it.
   }).catch(function(error){
       console.error("Google Sign-In Error:", error);
-      // Even if they hit "cancel" or the back button, fix the screen!
-      if (typeof forceEnterFullscreen === 'function') {
-          forceEnterFullscreen();
-      }
+      // REMOVE forceEnterFullscreen() from here as well.
   });
 }
 
