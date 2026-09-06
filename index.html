@@ -2479,7 +2479,7 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 window.dodImagesLoaded = false;
 (function dodPreloadImages() {
   var srcs = [
-    'PixelaksLogoTransparent.webp',
+    'PixelaksLogoTransparent.png',
     'CardstoBuy/TheBase.webp', 'Cards/SwapCard.webp', 'Cards/PowerCard.webp',
     'Cards/SteelCard.webp', 'Cards/ReverseCard.webp', 'Cards/PeekCard.webp',
     'Cards/CardPhase.webp', 'Cards/InsuranceCard.webp', 'Coins/Coins.webp', 'Tables/GreenWood.webp',
@@ -2512,6 +2512,7 @@ window.dodImagesLoaded = false;
 
   var loaded = 0;
   var total = srcs.length;
+  var isCached = localStorage.getItem('dod_assets_cached') === 'true';
 
   function updateLoaderUI() {
       var overlay = document.getElementById('introOverlay');
@@ -13235,7 +13236,7 @@ async function purchaseIAP(itemId, rewardAmount, event) {
             currency: orderRes.currency,
             name: "Deck of Deception",
             description: `Purchase ${rewardAmount} PC`,
-            image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.webp",
+            image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.png",
             order_id: orderRes.orderId, // Connects payment to the server order
             theme: { color: "#c9a227" }, // Matches your brass UI theme
             handler: async function (response) {
