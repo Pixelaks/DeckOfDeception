@@ -2611,10 +2611,10 @@ window.dodImagesLoaded = false;
   <button id="tutBtn" class="btn small" style="margin-top:10px; padding:10px 0; font-size:13px;" onclick="tutNext()">Continue</button>
 </div>
 
-<!-- ACHIEVEMENT POPUP -->
+<!-- UNIVERSAL UNLOCK POPUP -->
 <div id="achievementPopup">
   <div class="ach-banner">
-     <div style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-bottom:4px; text-shadow:0 2px 8px #000; letter-spacing:1px; text-transform:uppercase;">Achievement Unlocked!</div>
+     <div id="achPopupHeaderText" style="color:var(--brass-bright); font-family:'Cinzel Decorative',serif; font-size:18px; margin-bottom:4px; text-shadow:0 2px 8px #000; letter-spacing:1px; text-transform:uppercase;">Achievement Unlocked!</div>
      <div id="achPopupTitle" style="margin:10px 0;"></div>
      <div style="display:flex; gap:12px; margin-top:16px; justify-content:center;">
          <button class="btn small" id="achPopupEquipBtn" style="min-width:130px; font-size:12px; padding:10px;">Equip Now</button>
@@ -3450,7 +3450,13 @@ async function submitUniqueNameWithId() {
     <div class="pubg-content">
 
       <!-- HEADER -->
-      <h2 style="font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#fff; margin:0 0 30px 0; letter-spacing:1px;">DATA</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
+        <h2 style="font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#fff; margin:0 !important; letter-spacing:1px;">DATA</h2>
+        <div class="currency-badge" style="margin-top:0; padding:6px 14px; font-size:13px; display:flex; align-items:center; gap:6px;">
+          <img src="Coins/Coins.webp" style="width:16px; height:16px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC">
+          <span id="profileCurrency">0</span>
+        </div>
+      </div>
 
       <div class="pubg-inner-row">
         <!-- PREVIEW PANE -->
@@ -5630,6 +5636,13 @@ function listenToGameState() {
                     willAnimateAction = true;
                 }
             }
+            
+            // FIX: If this is our own optimistic action, we already animated it locally! 
+            // Do not lock the turn arrow or block the host bot trigger waiting for an animation.
+            if (serverState.lastAction.uid === myUid && window.dodJustPlayedLocally) {
+                willAnimateAction = false;
+            }
+            
             playNetworkedAnimation(serverState.lastAction);
         }
 
@@ -6795,7 +6808,7 @@ function renderHand(){
   wrap.innerHTML='';
   const you=state.players[0];
   
-  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL'].includes(state.uiState);
+  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState);
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
   if (localStorage.getItem('dod_setting_sort') === 'true') {
@@ -7079,8 +7092,9 @@ async function secureServerCall(endpoint, payload) {
 
 // 2. THE UPDATED PLAY FUNCTION (Optimistic UI)
 async function playNumberFromHand(idx, el) {
-    if(!isYourTurn()) return;
-    if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
+  if(!isYourTurn()) return;
+  if(state.uiState !== 'IDLE' && state.uiState !== 'RESOLVING_BUY') return; 
+  state.buyLoop = null;
     
     const myUid = DoDAuth.getProfile().uid;
     const myPlayerObj = state.players.find(p => p.uid === myUid);
@@ -7134,7 +7148,8 @@ async function playNumberFromHand(idx, el) {
 
 async function playWild(idx, el){
   if(!isYourTurn()) return;
-  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
+  if(state.uiState !== 'IDLE' && state.uiState !== 'RESOLVING_BUY') return; 
+  state.buyLoop = null;
   const myUid = DoDAuth.getProfile().uid;
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card = you.hand[idx];
@@ -7178,7 +7193,8 @@ async function playWild(idx, el){
 
 async function playReverse(idx, el){
   if(!isYourTurn()) return;
-  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
+  if(state.uiState !== 'IDLE' && state.uiState !== 'RESOLVING_BUY') return; 
+  state.buyLoop = null;
   const myUid = DoDAuth.getProfile().uid;
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const card=you.hand[idx];
@@ -7217,8 +7233,9 @@ async function playReverse(idx, el){
 }
 
 function openTargeting(idx, el, actionType){
-  if(state.uiState !== 'IDLE') return; // FIX: Prevent double-click state corruption
+  if(state.uiState !== 'IDLE' && state.uiState !== 'RESOLVING_BUY') return; 
   state.uiState = 'CHOOSE_TARGET_' + actionType;
+  state.buyLoop = null;
   state._pendingActionIdx = idx;
   state._pendingActionEl = el;
   renderAll();
@@ -7440,7 +7457,7 @@ async function playInsuranceFromHand(idx, el) {
     if (currentMatchId) {
         window.dodJustPlayedLocally = true;
         try {
-            await secureServerCall('playInsurance', { isResolvingBuy: isResolvingBuy });
+            await secureServerCall('useInsurance', { isResolvingBuy: isResolvingBuy });
         } catch(e) {
             state.uiState = isResolvingBuy ? 'RESOLVING_BUY' : 'IDLE';
             if (el) el.classList.remove('card-pending');
@@ -8197,8 +8214,25 @@ function resolveEmptySingleDraw(buyer){
           return; 
       }
       
-      const isMatch = (card.value===state.requiredValue) || (state.requiredValue===null);
+      let isMatch = (card.value===state.requiredValue) || (state.requiredValue===null) || card.type==='reverse' || (card.type==='wild' && buyer.shop>=2);
+      let isTargetCard = (card.type==='steal' || card.type==='power') && state.players.some(p => !p.out && p.id !== buyer.id);
+
+      if(isTargetCard) {
+          buyer.hand.push(card);
+          if (currentMatchId) {
+              firebase.firestore().collection('matches').doc(currentMatchId).update({
+                  'gameState.deck': state.deck, 'gameState.players': state.players, 'gameState.uiState': 'IDLE',
+                  'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: `Drew ${card.type.toUpperCase()}! Play it from your hand.` }
+              });
+          } else {
+              log(`Drew ${card.type.toUpperCase()}! Play it from your hand.`, 'ok');
+              state.uiState = 'IDLE'; renderAll(); flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[0], 5, '', buyer.deckSkin);
+          }
+          return;
+      }
+
       if(isMatch){
+        if(card.type==='wild') buyer.shop-=2;
         let effective,label;
         if(card.type==='number'){ effective=card.value; label=card.value; }
         else { 
@@ -8815,14 +8849,24 @@ async function botSingleDraw(buyer){
   const card=state.deck.pop();
   if(!card){ if (!currentMatchId) log(`${buyer.name} finds the market empty — turn skips.`); advanceTurn(); return; }
   
-  const isMatch=(card.value===state.requiredValue)||(state.requiredValue===null);
+  let isMatch = (card.value===state.requiredValue) || (state.requiredValue===null) || card.type==='reverse' || (card.type==='wild' && buyer.shop>=2) || ((card.type==='steal'||card.type==='power') && state.players.some(p => !p.out && p.id !== buyer.id));
   if(isMatch){
+    if(card.type==='wild') buyer.shop-=2;
     let effective,label;
     if(card.type==='number'){ effective=card.value; label=card.value; }
     else { 
         effective=state.requiredValue;
         label = card.type === 'wild' ? 'W' : card.type === 'reverse' ? 'REV' : card.type === 'steal' ? 'STL' : 'PWR';
         if(card.type==='reverse') { state.direction *= -1; }
+        if (card.type === 'steal' || card.type === 'power') {
+            const opts = state.players.filter(p => !p.out && p.id !== buyer.id);
+            if (opts.length > 0) {
+                const actionTarget = opts.sort((a, b) => b.shop - a.shop)[0];
+                const taken = Math.min(card.tier || (card.type === 'steal' ? 3 : 2), actionTarget.shop);
+                actionTarget.shop = Math.max(0, actionTarget.shop - taken);
+                if (card.type === 'steal') buyer.shop += taken;
+            }
+        }
     }
     buyer.shop+=PLAY_REWARD;
     state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=buyer.id;
@@ -8881,9 +8925,10 @@ async function botBuyLoop(buyer) {
       if (buyer.shop >= 8 && riskVal > 0.3) maxPulls = 2;
       if (buyer.shop >= 14 && riskVal > 0.7) maxPulls = 3;
   } else { // Apprentice / Trickster
-      // 25% chance to be smart and stop at 1, otherwise they act greedy!
-      if (riskVal > 0.25) maxPulls = 2;
-      if (riskVal > 0.6) maxPulls = 3;
+      // Perfectly even random chance to draw 1, 2, or 3 cards to feel like an unpredictable human!
+      if (riskVal < 0.33) maxPulls = 1;
+      else if (riskVal < 0.66) maxPulls = 2;
+      else maxPulls = 3;
   }
 
   // Cap pulls by what they can legally afford
@@ -8918,8 +8963,9 @@ async function botBuyLoop(buyer) {
         const card = state.deck.pop();
     if (!card) break;
     
-    const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null);
-    if (isMatch) {
+    const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null) || card.type === 'reverse' || (card.type === 'wild' && buyer.shop >= 2) || ((card.type === 'steal' || card.type === 'power') && state.players.some(p => !p.out && p.id !== buyer.id));
+      if (isMatch) {
+          if (card.type === 'wild') buyer.shop -= 2;
       // --- MATCH FOUND ---
       let effective, label;
       let actionTargetRect = null;
@@ -11282,13 +11328,52 @@ const TITLES_DB = [
   { id: 't_legend', name: 'The Legend', rarity: 'legendary', desc: 'Reach Legend Tier.', reqKey: 'tierLevel', reqVal: 5 }
 ];
 
+const PREMIUM_AVATARS = [
+    { id: 'BasicGemCounter', name: 'Basic Gem', shardPrice: 150, shardsNeeded: 10 },
+    { id: 'BoneDice', name: 'Bone Dice', shardPrice: 150, shardsNeeded: 12 },
+    { id: 'BronzeFirst', name: 'Bronze First', shardPrice: 150, shardsNeeded: 15 },
+    { id: 'CopperBettingCoin', name: 'Copper Coin', shardPrice: 150, shardsNeeded: 10 },
+    { id: 'IronCrosshair', name: 'Iron Crosshair', shardPrice: 150, shardsNeeded: 14 },
+    { id: 'IronHeart', name: 'Iron Heart', shardPrice: 150, shardsNeeded: 12 },
+    { id: 'IronShield', name: 'Iron Shield', shardPrice: 150, shardsNeeded: 15 },
+    { id: 'IronSword', name: 'Iron Sword', shardPrice: 150, shardsNeeded: 18 },
+    { id: 'JesterBell', name: 'Jester Bell', shardPrice: 150, shardsNeeded: 20 },
+    { id: 'TiedCardStack', name: 'Tied Cards', shardPrice: 150, shardsNeeded: 15 },
+    { id: 'TurnTimer', name: 'Turn Timer', shardPrice: 150, shardsNeeded: 12 },
+    { id: 'WaxSeal', name: 'Wax Seal', shardPrice: 150, shardsNeeded: 10 },
+    { id: 'WornPokerChip', name: 'Worn Chip', shardPrice: 150, shardsNeeded: 25 }
+];
+
+const PREMIUM_FRAMES = [
+    { id: 'Bone&Metal', name: 'Bone & Metal', shardPrice: 150, shardsNeeded: 12 },
+    { id: 'DarkMarble', name: 'Dark Marble', shardPrice: 150, shardsNeeded: 15 },
+    { id: 'DarkSteel', name: 'Dark Steel', shardPrice: 150, shardsNeeded: 10 },
+    { id: 'Dice&Filigree', name: 'Dice & Filigree', shardPrice: 150, shardsNeeded: 20 },
+    { id: 'HammeredIron', name: 'Hammered Iron', shardPrice: 150, shardsNeeded: 14 },
+    { id: 'OxidizedCopper', name: 'Oxidized Copper', shardPrice: 150, shardsNeeded: 18 },
+    { id: 'StoneAge', name: 'Stone Age', shardPrice: 150, shardsNeeded: 10 },
+    { id: 'TarnishedSilver', name: 'Tarnished Silver', shardPrice: 150, shardsNeeded: 15 },
+    { id: 'VerdigrisBronze', name: 'Verdigris Bronze', shardPrice: 150, shardsNeeded: 12 },
+    { id: 'Wood&Brass', name: 'Wood & Brass', shardPrice: 150, shardsNeeded: 25 }
+];
+
 let _customCurrentTab = 'avatars';
 let _previewAvatar = 'Apprentice';
 let _previewFrame = 'Apprentice';
 let _previewTitle = '';
 
-function getEquippedAvatar(profile) { return (profile && profile.avatar && TIERS.includes(profile.avatar)) ? profile.avatar : 'Apprentice'; }
-function getEquippedFrame(profile) { return (profile && profile.frame && TIERS.includes(profile.frame)) ? profile.frame : 'Apprentice'; }
+function getEquippedAvatar(profile) { 
+    if (!profile || !profile.avatar) return 'Apprentice';
+    if (TIERS.includes(profile.avatar)) return profile.avatar;
+    if (PREMIUM_AVATARS.find(a => a.id === profile.avatar)) return profile.avatar;
+    return 'Apprentice';
+}
+function getEquippedFrame(profile) { 
+    if (!profile || !profile.frame) return 'Apprentice';
+    if (TIERS.includes(profile.frame)) return profile.frame;
+    if (PREMIUM_FRAMES.find(f => f.id === profile.frame)) return profile.frame;
+    return 'Apprentice';
+}
 function getEquippedTitle(profile) { return (profile && profile.title) ? profile.title : ''; }
 function getEquippedBackImg(profile) {
     const eqBack = profile ? (profile.equippedBack || 'cb_default') : 'cb_default';
@@ -11377,6 +11462,9 @@ function updateProfileWidget(profile) {
     const modalTier = document.getElementById('modalProfileTier');
     const modalBar = document.getElementById('modalLevelBar');
     const modalProgressText = document.getElementById('modalLevelProgressText');
+    const profileCur = document.getElementById('profileCurrency');
+    
+    if (profileCur) profileCur.textContent = profile.currency || 0;
     
     if (modalName) {
         modalName.innerHTML = `${profile.displayName} 
@@ -11669,19 +11757,120 @@ async function executeDailyDraw(selectedIndex) {
             const hubCur = document.getElementById('hubCurrency');
             if (hubCur) hubCur.textContent = profile.currency || 0;
             renderEventsHub(profile);
+
+            // Pop up the Unlock Notification if an item was unlocked
+            if (res.unlockedItemId) {
+                setTimeout(() => triggerUnlockPopupFromId(res.unlockedItemId), 1200);
+            }
         }, 600);
 
     } catch(e) {
-        console.error("Draw failed:", e);
-        subtitle.textContent = "The Dealer encountered an error. Try again later.";
-        subtitle.style.color = "var(--danger-bright)";
-        // Unlock if it failed so they can try again
-        for (let i = 0; i < 4; i++) {
-            document.getElementById(`ddWrap_${i}`).classList.remove('locked');
-            document.getElementById(`ddWrap_${i}`).classList.remove('fade-out');
-            document.getElementById(`ddCard_${i}`).onclick = () => executeDailyDraw(i);
+            console.warn("Server offline. Running local simulation for Daily Draw.");
+            
+            // --- OFFLINE / LOCAL SIMULATION FALLBACK ---
+            let rollData = { date: new Date().toDateString(), rewardType: 'none', icon: '💨', msg: 'Nothing today' };
+            let newCurrency = profile.currency || 0;
+            let newChests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
+            let newShards = profile.shards || {};
+            let newInventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
+            let totalCopies = profile.totalCopies || 0;
+
+            const POOL_COMMON = [ { id: 'BasicGemCounter', name: 'Basic Gem', req: 10 }, { id: 'CopperBettingCoin', name: 'Copper Coin', req: 10 }, { id: 'WaxSeal', name: 'Wax Seal', req: 10 }, { id: 'BoneDice', name: 'Bone Dice', req: 12 }, { id: 'IronHeart', name: 'Iron Heart', req: 12 }, { id: 'TurnTimer', name: 'Turn Timer', req: 12 }, { id: 'DarkSteel', name: 'Dark Steel', req: 10 }, { id: 'StoneAge', name: 'Stone Age', req: 10 }, { id: 'Bone&Metal', name: 'Bone & Metal', req: 12 }, { id: 'VerdigrisBronze', name: 'Verdigris Bronze', req: 12 }, { id: 'cf_crimson', name: 'Crimson Blood Face', req: 10 }, { id: 'cb_crimson', name: 'Crimson Blood Back', req: 15 } ];
+            const POOL_RARE = [ { id: 'IronCrosshair', name: 'Iron Crosshair', req: 14 }, { id: 'BronzeFirst', name: 'Bronze First', req: 15 }, { id: 'IronShield', name: 'Iron Shield', req: 15 }, { id: 'TiedCardStack', name: 'Tied Cards', req: 15 }, { id: 'IronSword', name: 'Iron Sword', req: 18 }, { id: 'HammeredIron', name: 'Hammered Iron', req: 14 }, { id: 'DarkMarble', name: 'Dark Marble', req: 15 }, { id: 'TarnishedSilver', name: 'Tarnished Silver', req: 15 }, { id: 'OxidizedCopper', name: 'Oxidized Copper', req: 18 }, { id: 'cf_sapphire', name: 'Deep Sapphire Face', req: 15 }, { id: 'cf_emerald', name: 'Emerald Viper Face', req: 20 }, { id: 'cb_sapphire', name: 'Deep Sapphire Back', req: 20 }, { id: 'cb_bloodwood', name: 'Bloodwood Back', req: 25 }, { id: 'tb_bloodwood', name: 'Crimson Bloodwood Table', req: 1 }, { id: 'tb_midnight', name: 'Midnight Navy Table', req: 1 }, { id: 'tb_amethyst', name: 'Royal Amethyst Table', req: 1 } ];
+            const POOL_LEGENDARY = [ { id: 'JesterBell', name: 'Jester Bell', req: 20 }, { id: 'WornPokerChip', name: 'Worn Chip', req: 25 }, { id: 'Dice&Filigree', name: 'Dice & Filigree', req: 20 }, { id: 'Wood&Brass', name: 'Wood & Brass', req: 25 }, { id: 'cf_diamond', name: 'Prismatic Diamond Face', req: 1 }, { id: 'cb_obsidian', name: 'Obsidian Void Back', req: 1 }, { id: 'tb_clockwork', name: 'Clockwork Brass Table', req: 1 }, { id: 'tb_cyber', name: 'Cyber Matrix Table', req: 1 }, { id: 'tb_mirage', name: 'Desert Mirage Table', req: 1 }, { id: 'tb_dragon', name: 'Dragon\'s Lair Table', req: 1 }, { id: 'tb_void', name: 'Void Magic Table', req: 1 } ];
+
+            const r = Math.random();
+            if (r < 0.15) { 
+                // 15% Chance for Cosmetic (Weighted Rarities)
+                const rarityRoll = Math.random();
+                const targetPool = rarityRoll < 0.65 ? POOL_COMMON : (rarityRoll < 0.90 ? POOL_RARE : POOL_LEGENDARY);
+                const targetShard = targetPool[Math.floor(Math.random() * targetPool.length)];
+                
+                newShards[targetShard.id] = (newShards[targetShard.id] || 0) + 1;
+                totalCopies += 1;
+                rollData.rewardType = 'shard';
+                
+                let iconStr = '🎁';
+                if(targetShard.id.startsWith('cf_') || targetShard.id.startsWith('cb_')) iconStr = '🎴';
+                else if(targetShard.id.startsWith('tb_')) iconStr = '🎰';
+                else if(['Bone&Metal', 'DarkMarble', 'DarkSteel', 'Dice&Filigree', 'HammeredIron', 'OxidizedCopper', 'StoneAge', 'TarnishedSilver', 'VerdigrisBronze', 'Wood&Brass'].includes(targetShard.id)) iconStr = '🖼️';
+                else iconStr = '👤';
+                
+                if (newShards[targetShard.id] >= targetShard.req && !newInventory.includes(targetShard.id)) {
+                    newInventory.push(targetShard.id);
+                    rollData.icon = '🎉';
+                    rollData.msg = `Unlocked ${targetShard.name}!`;
+                } else {
+                    rollData.icon = `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(232,196,84,0.8));">${iconStr}</div>`;
+                    rollData.msg = `+1 Copy: ${targetShard.name}`;
+                }
+            } else if (r < 0.80) { 
+                // 65% Chance for Random Coins (20 to 100 PC)
+                const coinWin = Math.floor(Math.random() * 81) + 20;
+                newCurrency += coinWin;
+                rollData.rewardType = 'coins';
+                rollData.icon = `<img src="Coins/Coins.webp" style="width:46px;height:46px;filter:drop-shadow(0 0 8px rgba(226,189,74,0.6));">`;
+                rollData.msg = `+${coinWin} PC!`;
+            } else if (r < 0.92) { 
+                // 12% Chance for Basic Chest
+                newChests.base += 1;
+                rollData.rewardType = 'chest';
+                rollData.icon = `<img src="Cards/BasicCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                rollData.msg = 'Basic Reward Card!';
+            } else if (r < 0.94) { 
+                // 2% Chance for Mythic Chest
+                newChests.mythic += 1;
+                rollData.rewardType = 'chest';
+                rollData.icon = `<img src="Cards/MythicCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                rollData.msg = 'Mythic Reward Card!';
+            } else if (r < 0.95) { 
+                // 1% Chance for Legendary Chest
+                newChests.legendary += 1;
+                rollData.rewardType = 'chest';
+                rollData.icon = `<img src="Cards/LegendaryCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                rollData.msg = 'Legendary Reward Card!';
+            } else {
+                rollData.rewardType = 'none'; 
+                rollData.icon = `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(194,59,74,0.8));">💀</div>`; 
+                rollData.msg = "The Dealer Wins.";
+            }
+
+            // Sync Local Cache
+            profile.lastSpinDate = rollData.date;
+            profile.currency = newCurrency;
+            profile.chests = newChests;
+            profile.shards = newShards;
+            profile.inventory = newInventory;
+            profile.totalCopies = totalCopies;
+
+            // Save to Firebase securely
+            if (window.firebase) {
+                firebase.firestore().collection('users').doc(profile.uid).update({
+                    lastSpinDate: profile.lastSpinDate,
+                    currency: profile.currency,
+                    chests: profile.chests,
+                    shards: profile.shards,
+                    inventory: profile.inventory,
+                    totalCopies: profile.totalCopies
+                }).catch(()=>{});
+            }
+
+            selectedBack.innerHTML = `<div class="dd-reward-icon">${rollData.icon}</div><div class="dd-reward-text">${rollData.msg}</div>`;
+            
+            setTimeout(() => {
+                try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
+                if (rollData.rewardType !== 'none') triggerNotificationVfx('gold');
+                
+                selectedCard.classList.add('flipped');
+                setTimeout(() => selectedCard.classList.add('animating'), 800);
+                subtitle.textContent = "Reward Claimed!";
+                subtitle.style.color = "var(--ok)";
+                
+                const hubCur = document.getElementById('hubCurrency');
+                if (hubCur) hubCur.textContent = profile.currency || 0;
+                renderEventsHub(profile);
+            }, 600);
         }
-    }
 }
 
 let currentRewardTier = '';
@@ -11798,6 +11987,11 @@ async function executeRewardCardOpen() {
             if (hubCur) hubCur.textContent = profile.currency || 0;
             renderEventsHub(profile);
             if (typeof renderShopItems === 'function') renderShopItems();
+
+            // Pop up the Unlock Notification if an item was unlocked
+            if (res.unlockedItemId) {
+                setTimeout(() => triggerUnlockPopupFromId(res.unlockedItemId), 1000);
+            }
         }, 600);
 
     } catch(e) {
@@ -11837,54 +12031,115 @@ function checkNewlyUnlockedTitles(profile) {
     if (tDot) { if (hasUnseen) tDot.classList.add('show'); else tDot.classList.remove('show'); }
 }
 
+function triggerUnlockPopupFromId(itemId) {
+    let cat = 'avatars';
+    if (PREMIUM_FRAMES.find(f => f.id === itemId)) cat = 'frames';
+    else if (SHOP_DB.cardFaces.find(c => c.id === itemId)) cat = 'cardFaces';
+    else if (SHOP_DB.cardBacks.find(c => c.id === itemId)) cat = 'cardBacks';
+    else if (SHOP_DB.tables.find(t => t.id === itemId)) cat = 'tables';
+    showItemUnlockPopup(itemId, cat);
+}
+
 function showAchievementPopup(profile, tDef) {
+    showItemUnlockPopup(tDef.id, 'title');
+}
+
+function showItemUnlockPopup(itemId, category) {
     const popup = document.getElementById('achievementPopup');
-    const tContainer = document.getElementById('achPopupTitle');
+    const header = document.getElementById('achPopupHeaderText');
+    const visualContainer = document.getElementById('achPopupTitle');
     const equipBtn = document.getElementById('achPopupEquipBtn');
     const dismissBtn = document.getElementById('achPopupDismissBtn');
-    
-    if (!popup || !tContainer || !equipBtn) return;
-    
-    tContainer.innerHTML = renderTitleHTML(tDef.id, true);
-    equipBtn.onclick = (e) => equipFromPopup(tDef.id, e);
-    if (dismissBtn) dismissBtn.onclick = () => closeAchievementPopup(tDef.id);
-    
-    try { sfx.alert(); } catch(e){} // Now triggers your NotificationSfx.mp4!
-    
-    // Trigger golden confetti burst
+
+    if (!popup || !header || !visualContainer || !equipBtn) return;
+
+    header.textContent = "NEW ITEM UNLOCKED!";
+
+    // Find item definition and render HTML
+    let visualHtml = '';
+    let itemName = '';
+
+    if (category === 'title') {
+        header.textContent = "ACHIEVEMENT UNLOCKED!";
+        const t = TITLES_DB.find(x => x.id === itemId);
+        itemName = t ? t.name : 'Title';
+        visualHtml = renderTitleHTML(itemId, true);
+    } else if (category === 'avatars') {
+        const a = PREMIUM_AVATARS.find(x => x.id === itemId) || {name: itemId};
+        itemName = a.name;
+        visualHtml = `<div class="avatar-frame-wrap" style="width:72px; height:72px; margin:0 auto;"><img src="Avatars/${itemId}.webp" class="af-avatar" style="border-radius:4px; box-shadow:0 4px 15px rgba(0,0,0,0.8);"><img src="Frames/Apprentice.webp" class="af-frame"></div><div style="font-family:'Cinzel',serif; font-weight:bold; margin-top:12px; color:#fff;">${itemName}</div>`;
+    } else if (category === 'frames') {
+        const f = PREMIUM_FRAMES.find(x => x.id === itemId) || {name: itemId};
+        itemName = f.name;
+        visualHtml = `<div class="avatar-frame-wrap" style="width:72px; height:72px; margin:0 auto;"><img src="Avatars/Apprentice.webp" class="af-avatar" style="border-radius:4px;"><img src="Frames/${itemId}.webp" class="af-frame" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));"></div><div style="font-family:'Cinzel',serif; font-weight:bold; margin-top:12px; color:#fff;">${itemName}</div>`;
+    } else if (category === 'cardFaces') {
+        const c = SHOP_DB.cardFaces.find(x => x.id === itemId) || {name: itemId, color: '#c9a227'};
+        itemName = c.name;
+        visualHtml = `<div style="width:52px; height:74px; margin:0 auto; background-image:url('Cards/CardPhase.webp'); background-size:100% 100%; border:3px solid ${c.color}; border-radius:6px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:28px; color:#20190f; font-weight:bold; box-shadow:0 8px 20px rgba(0,0,0,0.8);">A</div><div style="font-family:'Cinzel',serif; font-weight:bold; margin-top:12px; color:#fff;">${itemName}</div>`;
+    } else if (category === 'cardBacks') {
+        const c = SHOP_DB.cardBacks.find(x => x.id === itemId) || {name: itemId, img: 'TheBase.webp'};
+        itemName = c.name;
+        visualHtml = `<div style="width:52px; height:74px; margin:0 auto; background-image:url('CardstoBuy/${c.img}'); background-size:100% 100%; border-radius:6px; border:2px solid var(--brass-bright); box-shadow:0 8px 20px rgba(0,0,0,0.8);"></div><div style="font-family:'Cinzel',serif; font-weight:bold; margin-top:12px; color:#fff;">${itemName}</div>`;
+    } else if (category === 'tables') {
+        const t = SHOP_DB.tables.find(x => x.id === itemId) || {name: itemId, img: 'GreenWood.webp'};
+        itemName = t.name;
+        visualHtml = `<div style="width:120px; height:120px; margin:0 auto; background-image:url('Tables/${t.img}'); background-size:cover; border-radius:50%; border:3px solid var(--brass-bright); transform: perspective(800px) rotateX(45deg); box-shadow:0 20px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.6);"></div><div style="font-family:'Cinzel',serif; font-weight:bold; margin-top:-10px; color:#fff;">${itemName}</div>`;
+    }
+
+    visualContainer.innerHTML = visualHtml;
+
+    // Re-bind the equip button
+    equipBtn.onclick = (e) => equipFromPopupUniversal(itemId, category, e);
+    if (dismissBtn) dismissBtn.onclick = () => closeAchievementPopup(itemId, category);
+
+    try { sfx.alert(); } catch(e){}
     triggerNotificationVfx('gold');
-    
     popup.classList.add('show');
 }
 
-function closeAchievementPopup(titleId) {
+function closeAchievementPopup(itemId, category) {
     const popup = document.getElementById('achievementPopup');
     if (popup) popup.classList.remove('show');
     try { sfx.uiBack(); } catch(e){}
-    if (titleId) markTitleAsSeen(titleId);
+    if (category === 'title' && itemId) markTitleAsSeen(itemId);
 }
 
-async function equipFromPopup(titleId, event) {
+async function equipFromPopupUniversal(itemId, category, event) {
     try { sfx.uiEquip(); } catch(e){}
-    triggerNotificationVfx('equip', event); // Trigger the new equip VFX at click
-    closeAchievementPopup();
-    
+    triggerNotificationVfx('equip', event);
+    closeAchievementPopup(); // Hide modal
+
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
-    
-    profile.title = titleId;
-    profile.seenTitles = profile.seenTitles || [];
-    if (!profile.seenTitles.includes(titleId)) profile.seenTitles.push(titleId);
-    
-    if (window.firebase) {
-        await firebase.firestore().collection('users').doc(profile.uid).update({
-            title: titleId,
-            seenTitles: firebase.firestore.FieldValue.arrayUnion(titleId)
-        }).catch(()=>{});
+
+    let updates = {};
+    if (category === 'title') {
+        profile.title = itemId; updates.title = itemId;
+        profile.seenTitles = profile.seenTitles || [];
+        if (!profile.seenTitles.includes(itemId)) {
+            profile.seenTitles.push(itemId);
+            updates.seenTitles = firebase.firestore.FieldValue.arrayUnion(itemId);
+        }
+    } else if (category === 'avatars') {
+        profile.avatar = itemId; updates.avatar = itemId;
+    } else if (category === 'frames') {
+        profile.frame = itemId; updates.frame = itemId;
+    } else if (category === 'cardFaces') {
+        profile.equippedFace = itemId; updates.equippedFace = itemId;
+    } else if (category === 'cardBacks') {
+        profile.equippedBack = itemId; updates.equippedBack = itemId;
+    } else if (category === 'tables') {
+        profile.equippedTable = itemId; updates.equippedTable = itemId;
     }
-    
-    updateProfileWidget(profile);
+
+    if (window.firebase && Object.keys(updates).length > 0) {
+        await firebase.firestore().collection('users').doc(profile.uid).update(updates).catch(()=>{});
+    }
+
+    applyEquippedSkins(profile); // Apply table/deck live
+    updateProfileWidget(profile); // Apply avatar/frame/title live
     if(typeof renderUnlockSelectors === 'function') renderUnlockSelectors(profile);
+    if(typeof renderShopItems === 'function') renderShopItems();
 }
 
 async function markTitleAsSeen(titleId) {
@@ -11940,6 +12195,7 @@ function updateEquipButtonState() {
     let isAlreadyEquipped = false;
     let unlockMessage = '';
     let equipLabel = '';
+    let premiumDef = null;
 
     if (_customCurrentTab === 'titles') {
         const tDef = TITLES_DB.find(t => t.id === _previewTitle);
@@ -11947,6 +12203,20 @@ function updateEquipButtonState() {
         isAlreadyEquipped = (_previewTitle === getEquippedTitle(profile));
         unlockMessage = tDef ? tDef.desc : 'Locked';
         equipLabel = 'TITLE';
+    } else if (_customCurrentTab === 'frames' && PREMIUM_FRAMES.find(f => f.id === _previewFrame)) {
+        premiumDef = PREMIUM_FRAMES.find(f => f.id === _previewFrame);
+        const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
+        isUnlocked = shards >= premiumDef.shardsNeeded;
+        isAlreadyEquipped = (premiumDef.id === getEquippedFrame(profile));
+        unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
+        equipLabel = 'FRAME';
+    } else if (_customCurrentTab === 'avatars' && PREMIUM_AVATARS.find(a => a.id === _previewAvatar)) {
+        premiumDef = PREMIUM_AVATARS.find(a => a.id === _previewAvatar);
+        const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
+        isUnlocked = shards >= premiumDef.shardsNeeded;
+        isAlreadyEquipped = (premiumDef.id === getEquippedAvatar(profile));
+        unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
+        equipLabel = 'AVATAR';
     } else {
         const userTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
         const activeItem = (_customCurrentTab === 'avatars') ? _previewAvatar : _previewFrame;
@@ -11956,12 +12226,25 @@ function updateEquipButtonState() {
         equipLabel = activeItem.toUpperCase();
     }
     
+    // Reset onclick so it defaults to equip
+    btn.onclick = (e) => equipSelectedCustomization(e);
+    
     if (!isUnlocked) {
-        btn.disabled = true;
-        btn.textContent = `🔒 ${unlockMessage}`;
-        btn.style.background = "rgba(0,0,0,0.5)";
-        btn.style.color = "rgba(255,255,255,0.4)";
-        btn.style.borderColor = "rgba(255,255,255,0.1)";
+        if (premiumDef) {
+            const canAfford = (profile.currency || 0) >= premiumDef.shardPrice;
+            btn.disabled = !canAfford;
+            btn.textContent = `Buy Copy (${premiumDef.shardPrice}c) • ${unlockMessage}`;
+            btn.style.background = "var(--brass)";
+            btn.style.color = "var(--felt-dark)";
+            btn.style.borderColor = "var(--brass-bright)";
+            btn.onclick = (e) => buyShard(premiumDef.id, premiumDef.shardPrice, premiumDef.shardsNeeded, e);
+        } else {
+            btn.disabled = true;
+            btn.textContent = `🔒 ${unlockMessage}`;
+            btn.style.background = "rgba(0,0,0,0.5)";
+            btn.style.color = "rgba(255,255,255,0.4)";
+            btn.style.borderColor = "rgba(255,255,255,0.1)";
+        }
     } else if (isAlreadyEquipped) {
         btn.disabled = true;
         btn.textContent = `EQUIPPED ✓`;
@@ -11988,7 +12271,7 @@ function renderUnlockSelectors(profile) {
     const eqFrame = getEquippedFrame(profile);
 
     // 1. Render Avatars Grid
-    avRow.innerHTML = TIERS.map((tierName, idx) => {
+    let avatarsHtml = TIERS.map((tierName, idx) => {
         const isUnlocked = idx <= userTierIdx;
         const isEquipped = tierName === eqAvatar;
         const isSelected = tierName === _previewAvatar;
@@ -12003,8 +12286,26 @@ function renderUnlockSelectors(profile) {
         `;
     }).join('');
 
+    avatarsHtml += PREMIUM_AVATARS.map(avatar => {
+        const shards = (profile.shards && profile.shards[avatar.id]) ? profile.shards[avatar.id] : 0;
+        const isUnlocked = shards >= avatar.shardsNeeded;
+        const isEquipped = avatar.id === eqAvatar;
+        const isSelected = avatar.id === _previewAvatar;
+        let classes = `pubg-grid-item ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''} ${isEquipped ? 'equipped' : ''}`;
+        
+        return `
+          <div onclick="selectAvatarItem('${avatar.id}')" class="${classes}">
+            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            <img src="Avatars/${avatar.id}.webp" style="width:70%; height:70%; object-fit:cover; border-radius:4px;" alt="${avatar.name}">
+            <span class="item-label">${avatar.name}</span>
+          </div>
+        `;
+    }).join('');
+
+    avRow.innerHTML = avatarsHtml;
+
     // 2. Render Frames Grid
-    frRow.innerHTML = TIERS.map((tierName, idx) => {
+    let framesHtml = TIERS.map((tierName, idx) => {
         const isUnlocked = idx <= userTierIdx;
         const isEquipped = tierName === eqFrame;
         const isSelected = tierName === _previewFrame;
@@ -12018,6 +12319,24 @@ function renderUnlockSelectors(profile) {
           </div>
         `;
     }).join('');
+
+    framesHtml += PREMIUM_FRAMES.map(frame => {
+        const shards = (profile.shards && profile.shards[frame.id]) ? profile.shards[frame.id] : 0;
+        const isUnlocked = shards >= frame.shardsNeeded;
+        const isEquipped = frame.id === eqFrame;
+        const isSelected = frame.id === _previewFrame;
+        let classes = `pubg-grid-item ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''} ${isEquipped ? 'equipped' : ''}`;
+        
+        return `
+          <div onclick="selectFrameItem('${frame.id}')" class="${classes}">
+            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            <img src="Frames/${frame.id}.webp" style="width:70%; height:70%; object-fit:contain;" alt="${frame.name}">
+            <span class="item-label">${frame.id}</span>
+          </div>
+        `;
+    }).join('');
+
+    frRow.innerHTML = framesHtml;
 
     // 3. Render Titles List
     const tiRow = document.getElementById('titleSelectorRow');
@@ -12800,9 +13119,8 @@ async function buyShard(itemId, price, requiredAmount, event) {
     if (event) triggerNotificationVfx('equip', event);
 
     if (isUnlockedNow) {
-        try { sfx.win(); } catch(e){}
-        triggerNotificationVfx('gold'); 
-        showSystemToast("Skin Unlocked!");
+        // Suppress toast and trigger the PUBG Popup!
+        setTimeout(() => triggerUnlockPopupFromId(itemId), 500); 
     } else {
         try { sfx.uiEquip(); } catch(e){} 
         showSystemToast("Copy Purchased!");
@@ -12812,7 +13130,13 @@ async function buyShard(itemId, price, requiredAmount, event) {
     const hubCur = document.getElementById('hubCurrency');
     if (shopCur) shopCur.textContent = profile.currency;
     if (hubCur) hubCur.textContent = profile.currency;
-    renderShopItems();
+    
+    if (typeof renderShopItems === 'function') renderShopItems();
+    if (document.getElementById('profileModal').classList.contains('show')) {
+        updateProfileWidget(profile);
+        updatePreviewBox();
+        renderUnlockSelectors(profile);
+    }
 
     // --- 2. BACKGROUND SERVER SYNC ---
     try {
@@ -12834,7 +13158,13 @@ async function buyShard(itemId, price, requiredAmount, event) {
         
         if (shopCur) shopCur.textContent = profile.currency;
         if (hubCur) hubCur.textContent = profile.currency;
-        renderShopItems();
+        
+        if (typeof renderShopItems === 'function') renderShopItems();
+        if (document.getElementById('profileModal').classList.contains('show')) {
+            updateProfileWidget(profile);
+            updatePreviewBox();
+            renderUnlockSelectors(profile);
+        }
         
         showSystemToast("Transaction rejected. Coins refunded.");
     }
