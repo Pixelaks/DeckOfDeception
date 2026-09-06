@@ -3,7 +3,7 @@
   "short_name": "DOD",
   "description": "Tactical card deception multiplayer game",
   "start_url": "./index.html",
-  "display": "fullscreen",
+  "display": "standalone",
   "orientation": "landscape",
   "background_color": "#060709",
   "theme_color": "#060709",
