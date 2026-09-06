@@ -2454,6 +2454,11 @@ window.dodImagesLoaded = false;
     'Cards/SteelCard.webp', 'Cards/ReverseCard.webp', 'Cards/PeekCard.webp',
     'Cards/CardPhase.webp', 'Cards/InsuranceCard.webp', 'Coins/Coins.webp', 'Tables/GreenWood.webp',
     'Cards/BasicCard.webp', 'Cards/MythicCard.webp', 'Cards/LegendaryCard.webp', 'Cards/LuckyCard.webp',
+    // --- NEW SHOP CARDS ---
+    'CardstoBuy/CopperRust.webp', 'CardstoBuy/CobaltNight.webp', 'CardstoBuy/Onyx&Steel.webp',
+    'CardstoBuy/IvoryPearl.webp', 'CardstoBuy/AmethystSilk.webp', 'CardstoBuy/EmeraldVelvet.webp',
+    'CardstoBuy/Magician.webp',
+    // --- TIERS & AVATARS ---
     'Tiers/Apprentice.webp', 'Tiers/Trickster.webp', 'Tiers/Phantom.webp',
     'Tiers/Mastermind.webp', 'Tiers/Oracle.webp', 'Tiers/Legend.webp',
     'Avatars/Apprentice.webp', 'Avatars/Trickster.webp', 'Avatars/Phantom.webp',
@@ -2477,10 +2482,6 @@ window.dodImagesLoaded = false;
 
   var loaded = 0;
   var total = srcs.length;
-  
-  // FIX: If the user bought and equipped new skins, the total count will be higher than before.
-  // We must force the loader to wait for these new images to download, even if the cache flag was previously true!
-  var isCached = localStorage.getItem('dod_assets_cached') === 'true' && localStorage.getItem('dod_last_asset_count') == total;
 
   function updateLoaderUI() {
       var overlay = document.getElementById('introOverlay');
@@ -2490,12 +2491,12 @@ window.dodImagesLoaded = false;
       
       if (!overlay || !statusEl || !fillEl) return;
       
-      // If assets were cached in a previous session, visually fast-track the loader to 100% instantly
-      var displayLoaded = isCached ? total : loaded;
-      var pct = total > 0 ? Math.floor((displayLoaded / total) * 100) : 0;
+      // FIX: Base the progress bar entirely on ACTUAL network/cache loaded events!
+      // If the images are in the browser cache, this still hits 100% in a fraction of a second.
+      var pct = total > 0 ? Math.floor((loaded / total) * 100) : 0;
       fillEl.style.width = pct + '%';
 
-      if (displayLoaded < total) {
+      if (loaded < total) {
           overlay.style.pointerEvents = 'none';
           statusEl.textContent = 'Loading Assets... ' + pct + '%';
           statusEl.classList.remove('pulse-text');
@@ -11706,9 +11707,15 @@ async function executeDailyDraw(selectedIndex) {
         if (res.newInventory !== undefined) profile.inventory = res.newInventory;
         if (res.totalCopies !== undefined) profile.totalCopies = res.totalCopies;
 
+        // FIX: Force correct Coin image path in case the Cloudflare server sends a bad path
+        let safeIcon = rollData.icon;
+        if (safeIcon) {
+            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.webp["']/gi, 'src="Coins/Coins.webp"');
+        }
+
         // Directly apply the styled HTML sent by the secure Cloudflare server
         selectedBack.innerHTML = `
-            <div class="dd-reward-icon">${rollData.icon}</div>
+            <div class="dd-reward-icon">${safeIcon}</div>
             <div class="dd-reward-text">${rollData.msg}</div>
         `;
         
@@ -11932,7 +11939,13 @@ async function executeRewardCardOpen() {
         const res = await secureServerCall('economy/openChest', { tier: currentRewardTier });
         const rollData = res.result;
 
-        icon.innerHTML = rollData.icon;
+        // FIX: Force correct Coin image path in case the Cloudflare server sends a bad path
+        let safeIcon = rollData.icon;
+        if (safeIcon) {
+            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.webp["']/gi, 'src="Coins/Coins.webp"');
+        }
+
+        icon.innerHTML = safeIcon;
         text.innerHTML = rollData.msg;
 
         // Sync Local Cache with Server Truth
@@ -12804,10 +12817,23 @@ const SHOP_DB = {
     ],
     cardBacks: [
         { id: 'cb_default', name: 'Brass Standard', method: 'default', img: 'TheBase.webp' },
+        
+        // --- NEW COMMON CARDS ---
+        { id: 'cb_copper', name: 'Copper Rust', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'CopperRust.webp' },
+        { id: 'cb_cobalt', name: 'Cobalt Night', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'CobaltNight.webp' },
+        { id: 'cb_onyx', name: 'Onyx & Steel', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'Onyx&Steel.webp' },
+        { id: 'cb_ivory', name: 'Ivory Pearl', method: 'coins', shardPrice: 200, shardsNeeded: 12, img: 'IvoryPearl.webp' },
+        { id: 'cb_amethyst', name: 'Amethyst Silk', method: 'coins', shardPrice: 200, shardsNeeded: 12, img: 'AmethystSilk.webp' },
+        { id: 'cb_emerald', name: 'Emerald Velvet', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'EmeraldVelvet.webp' },
+        { id: 'cb_magician', name: 'The Magician', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'Magician.webp' },
+        
+        // --- PREMIUM & SPECIAL CARDS ---
         { id: 'cb_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'CrimsonBlood.webp' },
         { id: 'cb_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 300, shardsNeeded: 20, img: 'DeepSapphire.webp' },
         { id: 'cb_bloodwood', name: 'Bloodwood', method: 'coins', shardPrice: 400, shardsNeeded: 25, img: 'Bloodwood.webp' },
         { id: 'cb_obsidian', name: 'Obsidian Void', method: 'spin', img: 'Obsidian Void.webp' },
+        
+        // --- TIER REWARDS ---
         { id: 'cb_trickster', name: 'The Trickster', method: 'tier', unlockTier: 'Trickster', img: 'TricksterCard.webp' },
         { id: 'cb_phantom', name: 'The Phantom', method: 'tier', unlockTier: 'Phantom', img: 'PhantomCard.webp' },
         { id: 'cb_mastermind', name: 'The Mastermind', method: 'tier', unlockTier: 'Mastermind', img: 'MastermindCard.webp' },
