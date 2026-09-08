@@ -1210,6 +1210,175 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   100% { transform: translate(var(--tx), var(--ty)) rotate(calc(var(--rot) - 20deg)) scaleY(0.5); opacity: 0; }
 }
 
+/* THE SYNDICATE HOT BUTTON (BOTTOM RIGHT) */
+.pubg-syndicate-hot-btn {
+  font-family: 'Cinzel', serif;
+  background: linear-gradient(180deg, #3a0d16 0%, #150307 100%);
+  color: var(--brass-bright);
+  border: 1px solid #c23b4a;
+  padding: 8px 26px;
+  font-size: 15px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 4px;
+  font-weight: 900;
+  transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  box-shadow: inset 0 0 15px rgba(194,59,74,0.2), 0 6px 15px rgba(0,0,0,0.6);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: skewX(-12deg);
+}
+.pubg-syndicate-hot-btn::before {
+  content: ''; position: absolute; inset: 0; border-radius: 3px;
+  box-shadow: inset 0 0 20px rgba(194,59,74,0.5), 0 0 20px 5px rgba(194,59,74,0.4);
+  opacity: 0; pointer-events: none; transition: opacity 0.3s;
+}
+.pubg-syndicate-hot-btn::after {
+  content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 3px;
+  background: #ff6b7a; transform: translateY(3px); transition: transform 0.2s;
+  box-shadow: 0 -4px 12px rgba(255,107,122,0.6);
+}
+.pubg-syndicate-hot-btn:hover::after { transform: translateY(0); }
+.pubg-syndicate-hot-btn:hover {
+  background: linear-gradient(180deg, #5c1422 0%, #24060c 100%);
+  border-color: #ff6b7a;
+  color: #fff;
+  transform: skewX(-12deg) translateY(-4px);
+}
+.pubg-syndicate-hot-btn:hover::before { opacity: 1; }
+.pubg-syndicate-hot-btn:active { transform: skewX(-12deg) translateY(0) scale(0.98); }
+.pubg-syndicate-hot-btn .hot-content {
+  transform: skewX(12deg);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+@media (max-width: 800px) {
+  .pubg-syndicate-hot-btn { padding: 6px 16px !important; font-size: 12px !important; }
+  .pubg-syndicate-hot-btn .hot-content span:first-child { font-size: 16px !important; }
+}
+
+#screen-underworld {
+  background: rgba(8, 4, 6, 0.90); /* Deep dark background for readability */
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(201,162,39,0.3);
+  border-radius: 16px;
+  padding: 24px;
+  margin: 70px auto 20px;
+  height: auto;
+  max-width: 540px !important; /* Caps the width so it looks like a neat centered card */
+  box-shadow: 0 20px 50px rgba(0,0,0,0.9);
+}
+
+/* PREMIUM SYNDICATE TRANSITION (EXTENDED 4.5s) */
+#underworldTransitionOverlay {
+  position: fixed; inset: 0; z-index: 100000;
+  display: none; align-items: center; justify-content: center;
+  pointer-events: none; overflow: hidden;
+}
+#underworldTransitionOverlay.active { display: flex; pointer-events: all; }
+
+.syn-door {
+  position: absolute; width: 100%; height: 50vh;
+  background: linear-gradient(180deg, #0a0305 0%, #150508 100%);
+  z-index: 1;
+}
+.syn-door.top { top: 0; transform: translateY(-100%); border-bottom: 2px solid var(--brass-bright); box-shadow: 0 10px 40px rgba(194,59,74,0.7); }
+.syn-door.bottom { bottom: 0; transform: translateY(100%); border-top: 2px solid var(--brass-bright); box-shadow: 0 -10px 40px rgba(194,59,74,0.7); background: linear-gradient(0deg, #0a0305 0%, #150508 100%); }
+
+#underworldTransitionOverlay.active .syn-door.top { animation: synCloseTop 4.5s cubic-bezier(0.64, 0, 0.12, 1) forwards; }
+#underworldTransitionOverlay.active .syn-door.bottom { animation: synCloseBottom 4.5s cubic-bezier(0.64, 0, 0.12, 1) forwards; }
+
+@keyframes synCloseTop {
+  0% { transform: translateY(-100%); }
+  12%, 88% { transform: translateY(0); }
+  100% { transform: translateY(-100%); }
+}
+@keyframes synCloseBottom {
+  0% { transform: translateY(100%); }
+  12%, 88% { transform: translateY(0); }
+  100% { transform: translateY(100%); }
+}
+
+.syn-loader-wrapper {
+  position: relative; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+
+.syn-logo {
+  position: absolute; font-family: 'Cinzel Decorative', serif;
+  font-size: 56px; color: var(--brass-bright); opacity: 0;
+  text-shadow: 0 0 30px rgba(226,189,74,1);
+}
+
+.syn-ring {
+  position: absolute; border-radius: 50%; opacity: 0;
+}
+.syn-ring.outer {
+  width: 150px; height: 150px; border: 2px dashed rgba(194,59,74,0.8);
+}
+.syn-ring.inner {
+  width: 120px; height: 120px; border: 3px solid transparent; border-top-color: var(--brass-bright); border-bottom-color: var(--brass-bright);
+}
+
+#underworldTransitionOverlay.active .syn-ring.outer { animation: synRingSpinOut 4.5s linear forwards; }
+#underworldTransitionOverlay.active .syn-ring.inner { animation: synRingSpinIn 4.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+#underworldTransitionOverlay.active .syn-logo { animation: synLogoPulse 4.5s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+
+@keyframes synRingSpinOut {
+  0%, 12% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  15%, 85% { opacity: 1; }
+  85% { transform: scale(1) rotate(180deg); filter: blur(0px); }
+  92%, 100% { opacity: 0; transform: scale(1.5) rotate(220deg); filter: blur(10px); }
+}
+@keyframes synRingSpinIn {
+  0%, 12% { opacity: 0; transform: scale(0.5) rotate(0deg); }
+  15%, 85% { opacity: 1; }
+  85% { transform: scale(1) rotate(-720deg); filter: blur(0px); }
+  92%, 100% { opacity: 0; transform: scale(0.5) rotate(-800deg); filter: blur(10px); }
+}
+@keyframes synLogoPulse {
+  0%, 12% { opacity: 0; transform: scale(0.5); filter: blur(15px); }
+  20%, 85% { opacity: 1; transform: scale(1); filter: blur(0px); }
+  92%, 100% { opacity: 0; transform: scale(1.5); filter: blur(15px); }
+}
+
+.syn-loader-text {
+  position: absolute; top: 110px; z-index: 3;
+  font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: bold;
+  letter-spacing: 3px; opacity: 0; white-space: nowrap;
+}
+.syn-loader-text::before { content: "VERIFYING CREDENTIALS..."; animation: synTextChange 4.5s forwards; }
+#underworldTransitionOverlay.exiting .syn-loader-text::before { animation: synTextChangeExit 4.5s forwards; }
+#underworldTransitionOverlay.active .syn-loader-text { animation: synTextFade 4.5s forwards; }
+
+@keyframes synTextFade {
+  0%, 15% { opacity: 0; transform: translateY(10px); }
+  20%, 82% { opacity: 1; transform: translateY(0); }
+  88%, 100% { opacity: 0; transform: translateY(-10px); filter: blur(5px); }
+}
+@keyframes synTextChange {
+  0%, 65% { content: "VERIFYING CREDENTIALS..."; color: rgba(194,59,74,1); }
+  68%, 100% { content: "ACCESS GRANTED"; color: var(--ok); text-shadow: 0 0 10px var(--ok); }
+}
+@keyframes synTextChangeExit {
+  0%, 65% { content: "ENCRYPTING DATA..."; color: rgba(194,59,74,1); }
+  68%, 100% { content: "CONNECTION SECURED"; color: var(--ok); text-shadow: 0 0 10px var(--ok); }
+}
+.uw-locked-list { text-align: left; background: rgba(0,0,0,0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); padding: clamp(10px, 3vh, 20px); border-radius: 8px; border: 1px solid rgba(201,162,39,0.4); margin-top: clamp(10px, 3vh, 20px); font-family: 'IBM Plex Mono', monospace; font-size: clamp(10px, 2.5vh, 13px); color: #fff; width: 100%; max-width: 340px; box-shadow: inset 0 0 20px rgba(201,162,39,0.1); }
+.uw-req-row { display: flex; justify-content: space-between; margin-bottom: clamp(6px, 1.5vh, 12px); border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: clamp(4px, 1vh, 8px); }
+.uw-req-row:last-child { margin-bottom: 0; border-bottom: none; padding-bottom: 0; }
+
+@media (max-height: 500px), (max-width: 800px) {
+  #screen-underworld { margin: 55px auto 10px; height: auto; padding: 15px; max-width: 95% !important; }
+  #screen-underworld .screen-title { font-size: clamp(18px, 5vh, 24px); margin-bottom: 4px; }
+}
+.uw-req-row.met { color: #5faa82; font-weight: bold; }
+.uw-req-row.failed { color: #ff6b7a; }
+
 /* Prevent 3D Z-fighting and subpixel flickering - Desktop gets the smooth original code */
 .menu-camera,
 .menu-bg-card,
@@ -2414,6 +2583,9 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
   --table-glow: 30, 74, 61;
 }
 .menu-table { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.6) 0%, rgba(0,0,0, 0.95) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+/* SYNDICATE MODE: Removes heavy tint and vignette so the table shines */
+#menu.syndicate-mode .menu-table { background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+#menu.syndicate-mode .menu-vignette { opacity: 0.3; }
 .tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.85) 55%, rgba(0,0,0, 0.98) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 #bootstrapOverlay { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .event-banner::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; mix-blend-mode: overlay !important; }
@@ -2598,6 +2770,9 @@ window.dodImagesLoaded = false;
 <audio id="tensionMusic" loop preload="auto">
   <source src="ClockroomTension.mp3" type="audio/mpeg">
 </audio>
+<audio id="syndicateMusic" loop preload="auto">
+  <source src="HouseofAsh.mp3" type="audio/mpeg">
+</audio>
 
 <!-- CUSTOM SFX ENGINE -->
 <audio id="sfxClick" src="ClickSfx.mp4" preload="auto"></audio>
@@ -2657,7 +2832,7 @@ window.dodImagesLoaded = false;
 
 <div id="menu">
   <!-- GLOBAL BACK BUTTON -->
-  <button class="btn ghost small" id="globalBackBtn" onclick="showMenuScreen('hub')" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
+  <button class="btn ghost small" id="globalBackBtn" onclick="handleGlobalBack()" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
   <!-- FULLSCREEN TOGGLE BUTTON -->
   <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
@@ -2757,6 +2932,9 @@ window.dodImagesLoaded = false;
       <button id="navBtnInstall" class="pubg-icon-btn" onclick="triggerPwaInstall()" title="Install App" style="display: none;">
         <div class="pubg-nav-content"><div class="pubg-nav-icon" style="color: var(--ok);">⤓</div><span class="ib-label" style="color: var(--ok);">Install</span></div>
       </button>
+      <button class="pubg-syndicate-hot-btn" onclick="attemptEnterUnderworld()" title="The Syndicate">
+        <div class="hot-content"><span style="font-size: 22px; line-height: 0.8; filter: drop-shadow(0 0 5px rgba(201,162,39,0.5));">♠</span> SYNDICATE</div>
+      </button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">
         <div class="pubg-nav-content"><div class="pubg-nav-icon">⟁</div><span class="ib-label">Top 100</span></div>
       </button>
@@ -2792,6 +2970,28 @@ window.dodImagesLoaded = false;
         <button id="pubgLeaveLobbyBtn" class="btn ghost small lobby-action-btn" onclick="leavePartyLobby()">LEAVE LOBBY</button>
       </div>
       <div class="lobby-seat-ring" id="pubgLobbyRing"></div>
+    </div>
+  </div>
+
+  <!-- UNDERWORLD TRANSITION -->
+  <div id="underworldTransitionOverlay">
+    <div class="syn-door top"></div>
+    <div class="syn-door bottom"></div>
+    <div class="syn-loader-wrapper">
+      <div class="syn-ring outer"></div>
+      <div class="syn-ring inner"></div>
+      <div class="syn-logo">♠</div>
+      <div class="syn-loader-text"></div>
+    </div>
+  </div>
+
+  <!-- UNDERWORLD SCREEN -->
+  <div class="menu-screen hidden" id="screen-underworld" style="width: 100%; max-width: 90%;">
+    <div class="screen-header">
+      <div class="screen-title" style="background: linear-gradient(180deg, #f5dd8a 0%, #c9a227 55%, #8a6a1c 100%); -webkit-background-clip: text; color: transparent; filter: drop-shadow(0 4px 10px rgba(201,162,39,0.4));">The Syndicate</div>
+    </div>
+    <div class="screen-content" id="underworldContent">
+      <!-- Dynamically injected by JS -->
     </div>
   </div>
 
@@ -3402,6 +3602,132 @@ async function submitUniqueNameWithId() {
         btn.disabled = false;
     }
 }
+
+// --- UNDERWORLD LOGIC ---
+function attemptEnterUnderworld() {
+    try { sfx.uiClick(); } catch(e){}
+    const trans = document.getElementById('underworldTransitionOverlay');
+    if (trans) {
+        trans.classList.remove('exiting'); // Ensure it shows "ACCESS GRANTED"
+        trans.classList.add('active');
+    }
+    
+    try { sfx.lose(); } catch(e){} // Vault doors closing
+    
+    // Swap the UI in the background while the screen is completely covered
+    // Swap the UI in the background while the screen is completely covered
+    setTimeout(() => {
+        showMenuScreen('underworld');
+        renderUnderworldScreen();
+        
+        // Apply the exclusive Syndicate table background!
+        document.documentElement.style.setProperty('--my-table', "url('SyndicateTable.webp')");
+        // Activate syndicate-mode to remove the heavy dark tints
+        document.getElementById('menu').classList.add('syndicate-mode');
+    }, 2200);
+
+    // Play an alert sound when "ACCESS GRANTED" text pops up at 68% (approx 3.0s)
+    setTimeout(() => {
+        try { sfx.alert(); } catch(e){}
+        playSyndicateMusic(); // Launch the House of Ash track right as access is granted!
+    }, 3000);
+
+    // Clean up the overlay after the 4.5s animation finishes
+    setTimeout(() => {
+        if (trans) trans.classList.remove('active');
+    }, 4600);
+}
+
+function handleGlobalBack() {
+    const uwScreen = document.getElementById('screen-underworld');
+    if (uwScreen && !uwScreen.classList.contains('hidden')) {
+        // Exiting the Syndicate: trigger the vault doors!
+        const trans = document.getElementById('underworldTransitionOverlay');
+        if (trans) {
+            trans.classList.add('exiting'); // Swaps the text to "CONNECTION SECURED"
+            trans.classList.add('active');
+        }
+        
+        try { sfx.lose(); } catch(e){} // Vault doors closing sound
+        
+        // Wait until the doors are completely closed to swap the UI
+        setTimeout(() => {
+            showMenuScreen('hub');
+            // Restore UI and the player's normal equipped table!
+            document.getElementById('menu').classList.remove('syndicate-mode');
+            applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null);
+        }, 2200); 
+
+        // Alert for "CONNECTION SECURED" and swap music
+        setTimeout(() => {
+            try { sfx.alert(); } catch(e){}
+            switchToMenuMusic();
+        }, 3000);
+
+        // Wait for doors to open before removing active class
+        setTimeout(() => {
+            if (trans) {
+                trans.classList.remove('active');
+                trans.classList.remove('exiting');
+            }
+        }, 4600);
+    } else {
+        // Normal exit for all other screens
+        showMenuScreen('hub');
+    }
+}
+
+function renderUnderworldScreen() {
+    const content = document.getElementById('underworldContent');
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+    
+    // New Increased Syndicate Requirements
+    const reqCoins = 15000;
+    const reqTierIdx = 3; // 0: Apprentice, 1: Trickster, 2: Phantom, 3: Mastermind
+    const reqMatches = 100;
+    
+    const pCoins = profile.currency || 0;
+    const pTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
+    const pMatches = profile.matchesPlayed || 0;
+    
+    const metCoins = pCoins >= reqCoins;
+    const metTier = pTierIdx >= reqTierIdx;
+    const metMatches = pMatches >= reqMatches;
+    
+    const isUnlocked = metCoins && metTier && metMatches;
+    
+    if (!isUnlocked) {
+            content.innerHTML = `
+                <div style="font-size: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px rgba(201,162,39,0.8));">🔒</div>
+                <p class="blurb" style="text-align:center; color: rgba(242,234,216,0.8); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Access Denied. You are not ready for the high stakes of the Syndicate. Meet the requirements below to receive your invitation.</p>
+                <div class="uw-locked-list">
+                    <div class="uw-req-row ${metTier ? 'met' : 'failed'}">
+                        <span>Reach Mastermind Tier</span>
+                        <span>${metTier ? '✓' : '✗'}</span>
+                    </div>
+                    <div class="uw-req-row ${metMatches ? 'met' : 'failed'}">
+                        <span>Play 100 Matches</span>
+                        <span>${pMatches} / ${reqMatches}</span>
+                    </div>
+                    <div class="uw-req-row ${metCoins ? 'met' : 'failed'}">
+                        <span>Hold 15,000 PC</span>
+                        <span>${pCoins} / ${reqCoins}</span>
+                    </div>
+                </div>
+            `;
+        } else {
+            content.innerHTML = `
+                <div style="font-size: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px #c9a227);">♠</div>
+                <p class="blurb" style="text-align:center; color: var(--brass-bright); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Welcome to the Syndicate. Here, you put your own PC on the line. Winner takes all.</p>
+                <div style="margin-top:clamp(12px, 3vh, 24px); width: 100%; max-width: 320px; display:flex; flex-direction:column; gap:clamp(8px, 2vh, 16px);">
+                    <button class="btn" style="background: linear-gradient(180deg, #e8c454, #c9a227); border-color: #f5dd8a; color: #150c12; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 500 PC</button>
+                    <button class="btn" style="background: linear-gradient(180deg, #c9a227, #8a6a1c); border-color: #e8c454; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 2,500 PC</button>
+                    <button class="btn" style="background: linear-gradient(180deg, #7a1f2e, #4a0f19); border-color: #c23b4a; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 20px rgba(194,59,74,0.6);" onclick="showSystemToast('High Stakes tables opening soon!')">ALL IN</button>
+                </div>
+            `;
+        }
+}
 </script>
 
 <!-- THE DEALER'S DRAW MODAL (Full Screen Cinematic) -->
@@ -3763,6 +4089,7 @@ let noiseBuffer;
 
 // Helper to play your custom audio files seamlessly
 function playExternalSfx(elementId) {
+    if (document.hidden) return; // FIX: Prevent SFX from triggering while the app is minimized
     const el = document.getElementById(elementId);
     if(el) {
         el.volume = sfxVolume; // Respects the in-game SFX slider!
@@ -3951,6 +4278,7 @@ function startAmbientPad(){
 const bgMusicElement = document.getElementById('bgMusic');
 const inGameMusicElement = document.getElementById('inGameMusic');
 const tensionMusicElement = document.getElementById('tensionMusic');
+const syndicateMusicElement = document.getElementById('syndicateMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
@@ -3961,6 +4289,18 @@ function stopAllMusic() {
     if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
         tensionMusicElement.pause();
         tensionMusicElement.currentTime = 0; // Reset suspense track when stopped
+    }
+    if (typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement) {
+        syndicateMusicElement.pause();
+        syndicateMusicElement.currentTime = 0;
+    }
+}
+
+function playSyndicateMusic() {
+    stopAllMusic(); // Cuts menu music
+    if (typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement) {
+        syndicateMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
+        syndicateMusicElement.play().catch(()=>{});
     }
 }
 
@@ -3980,6 +4320,16 @@ function switchToGameMusic() {
 function switchToMenuMusic() {
     stopAllMusic(); // Cut everything instantly
     if (bgMusicElement) {
+        const menuTracks = ['DeckofDeceptionTheme.mp3', 'GreenFeltRules.mp3'];
+        const chosenTrack = menuTracks[Math.floor(Math.random() * menuTracks.length)];
+        
+        // Only reload if the track is actually changing
+        const currentSrc = bgMusicElement.getAttribute('src') || (bgMusicElement.querySelector('source') ? bgMusicElement.querySelector('source').getAttribute('src') : '');
+        if (currentSrc !== chosenTrack) {
+            bgMusicElement.src = chosenTrack;
+            bgMusicElement.load();
+        }
+        
         bgMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
         bgMusicElement.play().catch(()=>{});
     }
@@ -3988,6 +4338,16 @@ function switchToMenuMusic() {
 function playTensionMusic() {
     stopAllMusic(); // Instantly cuts the game music!
     if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
+        const tensionTracks = ['ClockroomTension.mp3', 'ClockworkShadow.mp3'];
+        const chosenTrack = tensionTracks[Math.floor(Math.random() * tensionTracks.length)];
+        
+        // Only reload if the track is actually changing
+        const currentSrc = tensionMusicElement.getAttribute('src') || (tensionMusicElement.querySelector('source') ? tensionMusicElement.querySelector('source').getAttribute('src') : '');
+        if (currentSrc !== chosenTrack) {
+            tensionMusicElement.src = chosenTrack;
+            tensionMusicElement.load();
+        }
+        
         tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult;
         tensionMusicElement.play().catch(()=>{});
     }
@@ -4008,17 +4368,42 @@ function stopTensionMusic() {
 }
 
 // --- AUTO-MUTE WHEN GAME IS MINIMIZED OR CLOSED ---
+// FIX A: Patch Web Audio API (synth) sounds so they don't queue up and burst your ears when un-minimized!
+if (typeof sfx !== 'undefined') {
+    ['deceptionStart', 'card', 'turn', 'win', 'lose'].forEach(fn => {
+        if (sfx[fn]) {
+            const originalFn = sfx[fn];
+            sfx[fn] = () => { if (!document.hidden) originalFn(); };
+        }
+    });
+}
+
+// FIX B: Universal Pause for Music, MP4 SFX, and LiveKit Voice Chat
 document.addEventListener("visibilitychange", function() {
     if (document.hidden) {
-        if (bgMusicElement && !bgMusicElement.paused) { bgMusicElement.dataset.wasPlaying = 'true'; bgMusicElement.pause(); }
-        if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) { inGameMusicElement.dataset.wasPlaying = 'true'; inGameMusicElement.pause(); }
-        if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) { tensionMusicElement.dataset.wasPlaying = 'true'; tensionMusicElement.pause(); }
-        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'running') { audioCtx.suspend(); }
+        // 1. Suspend Web Audio API Context
+        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'running') { 
+            audioCtx.suspend(); 
+        }
+        // 2. Universally pause ALL HTML5 audio/video elements globally
+        document.querySelectorAll('audio, video').forEach(media => {
+            if (!media.paused) {
+                media.dataset.wasPlaying = 'true';
+                media.pause();
+            }
+        });
     } else {
-        if (bgMusicElement && bgMusicElement.dataset.wasPlaying === 'true') { bgMusicElement.play().catch(()=>{}); bgMusicElement.dataset.wasPlaying = 'false'; }
-        if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement && inGameMusicElement.dataset.wasPlaying === 'true') { inGameMusicElement.play().catch(()=>{}); inGameMusicElement.dataset.wasPlaying = 'false'; }
-        if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement && tensionMusicElement.dataset.wasPlaying === 'true') { tensionMusicElement.play().catch(()=>{}); tensionMusicElement.dataset.wasPlaying = 'false'; }
-        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended') { audioCtx.resume(); }
+        // 1. Resume Web Audio API Context
+        if (typeof audioCtx !== 'undefined' && audioCtx && audioCtx.state === 'suspended') { 
+            audioCtx.resume(); 
+        }
+        // 2. Universally resume ONLY the media elements that were actively playing before minimizing
+        document.querySelectorAll('audio, video').forEach(media => {
+            if (media.dataset.wasPlaying === 'true') {
+                media.play().catch(()=>{});
+                media.dataset.wasPlaying = 'false';
+            }
+        });
     }
 });
 
@@ -4119,6 +4504,12 @@ function proceedWithBoot(overlayEl) {
     });
     
     if(bgMusicElement) {
+        // Pick a random track for the initial boot
+        const menuTracks = ['DeckofDeceptionTheme.mp3', 'GreenFeltRules.mp3'];
+        const chosenTrack = menuTracks[Math.floor(Math.random() * menuTracks.length)];
+        bgMusicElement.src = chosenTrack;
+        bgMusicElement.load();
+
         bgMusicElement.volume = musicVolumeSetting; // FIX: Give it full requested volume!
         if(bgMusicElement.error){ startAmbientPad(); } 
         else {
@@ -4797,6 +5188,7 @@ function setMusicVolume(v){
   if(bgMusicElement && !bgMusicElement.paused) bgMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
   if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
   if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult; // Slightly softer than main themes
+  if(typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement && !syndicateMusicElement.paused) syndicateMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
 
   // Sync all quick-sliders visually so they match across all screens!
   const m1 = document.getElementById('musicVol');
@@ -4904,7 +5296,7 @@ function buildRanksScreen() {
 // ---------------- MENU HUB / SCREEN SWITCHING ----------------
 function showMenuScreen(name){
   if(name==='hub') { sfx.uiBack(); } else { sfx.uiClick(); }
-  
+
   document.querySelectorAll('.menu-screen').forEach(el=>el.classList.add('hidden'));
   const target = document.getElementById('screen-'+name);
   if(target) target.classList.remove('hidden');
@@ -6855,15 +7247,19 @@ function renderHand(){
   const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState);
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
+  // FIX: Map to a visual array so we don't alter the true index required by Cloudflare!
+  let displayHand = you.hand.map((c, i) => ({ card: c, originalIdx: i }));
   if (localStorage.getItem('dod_setting_sort') === 'true') {
-      you.hand.sort((a, b) => {
-          if (a.type === 'number' && b.type === 'number') return a.value - b.value;
-          if (a.type !== b.type) return a.type.localeCompare(b.type);
+      displayHand.sort((a, b) => {
+          if (a.card.type === 'number' && b.card.type === 'number') return a.card.value - b.card.value;
+          if (a.card.type !== b.card.type) return a.card.type.localeCompare(b.card.type);
           return 0;
       });
   }
 
-  you.hand.forEach((c,idx)=>{
+  displayHand.forEach((item, visualIdx)=>{
+    const c = item.card;
+    const idx = item.originalIdx;
     const el=document.createElement('div');
     
     let isCardMatch = false;
@@ -7400,7 +7796,7 @@ async function doBuyDraw() {
             let effective, label;
             if (card.type === 'number') { effective = card.value; label = card.value; }
             else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
-            else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; }
+            else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; state.direction *= -1; }
             else if (card.type === 'steal') { effective = state.requiredValue; label = 'STL'; }
             else { effective = state.requiredValue; label = `PWR`; } // Fallback for power cards
 
@@ -12814,7 +13210,7 @@ window.addEventListener('popstate', function(event) {
     // 5. Check if we are in a Sub-Menu (Shop, Ranks, Training, Settings, Social)
     const hubScreen = document.getElementById('screen-hub');
     if (hubScreen && hubScreen.classList.contains('hidden')) {
-        showMenuScreen('hub'); // Send them back to the main menu
+        handleGlobalBack(); // Send them back to the main menu, triggering animations if needed
         return;
     }
 
