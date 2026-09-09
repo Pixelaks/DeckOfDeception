@@ -2252,9 +2252,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     transform: perspective(1000px) rotateX(0deg) rotateZ(0deg) translateZ(0px) translateY(0%) scale(0.9) !important;
   }
 
-  /* Shift the Leave Lobby button lower and scale on compact screens */
+  /* Move the Leave Lobby bar to the top center on mobile so it never overlaps the Syndicate button */
   .lobby-action-bar {
-    bottom: clamp(2px, 1.5vh, 12px) !important;
+    bottom: auto !important;
+    top: 20px !important;
   }
   .lobby-action-btn {
     padding: clamp(4px, 1vh, 8px) clamp(10px, 2vw, 16px) !important;
@@ -2683,69 +2684,69 @@ window.dodImagesLoaded = false;
   }
 
   var loaded = 0;
-  var total = srcs.length;
-  var isCached = localStorage.getItem('dod_assets_cached') === 'true';
+      var total = srcs.length;
 
-  function updateLoaderUI() {
-      var overlay = document.getElementById('introOverlay');
-      var statusEl = document.getElementById('introStatusText');
-      var fillEl = document.getElementById('introProgressFill');
-      var trackEl = document.getElementById('introBarTrack');
-      
-      if (!overlay || !statusEl || !fillEl) return;
-      
-      // FIX: Base the progress bar entirely on ACTUAL network/cache loaded events!
-      // If the images are in the browser cache, this still hits 100% in a fraction of a second.
-      var pct = total > 0 ? Math.floor((loaded / total) * 100) : 0;
-      fillEl.style.width = pct + '%';
-
-      if (loaded < total) {
-          overlay.style.pointerEvents = 'none';
-          statusEl.textContent = 'Loading Assets... ' + pct + '%';
-          statusEl.classList.remove('pulse-text');
-          statusEl.style.color = 'rgba(242,234,216,0.6)';
-      } else {
-          window.dodImagesLoaded = true;
-          overlay.style.pointerEvents = 'auto';
-          statusEl.textContent = "Tap anywhere to enter";
-          statusEl.classList.add('pulse-text');
-          statusEl.style.color = 'var(--brass-bright)';
-          // Fade out the progress bar track leaving just the pulsing text and copyrights
-          if (trackEl) trackEl.style.opacity = '0';
+      function updateLoaderUI() {
+          var overlay = document.getElementById('introOverlay');
+          var statusEl = document.getElementById('introStatusText');
+          var fillEl = document.getElementById('introProgressFill');
+          var trackEl = document.getElementById('introBarTrack');
           
-          // Mark the local browser memory flag so next visit is instant
-          localStorage.setItem('dod_assets_cached', 'true');
-          localStorage.setItem('dod_last_asset_count', total); // Save the dynamic count
+          if (!overlay || !statusEl || !fillEl) return;
+          
+          var pct = total > 0 ? Math.floor((loaded / total) * 100) : 0;
+          fillEl.style.width = pct + '%';
+
+          if (loaded < total) {
+              overlay.style.pointerEvents = 'none';
+              statusEl.textContent = 'Loading Assets... ' + pct + '%';
+              statusEl.classList.remove('pulse-text');
+              statusEl.style.color = 'rgba(242,234,216,0.6)';
+          } else {
+              window.dodImagesLoaded = true;
+              overlay.style.pointerEvents = 'auto';
+              statusEl.textContent = "Tap anywhere to enter";
+              statusEl.classList.add('pulse-text');
+              statusEl.style.color = 'var(--brass-bright)';
+              // Fade out the progress bar track
+              if (trackEl) trackEl.style.opacity = '0';
+              
+              // Mark the local browser memory flag so next visit is instant
+              localStorage.setItem('dod_assets_cached', 'true');
+              localStorage.setItem('dod_last_asset_count', total);
+          }
       }
-  }
 
-  // Bind to DOM ready, and also check continuously in case of timing issues
-  document.addEventListener('DOMContentLoaded', updateLoaderUI);
-  var checkUI = setInterval(function() {
-      if (document.getElementById('introOverlay')) {
-          updateLoaderUI();
-          if (loaded >= total || isCached) clearInterval(checkUI);
+      // Bind to DOM ready, and also check continuously in case of timing issues
+      document.addEventListener('DOMContentLoaded', updateLoaderUI);
+      var checkUI = setInterval(function() {
+          if (document.getElementById('introOverlay')) {
+              updateLoaderUI();
+              if (loaded >= total) clearInterval(checkUI);
+          }
+      }, 50);
+
+      function markLoaded(img) {
+          loaded++;
+          // Append directly to DOM to force the GPU to decode
+          var hiddenDiv = document.getElementById('hiddenPreloader');
+          if (hiddenDiv) hiddenDiv.appendChild(img);
+          updateLoaderUI(); // ALWAYS update UI regardless of cache status
       }
-  }, 50);
 
-  function markLoaded(img) {
-      loaded++;
-      // Append directly to DOM to force the GPU to decode and hold the texture for the CSS backgrounds
-      var hiddenDiv = document.getElementById('hiddenPreloader');
-      if (hiddenDiv) hiddenDiv.appendChild(img);
-      // Only incrementally update the UI if we aren't fast-tracking
-      if (!isCached) updateLoaderUI();
-  }
+      // FIX: Store images in a global array so mobile browsers do not Garbage Collect them before they finish loading!
+      window._dodImageKeepAlive = [];
 
-  for (var i = 0; i < srcs.length; i++) {
-    var img = new Image();
-    // Force dimensions so the browser doesn't ignore the hidden render
-    img.style.width = "1px"; 
-    img.style.height = "1px";
-    img.onload = function() { markLoaded(this); };
-    img.onerror = function() { markLoaded(this); }; // Proceed even if a file fails so it doesn't freeze
-    img.src = srcs[i];
-  }
+      for (var i = 0; i < srcs.length; i++) {
+        var img = new Image();
+        window._dodImageKeepAlive.push(img); // Keeps the object safe from memory deletion
+        
+        img.style.width = "1px"; 
+        img.style.height = "1px";
+        img.onload = function() { markLoaded(this); };
+        img.onerror = function() { markLoaded(this); }; // Proceed even if a file fails
+        img.src = srcs[i];
+      }
 })();
 </script>
 
@@ -6120,12 +6121,46 @@ function listenToGameState() {
                     const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
                     const stuck = curPlayer && !curPlayer.out && serverState.uiState === 'IDLE' && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
                     if (curPlayer && stuck) {
+                        
+                        // 1. True Bankruptcy Check (0 Coins AND 0 Cards)
+                        if (curPlayer.shop <= 0 && curPlayer.hand.length === 0) {
+                            curPlayer.out = true;
+                            
+                            let nextIndex = state.players.findIndex(p => p.uid === curPlayer.uid);
+                            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out && nextIndex !== state.players.findIndex(p => p.uid === curPlayer.uid));
+                            
+                            const survivors = state.players.filter(p => !p.out);
+                            const isGameOver = survivors.length <= 1;
+
+                            firebase.firestore().collection('matches').doc(currentMatchId).update({
+                                'gameState.players': state.players,
+                                'gameState.turnUid': isGameOver ? curPlayer.uid : state.players[nextIndex].uid,
+                                'gameState.turnExpiresAt': Date.now() + 30000,
+                                'gameState.over': isGameOver,
+                                'gameState.lastAction': { 
+                                    id: Date.now().toString(), 
+                                    type: 'DECEPTION_RESULT', 
+                                    uid: 'system', 
+                                    deadInfo: [{ uid: curPlayer.uid, name: curPlayer.name, guess: 'Bankrupt' }],
+                                    msg: `${curPlayer.name} is bankrupt (0 coins, 0 cards) and has been eliminated!` 
+                                }
+                            });
+                            return;
+                        }
+
+                        // 2. Normal Deception Warning / Trigger
                         if (curPlayer.deceptionStrike) {
                             startDeceptionPhaseOnline(curPlayer);
                         } else {
                             curPlayer.deceptionStrike = true;
+                            let nextIndex = state.players.findIndex(p => p.uid === curPlayer.uid);
+                            do { nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; } while (state.players[nextIndex].out);
+
                             firebase.firestore().collection('matches').doc(currentMatchId).update({
                                 'gameState.players': state.players,
+                                'gameState.turnUid': state.players[nextIndex].uid,
+                                'gameState.turnExpiresAt': Date.now() + 30000,
+                                'gameState.uiState': 'IDLE',
                                 'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
                             }).then(() => {
                                 if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
@@ -6479,6 +6514,7 @@ function eliminate(p, reason, skipCinematic = false){
 
 function sweepEliminations(){
   if(state.over) return;
+  if(currentMatchId) return; // FIX: In online mode, the Host and Server exclusively dictate eliminations to prevent desyncs!
   state.players.forEach(p=>{ 
       if(!p.out && p.shop<=0 && p.hand.length===0) {
           eliminate(p, "Shop and hand empty.");
@@ -7472,11 +7508,13 @@ function renderActionBar(){
       btn.onclick=() => { startForcedBuySelf('BUY'); };
       bar.appendChild(btn);
   } else if (!hasMatch) {
-      // Only skip their turn if they have NO match AND NO money
-      bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">No match, and you can\'t afford to force-buy. Turn skipped.</span>';
-      setTimeout(() => skipStuckHumanTurn(`${you.name} has no match and can't afford to force-buy. Turn skipped.`), 2000);
-      return;
-  }
+          // Only skip their turn if they have NO match AND NO money
+          bar.innerHTML='<span class="hint" style="color:var(--danger-bright)">No match, and you can\'t afford to force-buy. Turn skipped.</span>';
+          if (!currentMatchId) {
+              setTimeout(() => skipStuckHumanTurn(`${you.name} has no match and can't afford to force-buy. Turn skipped.`), 2000);
+          }
+          return;
+      }
   
   const hint=document.createElement('span');
   hint.className='hint';
@@ -7748,12 +7786,9 @@ function startForcedBuySelf(mode){
         setTimeout(tutNext, 600);
     }
     const you = state.players[0];
-    if(mode === 'BUY'){
-        state.buyLoop = { buyer: you, tries: 0 };
-        doBuyDraw();
-    } else {
-        resolveEmptySingleDraw(you);
-    }
+    // FIX: Both 'BUY' (no match) and 'EMPTY' (0 cards) now allow up to 3 tries!
+    state.buyLoop = { buyer: you, tries: 0 };
+    doBuyDraw();
 }
 
 async function doBuyDraw() {
@@ -9156,7 +9191,7 @@ function botTurn(){
     if(bot.hand.length===0){
       if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
       if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
-      botSingleDraw(bot);
+      botBuyLoop(bot); // FIX: Bots also get up to 3 tries when their hand is empty
       return;
     }
     
