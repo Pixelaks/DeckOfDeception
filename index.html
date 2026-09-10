@@ -380,16 +380,25 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 @keyframes lsFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes lsTextPulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
+/* ORIGINAL SHOP GRID WITH BROWN GLASS */
 .shop-grid { 
     display: grid; 
-    /* By using a fixed 140px track instead of minmax, justify-content can properly center the entire group! */
     grid-template-columns: repeat(auto-fit, 140px); 
     gap: 14px; 
     width: 100%; 
     justify-content: center; 
     margin-top: 16px; 
 }
-.shop-item{ background:rgba(0,0,0,0.4); border:1px solid rgba(201,162,39,0.25); border-radius:8px; padding:12px 10px; text-align:center; }
+.shop-item { 
+    /* NEW: Premium Brown Glass Background */
+    background: linear-gradient(180deg, rgba(82, 54, 27, 0.7) 0%, rgba(38, 20, 8, 0.95) 100%); 
+    backdrop-filter: blur(4px);
+    border: 1px solid rgba(201,162,39,0.25); 
+    border-radius: 8px; 
+    padding: 12px 10px; 
+    text-align: center; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+}
 .shop-item .shop-swatch{ width:38px; height:38px; border-radius:50%; margin:0 auto 8px; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
 .shop-item .shop-name{ font-family:'Cinzel',serif; font-size:11.5px; color:var(--paper); margin-bottom:3px; }
 .shop-item .shop-price{ font-family:'IBM Plex Mono',monospace; font-size:10.5px; color:var(--brass-bright); margin-bottom:8px; }
@@ -398,6 +407,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .shop-item button.equipped{ background:var(--ok); color:#fff; cursor:default; }
 .shop-item button.locked{ background:var(--brass); color:var(--felt-dark); font-weight:600; }
 .shop-item button.locked:disabled{ background:rgba(201,162,39,0.2); color:rgba(242,234,216,0.35); cursor:not-allowed; }
+
+/* Re-styled Buttons */
+.shop-item button { font-family: 'IBM Plex Mono', monospace; font-size: 11px; padding: 10px 8px; border-radius: 4px; border: none; cursor: pointer; width: 100%; transition: all 0.2s; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; }
+.shop-item button.owned { background: rgba(47,110,82,0.2); border: 1px solid rgba(47,110,82,0.5); color: #9fd9b8; cursor: default; box-shadow: none; }
+.shop-item button.equipped { background: linear-gradient(180deg, #3d8f68, var(--ok)); color: #fff; border: 1px solid #5faa82; box-shadow: 0 4px 10px rgba(47,110,82,0.4); cursor: default; }
+.shop-item button.locked { background: linear-gradient(180deg, var(--brass-bright), var(--brass)); color: var(--felt-dark); box-shadow: 0 4px 12px rgba(201,162,39,0.4); }
+.shop-item button.locked:disabled { background: rgba(255,255,255,0.05); color: rgba(242,234,216,0.3); border: 1px solid rgba(255,255,255,0.08); box-shadow: none; cursor: not-allowed; }
 .menu-box .sub, .menu-box p.blurb, .menu-screen .sub, .menu-screen p.blurb { text-shadow: 0 2px 10px rgba(0,0,0,0.9); }
 .menu-box .section-label, .menu-screen .section-label { text-shadow: 0 2px 8px rgba(0,0,0,0.9); }
 .menu-box::before, .menu-box::after,
@@ -1257,8 +1273,9 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   gap: 10px;
 }
 @media (max-width: 800px) {
-  .pubg-syndicate-hot-btn { padding: 6px 16px !important; font-size: 12px !important; }
-  .pubg-syndicate-hot-btn .hot-content span:first-child { font-size: 16px !important; }
+  .pubg-syndicate-hot-btn { padding: 6px 14px !important; font-size: 13px !important; } /* Bigger, bolder text */
+  .pubg-syndicate-hot-btn .hot-content { gap: 8px !important; }
+  .pubg-syndicate-hot-btn .hot-content span:first-child { font-size: 18px !important; } /* Bigger Spade icon */
 }
 
 #screen-underworld {
@@ -2239,10 +2256,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .chest-item { padding: 4px 8px !important; }
   .chest-item span { font-size: 16px !important; }
   
-  .pubg-icon-bar { bottom: 15px !important; right: 15px !important; }
-  .pubg-icon-btn { padding: 6px 12px !important; }
-  .pubg-nav-icon { font-size: 14px !important; }
-  .pubg-icon-btn span.ib-label { font-size: 6.5px !important; letter-spacing: 0.5px !important; }
+  .pubg-icon-bar { 
+    bottom: 10px !important; 
+    right: 10px !important; 
+    gap: 8px !important; 
+    transform: scale(0.85) !important; /* Relaxed scale so the bar isn't too tiny */
+    transform-origin: bottom right !important; 
+  }
+  .pubg-icon-btn { padding: 6px 10px !important; border-radius: 4px !important; }
+  .pubg-nav-icon { font-size: 16px !important; } /* Restores icons to a large, readable size */
+  .pubg-icon-btn span.ib-label { font-size: 8px !important; letter-spacing: 0.5px !important; margin-top: 2px !important; } /* Makes text clear and crisp */
   
   .pubg-search-panel { left: 165px !important; bottom: clamp(120px, 26vh, 140px) !important; width: 220px !important; padding: 8px !important; }
   .pubg-search-panel input { padding: 5px 8px !important; font-size: 10px !important; }
@@ -2253,9 +2276,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   }
 
   /* Move the Leave Lobby bar to the top center on mobile so it never overlaps the Syndicate button */
+  /* Move the Leave Lobby bar to the top center on mobile so it never overlaps the Syndicate button */
   .lobby-action-bar {
     bottom: auto !important;
-    top: 20px !important;
+    top: 5px !important; /* Tucked slightly higher to clear the avatar */
+    transform: translateX(-50%) scale(0.75) !important; /* Shrinks the volume, mic, and leave button evenly */
+    transform-origin: top center;
   }
   .lobby-action-btn {
     padding: clamp(4px, 1vh, 8px) clamp(10px, 2vw, 16px) !important;
@@ -2577,6 +2603,131 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 .rank-item{ border-radius:12px; }
 .rank-item.current{ box-shadow:0 0 22px rgba(226,189,74,0.3); }
 .pubg-icon-btn{ border-radius:14px; }
+
+/* AAA SEASON PASS STYLES */
+.pass-track-container { 
+    display: flex; overflow-x: auto; overflow-y: hidden; width: 100%; 
+    gap: 12px; padding: 10px 20px 30px; scroll-snap-type: x mandatory; 
+    align-items: stretch; -webkit-overflow-scrolling: touch; 
+    position: relative; 
+    /* AAA GPU OPTIMIZATION: Force hardware acceleration for smooth scrolling */
+    will-change: scroll-position;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+.pass-track-container::-webkit-scrollbar { height: 4px; }
+.pass-track-container::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.5); border-radius: 4px; }
+
+.pass-level-col { 
+    display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; scroll-snap-align: center; width: 110px; position: relative; z-index: 2; 
+    /* AAA GPU OPTIMIZATION: Isolate columns to prevent layout thrashing */
+    transform: translateZ(0);
+    contain: layout style;
+}
+
+/* Sleek Tactical Node Marker */
+.pass-level-marker { 
+    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.5); 
+    background: rgba(0,0,0,0.6); padding: 4px 16px; border-radius: 4px; 
+    border: 1px solid rgba(255,255,255,0.08); margin: 6px 0; z-index: 2; letter-spacing: 1px;
+    /* FIX: Target exactly what changes, DO NOT use 'all' */
+    transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
+}
+.pass-level-marker.unlocked { 
+    color: var(--brass-bright); border-color: rgba(201,162,39,0.5); 
+    background: rgba(201,162,39,0.1); box-shadow: 0 0 10px rgba(201,162,39,0.2); 
+}
+
+/* Glassmorphism Reward Cards */
+.pass-reward-box { 
+    width: 100%; height: 110px; background: linear-gradient(180deg, rgba(30,35,40,0.7) 0%, rgba(10,12,15,0.95) 100%); 
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; display: flex; flex-direction: column; 
+    align-items: center; justify-content: center; position: relative; overflow: hidden; 
+    /* AAA GPU OPTIMIZATION: Never use transition: all! Force the card rendering to the GPU */
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease; 
+    box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); 
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}
+.pass-reward-box:hover { transform: translateY(-4px) scale(1.05); border-color: rgba(255,255,255,0.3); z-index: 5; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+
+/* Premium Rich Gold Cards */
+.pass-reward-box.premium { 
+    background: linear-gradient(180deg, rgba(60,50,20,0.8) 0%, rgba(15,10,5,0.95) 100%); 
+    border-color: rgba(201,162,39,0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(232,196,84,0.2); 
+}
+.pass-reward-box.premium:hover { border-color: var(--brass-bright); box-shadow: 0 10px 25px rgba(201,162,39,0.4); }
+
+.pass-reward-box.empty-slot { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); box-shadow: none; pointer-events: none; }
+
+/* NEW AAA STATES: Ready, Claimed, Locked */
+.pass-reward-box.ready { border-color: var(--ok); animation: pulseClaim 2s infinite alternate; cursor: pointer; }
+@keyframes pulseClaim { 
+    0% { box-shadow: 0 0 10px rgba(47,110,82,0.2), inset 0 0 15px rgba(47,110,82,0.1); } 
+    100% { box-shadow: 0 0 20px rgba(47,110,82,0.8), inset 0 0 25px rgba(47,110,82,0.4); border-color: #5faa82; } 
+}
+
+.pass-reward-box.claimed { opacity: 0.6; border-color: rgba(47,110,82,0.5); background: linear-gradient(180deg, rgba(20,35,25,0.8) 0%, rgba(5,10,5,0.95) 100%); filter: grayscale(0.4); cursor: default; }
+.pass-reward-box.claimed::after { content: '✓'; position: absolute; top: 6px; right: 8px; color: #5faa82; font-size: 16px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+
+/* FIX: Remove the darkness filter entirely so players can see exactly what they are grinding for! */
+.pass-reward-box.locked { opacity: 0.95; filter: none; cursor: not-allowed; }
+.pass-reward-box.locked::after { content: '🔒'; position: absolute; top: 6px; right: 8px; font-size: 14px; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.9); }
+
+/* Sticky Label Classes - Fade to transparent gradient */
+.pass-row-labels { 
+    position: sticky; left: -20px; z-index: 20; display: flex; flex-direction: column; 
+    justify-content: flex-start; padding: 10px 40px 30px 20px; margin: -10px 0 -30px -20px; 
+    background: linear-gradient(90deg, rgba(6,7,9,1) 45px, rgba(6,7,9,0.85) 80px, transparent 100%); 
+    border-right: none; box-shadow: none; pointer-events: none; align-self: stretch; 
+}
+.pass-label-free, .pass-label-elite { 
+    height: 110px; display: flex; align-items: center; font-family: 'Cinzel Decorative', serif; 
+    font-size: 15px; font-weight: 900; letter-spacing: 3px; 
+}
+.pass-label-free { color: rgba(255,255,255,0.3); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
+.pass-label-elite { color: var(--brass-bright); text-shadow: 0 0 15px rgba(226,189,74,0.4), 0 2px 4px #000; }
+.pass-label-spacer { height: 38px; } /* Exactly matches the marker gap to perfectly align the Elite row! */
+
+/* MISSIONS MODAL STYLES */
+.mission-card { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; transition: transform 0.2s, border-color 0.2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
+.mission-card:hover { transform: translateX(4px); border-color: rgba(201,162,39,0.3); }
+.mission-card.completed { border-color: var(--ok); background: rgba(47,110,82,0.15); box-shadow: inset 0 0 15px rgba(47,110,82,0.2); }
+.mission-card.claimed { opacity: 0.5; filter: grayscale(1); pointer-events: none; }
+.mission-info { display: flex; flex-direction: column; gap: 6px; flex: 1; min-width: 0; margin-right: 12px; }
+.mission-title { font-family: 'Inter', sans-serif; font-size: 13px; color: #fff; font-weight: bold; line-height: 1.2; word-break: break-word; }
+.mission-sp { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--brass-bright); font-weight: bold; display: flex; align-items: center; gap: 4px; }
+.mission-progress-bg { width: 100%; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; margin-top: 2px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+.mission-progress-fill { height: 100%; background: var(--ok); width: 0%; transition: width 0.4s cubic-bezier(0.2, 1, 0.3, 1); box-shadow: 0 0 8px var(--ok); }
+.mission-action { flex-shrink: 0; min-width: 80px; }
+
+/* --- COMBINED MOBILE SQUISH FOR SEASON PASS & MISSIONS --- */
+@media (max-width: 840px), (max-height: 500px) {
+    /* Season Pass Track Shrink */
+    .pass-track-container { padding: 5px 20px 10px !important; }
+    .pass-reward-box { height: 50px !important; } 
+    .pass-level-col { width: 65px !important; gap: 4px !important; }
+    .pass-level-marker { font-size: 8px !important; padding: 2px 6px !important; margin: 0 !important; }
+    .pass-line { top: 62px !important; left: 40px !important; width: calc(100% - 40px) !important; } 
+    .pass-label-free, .pass-label-elite { height: 50px !important; font-size: 10px !important; }
+    .pass-label-spacer { height: 26px !important; } /* Perfectly align mobile elite cards */
+    .pass-reward-box img { width: 14px !important; height: 14px !important; margin-bottom: 2px !important; }
+    .pass-reward-box div { font-size: 6px !important; line-height: 1.1 !important; }
+    .pass-reward-box.locked::after { font-size: 14px !important; }
+    .pass-reward-box.claimed::after { font-size: 7px !important; }
+
+    /* Missions Modal Shrink */
+    #missionsModal .modal { width: 95% !important; max-width: 480px !important; max-height: 85vh !important; }
+    #missionsModal h3 { font-size: 16px !important; }
+    .mission-card { padding: 8px 10px !important; gap: 6px !important; }
+    .mission-title { font-size: 11px !important; }
+    .mission-sp { font-size: 9px !important; }
+    .mission-action { min-width: 65px !important; }
+    .mission-action .btn { padding: 6px 10px !important; font-size: 9px !important; }
+    #missionListContainer { padding: 10px !important; min-height: 150px !important; }
+}
+.pass-line-fill { height: 100%; background: var(--brass-bright); box-shadow: 0 0 10px var(--brass-bright); transition: width 1s ease; }
 /* --- DYNAMIC SKIN ENGINE OVERRIDES --- */
 :root {
   --my-table: url('Tables/GreenWood.webp');
@@ -2657,10 +2808,17 @@ window.dodImagesLoaded = false;
     'Cards/SteelCard.webp', 'Cards/ReverseCard.webp', 'Cards/PeekCard.webp',
     'Cards/CardPhase.webp', 'Cards/InsuranceCard.webp', 'Coins/Coins.webp', 'Tables/GreenWood.webp',
     'Cards/BasicCard.webp', 'Cards/MythicCard.webp', 'Cards/LegendaryCard.webp', 'Cards/LuckyCard.webp',
+    'Coins/SyndicateChips.webp', 'Coins/HandfulofSyndicate.webp', 'Coins/SyndicatePouch.webp',
+    'Coins/SyndicateChest.webp', 'Coins/SyndicateVault.webp',
+    'Coins/Handfulofcoins.webp', 'Coins/Coinpouch.webp', 'Coins/Cointreasure.webp', 'Coins/Coinbankvault.webp',
     // --- NEW SHOP CARDS ---
     'CardstoBuy/CopperRust.webp', 'CardstoBuy/CobaltNight.webp', 'CardstoBuy/Onyx&Steel.webp',
     'CardstoBuy/IvoryPearl.webp', 'CardstoBuy/AmethystSilk.webp', 'CardstoBuy/EmeraldVelvet.webp',
-    'CardstoBuy/Magician.webp',
+    'CardstoBuy/Magician.webp', 'CardstoBuy/TheOne.webp',
+    // --- CRIMSON ROYAL CARD FACES ---
+    'Cards/CrimsonRoyal.webp', 'Cards/CrimsonRoyalSwapCard.webp', 'Cards/CrimsonRoyalInsuranceCard.webp',
+    'Cards/CrimsonRoyalPowerCard.webp', 'Cards/CrimsonRoyalReverseCard.webp', 'Cards/CrimsonRoyalStealCard.webp',
+    'Cards/CrimsonRoyalPeekCard.webp',
     // --- TIERS & AVATARS ---
     'Tiers/Apprentice.webp', 'Tiers/Trickster.webp', 'Tiers/Phantom.webp',
     'Tiers/Mastermind.webp', 'Tiers/Oracle.webp', 'Tiers/Legend.webp',
@@ -2774,6 +2932,9 @@ window.dodImagesLoaded = false;
 <audio id="syndicateMusic" loop preload="auto">
   <source src="HouseofAsh.mp3" type="audio/mpeg">
 </audio>
+<audio id="seasonMusic" loop preload="auto">
+  <source src="HouseEdge.mp3" type="audio/mpeg">
+</audio>
 
 <!-- CUSTOM SFX ENGINE -->
 <audio id="sfxClick" src="ClickSfx.mp4" preload="auto"></audio>
@@ -2838,9 +2999,16 @@ window.dodImagesLoaded = false;
   <!-- FULLSCREEN TOGGLE BUTTON -->
   <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
 
-  <!-- TOP-RIGHT CURRENCY CHIP -->
-  <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:6px;">
-    <img src="Coins/Coins.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
+  <!-- TOP-RIGHT CURRENCY CHIPS -->
+  <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:16px;">
+    <!-- Pixel Coins (PC - Free) -->
+    <div style="display:flex; align-items:center; gap:6px;" title="Pixel Coins">
+      <img src="Coins/Coins.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
+    </div>
+    <!-- Syndicate Chips (SC - Premium) -->
+    <div style="display:flex; align-items:center; gap:6px; color:var(--danger-bright);" title="Syndicate Chips">
+      <img src="Coins/SyndicateChips.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="SC"> <span id="hubPremiumCurrency" style="color:#fff;">0</span>
+    </div>
   </div>
 
   <!-- PUBG TOP-LEFT PROFILE WIDGET -->
@@ -2944,6 +3112,9 @@ window.dodImagesLoaded = false;
       </button>
       <button id="navBtnTraining" class="pubg-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">
         <div class="pubg-nav-content"><div class="pubg-nav-icon">⌖</div><span class="ib-label">Train</span></div>
+      </button>
+      <button class="pubg-icon-btn" onclick="showMenuScreen('seasonpass')" title="Season Pass">
+        <div class="pubg-nav-content"><div class="pubg-nav-icon" style="color: #e8c454;">🎫</div><span class="ib-label" style="color: #e8c454;">PASS</span></div>
       </button>
       <button class="pubg-icon-btn" onclick="showMenuScreen('shop')" title="Shop">
         <div class="pubg-nav-content"><div class="pubg-nav-icon">⍟</div><span class="ib-label">Shop</span></div>
@@ -3052,6 +3223,43 @@ window.dodImagesLoaded = false;
       <div class="ranks-list" id="ranksListContainer">
         <!-- Dynamically injected -->
       </div>
+    </div>
+  </div>
+
+  <!-- ELITE PASS (SEASON PASS) -->
+  <div class="menu-screen hidden" id="screen-seasonpass" style="max-width: 1200px; width: 100%;">
+    <div class="screen-header" style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 20px; width: 100%;">
+      <div style="text-align:left; cursor:pointer; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);" onclick="playSeasonCinematic()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Replay Season Trailer">
+        <h2 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:clamp(20px, 4vw, 32px); text-shadow:0 2px 10px #000; margin:0;">SEASON 1</h2>
+        <div style="font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:2px;">The House of Lies <span>▶</span></div>
+      </div>
+      <div style="text-align:right;">
+        <button id="btnBuyElitePass" class="btn small" style="background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); color: var(--felt-dark); border-color: #f5dd8a; padding: 8px 16px; font-size: 13px; font-weight: 900; box-shadow: 0 6px 20px rgba(201,162,39,0.4); display: inline-flex; align-items: center; gap: 8px;" onclick="purchaseElitePass()">
+          UNLOCK PREMIUM 
+          <span style="display:flex; align-items:center; background:rgba(0,0,0,0.4); color:#fff; padding:2px 8px; border-radius:12px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:1px solid rgba(255,255,255,0.3);">
+            300 <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; margin-left:4px; filter:drop-shadow(0 1px 2px #000);">
+          </span>
+        </button>
+      </div>
+    </div>
+    
+    <!-- display: block overrides the flex column so the track is forced to obey the screen width -->
+    <div class="screen-content" style="position:relative; width:100%; padding:0; margin-top:20px; overflow-y:hidden; display:block;">
+      <div class="pass-track-container" id="seasonPassTrack">
+        <!-- JS will generate the 50 levels here dynamically to save HTML space -->
+        <div style="color:var(--brass-bright); padding:40px; font-family:'IBM Plex Mono',monospace;">Loading Season Data...</div>
+      </div>
+    </div>
+    
+    <div class="screen-footer" style="padding: 10px 20px; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.8); border-top:1px solid rgba(201,162,39,0.3); width:100%;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <span id="spFooterLvl" style="font-family:'Cinzel Decorative',serif; font-size:24px; color:#fff;">ANTE 1</span>
+        <div style="display:flex; flex-direction:column;">
+          <span id="spFooterPts" style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-bright);">0 / 100 SP TO NEXT ANTE</span>
+          <button class="btn ghost small" style="padding:2px 8px; font-size:8px; width:max-content; margin-top:4px;" onclick="openMissionsModal()">VIEW MISSIONS ↗</button>
+        </div>
+      </div>
+      <button class="btn small" id="claimPassRewardsBtn" style="padding:10px 30px;" onclick="claimSeasonPassRewards()">CLAIM REWARDS</button>
     </div>
   </div>
 
@@ -3192,6 +3400,15 @@ window.dodImagesLoaded = false;
     </div>
   </div>
 
+</div>
+
+<!-- CINEMATIC SEASON INTRO -->
+<div id="seasonIntroOverlay" style="position: fixed; inset: 0; z-index: 150000; background: radial-gradient(circle at center, rgba(20,12,14,0.95) 0%, #060709 100%); display: none; align-items: center; justify-content: center; flex-direction: column; opacity: 0; transition: opacity 1s ease; pointer-events: auto;">
+  <div class="ls-halo" style="opacity: 0.3; pointer-events: none;"></div>
+  <div id="seasonIntroParticles" class="ls-particles" style="pointer-events: none;"></div>
+  <h1 id="seasonIntroText1" style="font-family:'Cinzel Decorative',serif; font-size:clamp(40px, 10vw, 80px); color:var(--brass-bright); margin:0; letter-spacing:6px; opacity:0; transform:scale(0.8); transition:all 2.5s cubic-bezier(0.2, 1, 0.3, 1); text-shadow:0 0 30px rgba(201,162,39,0.6); background:linear-gradient(100deg, #a9822c 20%, #f5dd8a 45%, #a9822c 60%); background-size: 200% auto; -webkit-background-clip:text; color:transparent; pointer-events: none;">SEASON I</h1>
+  <div id="seasonIntroText2" style="font-family:'Inter',sans-serif; font-size:clamp(14px, 3vw, 24px); letter-spacing:10px; color:rgba(242,234,216,0.8); margin-top:10px; text-transform:uppercase; opacity:0; transform:translateY(20px); transition:all 2s cubic-bezier(0.2, 1, 0.3, 1) 0.8s; pointer-events: none;">The House of Lies</div>
+  <button id="seasonIntroBtn" class="btn" style="margin-top: 50px; opacity: 0; transition: opacity 1s ease; padding: 14px 40px; font-size: 16px; z-index: 10;">Continue ↗</button>
 </div>
 
 <!-- CINEMATIC LOADING SCREEN -->
@@ -3410,6 +3627,79 @@ function applyGlobalTable(tableId) {
 }
 
 // --- CINEMATIC PUBG TABLE SHOWCASE OVERLAY ---
+function playSeasonCinematic(onComplete) {
+    localStorage.setItem('dod_season_1_intro', 'true');
+    const overlay = document.getElementById('seasonIntroOverlay');
+    const t1 = document.getElementById('seasonIntroText1');
+    const t2 = document.getElementById('seasonIntroText2');
+    const pCont = document.getElementById('seasonIntroParticles');
+    const btn = document.getElementById('seasonIntroBtn');
+
+    overlay.style.display = 'flex';
+    overlay.style.pointerEvents = 'auto'; // Ensure clicks are registered
+    
+    // Add floating embers
+    pCont.innerHTML = '';
+    for(let i = 0; i < 30; i++) {
+        let ember = document.createElement('div');
+        ember.className = 'ls-ember';
+        ember.style.left = Math.random() * 100 + '%';
+        ember.style.animationDuration = (Math.random() * 3 + 2) + 's';
+        ember.style.animationDelay = (Math.random() * 2) + 's';
+        pCont.appendChild(ember);
+    }
+
+    // Deep dramatic boom & start the dedicated season track
+    try { sfx.deceptionStart(); } catch(e){}
+    
+    stopAllMusic();
+    if (typeof seasonMusicElement !== 'undefined' && seasonMusicElement) {
+        seasonMusicElement.currentTime = 0;
+        seasonMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
+        seasonMusicElement.play().catch(()=>{});
+    }
+
+    // Trigger animations
+    requestAnimationFrame(() => {
+        overlay.style.opacity = '1';
+        
+        setTimeout(() => {
+            t1.style.opacity = '1';
+            t1.style.transform = 'scale(1)';
+        }, 400);
+        
+        setTimeout(() => {
+            t2.style.opacity = '1';
+            t2.style.transform = 'translateY(0)';
+        }, 800);
+
+        // Fade the button in after the text finishes animating
+        setTimeout(() => {
+            if (btn) btn.style.opacity = '1';
+        }, 2500);
+    });
+
+    // Wait for player to click Continue
+    if (btn) {
+        btn.onclick = () => {
+            try { sfx.uiClick(); } catch(e){}
+            overlay.style.pointerEvents = 'none'; // Prevent double clicks
+            overlay.style.opacity = '0';
+            
+            setTimeout(() => {
+                overlay.style.display = 'none';
+                
+                // FIX: If triggered manually from the menu, forcefully restore the hub music!
+                if (onComplete) {
+                    onComplete();
+                } else {
+                    switchToMenuMusic();
+                }
+            }, 1000);
+        };
+    }
+}
+
 function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
   const overlay = document.getElementById('tableShowcaseOverlay');
   const leaderCard = document.getElementById('tsLeaderCard');
@@ -3780,6 +4070,33 @@ function renderUnderworldScreen() {
         
         <button id="rcCloseBtn" class="btn ghost" style="width:220px; margin-top:40px; font-size: 14px; padding: 12px 0; opacity: 0; pointer-events: none; transition: opacity 0.5s;" onclick="document.getElementById('rewardCardModalOverlay').classList.remove('show')">Awesome!</button>
     </div>
+  </div>
+</div>
+
+<!-- MISSIONS MODAL -->
+<div class="modal-bg" id="missionsModal" style="z-index: 7500; backdrop-filter: blur(12px); background: rgba(0,0,0,0.75);">
+  <div class="modal" style="background: rgba(12,14,16,0.98); border: 1px solid rgba(201,162,39,0.5); border-radius: 12px; width: 95%; max-width: 500px; max-height: 85vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 20px 60px rgba(0,0,0,0.9);">
+    
+    <!-- Header -->
+    <div style="padding: 20px 20px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;">
+      <div>
+        <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:clamp(18px, 4vh, 24px); margin: 0 0 4px 0; text-shadow:0 2px 10px #000;">MISSIONS</h3>
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(242,234,216,0.5);">Earn SP to unlock Season Pass rewards</div>
+      </div>
+      <button onclick="document.getElementById('missionsModal').classList.remove('show')" style="background:none; border:none; color:rgba(255,255,255,0.5); font-size:24px; cursor:pointer; padding: 0;">✕</button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="shop-tabs-container" style="justify-content: flex-start; padding: 10px 20px; border-bottom: 1px solid rgba(201,162,39,0.2);">
+      <button class="pubg-subtab-btn active" onclick="switchMissionTab('daily', this)">Daily</button>
+      <button class="pubg-subtab-btn" onclick="switchMissionTab('weekly', this)">Weekly</button>
+    </div>
+
+    <!-- Scrollable Mission List -->
+    <div id="missionListContainer" style="flex: 1; overflow-y: auto; padding: 15px 20px; display: flex; flex-direction: column; min-height: 250px;">
+      <!-- Injected by JS -->
+    </div>
+
   </div>
 </div>
 
@@ -4280,6 +4597,7 @@ const bgMusicElement = document.getElementById('bgMusic');
 const inGameMusicElement = document.getElementById('inGameMusic');
 const tensionMusicElement = document.getElementById('tensionMusic');
 const syndicateMusicElement = document.getElementById('syndicateMusic');
+const seasonMusicElement = document.getElementById('seasonMusic');
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
@@ -4294,6 +4612,10 @@ function stopAllMusic() {
     if (typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement) {
         syndicateMusicElement.pause();
         syndicateMusicElement.currentTime = 0;
+    }
+    if (typeof seasonMusicElement !== 'undefined' && seasonMusicElement) {
+        seasonMusicElement.pause();
+        seasonMusicElement.currentTime = 0;
     }
 }
 
@@ -4526,7 +4848,15 @@ function proceedWithBoot(overlayEl) {
     setTimeout(() => {
         window.minimumBootTimePassed = true;
         if (localStorage.getItem('dod_seen_tutorial')) {
-            menu.classList.add('menu-visible');
+            // Check if they need to see the season intro!
+            if (!localStorage.getItem('dod_season_1_intro')) {
+                playSeasonCinematic(() => {
+                    menu.classList.add('menu-visible');
+                    switchToMenuMusic(); // Restore normal menu music after cinematic ends!
+                });
+            } else {
+                menu.classList.add('menu-visible');
+            }
         } else {
             openTutorial(false);
         }
@@ -5098,8 +5428,45 @@ if(window.DoDAuth){
                     if (typeof listenForPartyInvites === 'function') listenForPartyInvites();
 
                     menu.classList.add('menu-visible');
-                    showMenuScreen('match-lobby');
-                    listenToMatchLobby(savedMatchId);
+
+                    if (data.isPrivate) {
+                        // Private Party Match Lobby
+                        showMenuScreen('match-lobby');
+                        listenToMatchLobby(savedMatchId);
+                    } else {
+                        // Public PUBG Matchmaking Lobby
+                        showMenuScreen('hub');
+                        pubgCancelFlag = false;
+                        mpTableSize = data.tableSize || 4;
+                        pubgTableSize = data.tableSize || 4;
+
+                        // Restore the PUBG Lobby UI state
+                        const playBtn = document.getElementById('pubgPlayBtn');
+                        if (playBtn) {
+                            playBtn.classList.add('searching');
+                            playBtn.innerHTML = '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">Reconnected...</span>';
+                        }
+                        const cancelBtn = document.getElementById('pubgCancelBtn');
+                        const modeSelectEl = document.getElementById('customPubgSelect');
+                        if (cancelBtn) cancelBtn.style.display = 'block';
+                        if (modeSelectEl) modeSelectEl.style.display = 'none';
+                        const trainBtn = document.getElementById('navBtnTraining');
+                        if (trainBtn) trainBtn.style.display = 'none';
+
+                        // Fade out HUD elements to recreate the cinematic state
+                        document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
+
+                        transitionToTopdown();
+                        const lobbyView = document.getElementById('pubgLobbyView');
+                        if (lobbyView) lobbyView.classList.add('show');
+                        const overlay = document.getElementById('pubgMatchmakingOverlay');
+                        if (overlay) overlay.classList.add('show');
+
+                        const timerEl = document.getElementById('pubgMmTimer');
+                        const statusEl = document.getElementById('pubgMmStatus');
+
+                        listenToPubgMatchFilling(savedMatchId, timerEl, statusEl, overlay);
+                    }
                     return; // Stop hub loading
                 } 
                 else if (isSeated && data.status === 'active') {
@@ -5157,7 +5524,9 @@ if(window.DoDAuth){
     if(hud) hud.style.display='block';
     if (typeof initFriendsList === 'function') initFriendsList();
     const el = document.getElementById('hubCurrency');
-    if(el) el.textContent = profile.currency;
+    const premEl = document.getElementById('hubPremiumCurrency');
+    if(el) el.textContent = profile.currency || 0;
+    if(premEl) premEl.textContent = profile.premiumCurrency || 0;
     
     // FULL FIX: Start listening for incoming party invites globally as soon as they log in
     if (typeof listenForPartyInvites === 'function') {
@@ -5190,6 +5559,7 @@ function setMusicVolume(v){
   if(typeof inGameMusicElement !== 'undefined' && inGameMusicElement && !inGameMusicElement.paused) inGameMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
   if(typeof tensionMusicElement !== 'undefined' && tensionMusicElement && !tensionMusicElement.paused) tensionMusicElement.volume = musicVolumeSetting * 0.8 * micDuckMult; // Slightly softer than main themes
   if(typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement && !syndicateMusicElement.paused) syndicateMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
+  if(typeof seasonMusicElement !== 'undefined' && seasonMusicElement && !seasonMusicElement.paused) seasonMusicElement.volume = musicVolumeSetting * 1.0 * micDuckMult;
 
   // Sync all quick-sliders visually so they match across all screens!
   const m1 = document.getElementById('musicVol');
@@ -5326,17 +5696,21 @@ function showMenuScreen(name){
   if(name==='hub' || name==='shop'){
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     const coins = profile ? profile.currency || 0 : 0;
+    const premiumCoins = profile ? profile.premiumCurrency || 0 : 0;
     
     const hubCur = document.getElementById('hubCurrency');
     const shopCur = document.getElementById('shopCurrency');
+    const premiumCur = document.getElementById('hubPremiumCurrency');
     if(hubCur) hubCur.textContent = coins;
     if(shopCur) shopCur.textContent = coins;
+    if(premiumCur) premiumCur.textContent = premiumCoins;
   }
 
   // Defer heavy UI rendering to unblock the screen transition so the tap feels instant
   setTimeout(() => {
       if(name==='ranks') buildRanksScreen();
       if(name==='shop') renderShopItems();
+      if(name==='seasonpass') renderSeasonPass();
   }, 10);
 }
 
@@ -6852,15 +7226,17 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       g.style.backgroundImage = bgSkin ? `url('${bgSkin}')` : "var(--my-deck)";
       g.innerHTML = '';
   } else {
-      let bgImg = "url('Cards/CardPhase.webp')";
+      // DYNAMIC SKIN LOOKUP FOR FLYING CARD
+      const actorId = state ? state.lastPlayedBy : 0;
+      const activeFaceSkin = (state && state.players[actorId]) ? state.players[actorId].faceSkin : (window.DoDAuth ? DoDAuth.getProfile().equippedFace : 'cf_default');
+      
+      let bgImg = getCardFaceUrl(activeFaceSkin, label);
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
       // FIX: Ensure no corner HTML or inner content is applied to flying Special Cards!
-      if (label === 'W') { bgImg = "url('Cards/SwapCard.webp')"; innerContent = ''; }
-      else if (label === 'REV') { bgImg = "url('Cards/ReverseCard.webp')"; innerContent = ''; }
+      if (['W', 'REV', 'INS'].includes(label)) { innerContent = ''; }
       else if (label === 'STL') { 
-          bgImg = "url('Cards/SteelCard.webp')"; 
           let tBadge = '';
           if (typeof state !== 'undefined' && state && state.lastAction && state.lastAction.msg) {
               const m = state.lastAction.msg.match(/(taking|stealing) (\d+)/i);
@@ -7198,15 +7574,19 @@ function renderAll(){
 
        let displayVal = state.lastEffectiveValue;
        
-       let bgImg = "url('Cards/CardPhase.webp')";
+       // DYNAMIC SKIN LOOKUP FOR THE CENTER CARD!
+       const lastPlayer = state.lastPlayedBy !== null ? state.players.find(p => p.id === state.lastPlayedBy) : null;
+       const activeFaceSkin = lastPlayer ? (lastPlayer.faceSkin || 'cf_default') : 'cf_default';
+       
+       let bgImg = getCardFaceUrl(activeFaceSkin, displayLabel);
        let cornerHtml = displayVal !== null ? `<div class="act-val">${displayVal}</div><div class="act-val-right">${displayVal}</div>` : '';
        let innerContent = "";
 
-       // FIX: Action cards use pure graphical textures, so they shouldn't show inner content/corners!
-       if (displayLabel === 'W' || (typeof label !== 'undefined' && label === 'W')) { bgImg = "url('Cards/SwapCard.webp')"; innerContent = ''; }
-       else if (displayLabel === 'REV' || (typeof label !== 'undefined' && label === 'REV')) { bgImg = "url('Cards/ReverseCard.webp')"; innerContent = ''; }
+       // Action cards use pure graphical textures, no numbers
+       if (['W', 'REV', 'INS'].includes(displayLabel) || (typeof label !== 'undefined' && ['W', 'REV', 'INS'].includes(label))) {
+           innerContent = ''; 
+       }
        else if (displayLabel === 'STL' || (typeof label !== 'undefined' && label === 'STL')) { 
-           bgImg = "url('Cards/SteelCard.webp')"; 
            let tBadge = window.cachedStlBadge || '';
            let checkState = (typeof state !== 'undefined') ? state : null;
            if (checkState && checkState.lastAction && checkState.lastAction.msg) {
@@ -7216,7 +7596,6 @@ function renderAll(){
            innerContent = tBadge; 
        }
        else if (displayLabel === 'PWR' || (typeof label !== 'undefined' && label === 'PWR')) { 
-           bgImg = "url('Cards/PowerCard.webp')"; 
            let tBadge = window.cachedPwrBadge || '';
            let checkState = (typeof state !== 'undefined') ? state : null;
            if (checkState && checkState.lastAction && checkState.lastAction.msg) {
@@ -7225,8 +7604,9 @@ function renderAll(){
            }
            innerContent = tBadge; 
        }
-       else if (displayLabel === 'INS') { bgImg = "url('Cards/InsuranceCard.webp')"; innerContent = ''; }
-       else { bgImg = "url('Cards/CardPhase.webp')"; innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; }
+       else { 
+           innerContent = cornerHtml + `<div class="val">${displayLabel}</div>`; 
+       }
        
        lastHtml = `<div class="minicard" style="border-color:${lastColor}; background-image:${bgImg};">${innerContent}</div>`;
     }
@@ -9754,6 +10134,13 @@ async function computeMatchProgression() {
               Object.assign(profile, res.progression.new);
               profile.currency = (profile.currency || 0) + res.progression.earnedCoins;
               
+              // Apply passive Season Pass SP & Daily Stats
+              if (res.progression.newSeasonLevel) profile.seasonLevel = res.progression.newSeasonLevel;
+              if (res.progression.newSeasonPoints !== undefined) profile.seasonPoints = res.progression.newSeasonPoints;
+              if (res.progression.dailyStats) profile.dailyStats = res.progression.dailyStats;
+              if (res.progression.weeklyStats) profile.weeklyStats = res.progression.weeklyStats;
+              if (res.progression.claimedMissions) profile.claimedMissions = res.progression.claimedMissions;
+              
               // Add basic stats to local cache so the profile tab updates visually
               profile.matchesPlayed = (profile.matchesPlayed || 0) + 1;
               profile.totalScore = (profile.totalScore || 0) + res.progression.earnedCoins;
@@ -9857,6 +10244,12 @@ async function endGame(winner, byScore) {
   const myRank = sorted.findIndex(p => p.id === you.id) + 1;
   const isMyWin = myRank === 1;
 
+  // Inject Rank and Score into matchStats so Cloudflare can calculate PUBG Placement Math
+  if (window.matchStats) {
+      window.matchStats.myRank = myRank;
+      window.matchStats.myScore = score(you);
+  }
+
   // FIX: Check if game is actually over, or just an early exit
   const matchStatusText = state.over ? (byScore ? 'Time Limit Reached' : 'Match Concluded') : 'Match Ongoing (Early Exit)';
 
@@ -9907,6 +10300,7 @@ async function endGame(winner, byScore) {
 
   // Safely grab the coins without crashing if the server hiccuped
   let earnedCoins = window._latestProgression ? window._latestProgression.earnedCoins : 0;
+  let earnedSP = window._latestProgression ? (window._latestProgression.earnedSP || 0) : 0;
   let extraRewardHtml = '';
   
   // If the player won the match, they get a performance-based bonus!
@@ -9934,6 +10328,7 @@ async function endGame(winner, byScore) {
 
   const earnedTxt = `<div style="text-align:center; margin-top:20px; font-family:'IBM Plex Mono',monospace; font-size:12px; color:var(--brass-bright); display:flex; align-items:center; justify-content:center; flex-wrap:wrap; gap:6px;">
     <div style="display:flex; align-items:center; gap:6px;"><img src="Coins/Coins.webp" style="width:16px;height:16px;filter:drop-shadow(0 2px 4px rgba(0,0,0,0.5));"> +${earnedCoins} PC</div>
+    ${earnedSP > 0 ? `<div style="display:flex; align-items:center; gap:6px; color:#e4d8bd; margin-left:10px;"><span style="font-size:16px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.8));">✦</span> +${earnedSP} SP</div>` : ''}
     ${extraRewardHtml}
   </div>`;
   
@@ -10093,9 +10488,12 @@ function returnToMenuFromEndgame() {
         const menu = document.getElementById('menu');
         menu.style.display = 'flex';
         menu.style.opacity = '1';
-        menu.classList.add('menu-visible');
-        
-        // If in a party, restore the party lobby view directly instead of standard hub
+        overlay.classList.remove('show');
+
+        const resumeHub = () => {
+            menu.classList.add('menu-visible');
+            
+            // If in a party, restore the party lobby view directly instead of standard hub
         if (currentPartyId) {
             showMenuScreen('hub');
             showPartyLobbyCinematic();
@@ -10116,19 +10514,28 @@ function returnToMenuFromEndgame() {
         }
 
         // Restore HUB ui
-        const accountLoadingEl = document.getElementById('accountLoading');
-        const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
-        const hubBadgeEl = document.getElementById('hubCurrencyBadge');
-        if (accountLoadingEl) accountLoadingEl.style.display = 'none';
-        if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-        if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
-        if (window.DoDAuth && DoDAuth.getProfile()) {
-            const hubCurrencyEl = document.getElementById('hubCurrency');
-            if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency;
-        }
+            const accountLoadingEl = document.getElementById('accountLoading');
+            const hubButtonsEl = document.querySelector('#screen-hub .hub-buttons');
+            const hubBadgeEl = document.getElementById('hubCurrencyBadge');
+            if (accountLoadingEl) accountLoadingEl.style.display = 'none';
+            if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
+            if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+            if (window.DoDAuth && DoDAuth.getProfile()) {
+                const hubCurrencyEl = document.getElementById('hubCurrency');
+                const hubPremiumEl = document.getElementById('hubPremiumCurrency');
+                if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency || 0;
+                if (hubPremiumEl) hubPremiumEl.textContent = DoDAuth.getProfile().premiumCurrency || 0;
+            }
 
-        overlay.classList.remove('show');
-        switchToMenuMusic();
+            switchToMenuMusic();
+        };
+
+        // Trap them with the Season 1 cinematic if they haven't seen it yet!
+        if (!localStorage.getItem('dod_season_1_intro')) {
+            playSeasonCinematic(resumeHub);
+        } else {
+            resumeHub();
+        }
     }, 3500); // Matches the 3.5s bar animation
 }
 
@@ -10575,7 +10982,7 @@ async function leaveParty() {
     }
     
     const trainBtn = document.getElementById('navBtnTraining');
-    if (trainBtn) { trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
+    if (trainBtn) { trainBtn.style.display = 'flex'; trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
 
     if (!currentMatchId) {
         dodResetCinematicMenu(); // drop camera back down if we hadn't started a match yet
@@ -11326,7 +11733,7 @@ function showPartyLobbyCinematic() {
     partyLobbyCinematicActive = true;
 
     const trainBtn = document.getElementById('navBtnTraining');
-    if (trainBtn) { trainBtn.style.opacity = '0.35'; trainBtn.style.pointerEvents = 'none'; }
+    if (trainBtn) { trainBtn.style.display = 'none'; } /* Hide completely to free space */
 
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
 
@@ -11417,7 +11824,7 @@ function resetPubgPlayBtn() {
     window._pubgLobbyCount = 0;
     
     const trainBtn = document.getElementById('navBtnTraining');
-    if (trainBtn) { trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
+    if (trainBtn) { trainBtn.style.display = 'flex'; trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
 }
 
 // Timing constants for the cinematic Play sequence (kept in sync with the CSS
@@ -11445,7 +11852,7 @@ async function startMatchmakingPubg() {
     if (modeSelectEl) modeSelectEl.style.display = 'none';
     
     const trainBtn = document.getElementById('navBtnTraining');
-    if (trainBtn) { trainBtn.style.opacity = '0.35'; trainBtn.style.pointerEvents = 'none'; }
+    if (trainBtn) { trainBtn.style.display = 'none'; } /* Hide completely to free space */
 
     document.querySelectorAll('.dod-hud-el').forEach(el => el.classList.add('dod-fade-out'));
 
@@ -11519,6 +11926,7 @@ async function startMatchmakingPubg() {
 }
 
 function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
+    localStorage.setItem('dod_active_match', matchId); // Auto-save for reconnects!
     const db = firebase.firestore();
     if (matchLobbyUnsub) matchLobbyUnsub();
     
@@ -11697,6 +12105,7 @@ function cancelMatchmakingPubg() {
         // Send to Cloudflare to safely leave and pass host
         secureServerCall('leaveMatch', { matchId: matchToCancel }).catch(e => console.error("Error leaving match:", e));
     }
+    localStorage.removeItem('dod_active_match'); // Ensure the game completely forgets this cancelled match!
 }
 
 // --- PUBG PROFILE & PROGRESSION UI LOGIC ---
@@ -11762,6 +12171,7 @@ const TITLES_DB = [
 ];
 
 const PREMIUM_AVATARS = [
+    { id: 'TheGrandDealer', name: 'The Grand Dealer', method: 'season' },
     { id: 'BasicGemCounter', name: 'Basic Gem', shardPrice: 150, shardsNeeded: 10 },
     { id: 'BoneDice', name: 'Bone Dice', shardPrice: 150, shardsNeeded: 12 },
     { id: 'BronzeFirst', name: 'Bronze First', shardPrice: 150, shardsNeeded: 15 },
@@ -11778,6 +12188,7 @@ const PREMIUM_AVATARS = [
 ];
 
 const PREMIUM_FRAMES = [
+    { id: 'TheDealersGrasp', name: 'The Dealers Grasp', method: 'season' },
     { id: 'Bone&Metal', name: 'Bone & Metal', shardPrice: 150, shardsNeeded: 12 },
     { id: 'DarkMarble', name: 'Dark Marble', shardPrice: 150, shardsNeeded: 15 },
     { id: 'DarkSteel', name: 'Dark Steel', shardPrice: 150, shardsNeeded: 10 },
@@ -11852,7 +12263,13 @@ function updateProfileWidget(profile) {
     if (!profile) return;
     
     const pubgWidget = document.getElementById('pubgProfileWidget');
-    if(pubgWidget) pubgWidget.style.display = 'flex';
+    if (pubgWidget) {
+        // FIX: Only force the HUD to show if we are actually on the Main Hub screen!
+        const hubScreen = document.getElementById('screen-hub');
+        if (hubScreen && !hubScreen.classList.contains('hidden')) {
+            pubgWidget.style.display = (typeof partyLobbyCinematicActive !== 'undefined' && partyLobbyCinematicActive) ? 'none' : 'flex';
+        }
+    }
     
     const nameEl = document.getElementById('widgetPlayerName');
     const tierEl = document.getElementById('widgetPlayerTier');
@@ -12650,17 +13067,27 @@ function updateEquipButtonState() {
         equipLabel = 'TITLE';
     } else if (_customCurrentTab === 'frames' && PREMIUM_FRAMES.find(f => f.id === _previewFrame)) {
         premiumDef = PREMIUM_FRAMES.find(f => f.id === _previewFrame);
-        const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
-        isUnlocked = shards >= premiumDef.shardsNeeded;
+        if (premiumDef.method === 'season') {
+            isUnlocked = profile.inventory && profile.inventory.includes(premiumDef.id);
+            unlockMessage = `Season Pass Reward`;
+        } else {
+            const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
+            isUnlocked = shards >= premiumDef.shardsNeeded;
+            unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
+        }
         isAlreadyEquipped = (premiumDef.id === getEquippedFrame(profile));
-        unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
         equipLabel = 'FRAME';
     } else if (_customCurrentTab === 'avatars' && PREMIUM_AVATARS.find(a => a.id === _previewAvatar)) {
         premiumDef = PREMIUM_AVATARS.find(a => a.id === _previewAvatar);
-        const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
-        isUnlocked = shards >= premiumDef.shardsNeeded;
+        if (premiumDef.method === 'season') {
+            isUnlocked = profile.inventory && profile.inventory.includes(premiumDef.id);
+            unlockMessage = `Season Pass Reward`;
+        } else {
+            const shards = (profile.shards && profile.shards[premiumDef.id]) ? profile.shards[premiumDef.id] : 0;
+            isUnlocked = shards >= premiumDef.shardsNeeded;
+            unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
+        }
         isAlreadyEquipped = (premiumDef.id === getEquippedAvatar(profile));
-        unlockMessage = `Copies: ${shards}/${premiumDef.shardsNeeded}`;
         equipLabel = 'AVATAR';
     } else {
         const userTierIdx = Math.max(0, TIERS.indexOf(profile.tier || 'Apprentice'));
@@ -12675,7 +13102,7 @@ function updateEquipButtonState() {
     btn.onclick = (e) => equipSelectedCustomization(e);
     
     if (!isUnlocked) {
-        if (premiumDef) {
+        if (premiumDef && premiumDef.method !== 'season') {
             const canAfford = (profile.currency || 0) >= premiumDef.shardPrice;
             btn.disabled = !canAfford;
             btn.textContent = `Buy Copy (${premiumDef.shardPrice}c) • ${unlockMessage}`;
@@ -12732,8 +13159,13 @@ function renderUnlockSelectors(profile) {
     }).join('');
 
     avatarsHtml += PREMIUM_AVATARS.map(avatar => {
-        const shards = (profile.shards && profile.shards[avatar.id]) ? profile.shards[avatar.id] : 0;
-        const isUnlocked = shards >= avatar.shardsNeeded;
+        let isUnlocked = false;
+        if (avatar.method === 'season') {
+            isUnlocked = profile.inventory && profile.inventory.includes(avatar.id);
+        } else {
+            const shards = (profile.shards && profile.shards[avatar.id]) ? profile.shards[avatar.id] : 0;
+            isUnlocked = shards >= avatar.shardsNeeded;
+        }
         const isEquipped = avatar.id === eqAvatar;
         const isSelected = avatar.id === _previewAvatar;
         let classes = `pubg-grid-item ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''} ${isEquipped ? 'equipped' : ''}`;
@@ -12766,8 +13198,13 @@ function renderUnlockSelectors(profile) {
     }).join('');
 
     framesHtml += PREMIUM_FRAMES.map(frame => {
-        const shards = (profile.shards && profile.shards[frame.id]) ? profile.shards[frame.id] : 0;
-        const isUnlocked = shards >= frame.shardsNeeded;
+        let isUnlocked = false;
+        if (frame.method === 'season') {
+            isUnlocked = profile.inventory && profile.inventory.includes(frame.id);
+        } else {
+            const shards = (profile.shards && profile.shards[frame.id]) ? profile.shards[frame.id] : 0;
+            isUnlocked = shards >= frame.shardsNeeded;
+        }
         const isEquipped = frame.id === eqFrame;
         const isSelected = frame.id === _previewFrame;
         let classes = `pubg-grid-item ${isSelected ? 'active' : ''} ${!isUnlocked ? 'locked' : ''} ${isEquipped ? 'equipped' : ''}`;
@@ -13267,9 +13704,41 @@ window.addEventListener('popstate', function(event) {
 // ============================================================
 let currentShopTab = 'cardBacks';
 
+// --- DYNAMIC CARD FACE ENGINE ---
+function getCardFaceUrl(faceId, typeLabel) {
+    let t = (typeLabel || '').toLowerCase();
+    if (t === 'w') t = 'wild';
+    if (t === 'rev') t = 'reverse';
+    if (t === 'stl') t = 'steal';
+    if (t === 'pwr') t = 'power';
+    if (t === 'ins') t = 'insurance';
+    
+    // Custom Crimson Royal Master Set
+    if (faceId === 'cf_crimsonroyal') {
+        if (t === 'wild') return "url('Cards/CrimsonRoyalSwapCard.webp')";
+        if (t === 'reverse') return "url('Cards/CrimsonRoyalReverseCard.webp')";
+        if (t === 'steal') return "url('Cards/CrimsonRoyalStealCard.webp')";
+        if (t === 'power') return "url('Cards/CrimsonRoyalPowerCard.webp')";
+        if (t === 'insurance') return "url('Cards/CrimsonRoyalInsuranceCard.webp')";
+        if (t === 'peek') return "url('Cards/CrimsonRoyalPeekCard.webp')";
+        return "url('Cards/CrimsonRoyal.webp')"; // The base number card
+    }
+    
+    // Default Fallbacks
+    if (t === 'wild') return "url('Cards/SwapCard.webp')";
+    if (t === 'reverse') return "url('Cards/ReverseCard.webp')";
+    if (t === 'steal') return "url('Cards/SteelCard.webp')";
+    if (t === 'power') return "url('Cards/PowerCard.webp')";
+    if (t === 'insurance') return "url('Cards/InsuranceCard.webp')";
+    if (t === 'peek') return "url('Cards/PeekCard.webp')";
+    
+    return "url('Cards/CardPhase.webp')";
+}
+
 const SHOP_DB = {
     cardFaces: [
         { id: 'cf_default', name: 'Brass Standard', method: 'default', color: '#c9a227' },
+        { id: 'cf_crimsonroyal', name: 'Crimson Royal', method: 'season', color: '#b2455e' },
         { id: 'cf_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 150, shardsNeeded: 10, color: '#b2455e' },
         { id: 'cf_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 200, shardsNeeded: 15, color: '#3c7fb2' },
         { id: 'cf_emerald', name: 'Emerald Viper', method: 'coins', shardPrice: 300, shardsNeeded: 20, color: '#3ca25e' },
@@ -13279,6 +13748,7 @@ const SHOP_DB = {
     ],
     cardBacks: [
         { id: 'cb_default', name: 'Brass Standard', method: 'default', img: 'TheBase.webp' },
+        { id: 'cb_theone', name: 'The One', method: 'season', img: 'TheOne.webp' },
         
         // --- NEW COMMON CARDS ---
         { id: 'cb_copper', name: 'Copper Rust', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'CopperRust.webp' },
@@ -13304,6 +13774,7 @@ const SHOP_DB = {
     ],
     tables: [
         { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.webp', color: '30, 74, 61' },
+        { id: 'tb_sanctum', name: 'Inner Sanctum', method: 'season', desc: 'The ultimate Season 1 capstone table.', img: 'InnerSanctum.webp', color: '74, 21, 27' },
         { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.webp', color: '74, 21, 27' },
         { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.webp', color: '22, 36, 66' },
         { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.webp', color: '53, 28, 77' },
@@ -13316,10 +13787,17 @@ const SHOP_DB = {
         { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.webp', color: '69, 64, 39' }
     ],
     coins: [
-        { id: 'iap_1', name: 'Handful of PC', price: '₹49', reward: 1000, img: 'Coins/Handfulofcoins.webp' },
-        { id: 'iap_2', name: 'PC Pouch', price: '₹249', reward: 5500, img: 'Coins/Coinpouch.webp' },
-        { id: 'iap_3', name: 'Treasure Chest', price: '₹499', reward: 12000, img: 'Coins/Cointreasure.webp' },
-        { id: 'iap_4', name: 'Bank Vault', price: '₹999', reward: 30000, img: 'Coins/Coinbankvault.webp' }
+        // --- SYNDICATE CHIPS (PREMIUM SC) ---
+        { id: 'iap_1', name: 'Handful of SC', price: '₹49', reward: 100, type: 'sc', img: 'Coins/HandfulofSyndicate.webp' },
+        { id: 'iap_2', name: 'SC Pouch', price: '₹249', reward: 550, type: 'sc', img: 'Coins/SyndicatePouch.webp' },
+        { id: 'iap_3', name: 'SC Chest', price: '₹499', reward: 1200, type: 'sc', img: 'Coins/SyndicateChest.webp' },
+        { id: 'iap_4', name: 'Syndicate Vault', price: '₹999', reward: 3000, type: 'sc', img: 'Coins/SyndicateVault.webp' },
+
+        // --- PIXEL COINS (BOUGHT WITH SC) ---
+        { id: 'exchange_pc_1', name: 'Handful of PC', scPrice: 10, reward: 1000, type: 'pc', img: 'Coins/Handfulofcoins.webp' },
+        { id: 'exchange_pc_2', name: 'PC Pouch', scPrice: 50, reward: 5500, type: 'pc', img: 'Coins/Coinpouch.webp' },
+        { id: 'exchange_pc_3', name: 'PC Chest', scPrice: 100, reward: 13000, type: 'pc', img: 'Coins/Cointreasure.webp' },
+        { id: 'exchange_pc_4', name: 'PC Bank Vault', scPrice: 250, reward: 35000, type: 'pc', img: 'Coins/Coinbankvault.webp' }
     ]
 };
 
@@ -13333,6 +13811,192 @@ function switchShopTab(tab, btn) {
     btn.classList.add('active');
     
     renderShopItems();
+}
+
+function renderSeasonPass() {
+    const track = document.getElementById('seasonPassTrack');
+    if (!track) return;
+
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    const currentLevel = profile ? (profile.seasonLevel || 1) : 1; 
+    const currentSP = profile ? (profile.seasonPoints || 0) : 0;
+    const hasPremium = profile ? (profile.hasPremiumPass || false) : false;
+    
+    // Arrays to track what we already grabbed
+    const claimedFree = profile ? (profile.claimedFreeRewards || []) : [];
+    const claimedPrem = profile ? (profile.claimedPremiumRewards || []) : [];
+
+    // Create sticky row labels (FREE / ELITE) on the left side
+    let html = `
+        <div class="pass-row-labels">
+            <div class="pass-label-free">FREE</div>
+            <div class="pass-label-spacer"></div>
+            <div class="pass-label-elite">ELITE</div>
+        </div>
+    `;
+
+    for (let i = 1; i <= 50; i++) {
+        const isUnlocked = currentLevel >= i;
+
+        // Generate Reward Data based on Level
+        let freeData = { type: 'none', val: '' };
+        let premData = { type: 'pc', val: '25 PC' }; // Default premium filler reward
+
+        // --- AAA PSYCHOLOGICAL MILESTONES (WITH REAL IMAGES & PREVIEW LINKS) ---
+        if (i === 1) { 
+            freeData = { type: 'pc', val: '50 PC' }; 
+            premData = { type: 'cosmetic', val: 'Avatar: Dealer', img: 'Avatars/TheGrandDealer.webp', style: 'width:42px; height:42px; border-radius:4px; object-fit:cover;', previewId: 'TheGrandDealer', previewTab: 'avatars' }; 
+        }
+        else if (i === 5) { 
+            freeData = { type: 'chest', val: 'Basic' }; 
+            // Make absolutely sure your folder is spelled exactly "CardstoBuy" and your file is exactly "TheOne.webp"
+            premData = { type: 'cosmetic', val: 'Back: Lies', img: 'CardstoBuy/TheOne.webp', style: 'width:28px; height:40px; border-radius:4px;', previewId: 'cb_theone', previewTab: 'cardBacks' }; 
+        }
+        else if (i === 10) { 
+            freeData = { type: 'pc', val: '100 PC' }; 
+            premData = { type: 'sc', val: '50 SC' }; 
+        }
+        else if (i === 15) { 
+            freeData = { type: 'chest', val: 'Basic' }; 
+            premData = { type: 'cosmetic', val: 'Frame: Gilded', img: 'Frames/TheDealersGrasp.webp', style: 'width:48px; height:48px; object-fit:contain;', previewId: 'TheDealersGrasp', previewTab: 'frames' }; 
+        }
+        else if (i === 20) { 
+            freeData = { type: 'pc', val: '150 PC' }; 
+            premData = { type: 'sc', val: '50 SC' }; 
+        }
+        else if (i === 25) { 
+            // FIX: Removed exclusive Avatar from Free track! Replaced with a solid PC drop.
+            freeData = { type: 'pc', val: '250 PC' }; 
+            premData = { type: 'cosmetic', val: 'Face: Crimson', img: 'Cards/CrimsonRoyal.webp', style: 'width:28px; height:40px; border-radius:4px;', previewId: 'cf_crimsonroyal', previewTab: 'cardFaces' }; 
+        }
+        else if (i === 30) { 
+            freeData = { type: 'chest', val: 'Basic' }; 
+            premData = { type: 'sc', val: '50 SC' }; 
+        }
+        else if (i === 35) { 
+            // FIX: Removed exclusive Title from Free track. Replaced with PC.
+            freeData = { type: 'pc', val: '300 PC' }; 
+            premData = { type: 'cosmetic', val: 'Title: High Roller', isTitle: true, titleClass: 'mythic', titleText: 'High Roller', previewId: 't_rich', previewTab: 'titles' }; 
+        }
+        else if (i === 40) { 
+            freeData = { type: 'chest', val: 'Mythic' }; 
+            premData = { type: 'sc', val: '50 SC' }; 
+        }
+        else if (i === 45) { 
+            freeData = { type: 'pc', val: '400 PC' }; 
+            premData = { type: 'cosmetic', val: 'VFX: Sparks', isVFX: true }; 
+        }
+        else if (i === 50) { 
+            // FIX: Free track capstone is now a highly valuable Mythic Chest instead of an exclusive Title
+            freeData = { type: 'chest', val: 'Mythic' }; 
+            // The Capstone Flex (Exclusive Table)
+            premData = { type: 'cosmetic', val: 'Table: Sanctum', img: 'Tables/InnerSanctum.webp', style: 'width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--brass);', previewId: 'tb_sanctum', previewTab: 'tables' }; 
+        }
+
+        else {
+            // FIX: Give a small 10 PC reward on EVERY level so there are no ugly blank slots!
+            freeData = { type: 'pc', val: '10 PC' };
+        }
+
+        // HTML Asset Builders
+        const buildInner = (data, isPrem) => {
+            if (data.type === 'none') return '';
+            let inner = '';
+            
+            if (data.type === 'pc') inner = `<img src="Coins/Coins.webp" style="width:36px; height:36px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">`;
+            else if (data.type === 'sc') inner = `<img src="Coins/SyndicateChips.webp" style="width:36px; height:36px; filter:drop-shadow(0 4px 10px rgba(194,59,74,0.6)); margin-bottom:8px;">`;
+            else if (data.type === 'chest') inner = `<img src="Cards/${data.val}Card.webp" style="width:28px; height:40px; border-radius:3px; box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:8px;">`;
+            else if (data.type === 'cosmetic') {
+                // FIX: Dynamically render real images, titles, and VFX instead of emojis!
+                if (data.img) {
+                    inner = `<img src="${data.img}" style="${data.style} box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:8px;">`;
+                } else if (data.isTitle) {
+                    inner = `<div style="margin-bottom:8px; transform:scale(0.85);"><div class="player-title title-${data.titleClass}" style="height:18px; font-size:8px; padding:0 10px 0 4px;"><span>${data.titleText}</span></div></div>`;
+                } else if (data.isVFX) {
+                    inner = `<div style="font-size:28px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">✨</div>`;
+                } else {
+                    inner = `<div style="font-size:28px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">🎁</div>`;
+                }
+            }
+            
+            // If the reward is SC, make the text color Pop with the Danger/Red theme so they notice it!
+            let txtColor = isPrem ? 'var(--brass-bright)' : '#fff';
+            if (data.type === 'sc') txtColor = 'var(--danger-bright)';
+
+            return `${inner}<div style="font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:bold; color:${txtColor}; text-align:center; padding: 0 6px; line-height: 1.2;">${data.val}</div>`;
+        };
+
+        let freeHtml = buildInner(freeData, false);
+        const freeIsClaimed = claimedFree.includes(i);
+        let freeClass = `pass-reward-box ${freeData.type === 'none' ? 'empty-slot' : (!isUnlocked ? 'locked' : (freeIsClaimed ? 'claimed' : 'ready'))}`;
+        // If there's a preview link attached, inject the onclick event!
+        let freeOnClick = freeData.previewId ? `onclick="openShopPreview('${freeData.previewId}', '${freeData.previewTab}')"` : '';
+        
+        let premHtml = buildInner(premData, true);
+        const premIsClaimed = claimedPrem.includes(i);
+        let premClass = `pass-reward-box premium ${(!hasPremium || !isUnlocked) ? 'locked' : (premIsClaimed ? 'claimed' : 'ready')}`;
+        let premOnClick = premData.previewId ? `onclick="openShopPreview('${premData.previewId}', '${premData.previewTab}')"` : '';
+
+        html += `
+            <div class="pass-level-col">
+                <div class="${freeClass}" ${freeOnClick} style="${freeData.previewId ? 'cursor:pointer;' : ''}">${freeHtml}</div>
+                <div class="pass-level-marker ${isUnlocked ? 'unlocked' : ''}">ANTE ${i}</div>
+                <div class="${premClass}" ${premOnClick} style="${premData.previewId ? 'cursor:pointer;' : ''}">${premHtml}</div>
+            </div>
+        `;
+    }
+
+    track.innerHTML = html;
+
+    // Update the visual background line to map the exact 50-level progress
+    const lineFill = document.querySelector('.pass-line-fill');
+    if (lineFill) {
+        const progress = Math.min(100, Math.max(0, ((currentLevel - 1) / 50) * 100));
+        setTimeout(() => { lineFill.style.width = progress + '%'; }, 100);
+    }
+    
+    // Update the footer text safely
+    // Update the footer text safely
+        // Hide the purchase button if they already own the Elite Pass
+    const buyBtn = document.getElementById('btnBuyElitePass');
+    if (buyBtn) {
+        if (hasPremium) {
+            buyBtn.style.display = 'none';
+        } else {
+            buyBtn.style.display = 'inline-flex';
+        }
+    }
+
+    // Update the footer text safely
+    // Update the footer text safely
+        const footerLvlText = document.getElementById('spFooterLvl');
+        const footerSpText = document.getElementById('spFooterPts');
+        if (footerLvlText) footerLvlText.textContent = `ANTE ${currentLevel}`;
+        if (footerSpText) footerSpText.textContent = `${currentSP} / 100 SP TO NEXT ANTE`;
+
+        // FULL FIX: Disable the claim button visually if everything is already claimed
+        const claimBtn = document.getElementById('claimPassRewardsBtn');
+        if (claimBtn) {
+            let hasUnclaimed = false;
+            for (let i = 1; i <= currentLevel; i++) {
+                if (!claimedFree.includes(i)) hasUnclaimed = true;
+                if (hasPremium && !claimedPrem.includes(i)) hasUnclaimed = true;
+            }
+
+            if (hasUnclaimed) {
+                claimBtn.disabled = false;
+                claimBtn.textContent = "CLAIM REWARDS";
+                claimBtn.style.background = "var(--ok)";
+                claimBtn.style.color = "#fff";
+                claimBtn.style.borderColor = "#5faa82";
+            } else {
+                claimBtn.disabled = true;
+                claimBtn.textContent = "ALL CLAIMED ✓";
+                claimBtn.style.background = "rgba(255,255,255,0.05)";
+                claimBtn.style.color = "rgba(255,255,255,0.3)";
+                claimBtn.style.borderColor = "transparent";
+            }
+        }
 }
 
 function renderShopItems() {
@@ -13378,10 +14042,16 @@ function renderShopItems() {
         } else if (currentShopTab === 'vfx') {
             visualHtml = `<div style="font-size:24px; margin:10px 0;">✨</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
         } else if (currentShopTab === 'coins') {
+            // Determine if it is Syndicate Chips (SC) or Pixel Coins (PC)
+            const isSC = item.type === 'sc';
+            const txtColor = isSC ? '#c23b4a' : 'var(--brass-bright)';
+            
             const iconHtml = item.img 
                 ? `<img src="${item.img}" style="width:clamp(65px, 12vh, 90px); height:clamp(65px, 12vh, 90px); object-fit:contain; margin:10px auto; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.6)); display:block;" alt="${item.name}">`
-                : `<img src="Coins/Coins.webp" style="width:40px; height:40px; margin:10px auto; filter:drop-shadow(0 0 8px rgba(226,189,74,0.6)); display:block;" alt="PC">`;
-            visualHtml = `${iconHtml}<div style="font-size:13px; color:var(--ok); font-weight:bold; font-family:'IBM Plex Mono',monospace; margin-bottom:10px;">+${item.reward} PC</div>`;
+                : `<img src="Coins/SyndicateChips.webp" style="width:40px; height:40px; margin:10px auto; filter:drop-shadow(0 0 8px rgba(194,59,74,0.6)); display:block;" alt="SC">`;
+            
+            // Changed font to Cinzel Decorative and fixed the SC/PC dynamic label!
+            visualHtml = `${iconHtml}<div style="font-family:'Cinzel Decorative',serif; font-size:15px; font-weight:bold; letter-spacing: 1px; color:${txtColor}; margin-bottom:10px; text-shadow:0 2px 4px #000;">+${item.reward} ${isSC ? 'SC' : 'PC'}</div>`;
         }
 
         // Build the Preview button (Hidden for Coins and VFX)
@@ -13392,7 +14062,19 @@ function renderShopItems() {
 
         let btnHtml = '';
         if (currentShopTab === 'coins') {
-            btnHtml = `<button class="btn small" style="background:var(--ok); border-color:#5faa82; color:#fff; width:100%;" onclick="purchaseIAP('${item.id}', ${item.reward}, event)">Buy ${item.price}</button>`;
+            const isPC = item.type === 'pc';
+            // FIX: Change the SC button (Real Money) from Red to Casino Green!
+            const btnBg = isPC ? 'linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%)' : 'linear-gradient(180deg, #3d8f68, #2f6e52)';
+            const btnColor = isPC ? 'var(--felt-dark)' : '#fff';
+            const btnBorder = isPC ? '#f5dd8a' : '#5faa82';
+            
+            if (item.scPrice) {
+                // Bought with SC
+                btnHtml = `<button class="btn small" style="background:${btnBg}; border-color:${btnBorder}; color:${btnColor}; width:100%; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onclick="exchangeSCToPC('${item.id}', ${item.scPrice}, ${item.reward}, event)">${item.scPrice} <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));"></button>`;
+            } else {
+                // Bought with Real Money
+                btnHtml = `<button class="btn small" style="background:${btnBg}; border-color:${btnBorder}; color:${btnColor}; width:100%; font-weight:700; box-shadow: 0 4px 10px rgba(47,110,82,0.4);" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
+            }
         } else if (isEquipped) {
             btnHtml = `<button class="btn small equipped" style="width:100%;" disabled>EQUIPPED ✓</button>`;
         } else if (isOwned) {
@@ -13415,11 +14097,16 @@ function renderShopItems() {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Lucky Spin Only</button>`;
         }
 
+        // SMART FILTER: Only modify proportions if we are looking at Playing Cards!
+        const isCard = (currentShopTab === 'cardBacks' || currentShopTab === 'cardFaces');
+        const customHeight = isCard ? 'min-height: 260px;' : '';
+        const customVisualWrap = isCard ? `<div style="transform: scale(1.7); margin: 25px 0 25px 0;">${visualHtml}</div>` : visualHtml;
+
         return `
-            <div class="shop-item" style="display:flex; flex-direction:column; justify-content:space-between; background:rgba(0,0,0,0.6); border:1px solid ${isEquipped ? 'var(--brass-bright)' : 'rgba(255,255,255,0.1)'}; border-radius:8px; padding:14px 10px; text-align:center;">
+            <div class="shop-item" style="${customHeight} display:flex; flex-direction:column; justify-content:space-between; background: linear-gradient(180deg, rgba(82, 54, 27, 0.7) 0%, rgba(38, 20, 8, 0.95) 100%); border:1px solid ${isEquipped ? 'var(--brass-bright)' : 'rgba(201,162,39,0.25)'}; border-radius:8px; padding:14px 10px; text-align:center;">
                 <div>
                     <div class="shop-name" style="font-size:12px; font-weight:bold; color:${isEquipped ? 'var(--brass-bright)' : '#fff'}; font-family:'Cinzel',serif;">${item.name}</div>
-                    ${visualHtml}
+                    ${customVisualWrap}
                 </div>
                 <div style="margin-top:auto;">
                     ${previewBtn}
@@ -13432,7 +14119,14 @@ function renderShopItems() {
 
 function openShopPreview(itemId, tab) {
     try { sfx.uiClick(); } catch(e){}
-    const item = SHOP_DB[tab].find(i => i.id === itemId);
+    
+    // NEW: Allow previewing all item types, including Avatars, Frames, and Titles!
+    let item = null;
+    if (tab === 'avatars') item = PREMIUM_AVATARS.find(i => i.id === itemId) || { id: itemId, name: itemId.replace('t_',''), desc: 'Exclusive Avatar' };
+    else if (tab === 'frames') item = PREMIUM_FRAMES.find(i => i.id === itemId) || { id: itemId, name: itemId, desc: 'Exclusive Frame' };
+    else if (tab === 'titles') item = TITLES_DB.find(i => i.id === itemId);
+    else item = SHOP_DB[tab] ? SHOP_DB[tab].find(i => i.id === itemId) : null;
+    
     if(!item) return;
 
     document.getElementById('previewItemName').textContent = item.name;
@@ -13453,12 +14147,17 @@ function openShopPreview(itemId, tab) {
     // 2. Render high-res showcase on top of particles
     let innerHtml = '';
     if (tab === 'tables') {
-        // Renders the table as a thick 3D poker table disc tilted in space!
         innerHtml = `<div style="width:180px; height:180px; max-width:85%; max-height:85%; border-radius:50%; background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.7) 100%), url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; z-index:2; position:relative; transform: perspective(800px) rotateX(55deg) rotateZ(-15deg); border: 3px solid var(--brass-bright); box-shadow: -4px 12px 0 #150c12, -8px 24px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);"></div>`;
     } else if (tab === 'cardBacks') {
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); z-index:2; position:relative;"></div>`;
     } else if (tab === 'cardFaces') {
-         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('Cards/CardPhase.webp'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
+        innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('Cards/CardPhase.webp'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
+    } else if (tab === 'avatars') {
+        innerHtml = `<div class="avatar-frame-wrap" style="width:120px; height:120px; margin:0 auto; z-index:2;"><img src="Avatars/${item.id}.webp" class="af-avatar" style="border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.8);"><img src="Frames/Apprentice.webp" class="af-frame"></div>`;
+    } else if (tab === 'frames') {
+        innerHtml = `<div class="avatar-frame-wrap" style="width:120px; height:120px; margin:0 auto; z-index:2;"><img src="Avatars/Apprentice.webp" class="af-avatar" style="border-radius:6px;"><img src="Frames/${item.id}.webp" class="af-frame" style="filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));"></div>`;
+    } else if (tab === 'titles') {
+        innerHtml = `<div style="margin-top:20px; transform:scale(1.5); z-index:2;">${renderTitleHTML(item.id, true)}</div>`;
     }
     
     // Inject both into the visual box simultaneously
@@ -13470,8 +14169,13 @@ function openShopPreview(itemId, tab) {
     const eqFace = profile ? (profile.equippedFace || profile.equippedCard || 'cf_default') : '';
     const eqBack = profile ? (profile.equippedBack || 'cb_default') : '';
     const eqTable = profile ? (profile.equippedTable || 'tb_default') : '';
+    // FIX: Grab the current Avatar, Frame, and Title using your existing safe helper functions!
+    const eqAvatar = profile ? getEquippedAvatar(profile) : '';
+    const eqFrame = profile ? getEquippedFrame(profile) : '';
+    const eqTitle = profile ? getEquippedTitle(profile) : '';
     
-    let isEquipped = (item.id === eqFace || item.id === eqBack || item.id === eqTable);
+    // Check against everything so the button successfully changes to EQUIPPED ✓
+    let isEquipped = (item.id === eqFace || item.id === eqBack || item.id === eqTable || item.id === eqAvatar || item.id === eqFrame || item.id === eqTitle);
     let isOwned = inventory.includes(item.id) || item.method === 'default';
     if (item.method === 'tier' && profile) {
         const userTierIdx = TIERS.indexOf(profile.tier || 'Apprentice');
@@ -13484,7 +14188,8 @@ function openShopPreview(itemId, tab) {
     if (isEquipped) {
         btnHtml = `<button class="btn equipped" style="width:100%; font-size:14px; padding:12px;" disabled>EQUIPPED ✓</button>`;
     } else if (isOwned) {
-        btnHtml = `<button class="btn owned" style="background:var(--brass); color:var(--felt-dark); width:100%; font-weight:bold; font-size:14px; padding:12px;" onclick="equipShopItem('${item.id}', '${tab}', event); document.getElementById('shopPreviewModal').classList.remove('show');">EQUIP NOW</button>`;
+        // FIX: Removed the code that instantly closes the modal so the button can successfully update to EQUIPPED!
+        btnHtml = `<button class="btn owned" style="background:var(--brass); color:var(--felt-dark); width:100%; font-weight:bold; font-size:14px; padding:12px;" onclick="equipShopItem('${item.id}', '${tab}', event);">EQUIP NOW</button>`;
     } else if (item.method === 'coins') {
         if (item.shardsNeeded) {
             let shards = (profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
@@ -13501,6 +14206,8 @@ function openShopPreview(itemId, tab) {
         btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Unlocked via Achievement</button>`;
     } else if (item.method === 'spin') {
         btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Exclusive Lucky Spin Reward</button>`;
+    } else if (item.method === 'season') {
+        btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Season Pass Exclusive</button>`;
     }
     
     document.getElementById('previewItemAction').innerHTML = btnHtml;
@@ -13638,6 +14345,10 @@ async function equipShopItem(itemId, category, event) {
     if (category === 'cardFaces') { updateField = 'equippedFace'; profile.equippedFace = itemId; }
     else if (category === 'cardBacks') { updateField = 'equippedBack'; profile.equippedBack = itemId; }
     else if (category === 'tables') { updateField = 'equippedTable'; profile.equippedTable = itemId; }
+    // FIX: Allow Avatars, Frames, and Titles to be equipped directly from the Shop Preview Modal!
+    else if (category === 'avatars') { updateField = 'avatar'; profile.avatar = itemId; }
+    else if (category === 'frames') { updateField = 'frame'; profile.frame = itemId; }
+    else if (category === 'titles') { updateField = 'title'; profile.title = itemId; }
 
     if (updateField) {
         await firebase.firestore().collection('users').doc(profile.uid).update({
@@ -13646,14 +14357,86 @@ async function equipShopItem(itemId, category, event) {
     }
     
     applyEquippedSkins(profile); // Apply instantly!
+    updateProfileWidget(profile); // FIX: Instantly updates the Top-Left Avatar HUD on the main menu!
     renderShopItems();
+
+    // If the customization modal is open in the background, refresh it too
+    if (document.getElementById('profileModal').classList.contains('show')) {
+        updatePreviewBox();
+        renderUnlockSelectors(profile);
+    }
+    
+    // FIX: If the 3D Preview Modal is open, refresh it so the button instantly changes to EQUIPPED ✓
+    if (document.getElementById('shopPreviewModal').classList.contains('show')) {
+        openShopPreview(itemId, category);
+    }
 }
 
-async function purchaseIAP(itemId, rewardAmount, event) {
+async function exchangeSCToPC(packId, scCost, pcReward, event) {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile || (profile.premiumCurrency || 0) < scCost) {
+        showSystemToast("Not enough Syndicate Chips (SC)!");
+        try { sfx.alert(); } catch(e){}
+        return;
+    }
+
+    // --- 0. SAVE BACKUP FOR ROLLBACK ---
+    const backupSC = profile.premiumCurrency;
+    const backupPC = profile.currency;
+
+    // --- 1. INSTANT OPTIMISTIC UI ---
+    profile.premiumCurrency -= scCost;
+    profile.currency = (profile.currency || 0) + pcReward;
+
+    try { sfx.coin(); } catch(e){}
+    if (event) triggerNotificationVfx('equip', event);
+    try { sfx.win(); } catch(e){}
+    
+    if (typeof confetti !== 'undefined') {
+        const duration = 1500;
+        const end = Date.now() + duration;
+        (function frame() {
+            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#ffd700', '#ffffff'], zIndex: 1000000 });
+            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#ffd700', '#ffffff'], zIndex: 1000000 });
+            if (Date.now() < end) requestAnimationFrame(frame);
+        }());
+    }
+
+    const hubCur = document.getElementById('hubCurrency');
+    const shopCur = document.getElementById('shopCurrency');
+    const premCur = document.getElementById('hubPremiumCurrency');
+    
+    if (hubCur) hubCur.textContent = profile.currency;
+    if (shopCur) shopCur.textContent = profile.currency;
+    if (premCur) premCur.textContent = profile.premiumCurrency;
+    
+    renderShopItems();
+    showSystemToast(`Exchange Complete! +${pcReward.toLocaleString()} PC`);
+
+    // --- 2. BACKGROUND SERVER SYNC ---
+    try {
+        const res = await secureServerCall('economy/exchangeScToPc', { packId });
+        profile.premiumCurrency = res.newPremiumCurrency;
+        profile.currency = res.newCurrency;
+    } catch (e) {
+        console.error("Exchange failed:", e);
+        // --- 3. ROLLBACK ON FAILURE ---
+        profile.premiumCurrency = backupSC;
+        profile.currency = backupPC;
+        if (hubCur) hubCur.textContent = profile.currency;
+        if (shopCur) shopCur.textContent = profile.currency;
+        if (premCur) premCur.textContent = profile.premiumCurrency;
+        renderShopItems();
+        showSystemToast(e.message || "Exchange failed. SC refunded.");
+    }
+}
+
+async function purchaseIAP(itemId, rewardAmount, currencyType = 'sc', event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
 
     try { sfx.uiClick(); } catch(e){}
+    const unit = currencyType === 'pc' ? 'PC' : 'SC';
     showSystemToast("Initializing secure checkout...");
 
     try {
@@ -13666,10 +14449,10 @@ async function purchaseIAP(itemId, rewardAmount, event) {
             amount: orderRes.amount,
             currency: orderRes.currency,
             name: "Deck of Deception",
-            description: `Purchase ${rewardAmount} PC`,
+            description: `Purchase ${rewardAmount.toLocaleString()} ${unit}`,
             image: window.location.hostname === "127.0.0.1" || window.location.hostname === "localhost" ? undefined : "https://deckofdeception.pages.dev/PixelaksLogoTransparent.png",
-            order_id: orderRes.orderId, // Connects payment to the server order
-            theme: { color: "#c9a227" }, // Matches your brass UI theme
+            order_id: orderRes.orderId,
+            theme: { color: currencyType === 'pc' ? "#e8c454" : "#c23b4a" },
             handler: async function (response) {
                 showSystemToast("Verifying payment...");
                 try {
@@ -13681,8 +14464,20 @@ async function purchaseIAP(itemId, rewardAmount, event) {
                         razorpay_signature: response.razorpay_signature
                     });
 
-                    // 4. Success! Grant the coins visually
-                    profile.currency = verifyRes.newCurrency;
+                    // 4. Update the relevant balance
+                    if (verifyRes.rewardType === 'pc') {
+                        profile.currency = verifyRes.newCurrency;
+                        const curEl = document.getElementById('hubCurrency');
+                        const shopCurEl = document.getElementById('shopCurrency');
+                        if (curEl) curEl.textContent = profile.currency;
+                        if (shopCurEl) shopCurEl.textContent = profile.currency;
+                        showSystemToast(`Purchase Verified! +${rewardAmount.toLocaleString()} PC added to your wallet.`);
+                    } else {
+                        profile.premiumCurrency = verifyRes.newPremiumCurrency;
+                        const premCur = document.getElementById('hubPremiumCurrency');
+                        if (premCur) premCur.textContent = profile.premiumCurrency;
+                        showSystemToast(`Purchase Verified! +${rewardAmount.toLocaleString()} SC added to your vault.`);
+                    }
                     
                     try { sfx.coin(); } catch(e){}
                     if (event) triggerNotificationVfx('equip', event);
@@ -13691,20 +14486,15 @@ async function purchaseIAP(itemId, rewardAmount, event) {
                     if (typeof confetti !== 'undefined') {
                         const duration = 2000;
                         const end = Date.now() + duration;
+                        const cColors = currencyType === 'pc' ? ['#e8c454', '#ffd700', '#ffffff'] : ['#c23b4a', '#ff6b7a', '#ffffff'];
                         (function frame() {
-                            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
-                            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: ['#e8c454', '#c9a227'], zIndex: 1000000 });
+                            confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0, y: 0.8 }, colors: cColors, zIndex: 1000000 });
+                            confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1, y: 0.8 }, colors: cColors, zIndex: 1000000 });
                             if (Date.now() < end) requestAnimationFrame(frame);
                         }());
                     }
                     
-                    const shopCur = document.getElementById('shopCurrency');
-                    const hubCur = document.getElementById('hubCurrency');
-                    if (shopCur) shopCur.textContent = profile.currency;
-                    if (hubCur) hubCur.textContent = profile.currency;
-                    
                     renderShopItems();
-                    showSystemToast("Purchase Verified! PC added to your vault.");
                 } catch (err) {
                     console.error("Verification error:", err);
                     showSystemToast("Verification failed. If charged, contact support.");
@@ -13717,7 +14507,6 @@ async function purchaseIAP(itemId, rewardAmount, event) {
             }
         };
 
-        // 5. Open the Razorpay UI
         const rzp = new window.Razorpay(options);
         rzp.on('payment.failed', function (response){
             console.error(response.error);
@@ -13910,6 +14699,341 @@ function dismissPwaInstall() {
     if (modal) modal.classList.remove('show');
     // Save their choice so we never annoy them with the popup again
     localStorage.setItem('dod_pwa_dismissed', 'true');
+}
+
+// ============================================================
+// DAILY MISSIONS ENGINE
+// ============================================================
+
+let currentMissionTab = 'daily';
+
+function openMissionsModal() {
+    try { sfx.uiClick(); } catch(e){}
+    document.getElementById('missionsModal').classList.add('show');
+    renderMissionsList();
+}
+
+function closeMissionsModal() {
+    try { sfx.uiBack(); } catch(e){}
+    const modal = document.getElementById('missionsModal');
+    if (modal) modal.classList.remove('show');
+}
+
+function switchMissionTab(tab, btnElement) {
+    try { sfx.uiClick(); } catch(e){}
+    currentMissionTab = tab;
+    
+    // Update active button state visually
+    const buttons = btnElement.parentElement.querySelectorAll('.pubg-subtab-btn');
+    buttons.forEach(b => b.classList.remove('active'));
+    btnElement.classList.add('active');
+    
+    renderMissionsList();
+}
+
+// Master pool of all possible missions
+const ALL_MISSIONS = {
+    daily: [
+        { id: 'd1', title: 'Complete 3 Matches', target: 3, reqKey: 'matchesPlayed', sp: 30 },
+        { id: 'd2', title: 'Perform 8 Forced Buys', target: 8, reqKey: 'forcedBuys', sp: 30 },
+        { id: 'd3', title: 'Play 4 Wild Cards', target: 4, reqKey: 'wilds', sp: 25 },
+        { id: 'd4', title: 'Use Peek 5 Times', target: 5, reqKey: 'peeks', sp: 25 },
+        { id: 'd5', title: 'Play 5 Reverse Cards', target: 5, reqKey: 'reverses', sp: 25 },
+        { id: 'd6', title: 'Win 1 Match', target: 1, reqKey: 'wins', sp: 30 },
+        { id: 'd7', title: 'Use Insurance 3 Times', target: 3, reqKey: 'insurances', sp: 25 },
+        { id: 'd8', title: 'Use 5 Power Cards', target: 5, reqKey: 'powers', sp: 30 },
+        { id: 'd9', title: 'Survive 3 Deceptions', target: 3, reqKey: 'deceptionsSurvived', sp: 40 }
+    ],
+    weekly: [
+        { id: 'w1', title: 'Win 10 Matches', target: 10, reqKey: 'wins', sp: 200 },
+        { id: 'w2', title: 'Use 25 Steal Cards', target: 25, reqKey: 'steals', sp: 150 },
+        { id: 'w3', title: 'Win 2 Matches Without Wilds', target: 2, reqKey: 'winsNoWilds', sp: 300 },
+        { id: 'w4', title: 'Complete 25 Matches', target: 25, reqKey: 'matchesPlayed', sp: 150 },
+        { id: 'w5', title: 'Win 2 Pacifist Matches (No Attacks)', target: 2, reqKey: 'pacifistWins', sp: 350 },
+        { id: 'w6', title: 'Survive 15 Deception Showdowns', target: 15, reqKey: 'deceptionsSurvived', sp: 200 }
+    ]
+};
+
+// Mathematically selects missions so everyone gets the same ones each day
+function getActiveMissions() {
+    const nowMs = Date.now();
+    const dayId = Math.floor(nowMs / 86400000);
+    const weekId = Math.floor((nowMs + 345600000) / 604800000);
+
+    const dPool = ALL_MISSIONS.daily;
+    const wPool = ALL_MISSIONS.weekly;
+
+    return {
+        daily: [
+            dPool[dayId % dPool.length],
+            dPool[(dayId + 1) % dPool.length],
+            dPool[(dayId + 2) % dPool.length]
+        ],
+        weekly: [
+            wPool[weekId % wPool.length],
+            wPool[(weekId + 1) % wPool.length],
+            wPool[(weekId + 2) % wPool.length]
+        ]
+    };
+}
+
+function renderMissionsList() {
+    const container = document.getElementById('missionListContainer');
+    if (!container) return;
+    
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    const claimedMissions = profile ? (profile.claimedMissions || []) : [];
+
+    // Safety check just in case the active missions failed to load
+    if (typeof getActiveMissions !== 'function') return;
+
+    const activeMissions = getActiveMissions();
+    const missions = activeMissions[currentMissionTab] || [];
+    
+    if (missions.length === 0) {
+        container.innerHTML = `<div style="text-align:center; padding: 20px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; font-size:12px;">NO MISSIONS AVAILABLE</div>`;
+        return;
+    }
+
+    container.innerHTML = missions.map(m => {
+        if (!m) return ''; // Extra safety check
+
+        // Dynamic Progress Tracking (Daily vs Weekly)
+        let currentVal = 0;
+        if (profile) {
+            if (currentMissionTab === 'daily' && profile.dailyStats) {
+                currentVal = profile.dailyStats[m.reqKey] || 0;
+            } else if (currentMissionTab === 'weekly' && profile.weeklyStats) {
+                currentVal = profile.weeklyStats[m.reqKey] || 0;
+            }
+        }
+        
+        // Check Firebase Profile array to see if this ID was already claimed
+        const isClaimed = claimedMissions.includes(m.id);
+        
+        // --- OVERRIDE: If claimed, force progress to show 100% (fixes the 0/25 bug) ---
+        const displayVal = isClaimed ? m.target : Math.min(currentVal, m.target);
+        const isComplete = isClaimed || currentVal >= m.target;
+        const pct = isClaimed ? 100 : Math.min(100, (currentVal / m.target) * 100);
+        
+        let cardClass = 'mission-card';
+        if (isClaimed) cardClass += ' claimed';
+        else if (isComplete) cardClass += ' completed';
+
+        // --- NEW UI STYLING FOR MISSIONS ---
+        let titleStyle = "font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; transition: all 0.3s ease;";
+        // FIX: Override old CSS by forcing a column layout so the bar sits correctly at the bottom!
+        let cardStyle = "display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 15px; border-radius: 8px; margin-bottom: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;";
+        let barColor = "var(--brass-bright)";
+        
+        if (isClaimed) {
+            titleStyle += " text-decoration: line-through; opacity: 0.4;";
+            cardStyle = "display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 15px; border-radius: 8px; margin-bottom: 12px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.02); opacity: 0.6;";
+            barColor = "rgba(255,255,255,0.2)";
+        } else if (isComplete) {
+            cardStyle = "display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 15px; border-radius: 8px; margin-bottom: 12px; background: rgba(20, 30, 20, 0.6); border: 1px solid rgba(45, 140, 92, 0.4); box-shadow: 0 0 15px rgba(45, 140, 92, 0.1);";
+            barColor = "#2d8c5c";
+        }
+
+        let btnHtml = '';
+        if (isClaimed) {
+            btnHtml = `<button class="btn ghost small" disabled style="opacity:0.3; border: 1px solid rgba(255,255,255,0.2); cursor: default;">CLAIMED ✓</button>`;
+        } else if (isComplete) {
+            btnHtml = `<button class="btn small" style="background:#2d8c5c; color:#fff; border:none; box-shadow: 0 0 10px rgba(45,140,92,0.4);" onclick="claimMission('${m.id}')">CLAIM</button>`;
+        } else {
+            // FIX: Chained functions so it closes the modal AND warps the player to the main hub!
+            btnHtml = `<button class="btn ghost small" onclick="closeMissionsModal(); showMenuScreen('hub');">GO ↗</button>`;
+        }
+
+        return `
+            <div class="${cardClass}" style="${cardStyle}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; width: 100%;">
+                    <!-- FIX: Flex:1 pushes the button cleanly to the right side -->
+                    <div style="flex: 1; padding-right: 15px;">
+                        <div style="${titleStyle}">${m.title}</div>
+                        <div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:${isClaimed ? 'rgba(255,255,255,0.3)' : 'var(--brass-bright)'}; display:flex; align-items:center; gap:4px;">
+                            <span style="font-size:14px; ${!isClaimed ? 'filter:drop-shadow(0 1px 2px rgba(0,0,0,0.8));' : ''}">✦</span> ${m.sp} SP
+                        </div>
+                    </div>
+                    <div style="flex-shrink: 0;">
+                        ${btnHtml}
+                    </div>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 15px; width: 100%;">
+                    <div class="mission-progress-bg" style="flex:1; margin-right:15px; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden;">
+                        <div class="mission-progress-fill" style="width: ${pct}%; height: 100%; background: ${barColor}; transition: width 0.5s ease;"></div>
+                    </div>
+                    <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); flex-shrink: 0;">${displayVal}/${m.target}</span>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+async function claimMission(missionId) {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    if (!profile) return;
+
+    // UI Lock to prevent spam clicking
+    const btn = document.getElementById(`claimBtn_${missionId}`);
+    if (btn) { btn.disabled = true; btn.textContent = "CLAIMING..."; }
+
+    try {
+        // Securely process SP math and Level Up logic in Cloudflare!
+        const res = await secureServerCall('season/claimMission', { missionId: missionId });
+
+        try { sfx.uiEquip(); } catch(e){}
+        triggerNotificationVfx('gold'); 
+
+        // Visual Celebrations
+        if (res.leveledUp) {
+            try { sfx.win(); } catch(e){}
+            showSystemToast(`ANTE INCREASED! You reached Season Ante ${res.newLevel}!`);
+        } else {
+            showSystemToast(`+${res.earnedSp} Syndicate Points Earned!`);
+        }
+
+        // OPTIMISTIC UI FIX: Force the local profile to update instantly so the UI reflects it immediately!
+        profile.seasonLevel = res.newLevel;
+        profile.seasonPoints = res.newPoints;
+        profile.claimedMissions = res.newClaimedArray;
+
+        // Fire off the background refresh to keep Firebase synced, but don't wait for it to finish rendering
+        if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
+            DoDAuth.refreshProfile().then(() => {
+                const syncedProfile = DoDAuth.getProfile();
+                if (syncedProfile) {
+                    syncedProfile.seasonLevel = res.newLevel;
+                    syncedProfile.seasonPoints = res.newPoints;
+                    syncedProfile.claimedMissions = res.newClaimedArray;
+                }
+            });
+        }
+
+        // Re-render the Modal and the Track!
+        renderMissionsList();
+        if (typeof renderSeasonPass === 'function') renderSeasonPass();
+
+    } catch (e) {
+        console.error(e);
+        showSystemToast("Failed to claim mission.");
+        if (btn) { btn.disabled = false; btn.textContent = "CLAIM"; }
+    }
+}
+
+async function claimSeasonPassRewards() {
+    const btn = document.getElementById('claimPassRewardsBtn');
+    if (btn) { btn.disabled = true; btn.textContent = "CLAIMING..."; }
+    
+    try { sfx.uiClick(); } catch(e){}
+
+    try {
+        const res = await secureServerCall('season/claimPassRewards', {});
+        
+        if (res.itemsClaimed === 0) {
+            showSystemToast("No new rewards to claim.");
+            if (btn) { btn.disabled = true; btn.textContent = "ALL CLAIMED ✓"; }
+            return;
+        }
+
+        // Play massive celebration!
+        try { sfx.win(); } catch(e){}
+        triggerNotificationVfx('gold');
+
+        // OPTIMISTIC UI FIX: Update local cache immediately for zero latency
+        const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+        if (profile) {
+            profile.currency = res.newCurrency;
+            profile.chests = res.newChests;
+            profile.inventory = res.newInventory;
+            profile.claimedFreeRewards = res.newClaimedFree;
+            profile.claimedPremiumRewards = res.newClaimedPremium;
+
+            const hubCur = document.getElementById('hubCurrency');
+            if (hubCur) hubCur.textContent = profile.currency;
+            if (typeof renderEventsHub === 'function') renderEventsHub(profile);
+        }
+
+        // Background refresh to keep DB in sync without freezing the screen
+        if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
+            DoDAuth.refreshProfile().then(() => {
+                const syncedProfile = DoDAuth.getProfile();
+                if (syncedProfile) {
+                    syncedProfile.currency = res.newCurrency;
+                    syncedProfile.chests = res.newChests;
+                    syncedProfile.inventory = res.newInventory;
+                    syncedProfile.claimedFreeRewards = res.newClaimedFree;
+                    syncedProfile.claimedPremiumRewards = res.newClaimedPremium;
+                }
+            });
+        }
+
+        if (typeof renderSeasonPass === 'function') renderSeasonPass();
+        showSystemToast(`Successfully claimed ${res.itemsClaimed} rewards!`);
+
+    } catch (e) {
+        console.error("Claim Failed:", e);
+        showSystemToast(e.message || "Failed to claim rewards.");
+        if (btn) { btn.disabled = false; btn.textContent = "CLAIM REWARDS"; }
+    }
+}
+
+async function purchaseElitePass() {
+    const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+    const PASS_COST = 300; // SC Cost
+    
+    if (!profile) return;
+    if (profile.hasPremiumPass) {
+        showSystemToast("You already own the Elite Pass!");
+        return;
+    }
+    if ((profile.premiumCurrency || 0) < PASS_COST) {
+        showSystemToast("Not enough SC! Buy more in the Marketplace.");
+        try { sfx.alert(); } catch(e){}
+        // Optionally, redirect them to the shop tab here:
+        // showMenuScreen('shop'); switchShopTab('coins', document.querySelector('.shop-tabs-container button:nth-child(3)'));
+        return;
+    }
+
+    try { sfx.uiClick(); } catch(e){}
+    const btn = document.getElementById('btnBuyElitePass');
+    if (btn) { btn.disabled = true; btn.textContent = "UNLOCKING..."; }
+
+    // --- 1. SAVE BACKUP FOR ROLLBACK ---
+    const backupSC = profile.premiumCurrency;
+
+    // --- 2. INSTANT OPTIMISTIC UI ---
+    profile.premiumCurrency -= PASS_COST;
+    profile.hasPremiumPass = true;
+
+    try { sfx.uiEquip(); } catch(e){}
+    triggerNotificationVfx('gold');
+    try { sfx.win(); } catch(e){}
+    showSystemToast("Elite Pass Unlocked!");
+
+    const premCur = document.getElementById('hubPremiumCurrency');
+    if (premCur) premCur.textContent = profile.premiumCurrency;
+    
+    // Instantly rerender the pass to unlock all the premium slots they've reached!
+    renderSeasonPass();
+
+    // --- 3. BACKGROUND SERVER SYNC ---
+    try {
+        const res = await secureServerCall('season/buyPass', {});
+        profile.premiumCurrency = res.newPremiumCurrency; // Sync exact server value
+    } catch (e) {
+        console.error("Pass Purchase failed:", e);
+        // --- 4. ROLLBACK ON FAILURE ---
+        profile.premiumCurrency = backupSC;
+        profile.hasPremiumPass = false;
+        if (premCur) premCur.textContent = profile.premiumCurrency;
+        renderSeasonPass();
+        showSystemToast(e.message || "Transaction failed. SC refunded.");
+        if (btn) { 
+            btn.disabled = false; 
+            btn.innerHTML = `UNLOCK PREMIUM <span style="display:flex; align-items:center; background:rgba(0,0,0,0.4); color:#fff; padding:2px 8px; border-radius:12px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:1px solid rgba(255,255,255,0.3);">300 <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; margin-left:4px; filter:drop-shadow(0 1px 2px #000);"></span>`; 
+        }
+    }
 }
 </script>
 </body>
