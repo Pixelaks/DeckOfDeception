@@ -1162,12 +1162,17 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .rc-front-legendary::before { background-image: url('Cards/LegendaryCard.webp') !important; border-radius: 12px !important; }
 
 .dd-back {
-  background: radial-gradient(circle at center, #2b1a24, #060709);
+  /* Upgraded from a dark gradient to the actual premium card face texture! */
+  background-image: url('Cards/CardPhase.webp');
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
   transform: rotateY(180deg); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
   padding: 10px; border-color: var(--ok); box-shadow: 0 0 40px rgba(47,110,82,0.8);
 }
-.dd-reward-icon { font-size: 46px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.8)); margin-bottom: 5px; }
-.dd-reward-text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: bold; color: #fff; line-height: 1.3; }
+.dd-reward-icon { font-size: 46px; filter: drop-shadow(0 2px 5px rgba(0,0,0,0.3)); margin-bottom: 5px; }
+/* Changed color to var(--ink) so it is perfectly readable on the light card background */
+.dd-reward-text { font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: bold; color: var(--ink); line-height: 1.3; text-shadow: 0 1px 1px rgba(255,255,255,0.4); }
 
 /* Cinematic Background VFX */
 .dd-particles { position: absolute; inset: 0; overflow: hidden; pointer-events: none; z-index: 1; }
@@ -2704,18 +2709,26 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 
 /* --- COMBINED MOBILE SQUISH FOR SEASON PASS & MISSIONS --- */
 @media (max-width: 840px), (max-height: 500px) {
-    /* Season Pass Track Shrink */
-    .pass-track-container { padding: 5px 20px 10px !important; }
-    .pass-reward-box { height: 50px !important; } 
-    .pass-level-col { width: 65px !important; gap: 4px !important; }
-    .pass-level-marker { font-size: 8px !important; padding: 2px 6px !important; margin: 0 !important; }
-    .pass-line { top: 62px !important; left: 40px !important; width: calc(100% - 40px) !important; } 
-    .pass-label-free, .pass-label-elite { height: 50px !important; font-size: 10px !important; }
-    .pass-label-spacer { height: 26px !important; } /* Perfectly align mobile elite cards */
-    .pass-reward-box img { width: 14px !important; height: 14px !important; margin-bottom: 2px !important; }
-    .pass-reward-box div { font-size: 6px !important; line-height: 1.1 !important; }
-    .pass-reward-box.locked::after { font-size: 14px !important; }
-    .pass-reward-box.claimed::after { font-size: 7px !important; }
+    /* Season Pass Track Shrink (FLUID SCALING FOR ALL DEVICES) */
+    .pass-track-container { padding: 5px 15px 10px !important; }
+    .pass-reward-box { height: clamp(55px, 14vh, 75px) !important; }
+    .pass-level-col { width: clamp(75px, 18vw, 85px) !important; gap: 4px !important; }
+    .pass-level-marker { font-size: 8px !important; padding: 2px 6px !important; margin: 2px 0 !important; }
+    .pass-label-free, .pass-label-elite { height: clamp(55px, 14vh, 75px) !important; font-size: 10px !important; }
+    .pass-label-spacer { height: 18px !important; } 
+    
+    /* Auto-width preserves the exact aspect ratio of the cards/chests so they never distort! */
+    .pass-reward-box img { 
+        height: clamp(20px, 5vh, 28px) !important; 
+        width: auto !important; 
+        max-width: 90% !important; 
+        object-fit: contain !important; 
+        margin-bottom: 2px !important; 
+    }
+    
+    .pass-reward-box div { font-size: clamp(7px, 1.8vh, 8.5px) !important; line-height: 1.1 !important; }
+    .pass-reward-box.locked::after { font-size: 12px !important; top: 4px !important; right: 4px !important; }
+    .pass-reward-box.claimed::after { font-size: 10px !important; top: 4px !important; right: 4px !important; }
 
     /* Missions Modal Shrink */
     #missionsModal .modal { width: 95% !important; max-width: 480px !important; max-height: 85vh !important; }
@@ -3000,7 +3013,7 @@ window.dodImagesLoaded = false;
   <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
 
   <!-- TOP-RIGHT CURRENCY CHIPS -->
-  <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:16px;">
+  <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:16px; flex-direction:row;">
     <!-- Pixel Coins (PC - Free) -->
     <div style="display:flex; align-items:center; gap:6px;" title="Pixel Coins">
       <img src="Coins/Coins.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
@@ -3244,7 +3257,8 @@ window.dodImagesLoaded = false;
     </div>
     
     <!-- display: block overrides the flex column so the track is forced to obey the screen width -->
-    <div class="screen-content" style="position:relative; width:100%; padding:0; margin-top:20px; overflow-y:hidden; display:block;">
+    <!-- FIX: Added overflow-y: auto so Fold Phones can scroll down to see the Elite track if their screen is short! -->
+    <div class="screen-content" style="position:relative; width:100%; padding:0; margin-top:20px; overflow-y:auto; overflow-x:hidden; display:block;">
       <div class="pass-track-container" id="seasonPassTrack">
         <!-- JS will generate the 50 levels here dynamically to save HTML space -->
         <div style="color:var(--brass-bright); padding:40px; font-family:'IBM Plex Mono',monospace;">Loading Season Data...</div>
@@ -5875,6 +5889,30 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (key === 'power' && isEnabled) document.body.classList.add('low-power-mode');
     });
+
+    // ADAPTIVE PERFORMANCE: benchmark real FPS for 3s on first launch only.
+    // Devices that render smoothly keep full visual quality. Only devices
+    // that actually can't hit 50fps get auto-switched to Low Power Mode.
+    // Never runs again once the player has touched the toggle manually.
+    if (localStorage.getItem('dod_setting_power') === null) {
+        let frames = 0;
+        const benchStart = performance.now();
+        function benchSample(now) {
+            frames++;
+            if (now - benchStart < 3000) {
+                requestAnimationFrame(benchSample);
+            } else {
+                const avgFps = frames / ((now - benchStart) / 1000);
+                if (avgFps < 50) {
+                    localStorage.setItem('dod_setting_power', 'true');
+                    document.body.classList.add('low-power-mode');
+                    const toggleEl = document.getElementById('toggle-power');
+                    if (toggleEl) toggleEl.classList.add('active');
+                }
+            }
+        }
+        requestAnimationFrame(benchSample);
+    }
 });
 
 // ============================================================
@@ -7021,6 +7059,7 @@ function spawnSpecialGameVFX(type, x, y) {
     canvas.height = window.innerHeight;
 
     let isAlive = true;
+    const isLowPower = document.body.classList.contains('low-power-mode');
 
     if (type === 'WILD') {
         // --- WILD CARD MAGIC SFX ---
@@ -7044,7 +7083,7 @@ function spawnSpecialGameVFX(type, x, y) {
             { r: 0, speed: 12, color: '#ffff00' }  // Yellow
         ];
         let sparks = [];
-        for(let i=0; i<40; i++) {
+        for(let i=0; i<(isLowPower ? 12 : 40); i++) {
             let a = Math.random() * Math.PI * 2;
             let s = Math.random() * 20 + 5;
             sparks.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1, size: Math.random()*3+1 });
@@ -7133,7 +7172,7 @@ function spawnSpecialGameVFX(type, x, y) {
             });
         }
         let blood = [];
-        for(let i = 0; i < 40; i++) {
+        for(let i = 0; i < (isLowPower ? 12 : 40); i++) {
             let a = Math.random() * Math.PI * 2;
             let s = Math.random() * 25 + 5;
             blood.push({ x, y, vx: Math.cos(a)*s, vy: Math.sin(a)*s, life: 1 });
@@ -10144,6 +10183,14 @@ async function computeMatchProgression() {
               // Add basic stats to local cache so the profile tab updates visually
               profile.matchesPlayed = (profile.matchesPlayed || 0) + 1;
               profile.totalScore = (profile.totalScore || 0) + res.progression.earnedCoins;
+
+              // FIX: Optimistically add the Winner's Bonus Chest or Coins so it renders on the Hub instantly!
+              if (res.progression.bonusType === 'card') {
+                  profile.chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
+                  profile.chests.base = (profile.chests.base || 0) + 1;
+              } else if (res.progression.bonusType === 'coins' && res.progression.bonusCoins) {
+                  profile.currency = (profile.currency || 0) + res.progression.bonusCoins;
+              }
               
               return res.progression;
           } else if (res.message === "Already claimed") {
@@ -10519,12 +10566,27 @@ function returnToMenuFromEndgame() {
             const hubBadgeEl = document.getElementById('hubCurrencyBadge');
             if (accountLoadingEl) accountLoadingEl.style.display = 'none';
             if (hubButtonsEl) hubButtonsEl.style.display = 'flex';
-            if (hubBadgeEl) hubBadgeEl.style.display = 'inline-block';
+            if (hubBadgeEl) hubBadgeEl.style.display = 'flex'; // Changed to flex for horizontal alignment!
+            
             if (window.DoDAuth && DoDAuth.getProfile()) {
+                const p = DoDAuth.getProfile();
                 const hubCurrencyEl = document.getElementById('hubCurrency');
                 const hubPremiumEl = document.getElementById('hubPremiumCurrency');
-                if (hubCurrencyEl) hubCurrencyEl.textContent = DoDAuth.getProfile().currency || 0;
-                if (hubPremiumEl) hubPremiumEl.textContent = DoDAuth.getProfile().premiumCurrency || 0;
+                
+                // 1. INSTANT OPTIMISTIC UI: Draw the chests/coins from local memory immediately!
+                if (hubCurrencyEl) hubCurrencyEl.textContent = p.currency || 0;
+                if (hubPremiumEl) hubPremiumEl.textContent = p.premiumCurrency || 0;
+                if (typeof renderEventsHub === 'function') renderEventsHub(p);
+
+                // 2. BACKGROUND SYNC: Silently fetch from server to ensure it matches
+                if (typeof DoDAuth.refreshProfile === 'function') {
+                    DoDAuth.refreshProfile().then(() => {
+                        const syncedProfile = DoDAuth.getProfile();
+                        if (hubCurrencyEl) hubCurrencyEl.textContent = syncedProfile.currency || 0;
+                        if (hubPremiumEl) hubPremiumEl.textContent = syncedProfile.premiumCurrency || 0;
+                        if (typeof renderEventsHub === 'function') renderEventsHub(syncedProfile);
+                    });
+                }
             }
 
             switchToMenuMusic();
@@ -12589,7 +12651,7 @@ async function executeDailyDraw(selectedIndex) {
         // FIX: Force correct Coin image path in case the Cloudflare server sends a bad path
         let safeIcon = rollData.icon;
         if (safeIcon) {
-            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.webp["']/gi, 'src="Coins/Coins.webp"');
+            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.(webp|png)["']/gi, 'src="Coins/Coins.webp"');
         }
 
         // Directly apply the styled HTML sent by the secure Cloudflare server
@@ -12632,8 +12694,9 @@ async function executeDailyDraw(selectedIndex) {
             let totalCopies = profile.totalCopies || 0;
 
             const POOL_COMMON = [ { id: 'BasicGemCounter', name: 'Basic Gem', req: 10 }, { id: 'CopperBettingCoin', name: 'Copper Coin', req: 10 }, { id: 'WaxSeal', name: 'Wax Seal', req: 10 }, { id: 'BoneDice', name: 'Bone Dice', req: 12 }, { id: 'IronHeart', name: 'Iron Heart', req: 12 }, { id: 'TurnTimer', name: 'Turn Timer', req: 12 }, { id: 'DarkSteel', name: 'Dark Steel', req: 10 }, { id: 'StoneAge', name: 'Stone Age', req: 10 }, { id: 'Bone&Metal', name: 'Bone & Metal', req: 12 }, { id: 'VerdigrisBronze', name: 'Verdigris Bronze', req: 12 }, { id: 'cf_crimson', name: 'Crimson Blood Face', req: 10 }, { id: 'cb_crimson', name: 'Crimson Blood Back', req: 15 } ];
-            const POOL_RARE = [ { id: 'IronCrosshair', name: 'Iron Crosshair', req: 14 }, { id: 'BronzeFirst', name: 'Bronze First', req: 15 }, { id: 'IronShield', name: 'Iron Shield', req: 15 }, { id: 'TiedCardStack', name: 'Tied Cards', req: 15 }, { id: 'IronSword', name: 'Iron Sword', req: 18 }, { id: 'HammeredIron', name: 'Hammered Iron', req: 14 }, { id: 'DarkMarble', name: 'Dark Marble', req: 15 }, { id: 'TarnishedSilver', name: 'Tarnished Silver', req: 15 }, { id: 'OxidizedCopper', name: 'Oxidized Copper', req: 18 }, { id: 'cf_sapphire', name: 'Deep Sapphire Face', req: 15 }, { id: 'cf_emerald', name: 'Emerald Viper Face', req: 20 }, { id: 'cb_sapphire', name: 'Deep Sapphire Back', req: 20 }, { id: 'cb_bloodwood', name: 'Bloodwood Back', req: 25 }, { id: 'tb_bloodwood', name: 'Crimson Bloodwood Table', req: 1 }, { id: 'tb_midnight', name: 'Midnight Navy Table', req: 1 }, { id: 'tb_amethyst', name: 'Royal Amethyst Table', req: 1 } ];
-            const POOL_LEGENDARY = [ { id: 'JesterBell', name: 'Jester Bell', req: 20 }, { id: 'WornPokerChip', name: 'Worn Chip', req: 25 }, { id: 'Dice&Filigree', name: 'Dice & Filigree', req: 20 }, { id: 'Wood&Brass', name: 'Wood & Brass', req: 25 }, { id: 'cf_diamond', name: 'Prismatic Diamond Face', req: 1 }, { id: 'cb_obsidian', name: 'Obsidian Void Back', req: 1 }, { id: 'tb_clockwork', name: 'Clockwork Brass Table', req: 1 }, { id: 'tb_cyber', name: 'Cyber Matrix Table', req: 1 }, { id: 'tb_mirage', name: 'Desert Mirage Table', req: 1 }, { id: 'tb_dragon', name: 'Dragon\'s Lair Table', req: 1 }, { id: 'tb_void', name: 'Void Magic Table', req: 1 } ];
+            // FIX: Tables and Premium Cards now require 10 to 20 shards to unlock!
+            const POOL_RARE = [ { id: 'IronCrosshair', name: 'Iron Crosshair', req: 14 }, { id: 'BronzeFirst', name: 'Bronze First', req: 15 }, { id: 'IronShield', name: 'Iron Shield', req: 15 }, { id: 'TiedCardStack', name: 'Tied Cards', req: 15 }, { id: 'IronSword', name: 'Iron Sword', req: 18 }, { id: 'HammeredIron', name: 'Hammered Iron', req: 14 }, { id: 'DarkMarble', name: 'Dark Marble', req: 15 }, { id: 'TarnishedSilver', name: 'Tarnished Silver', req: 15 }, { id: 'OxidizedCopper', name: 'Oxidized Copper', req: 18 }, { id: 'cf_sapphire', name: 'Deep Sapphire Face', req: 15 }, { id: 'cf_emerald', name: 'Emerald Viper Face', req: 20 }, { id: 'cb_sapphire', name: 'Deep Sapphire Back', req: 20 }, { id: 'cb_bloodwood', name: 'Bloodwood Back', req: 25 }, { id: 'tb_bloodwood', name: 'Crimson Bloodwood Table', req: 10 }, { id: 'tb_midnight', name: 'Midnight Navy Table', req: 10 }, { id: 'tb_amethyst', name: 'Royal Amethyst Table', req: 15 } ];
+            const POOL_LEGENDARY = [ { id: 'JesterBell', name: 'Jester Bell', req: 20 }, { id: 'WornPokerChip', name: 'Worn Chip', req: 25 }, { id: 'Dice&Filigree', name: 'Dice & Filigree', req: 20 }, { id: 'Wood&Brass', name: 'Wood & Brass', req: 25 }, { id: 'cf_diamond', name: 'Prismatic Diamond Face', req: 20 }, { id: 'cb_obsidian', name: 'Obsidian Void Back', req: 20 }, { id: 'tb_clockwork', name: 'Clockwork Brass Table', req: 20 }, { id: 'tb_cyber', name: 'Cyber Matrix Table', req: 20 }, { id: 'tb_mirage', name: 'Desert Mirage Table', req: 20 }, { id: 'tb_dragon', name: 'Dragon\'s Lair Table', req: 20 }, { id: 'tb_void', name: 'Void Magic Table', req: 20 } ];
 
             const r = Math.random();
             if (r < 0.15) { 
@@ -12658,7 +12721,8 @@ async function executeDailyDraw(selectedIndex) {
                     rollData.msg = `Unlocked ${targetShard.name}!`;
                 } else {
                     rollData.icon = `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(232,196,84,0.8));">${iconStr}</div>`;
-                    rollData.msg = `+1 Copy: ${targetShard.name}`;
+                    // FIX: Visually display how many copies out of the total required!
+                    rollData.msg = `+1 Copy: ${targetShard.name}<br><span style="color:var(--brass-bright); font-size:9px;">(${newShards[targetShard.id]} / ${targetShard.req} Copies)</span>`;
                 }
             } else if (r < 0.80) { 
                 // 65% Chance for Random Coins (20 to 100 PC)
@@ -12821,7 +12885,7 @@ async function executeRewardCardOpen() {
         // FIX: Force correct Coin image path in case the Cloudflare server sends a bad path
         let safeIcon = rollData.icon;
         if (safeIcon) {
-            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.webp["']/gi, 'src="Coins/Coins.webp"');
+            safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.(webp|png)["']/gi, 'src="Coins/Coins.webp"');
         }
 
         icon.innerHTML = safeIcon;
@@ -13706,7 +13770,7 @@ let currentShopTab = 'cardBacks';
 
 // --- DYNAMIC CARD FACE ENGINE ---
 function getCardFaceUrl(faceId, typeLabel) {
-    let t = (typeLabel || '').toLowerCase();
+    let t = String(typeLabel || '').toLowerCase();
     if (t === 'w') t = 'wild';
     if (t === 'rev') t = 'reverse';
     if (t === 'stl') t = 'steal';
@@ -14094,7 +14158,16 @@ function renderShopItems() {
         } else if (item.method === 'achievement') {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Achievement Unlock</button>`;
         } else if (item.method === 'spin') {
-            btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Lucky Spin Only</button>`;
+            let shards = (profile && profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
+            let req = item.shardsNeeded || 25; // Defaults to 25 copies needed
+            let pct = Math.min(100, (shards / req) * 100);
+            btnHtml = `<button class="btn small locked" style="width:100%; padding:4px 2px; border-color: rgba(201,162,39,0.3);" disabled>
+                           <span style="font-size:8px; opacity:0.8; display:block; margin-bottom:2px;">LUCKY SPIN ONLY</span>
+                           <span style="font-family:'IBM Plex Mono',monospace; font-size:8.5px; color:var(--brass-bright); display:block; margin-bottom:3px;">Copies: ${shards}/${req}</span>
+                           <div style="width:90%; height:3px; background:rgba(0,0,0,0.6); margin:0 auto; border-radius:2px; overflow:hidden;">
+                               <div style="width:${pct}%; height:100%; background:var(--brass-bright); box-shadow:0 0 4px var(--brass-bright);"></div>
+                           </div>
+                       </button>`;
         }
 
         // SMART FILTER: Only modify proportions if we are looking at Playing Cards!
@@ -14151,7 +14224,9 @@ function openShopPreview(itemId, tab) {
     } else if (tab === 'cardBacks') {
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); z-index:2; position:relative;"></div>`;
     } else if (tab === 'cardFaces') {
-        innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('Cards/CardPhase.webp'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
+        // FIX: Dynamically fetch the correct Card Face texture (handles Crimson Royal and defaults perfectly!)
+        const bgImgUrl = getCardFaceUrl(item.id, '');
+        innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:${bgImgUrl}; background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
     } else if (tab === 'avatars') {
         innerHtml = `<div class="avatar-frame-wrap" style="width:120px; height:120px; margin:0 auto; z-index:2;"><img src="Avatars/${item.id}.webp" class="af-avatar" style="border-radius:6px; box-shadow:0 4px 15px rgba(0,0,0,0.8);"><img src="Frames/Apprentice.webp" class="af-frame"></div>`;
     } else if (tab === 'frames') {
@@ -14203,10 +14278,19 @@ function openShopPreview(itemId, tab) {
     } else if (item.method === 'tier') {
         btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Unlocks at ${item.unlockTier} Rank</button>`;
     } else if (item.method === 'achievement') {
-        btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Unlocked via Achievement</button>`;
-    } else if (item.method === 'spin') {
-        btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Exclusive Lucky Spin Reward</button>`;
-    } else if (item.method === 'season') {
+            btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Unlocked via Achievement</button>`;
+        } else if (item.method === 'spin') {
+            let shards = (profile && profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
+            let req = item.shardsNeeded || 25;
+            let pct = Math.min(100, (shards / req) * 100);
+            btnHtml = `<button class="btn locked" style="width:100%; padding:10px; border-color: rgba(201,162,39,0.3);" disabled>
+                           <span style="font-size:12px; opacity:0.8; display:block; margin-bottom:4px;">LUCKY SPIN ONLY</span>
+                           <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-bright); display:block; margin-bottom:6px;">Copies Collected: ${shards}/${req}</span>
+                           <div style="width:80%; height:4px; background:rgba(0,0,0,0.6); margin:0 auto; border-radius:2px; overflow:hidden;">
+                               <div style="width:${pct}%; height:100%; background:var(--brass-bright); box-shadow:0 0 6px var(--brass-bright);"></div>
+                           </div>
+                       </button>`;
+        } else if (item.method === 'season') {
         btnHtml = `<button class="btn locked" style="width:100%; opacity:0.6; font-size:12px; padding:12px;" disabled>Season Pass Exclusive</button>`;
     }
     
