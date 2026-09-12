@@ -292,7 +292,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .shop-item { padding: 10px 8px !important; }
 .menu-screen.hidden { display:none; }
 .screen-header { flex-shrink:0; width:100%; text-align:center; z-index:10; margin-bottom: 12px; }
-.screen-content { flex:1; width:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; align-items:center; padding:0 5px; }
+.screen-content { flex:1; width:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; align-items:center; padding:0 5px; transform: translateZ(0); will-change: scroll-position; contain: content; }
 .screen-content::-webkit-scrollbar { display:none; }
 .screen-content { -ms-overflow-style:none; scrollbar-width:none; }
 .screen-footer { flex-shrink:0; width:100%; display:flex; justify-content:center; padding-top:16px; z-index:10; }
@@ -390,14 +390,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     margin-top: 16px; 
 }
 .shop-item { 
-    /* NEW: Premium Brown Glass Background */
-    background: linear-gradient(180deg, rgba(82, 54, 27, 0.7) 0%, rgba(38, 20, 8, 0.95) 100%); 
-    backdrop-filter: blur(4px);
+    /* NEW: Premium Solid Background (Blur removed for 60fps mobile scrolling) */
+    background: linear-gradient(180deg, rgba(82, 54, 27, 0.9) 0%, rgba(38, 20, 8, 1) 100%); 
     border: 1px solid rgba(201,162,39,0.25); 
     border-radius: 8px; 
     padding: 12px 10px; 
     text-align: center; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+    transform: translateZ(0);
+    will-change: transform;
 }
 .shop-item .shop-swatch{ width:38px; height:38px; border-radius:50%; margin:0 auto 8px; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
 .shop-item .shop-name{ font-family:'Cinzel',serif; font-size:11.5px; color:var(--paper); margin-bottom:3px; }
@@ -1205,16 +1206,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 .ghost-card{position:fixed;z-index:200;border-radius:5px;display:flex;flex-direction:column;align-items:center;justify-content:center;
   font-family:'Cinzel Decorative',serif;font-weight:700;font-size:20px;pointer-events:none;
-  transition:left .42s cubic-bezier(.2,.8,.2,1), top .42s cubic-bezier(.2,.8,.2,1), transform .42s, opacity .3s;
+  transition: transform .42s cubic-bezier(.2,.8,.2,1), opacity .3s;
   background-image:url('Cards/CardPhase.webp');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
-  will-change: left, top, transform; transform: translateZ(0); /* Force GPU composite */
+  will-change: transform; transform: translate3d(0,0,0); /* GPU-only compositing, no layout thrash */
 }
 .ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
-  transition:left .48s ease, top .48s ease, opacity .48s;
+  transition: transform .48s ease, opacity .48s;
   background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;
   box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
-  will-change: left, top; transform: translateZ(0); /* Force GPU composite */
+  will-change: transform; transform: translate3d(0,0,0); /* GPU-only compositing, no layout thrash */
 }
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
@@ -2512,12 +2513,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 
 /* SHOP: rarity-styled premium cards */
+/* SHOP: rarity-styled premium cards */
 .shop-item{
-  background:linear-gradient(160deg,rgba(30,20,14,0.9),rgba(10,7,5,0.9));
-  border:1px solid rgba(201,162,39,0.35); border-radius:12px;
-  padding:16px 12px; position:relative; overflow:hidden;
-  box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
-  transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+ background:linear-gradient(160deg,rgba(30,20,14,0.95),rgba(10,7,5,0.98));
+ border:1px solid rgba(201,162,39,0.35); border-radius:12px;
+ padding:16px 12px; position:relative; overflow:hidden;
+ box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+ transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+ transform: translateZ(0);
+ will-change: transform;
+ contain: content;
 }
 .shop-item::before{
   content:''; position:absolute; inset:0;
@@ -2588,6 +2593,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* Battery Saver Mode overrides - Kills expensive GPU renders */
 body.low-power-mode * { filter: none !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; box-shadow: none !important; text-shadow: none !important; }
 body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power-mode .dd-particles, body.low-power-mode .dec-particles, body.low-power-mode .rank-particles { display: none !important; }
+
+/* Panels that relied on blur for opacity instead of a solid color underneath.
+   Without blur they turned see-through, so give them a solid fallback here. */
+body.low-power-mode #profileModal { background: rgba(6,5,5,0.97) !important; }
+body.low-power-mode .pubg-modal-container { background: rgba(10,8,8,0.97) !important; }
+body.low-power-mode #achievementPopup,
+body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 
 /* Profile modal: refined glass panel */
 #pubgProfileWidget{ padding:4px !important; border-radius:12px; }
@@ -2909,14 +2921,29 @@ window.dodImagesLoaded = false;
       window._dodImageKeepAlive = [];
 
       for (var i = 0; i < srcs.length; i++) {
-        var img = new Image();
-        window._dodImageKeepAlive.push(img); // Keeps the object safe from memory deletion
-        
-        img.style.width = "1px"; 
-        img.style.height = "1px";
-        img.onload = function() { markLoaded(this); };
-        img.onerror = function() { markLoaded(this); }; // Proceed even if a file fails
-        img.src = srcs[i];
+        (function(src) {
+          var attempts = 0;
+          function tryLoadImage() {
+            var img = new Image();
+            window._dodImageKeepAlive.push(img); // Keeps the object safe from memory deletion
+
+            img.style.width = "1px";
+            img.style.height = "1px";
+            img.onload = function() { markLoaded(this); };
+            img.onerror = function() {
+              attempts++;
+              // Cold first-time loads over mobile data can drop a request.
+              // Retry a couple times with a short backoff before finally giving up.
+              if (attempts < 3) {
+                setTimeout(tryLoadImage, 400 * attempts);
+              } else {
+                markLoaded(this); // Proceed even if a file truly fails after retries
+              }
+            };
+            img.src = src;
+          }
+          tryLoadImage();
+        })(srcs[i]);
       }
 })();
 </script>
@@ -3621,23 +3648,15 @@ window.dodImagesLoaded = false;
 
 <script>
 
-// --- TABLE REGISTRY: MAPS IDS TO TEXTURES AND GLOWS ---
-const TABLES_DB = {
-  'tb_default':   { name: 'Classic Green Felt', img: 'Tables/GreenWood.webp', glow: '30, 74, 61' },
-  'tb_bloodwood': { name: 'Bloodwood Velvet',   img: 'Tables/BloodWood.webp', glow: '122, 31, 46' },
-  'tb_midnight':  { name: 'Midnight Obsidian',  img: 'Tables/Midnight.webp',  glow: '32, 45, 78' },
-  'tb_amethyst':  { name: 'Royal Amethyst',    img: 'Tables/Amethyst.webp',  glow: '107, 63, 138' },
-  'tb_clockwork': { name: 'Clockwork Brass',   img: 'Tables/Clockwork.webp', glow: '201, 162, 39' },
-  'tb_cyber':     { name: 'Cyber Matrix',      img: 'Tables/Cyber.webp',     glow: '47, 169, 161' },
-  'tb_mirage':    { name: 'Desert Mirage',     img: 'Tables/Mirage.webp',    glow: '201, 106, 39' },
-  'tb_dragon':    { name: "Dragon's Lair",     img: 'Tables/Dragon.webp',    glow: '178, 69, 94' },
-  'tb_void':      { name: 'Void Magic',        img: 'Tables/Void.webp',      glow: '139, 61, 255' }
-};
-
+// --- TABLE REGISTRY (DELEGATED TO SHOP_DB) ---
+// Global tables are now strictly parsed through the main SHOP_DB below.
 function applyGlobalTable(tableId) {
-  const table = TABLES_DB[tableId] || TABLES_DB['tb_default'];
-  document.documentElement.style.setProperty('--my-table', `url('${table.img}')`);
-  document.documentElement.style.setProperty('--table-glow', table.glow);
+    if (typeof SHOP_DB === 'undefined') return;
+    const tableDef = SHOP_DB.tables.find(t => t.id === tableId) || SHOP_DB.tables[0];
+    const tableUrl = `url('Tables/${encodeURIComponent(tableDef.img)}')`;
+    const tableGlow = tableDef.color || '30, 74, 61';
+    document.documentElement.style.setProperty('--my-table', tableUrl);
+    document.documentElement.style.setProperty('--table-glow', tableGlow);
 }
 
 // --- CINEMATIC PUBG TABLE SHOWCASE OVERLAY ---
@@ -3723,7 +3742,7 @@ function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
     return;
   }
 
-  const tableDef = TABLES_DB[globalTable.id] || TABLES_DB['tb_default'];
+  const tableDef = SHOP_DB.tables.find(t => t.id === globalTable.id) || SHOP_DB.tables[0];
   const av = globalTable.ownerAvatar || 'Apprentice';
   const fr = globalTable.ownerFrame || 'Apprentice';
 
@@ -4861,6 +4880,7 @@ function proceedWithBoot(overlayEl) {
     
     setTimeout(() => {
         window.minimumBootTimePassed = true;
+        setTimeout(runAdaptiveVfxBenchmark, 1500);
         if (localStorage.getItem('dod_seen_tutorial')) {
             // Check if they need to see the season intro!
             if (!localStorage.getItem('dod_season_1_intro')) {
@@ -5720,12 +5740,17 @@ function showMenuScreen(name){
     if(premiumCur) premiumCur.textContent = premiumCoins;
   }
 
-  // Defer heavy UI rendering to unblock the screen transition so the tap feels instant
-  setTimeout(() => {
-      if(name==='ranks') buildRanksScreen();
-      if(name==='shop') renderShopItems();
-      if(name==='seasonpass') renderSeasonPass();
-  }, 10);
+  // Defer heavy UI rendering until AFTER the browser has actually painted the
+  // screen switch. A plain setTimeout(10) doesn't guarantee a paint happened
+  // first on slower devices, so the heavy render can still block it. Two
+  // nested rAFs guarantee at least one real paint before this runs.
+  requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+          if(name==='ranks') buildRanksScreen();
+          if(name==='shop') renderShopItems();
+          if(name==='seasonpass') renderSeasonPass();
+      });
+  });
 }
 
 // FULL FIX: Hook the invite listener when visiting the social screen to guarantee connection
@@ -5889,31 +5914,33 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (key === 'power' && isEnabled) document.body.classList.add('low-power-mode');
     });
+});
 
-    // ADAPTIVE PERFORMANCE: benchmark real FPS for 3s on first launch only.
-    // Devices that render smoothly keep full visual quality. Only devices
-    // that actually can't hit 50fps get auto-switched to Low Power Mode.
-    // Never runs again once the player has touched the toggle manually.
-    if (localStorage.getItem('dod_setting_power') === null) {
-        let frames = 0;
-        const benchStart = performance.now();
-        function benchSample(now) {
-            frames++;
-            if (now - benchStart < 3000) {
-                requestAnimationFrame(benchSample);
-            } else {
-                const avgFps = frames / ((now - benchStart) / 1000);
-                if (avgFps < 50) {
-                    localStorage.setItem('dod_setting_power', 'true');
-                    document.body.classList.add('low-power-mode');
-                    const toggleEl = document.getElementById('toggle-power');
-                    if (toggleEl) toggleEl.classList.add('active');
-                }
+// ADAPTIVE PERFORMANCE: benchmark real FPS for 3s, but only once the intro
+// loading is fully done and the animated menu is idle on screen. Running this
+// during DOMContentLoaded was a false positive — every phone is busy loading
+// assets and Firebase at that moment, so it flagged good devices as weak too.
+// Only genuinely struggling devices get switched to Low Power Mode this way.
+function runAdaptiveVfxBenchmark() {
+    if (localStorage.getItem('dod_setting_power') !== null) return;
+    let frames = 0;
+    const benchStart = performance.now();
+    function benchSample(now) {
+        frames++;
+        if (now - benchStart < 3000) {
+            requestAnimationFrame(benchSample);
+        } else {
+            const avgFps = frames / ((now - benchStart) / 1000);
+            if (avgFps < 50) {
+                localStorage.setItem('dod_setting_power', 'true');
+                document.body.classList.add('low-power-mode');
+                const toggleEl = document.getElementById('toggle-power');
+                if (toggleEl) toggleEl.classList.add('active');
             }
         }
-        requestAnimationFrame(benchSample);
     }
-});
+    requestAnimationFrame(benchSample);
+}
 
 // ============================================================
 // LIVEKIT (SFU) VOICE CHAT ENGINE
@@ -6417,7 +6444,9 @@ function listenToGameState() {
                 localExpiresAt = Date.now() + 30000; 
             }
         } else {
-            localExpiresAt = Date.now() + 30000; 
+            // FRESH LOAD / REFRESH: Use the server's absolute expiration time!
+            localExpiresAt = serverState.turnExpiresAt || (Date.now() + 30000);
+            computedTurnTimeLeft = Math.max(0, Math.floor((localExpiresAt - Date.now()) / 1000));
         }
 
         state = {
@@ -7252,10 +7281,12 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       h = dstRect.height;
   }
   
+  const startLeft = srcRect.left+srcRect.width/2-w/2;
+  const startTop = srcRect.top+srcRect.height/2-h/2;
   const g=document.createElement('div');
   g.className='ghost-card';
-  g.style.left=(srcRect.left+srcRect.width/2-w/2)+'px';
-  g.style.top=(srcRect.top+srcRect.height/2-h/2)+'px';
+  g.style.left=startLeft+'px';
+  g.style.top=startTop+'px';
   g.style.width=w+'px'; g.style.height=h+'px';
   g.style.border=`2px solid ${color}`; g.style.color=color;
   
@@ -7306,16 +7337,19 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
   void g.offsetWidth; 
   
   requestAnimationFrame(()=>{
+    let endLeft, endTop;
     if (isCardPlaceholder) {
         // Drop perfectly into the center placeholder
-        g.style.left=dstRect.left+'px';
-        g.style.top=dstRect.top+'px';
+        endLeft = dstRect.left;
+        endTop = dstRect.top;
     } else {
         // Fly directly to the center of the avatar
-        g.style.left=(dstRect.left+dstRect.width/2-w/2)+'px';
-        g.style.top=(dstRect.top+dstRect.height/2-h/2)+'px';
+        endLeft = dstRect.left+dstRect.width/2-w/2;
+        endTop = dstRect.top+dstRect.height/2-h/2;
     }
-    g.style.transform='scale(1)';
+    // GPU-only move: translate from the static start position instead of
+    // animating left/top, which forces a full layout+paint every frame.
+    g.style.transform = `translate3d(${endLeft-startLeft}px, ${endTop-startTop}px, 0) scale(1)`;
   });
   
   setTimeout(()=>{
@@ -7365,11 +7399,17 @@ function flyCoin(srcRect,dstRect,delay){
     g.className='ghost-coin';
     g.style.width=size+'px'; g.style.height=size+'px';
     const c1=rectCenter(srcRect);
-    g.style.left=(c1.x-size/2)+'px'; g.style.top=(c1.y-size/2)+'px';
+    const startLeft = c1.x-size/2;
+    const startTop = c1.y-size/2;
+    g.style.left=startLeft+'px'; g.style.top=startTop+'px';
     document.body.appendChild(g);
     requestAnimationFrame(()=>{
       const c2=rectCenter(dstRect);
-      g.style.left=(c2.x-size/2)+'px'; g.style.top=(c2.y-size/2)+'px';
+      const endLeft = c2.x-size/2;
+      const endTop = c2.y-size/2;
+      // GPU-only move: translate from the static start position instead of
+      // animating left/top, which forces a full layout+paint every frame.
+      g.style.transform = `translate3d(${endLeft-startLeft}px, ${endTop-startTop}px, 0)`;
       g.style.opacity='0.15';
     });
     setTimeout(()=> {
@@ -13811,25 +13851,49 @@ const SHOP_DB = {
         { id: 'cf_diamond', name: 'Prismatic Diamond', method: 'spin', color: '#e0f7fa' }
     ],
     cardBacks: [
+        // --- ORIGINAL / DEFAULT / TIER / SEASON ---
         { id: 'cb_default', name: 'Brass Standard', method: 'default', img: 'TheBase.webp' },
         { id: 'cb_theone', name: 'The One', method: 'season', img: 'TheOne.webp' },
-        
-        // --- NEW COMMON CARDS ---
-        { id: 'cb_copper', name: 'Copper Rust', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'CopperRust.webp' },
-        { id: 'cb_cobalt', name: 'Cobalt Night', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'CobaltNight.webp' },
-        { id: 'cb_onyx', name: 'Onyx & Steel', method: 'coins', shardPrice: 150, shardsNeeded: 10, img: 'Onyx&Steel.webp' },
-        { id: 'cb_ivory', name: 'Ivory Pearl', method: 'coins', shardPrice: 200, shardsNeeded: 12, img: 'IvoryPearl.webp' },
-        { id: 'cb_amethyst', name: 'Amethyst Silk', method: 'coins', shardPrice: 200, shardsNeeded: 12, img: 'AmethystSilk.webp' },
-        { id: 'cb_emerald', name: 'Emerald Velvet', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'EmeraldVelvet.webp' },
-        { id: 'cb_magician', name: 'The Magician', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'Magician.webp' },
-        
-        // --- PREMIUM & SPECIAL CARDS ---
         { id: 'cb_crimson', name: 'Crimson Blood', method: 'coins', shardPrice: 250, shardsNeeded: 15, img: 'CrimsonBlood.webp' },
         { id: 'cb_sapphire', name: 'Deep Sapphire', method: 'coins', shardPrice: 300, shardsNeeded: 20, img: 'DeepSapphire.webp' },
         { id: 'cb_bloodwood', name: 'Bloodwood', method: 'coins', shardPrice: 400, shardsNeeded: 25, img: 'Bloodwood.webp' },
         { id: 'cb_obsidian', name: 'Obsidian Void', method: 'spin', img: 'Obsidian Void.webp' },
         
-        // --- TIER REWARDS ---
+        // --- NEW COMMON CARDS (18) ---
+        { id: 'cb_RubyVelvet', name: 'Ruby Velvet', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'RubyVelvet.webp' },
+        { id: 'cb_CobaltLeather', name: 'Cobalt Leather', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'CobaltLeather.webp' },
+        { id: 'cb_EmeraldDamask', name: 'Emerald Damask', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'EmeraldDamask.webp' },
+        { id: 'cb_OnyxSlate', name: 'Onyx Slate', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'OnyxSlate.webp' },
+        { id: 'cb_IvoryParchment', name: 'Ivory Parchment', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'IvoryParchment.webp' },
+        { id: 'cb_CopperRust', name: 'Copper Rust', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'CopperRust.webp' },
+        { id: 'cb_TarnishedSilver', name: 'Tarnished Silver', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'TarnishedSilver.webp' },
+        { id: 'cb_GoldenOak', name: 'Golden Oak', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'GoldenOak.webp' },
+        { id: 'cb_MidnightCanvas', name: 'Midnight Canvas', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'MidnightCanvas.webp' },
+        { id: 'cb_RosewoodMarquetry', name: 'Rosewood Marquetry', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'RosewoodMarquetry.webp' },
+        { id: 'cb_CopperAge', name: 'Copper Age', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'CopperAge.webp' },
+        { id: 'cb_IvoryPearl', name: 'Ivory Pearl', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'IvoryPearl.webp' },
+        { id: 'cb_Magician', name: 'The Magician', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'Magician.webp' },
+        { id: 'cb_OnyxSteel', name: 'Onyx & Steel', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'Onyx&Steel.webp' },
+        { id: 'cb_CobaltNight', name: 'Cobalt Night', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'CobaltNight.webp' },
+        { id: 'cb_EmeraldVelvet', name: 'Emerald Velvet', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'EmeraldVelvet.webp' },
+        { id: 'cb_AmethystSilk', name: 'Amethyst Silk', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'AmethystSilk.webp' },
+        { id: 'cb_BrassEngraving', name: 'Brass Engraving', method: 'coins', shardPrice: 150, shardsNeeded: 15, img: 'BrassStandard.webp' },
+
+        // --- NEW MYTHIC CARDS (5) ---
+        { id: 'cb_VoidQuartz', name: 'Void Quartz', method: 'coins', shardPrice: 400, shardsNeeded: 40, img: 'VoidQuartz.webp' },
+        { id: 'cb_AbyssalPearl', name: 'Abyssal Pearl', method: 'coins', shardPrice: 400, shardsNeeded: 40, img: 'AbyssalPearl.webp' },
+        { id: 'cb_NeonMatrix', name: 'Neon Matrix', method: 'coins', shardPrice: 400, shardsNeeded: 40, img: 'NeonMatrix.webp' },
+        { id: 'cb_BloodMoon', name: 'Blood Moon', method: 'coins', shardPrice: 400, shardsNeeded: 40, img: 'BloodMoon.webp' },
+        { id: 'cb_EtherealWisp', name: 'Ethereal Wisp', method: 'coins', shardPrice: 400, shardsNeeded: 40, img: 'EtherealWisp.webp' },
+
+        // --- NEW LEGENDARY CARDS (5) ---
+        { id: 'cb_DragonsBreath', name: 'Dragon\'s Breath', method: 'coins', shardPrice: 800, shardsNeeded: 100, img: 'DragonsBreath.webp' },
+        { id: 'cb_ChronomancersVault', name: 'Chronomancer\'s Vault', method: 'coins', shardPrice: 800, shardsNeeded: 100, img: 'ChronomancersVault.webp' },
+        { id: 'cb_CelestialZodiac', name: 'Celestial Zodiac', method: 'coins', shardPrice: 800, shardsNeeded: 100, img: 'CelestialZodiac.webp' },
+        { id: 'cb_InfernalContract', name: 'Infernal Contract', method: 'coins', shardPrice: 800, shardsNeeded: 100, img: 'InfernalContract.webp' },
+        { id: 'cb_PrismaticDiamond', name: 'Prismatic Diamond', method: 'coins', shardPrice: 800, shardsNeeded: 100, img: 'PrismaticDiamond.webp' },
+
+        // --- TIER REWARDS (5) ---
         { id: 'cb_trickster', name: 'The Trickster', method: 'tier', unlockTier: 'Trickster', img: 'TricksterCard.webp' },
         { id: 'cb_phantom', name: 'The Phantom', method: 'tier', unlockTier: 'Phantom', img: 'PhantomCard.webp' },
         { id: 'cb_mastermind', name: 'The Mastermind', method: 'tier', unlockTier: 'Mastermind', img: 'MastermindCard.webp' },
@@ -13837,8 +13901,13 @@ const SHOP_DB = {
         { id: 'cb_legend', name: 'The Legend', method: 'tier', unlockTier: 'Legend', img: 'LegendCard.webp' }
     ],
     tables: [
+        // --- ORIGINAL / DEFAULT / TIER ---
         { id: 'tb_default', name: 'Classic Green', method: 'default', desc: 'The standard casino felt.', img: 'GreenWood.webp', color: '30, 74, 61' },
         { id: 'tb_sanctum', name: 'Inner Sanctum', method: 'season', desc: 'The ultimate Season 1 capstone table.', img: 'InnerSanctum.webp', color: '74, 21, 27' },
+        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.webp', color: '39, 56, 69' },
+        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.webp', color: '69, 64, 39' },
+        
+        // --- ORIGINAL PREMIUM TABLES ---
         { id: 'tb_bloodwood', name: 'Crimson Bloodwood', method: 'coins', price: 1500, desc: 'Rich, polished dark mahogany wood.', img: 'CrimsonBloodwood.webp', color: '74, 21, 27' },
         { id: 'tb_midnight', name: 'Midnight Navy', method: 'coins', price: 2000, desc: 'Deep navy blue premium casino felt.', img: 'MidnightNavy.webp', color: '22, 36, 66' },
         { id: 'tb_amethyst', name: 'Royal Amethyst', method: 'coins', price: 3000, desc: 'Rich purple velvet cloth texture.', img: 'RoyalAmethyst.webp', color: '53, 28, 77' },
@@ -13847,8 +13916,33 @@ const SHOP_DB = {
         { id: 'tb_mirage', name: 'Desert Mirage', method: 'spin', desc: 'Hot, shifting golden sands.', img: 'DesertMirage.webp', color: '77, 58, 28' },
         { id: 'tb_dragon', name: 'Dragon\'s Lair', method: 'spin', desc: 'Dark green reptilian scales.', img: 'DragonsLair.webp', color: '24, 56, 33' },
         { id: 'tb_void', name: 'Void Magic', method: 'spin', desc: 'Deep space nebula magic.', img: 'VoidMagic.webp', color: '28, 21, 51' },
-        { id: 'tb_oracle', name: 'Oracle Table', method: 'tier', unlockTier: 'Oracle', desc: 'Mystical stone tablet and runes.', img: 'OracleTable.webp', color: '39, 56, 69' },
-        { id: 'tb_legendary', name: 'Legendary Table', method: 'tier', unlockTier: 'Legend', desc: 'Pristine white marble and gold.', img: 'LegendaryTable.webp', color: '69, 64, 39' }
+
+        // --- NEW COMMON TABLES (10) ---
+        { id: 'tb_ClassicHigh-RollerGreen', name: 'Classic Green', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'A classic emerald green casino table.', img: 'ClassicHigh-RollerGreen.webp', color: '30, 74, 61' },
+        { id: 'tb_MidnightVelvet', name: 'Midnight Velvet', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Luxurious midnight blue velvet.', img: 'MidnightVelvet.webp', color: '22, 36, 66' },
+        { id: 'tb_PolishedMahogany', name: 'Polished Mahogany', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Rich polished woodgrain finish.', img: 'PolishedMahogany.webp', color: '74, 21, 27' },
+        { id: 'tb_BurgundyDiamond', name: 'Burgundy Diamond', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Deep burgundy quilted leather.', img: 'BurgundyDiamond.webp', color: '89, 21, 33' },
+        { id: 'tb_SlateCarbon', name: 'Slate Carbon', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Sleek slate grey carbon-weave.', img: 'SlateCarbon.webp', color: '40, 44, 52' },
+        { id: 'tb_TavernOak', name: 'Tavern Oak', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Weathered dark oak tavern table.', img: 'TavernOak.webp', color: '82, 54, 27' },
+        { id: 'tb_ObsidianFelt', name: 'Obsidian Felt', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Pitch-black obsidian felt.', img: 'ObsidianFelt.webp', color: '15, 15, 15' },
+        { id: 'tb_IvoryDamask', name: 'Ivory Damask', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Antique ivory silk texture.', img: 'IvoryDamask.webp', color: '228, 216, 189' },
+        { id: 'tb_RoyalAmethyst', name: 'Royal Amethyst', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Vibrant purple velvet.', img: 'RoyalAmethyst.webp', color: '107, 63, 138' },
+        { id: 'tb_Ironhide', name: 'Ironhide', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Rugged dark iron-grey leather.', img: 'Ironhide.webp', color: '50, 53, 58' },
+        { id: 'tb_CharcoalSlate', name: 'Charcoal Slate', method: 'coins', shardPrice: 200, shardsNeeded: 15, desc: 'Matte black slate stone surface.', img: 'CharcoalSlate.webp', color: '40, 44, 52' },
+
+        // --- NEW MYTHIC TABLES (5) ---
+        { id: 'tb_AbyssalVoid', name: 'Abyssal Void', method: 'coins', shardPrice: 500, shardsNeeded: 40, desc: 'Mystical deep void texture.', img: 'AbyssalVoid.webp', color: '139, 61, 255' },
+        { id: 'tb_NeonMatrix', name: 'Neon Matrix', method: 'coins', shardPrice: 500, shardsNeeded: 40, desc: 'Sleek cyberpunk dark glass.', img: 'NeonMatrix.webp', color: '47, 169, 161' },
+        { id: 'tb_SunkenAtlantis', name: 'Sunken Atlantis', method: 'coins', shardPrice: 500, shardsNeeded: 40, desc: 'Ancient aquamarine marble.', img: 'SunkenAtlantis.webp', color: '32, 178, 170' },
+        { id: 'tb_EnchantedRoot', name: 'Enchanted Root', method: 'coins', shardPrice: 500, shardsNeeded: 40, desc: 'Living dark emerald petrified wood.', img: 'EnchantedRoot.webp', color: '46, 139, 87' },
+        { id: 'tb_BloodMoonAltar', name: 'Blood Moon Altar', method: 'coins', shardPrice: 500, shardsNeeded: 40, desc: 'Sacrificial dark crimson stone.', img: 'BloodMoonAltar.webp', color: '178, 34, 34' },
+
+        // --- NEW LEGENDARY TABLES (5) ---
+        { id: 'tb_DragonsHoard', name: 'Dragon\'s Hoard', method: 'coins', shardPrice: 1000, shardsNeeded: 100, desc: 'Gold-flecked obsidian scales.', img: 'DragonsHoard.webp', color: '218, 165, 32' },
+        { id: 'tb_ChronomancersDial', name: 'Chronomancer\'s Dial', method: 'coins', shardPrice: 1000, shardsNeeded: 100, desc: 'Translucent quartz and brass.', img: 'ChronomancersDial.webp', color: '201, 162, 39' },
+        { id: 'tb_TheSyndicateVault', name: 'The Syndicate Vault', method: 'coins', shardPrice: 1000, shardsNeeded: 100, desc: 'Platinum and carbon-fiber.', img: 'TheSyndicateVault.webp', color: '229, 228, 226' },
+        { id: 'tb_CelestialZodiac', name: 'Celestial Zodiac', method: 'coins', shardPrice: 1000, shardsNeeded: 100, desc: 'Deep midnight starry glass.', img: 'CelestialZodiac.webp', color: '25, 25, 112' },
+        { id: 'tb_InfernalContract', name: 'Infernal Contract', method: 'coins', shardPrice: 1000, shardsNeeded: 100, desc: 'Scorched demonic brass and ash.', img: 'InfernalContract.webp', color: '255, 69, 0' }
     ],
     coins: [
         // --- SYNDICATE CHIPS (PREMIUM SC) ---
@@ -14098,11 +14192,9 @@ function renderShopItems() {
         if (currentShopTab === 'cardFaces') {
             visualHtml = `<div class="shop-swatch" style="background:${item.color}; margin-top:10px; width:38px; height:38px; border-radius:50%; margin:10px auto; border:2px solid rgba(255,255,255,0.2);"></div>`;
         } else if (currentShopTab === 'cardBacks') {
-            /* Changed cover to 100% 100% to prevent border cropping, and added high-quality rendering */
-            visualHtml = `<div style="width:34px; height:48px; border-radius:4px; margin:10px auto; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:100% 100%; background-repeat:no-repeat; background-position:center; image-rendering:high-quality; border:2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div>`;
+            visualHtml = `<div style="width:34px; height:48px; border-radius:4px; margin:10px auto; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:100% 100%; background-repeat:no-repeat; background-position:center; border:2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translateZ(0);"></div>`;
         } else if (currentShopTab === 'tables') {
-            /* Added image-rendering: high-quality to smooth out the grainy downsampling on the textures */
-            visualHtml = `<div style="width:100%; height:40px; border-radius:4px; margin:8px 0; background-image:url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; image-rendering:high-quality; border:1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5);"></div><div style="font-size:9.5px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px; display:flex; align-items:center; justify-content:center; line-height:1.2;">${item.desc}</div>`;
+            visualHtml = `<div style="width:100%; height:40px; border-radius:4px; margin:8px 0; background-image:url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; border:1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translateZ(0);"></div><div style="font-size:9.5px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px; display:flex; align-items:center; justify-content:center; line-height:1.2;">${item.desc}</div>`;
         } else if (currentShopTab === 'vfx') {
             visualHtml = `<div style="font-size:24px; margin:10px 0;">✨</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
         } else if (currentShopTab === 'coins') {
