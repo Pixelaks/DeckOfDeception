@@ -851,6 +851,26 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:2000;padding:16px}
 .modal-bg.show{display:flex}
 
+/* --- LONG PRESS TOOLTIP --- */
+#cardTooltip {
+  position: fixed;
+  background: linear-gradient(135deg, rgba(20,15,10,0.98), rgba(6,4,3,0.98));
+  border: 1px solid var(--brass-bright);
+  color: rgba(242,234,216,0.9);
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  pointer-events: none;
+  z-index: 100000;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.9), inset 0 0 10px rgba(232,196,84,0.1);
+  display: none;
+  max-width: 180px;
+  text-align: center;
+  transform: translate(-50%, -100%);
+  line-height: 1.4;
+}
+
 /* HOW TO PLAY TUTORIAL */
 #tutorialOverlay{display:none;position:fixed;inset:0;background:rgba(6,4,3,0.94);z-index:5000;align-items:center;justify-content:center;padding:24px;
   -webkit-tap-highlight-color:transparent;}
@@ -2998,6 +3018,8 @@ window.dodImagesLoaded = false;
     </div>
 </div>
 
+<div id="cardTooltip"></div>
+
 <!-- INTERACTIVE TUTORIAL ENGINE -->
 <style>
   #tutOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; pointer-events: auto; }
@@ -3016,6 +3038,10 @@ window.dodImagesLoaded = false;
       <div style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:20px;">The Dealer</div>
       <button onclick="endInteractiveTutorial()" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;">Skip ✕</button>
   </div>
+  <div style="width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
+      <div id="tutProgressFill" style="height:100%; width:0%; background:var(--brass-bright); transition:width 0.3s ease;"></div>
+  </div>
+  <div id="tutStepLabel" style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px;"></div>
   <div id="tutText" style="font-family:'Inter',sans-serif; font-size:14px; line-height:1.6; color:rgba(242,234,216,0.9);"></div>
   <button id="tutBtn" class="btn small" style="margin-top:10px; padding:10px 0; font-size:13px;" onclick="tutNext()">Continue</button>
 </div>
@@ -3610,15 +3636,9 @@ window.dodImagesLoaded = false;
   </div>
 </div>
 
-<!-- LOGIN CHOICE MODAL (2D Cinematic Background) -->
-<div class="modal-bg" id="loginChoiceOverlay" style="background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table); background-size: cover; background-position: center; z-index: 6000; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
-  <!-- Glowing spinning halo from the loading screen -->
-  <div class="ls-halo" style="z-index: 0; opacity: 0.6;"></div>
-  
-  <!-- Huge Cinematic Title -->
-  <h1 class="ls-title" style="position: relative; z-index: 2; margin-bottom: 40px; font-size: clamp(32px, 8vw, 64px);">DECK OF DECEPTION</h1>
-  
-  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
+<!-- LOGIN CHOICE MODAL -->
+<div class="modal-bg" id="loginChoiceOverlay" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 6000; flex-direction: column; justify-content: center; align-items: center;">
+  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1); margin-top: 100px;">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Sign In</h3>
     <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
     <button id="btnGoogleLogin" class="btn" style="width:100%; margin-bottom:14px; background:#e8c454; color:#150c12; font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0;" onclick="handleAuthClick('google')">Sign in with Google</button>
@@ -3626,14 +3646,9 @@ window.dodImagesLoaded = false;
   </div>
 </div>
 
-<!-- NAME SETUP MODAL (2D Cinematic Background) -->
-<div class="modal-bg" id="nameSetupOverlay" style="background: radial-gradient(circle at center, rgba(0,0,0,0.2) 0%, rgba(0,0,0,0.95) 100%), var(--my-table); background-size: cover; background-position: center; z-index: 6000; flex-direction: column; justify-content: center; align-items: center; overflow: hidden;">
-  <div class="ls-halo" style="z-index: 0; opacity: 0.6;"></div>
-  
-  <!-- Huge Cinematic Title -->
-  <h1 class="ls-title" style="position: relative; z-index: 2; margin-bottom: 40px; font-size: clamp(32px, 8vw, 64px);">DECK OF DECEPTION</h1>
-  
-  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
+<!-- NAME SETUP MODAL -->
+<div class="modal-bg" id="nameSetupOverlay" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 6000; flex-direction: column; justify-content: center; align-items: center;">
+  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1); margin-top: 100px;">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright);">Choose your name</h3>
     <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:10px;">This is permanent. It's how others will see you.</p>
     <div id="nameSetupError" class="mono" style="color:var(--danger-bright); font-size:11px; margin-bottom:10px; display:none;"></div>
@@ -4438,11 +4453,33 @@ function createNoiseBuffer() {
 }
 let noiseBuffer;
 
+// FIX: iOS Safari silently ignores audio.volume — route through a GainNode instead.
+// Redefines el.volume as a getter/setter so every existing "el.volume = x" line
+// elsewhere in the file keeps working unchanged, on iOS and everywhere else.
+function patchAudioVolume(el) {
+    if (!el || el._volumePatched) return el;
+    try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(el);
+        const gainNode = audioCtx.createGain();
+        source.connect(gainNode).connect(audioCtx.destination);
+        let vol = el.volume;
+        gainNode.gain.value = vol;
+        Object.defineProperty(el, 'volume', {
+            get() { return vol; },
+            set(v) { vol = v; gainNode.gain.value = v; }
+        });
+        el._volumePatched = true;
+    } catch (e) { console.warn('iOS volume patch failed:', e); }
+    return el;
+}
+
 // Helper to play your custom audio files seamlessly
 function playExternalSfx(elementId) {
     if (document.hidden) return; // FIX: Prevent SFX from triggering while the app is minimized
     const el = document.getElementById(elementId);
     if(el) {
+        patchAudioVolume(el);
         el.volume = sfxVolume; // Respects the in-game SFX slider!
         el.currentTime = 0;    // Instantly resets so it can be spammed
         el.play().catch(()=>{});
@@ -4626,11 +4663,11 @@ function startAmbientPad(){
 }
 
 // --- BACKGROUND MUSIC LOGIC ---
-const bgMusicElement = document.getElementById('bgMusic');
-const inGameMusicElement = document.getElementById('inGameMusic');
-const tensionMusicElement = document.getElementById('tensionMusic');
-const syndicateMusicElement = document.getElementById('syndicateMusic');
-const seasonMusicElement = document.getElementById('seasonMusic');
+const bgMusicElement = patchAudioVolume(document.getElementById('bgMusic'));
+const inGameMusicElement = patchAudioVolume(document.getElementById('inGameMusic'));
+const tensionMusicElement = patchAudioVolume(document.getElementById('tensionMusic'));
+const syndicateMusicElement = patchAudioVolume(document.getElementById('syndicateMusic'));
+const seasonMusicElement = patchAudioVolume(document.getElementById('seasonMusic'));
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
@@ -4772,6 +4809,10 @@ document.addEventListener("visibilitychange", function() {
 // ============================================================
 
 function forceEnterFullscreen() {
+    // iPhone Safari never supports requestFullscreen() on a normal page — skip it there
+    // to avoid a silent failure/console warning. iPad and desktop Safari still get real fullscreen.
+    const isIphone = /iPhone/.test(navigator.userAgent) && !window.navigator.standalone;
+    if (isIphone) return;
     const doc = document.documentElement;
 
     try {
@@ -4882,15 +4923,7 @@ function proceedWithBoot(overlayEl) {
         window.minimumBootTimePassed = true;
         setTimeout(runAdaptiveVfxBenchmark, 1500);
         if (localStorage.getItem('dod_seen_tutorial')) {
-            // Check if they need to see the season intro!
-            if (!localStorage.getItem('dod_season_1_intro')) {
-                playSeasonCinematic(() => {
-                    menu.classList.add('menu-visible');
-                    switchToMenuMusic(); // Restore normal menu music after cinematic ends!
-                });
-            } else {
-                menu.classList.add('menu-visible');
-            }
+            menu.classList.add('menu-visible');
         } else {
             openTutorial(false);
         }
@@ -4899,62 +4932,12 @@ function proceedWithBoot(overlayEl) {
 
 function handleGameBoot(e) {
     const intro = document.getElementById('introOverlay');
-    if (intro.dataset.booted === 'true' || intro.dataset.waitingForMic === 'true') return;
+    if (intro.dataset.booted === 'true') return;
 
-    // Tap #1 (First visit - Ask for Microphone)
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia && !localStorage.getItem('dod_mic_asked')) {
-        intro.dataset.waitingForMic = 'true';
-        const statusText = document.getElementById('introStatusText');
-        if (statusText) statusText.textContent = "Please allow microphone access...";
-
-        // THE FIX: If they tapped the "Rotate" overlay earlier, they are already in fullscreen.
-        // Popping a system permission dialog WHILE in fullscreen permanently breaks Chromium on Android.
-        // We must gracefully exit fullscreen manually first!
-        const isFs = document.fullscreenElement || document.webkitFullscreenElement;
-        if (isFs) {
-            try {
-                if (document.exitFullscreen) document.exitFullscreen().catch(()=>{});
-                else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
-            } catch(err){}
-        }
-
-        // Wait 300ms for the browser to cleanly drop out of fullscreen before asking for the mic
-        setTimeout(() => {
-            navigator.mediaDevices.getUserMedia({
-                audio: {
-                    autoGainControl: true,      // Boosts quiet voices
-                    echoCancellation: true,     // Stops speaker feedback
-                    noiseSuppression: true,     // Filters background noise
-                    channelCount: 1,            // Mono voice chat
-                    sampleRate: 48000,          // FORCE HD AUDIO (48kHz)
-                    sampleSize: 16,             // 16-bit depth for clarity
-                    latency: 0                  // Request the absolute lowest delay possible
-                },
-                video: false
-            })
-                .then(stream => {
-                    stream.getTracks().forEach(track => track.stop());
-                    localStorage.setItem('dod_mic_asked', 'true');
-                    
-                    // Unlock the screen for the final tap! No reboot needed.
-                    intro.dataset.waitingForMic = 'false'; 
-                    if (statusText) statusText.textContent = "Permission saved! Tap anywhere to start.";
-                })
-                .catch(err => {
-                    localStorage.setItem('dod_mic_asked', 'true');
-                    
-                    // Unlock the screen for the final tap! No reboot needed.
-                    intro.dataset.waitingForMic = 'false'; 
-                    if (statusText) statusText.textContent = "Settings saved! Tap anywhere to start.";
-                });
-        }, 300);
-
-    } else {
-        // Tap #2 (Or Returning User)
-        intro.dataset.booted = 'true';
-        forceEnterFullscreen(); 
-        proceedWithBoot(intro);
-    }
+    // Mic permission removed from boot — VoiceChat now asks for it only when the mic button is clicked.
+    intro.dataset.booted = 'true';
+    forceEnterFullscreen();
+    proceedWithBoot(intro);
 }
 
 // BIND TO CLICK ONLY! (No touchend. Touchend ruins the Android fullscreen security token!)
@@ -5149,10 +5132,10 @@ const tutScript = [
     { target: null, text: "<b>Insurance:</b> A passive card. If you are Forced to Buy and draw a dud, use this to safely discard it without skipping your turn.", btn: "Got it", showcaseCard: 'insurance' },
 
     // --- VISUAL DECEPTION EXPLANATION ---
-    { target: null, text: "Great! I've paused the bots. Let's explain the <b>Deception Showdown</b>. If a player is broke (0 PC) and has no match, their turn skips.", btn: "And then?" },
-    { target: 'deceptionContent', text: "<b>Rich View (1/2):</b> If they are STILL stuck on their NEXT turn, the Showdown begins! Rich players secretly pick a <b>Real Number</b>.", btn: "Next", action: 'mock_deception_rich_real' },
-    { target: 'deceptionContent', text: "<b>Rich View (2/2):</b> Then, they pick a <b>Claim Number</b>. They can tell the truth, or try to bluff the broke players!", btn: "Next", action: 'mock_deception_rich_claim' },
-    { target: 'deceptionContent', text: "<b>Broke View:</b> As a broke player, you see the Claim. You must decide to Believe it, or click 'I don't buy it' to guess your own number.", btn: "Let's practice", action: 'mock_deception_broke' },
+    { target: null, text: "Great! I've paused the bots. Let's explain the <b>Deception Showdown</b> — a mini-game that kicks in if a player is broke (0 PC) with no match. You'll play BOTH sides so it's crystal clear.", btn: "Show me" },
+    { target: 'deceptionContent', text: "<b>Side 1 — Players WITH Coins:</b> If the broke player is STILL stuck next turn, the Showdown begins! Coin-holders secretly agree on a hidden <b>Real Number</b>.", btn: "Next", action: 'mock_deception_rich_real' },
+    { target: 'deceptionContent', text: "<b>Side 1 — Players WITH Coins:</b> Now they agree on a <b>Claim Number</b> to tell the broke player. Truth, or bluff — their call.", btn: "Next", action: 'mock_deception_rich_claim' },
+    { target: 'deceptionContent', text: "<b>Side 2 — Switch seats, you're Broke now:</b> You only see the Claim. Do you Believe it, or click 'I don't buy it' and guess the real number yourself?", btn: "Let's practice", action: 'mock_deception_broke' },
     // FIX: Added 'unlock_deception_broke' to cleanly unlock the buttons only when reaching this exact step!
     { target: 'deceptionContent', text: "Let's practice surviving! Click <b>Believe it</b> right now to trust the table's claim.", wait: 'clicked_believe', action: 'unlock_deception_broke' },
     { target: 'deceptionContent', text: "<b>Success!</b> You survived and won <b>+15 coins</b>! (If you had clicked 'I don't buy it', a number pad would appear for your exact guess).", btn: "What if I miss?", action: 'mock_deception_result' },
@@ -5365,6 +5348,10 @@ function applyTutStep() {
     }
     
     tutText.innerHTML = step.text;
+    const tutProgressFill = document.getElementById('tutProgressFill');
+    const tutStepLabel = document.getElementById('tutStepLabel');
+    if (tutProgressFill) tutProgressFill.style.width = (((tutStep + 1) / tutScript.length) * 100) + '%';
+    if (tutStepLabel) tutStepLabel.textContent = 'Step ' + (tutStep + 1) + ' of ' + tutScript.length;
     
     if (step.wait) {
         tutBtn.style.display = 'none';
@@ -5551,20 +5538,34 @@ if(window.DoDAuth){
     }
 
     // --- NORMAL HUB LOADING ---
-    if(loading) loading.style.display='none';
-    if(buttons) buttons.style.display='flex';
-    if(badge) badge.style.display='flex';
-    const hud = document.getElementById('pubgHud');
-    if(hud) hud.style.display='block';
-    if (typeof initFriendsList === 'function') initFriendsList();
-    const el = document.getElementById('hubCurrency');
-    const premEl = document.getElementById('hubPremiumCurrency');
-    if(el) el.textContent = profile.currency || 0;
-    if(premEl) premEl.textContent = profile.premiumCurrency || 0;
-    
-    // FULL FIX: Start listening for incoming party invites globally as soon as they log in
-    if (typeof listenForPartyInvites === 'function') {
-        listenForPartyInvites();
+    const initHubUI = () => {
+        if(loading) loading.style.display='none';
+        if(buttons) buttons.style.display='flex';
+        if(badge) badge.style.display='flex';
+        const hud = document.getElementById('pubgHud');
+        if(hud) hud.style.display='block';
+        if (typeof initFriendsList === 'function') initFriendsList();
+        const el = document.getElementById('hubCurrency');
+        const premEl = document.getElementById('hubPremiumCurrency');
+        if(el) el.textContent = profile.currency || 0;
+        if(premEl) premEl.textContent = profile.premiumCurrency || 0;
+        
+        // FULL FIX: Start listening for incoming party invites globally as soon as they log in
+        if (typeof listenForPartyInvites === 'function') {
+            listenForPartyInvites();
+        }
+    };
+
+    // FIX: Show Season 1 Cinematic ONLY after successful sign-in!
+    if (!localStorage.getItem('dod_season_1_intro') && localStorage.getItem('dod_seen_tutorial') && !currentMatchId && !currentPartyId) {
+        setTimeout(() => {
+            playSeasonCinematic(() => {
+                initHubUI();
+                switchToMenuMusic();
+            });
+        }, 400); // Small delay to let auth modals fade out cleanly
+    } else {
+        initHubUI();
     }
   });
 } else {
@@ -5954,6 +5955,10 @@ const VoiceChat = {
     async joinRoom(matchId, isUserInitiated = false) {
         if (!matchId) return;
         if (this.currentRoomId === matchId && this.room) return; // Already connected
+        
+        // --- NEW: Remember mic state before switching rooms ---
+        const wasUnmuted = !this.isMuted && this.room !== null;
+
         if (this.room) this.leaveRoom(); // Clean up old connection
 
         if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
@@ -6018,8 +6023,21 @@ const VoiceChat = {
             
             await Promise.race([connectPromise, timeoutPromise]);
 
-            this.isMuted = true;
-            if (typeof setMicActive === 'function') setMicActive(false); 
+            // --- NEW: Restore the mic state seamlessly ---
+            if (wasUnmuted) {
+                this.isMuted = false;
+                try {
+                    await this.room.localParticipant.setMicrophoneEnabled(true);
+                    if (typeof setMicActive === 'function') setMicActive(true);
+                } catch(e) {
+                    this.isMuted = true;
+                    if (typeof setMicActive === 'function') setMicActive(false);
+                }
+            } else {
+                this.isMuted = true;
+                if (typeof setMicActive === 'function') setMicActive(false); 
+            }
+            
             this.updateMuteButtonUI();
 
         } catch (err) {
@@ -6833,6 +6851,7 @@ async function handleTurnTimeout() {
     
     const curPlayer = state.players[state.turn];
     const isOnline = !!currentMatchId;
+    const wasChoosingCall = state.uiState === 'CHOOSE_CALL'; // FIX: Remember WHY they timed out before we overwrite uiState
 
     // FIX: Instantly lock the UI for EVERYONE at 0 seconds. 
     // This prevents panicked players from clicking a card right as the server skips their turn!
@@ -6854,7 +6873,9 @@ async function handleTurnTimeout() {
         // OFFLINE BOT MODE LOGIC
         const penalty = 2;
         curPlayer.shop = Math.max(0, curPlayer.shop - penalty);
-        const msg = `⏳ Time's up! ${curPlayer.name} took too long and lost ${penalty} coins. Turn skipped.`;
+        const msg = wasChoosingCall
+            ? `⏳ Time's up! ${curPlayer.name} played a card but didn't call a number in time — lost ${penalty} coins. Turn skipped.`
+            : `⏳ Time's up! ${curPlayer.name} took too long and lost ${penalty} coins. Turn skipped.`;
         
         log(msg, 'alert');
         state.buyLoop = null; 
@@ -7774,32 +7795,50 @@ function renderHand(){
           // Give the card a unique ID so the flip animation can target it flawlessly
           el.id = `hand-card-${idx}`;
 
+          // --- LONG PRESS TOOLTIP ATTACHMENTS ---
+          el.oncontextmenu = (e) => { e.preventDefault(); return false; };
+          el.onpointerdown = (e) => handleCardPointerDown(e, c.type, c.value, c.tier);
+          el.onpointerup = () => handleCardPointerUp();
+          el.onpointerleave = () => handleCardPointerUp();
+          el.onpointercancel = () => handleCardPointerUp();
+          
+          // Wrapper to block 'onclick' from firing if they just finished a long-press
+          const wrapClick = (action) => {
+              return (e) => {
+                  if (window.dodIsLongPressing) {
+                      e.preventDefault();
+                      return;
+                  }
+                  action();
+              };
+          };
+
           if(c.type==='number'){
             el.className='card number'+(playable?'':' disabled');
             el.innerHTML= html + `<div class="val">${c.value}</div>`;
-            if(playable) el.onclick=()=>playNumberFromHand(idx, el);
+            if(playable) el.onclick=wrapClick(()=>playNumberFromHand(idx, el));
           } else if(c.type==='wild'){
             const canPay = you.shop>=WILD_COST;
             el.className='card wild'+(playable && canPay ?'':' disabled');
             el.innerHTML= html; // Empty center
-            if(playable && canPay) el.onclick=()=>playWild(idx, el);
+            if(playable && canPay) el.onclick=wrapClick(()=>playWild(idx, el));
           } else if(c.type==='power'){
             el.className='card power'+(playable?'':' disabled');
             el.innerHTML= html + `<div class="tier-badge">-${c.tier}</div>`;
-            if(playable) el.onclick=()=>openTargeting(idx, el, 'POWER');
+            if(playable) el.onclick=wrapClick(()=>openTargeting(idx, el, 'POWER'));
           } else if(c.type==='steal'){
             el.className='card steal'+(playable?'':' disabled');
             el.innerHTML= html + `<div class="tier-badge">+${c.tier}</div>`;
-            if(playable) el.onclick=()=>openTargeting(idx, el, 'STEAL');
+            if(playable) el.onclick=wrapClick(()=>openTargeting(idx, el, 'STEAL'));
           } else if(c.type==='reverse'){
             el.className='card reverse'+(playable?'':' disabled');
             el.innerHTML= html; // Empty center
-            if(playable) el.onclick=()=>playReverse(idx, el);
+            if(playable) el.onclick=wrapClick(()=>playReverse(idx, el));
           } else if(c.type==='insurance'){
             const playableIns = isYourTurn() && (state.uiState === 'IDLE' || state.uiState === 'RESOLVING_BUY');
             el.className='card insurance' + (playableIns ? '' : ' disabled');
             el.innerHTML= html; // Empty center
-            if (playableIns) el.onclick = () => playInsuranceFromHand(idx, el);
+            if (playableIns) el.onclick = wrapClick(() => playInsuranceFromHand(idx, el));
           } else if(c.type==='peek'){
             el.className='card peek';
             el.innerHTML= html; // Empty center
@@ -7960,10 +7999,12 @@ function renderActionBar(){
   }
 
   // ALWAYS show the draw button if they have money, but style it differently if it's optional
+  const isTutForcedBuyStep = window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'forced_buy';
+  const showAsForced = hasMatch && !isTutForcedBuyStep ? false : true;
   if(you.shop >= BUY_COST){
       const btn=document.createElement('button');
-      btn.className = hasMatch ? 'btn ghost' : 'btn'; // Ghost style if optional, solid if forced
-      btn.textContent = hasMatch ? `Optional Draw (${BUY_COST} PC) ↗` : `No match — Forced Buy (${BUY_COST} PC) ↗`;
+      btn.className = showAsForced ? 'btn' : 'btn ghost'; // Ghost style if optional, solid if forced
+      btn.textContent = showAsForced ? `No match — Forced Buy (${BUY_COST} PC) ↗` : `Optional Draw (${BUY_COST} PC) ↗`;
       btn.onclick=() => { startForcedBuySelf('BUY'); };
       bar.appendChild(btn);
   } else if (!hasMatch) {
@@ -8463,8 +8504,67 @@ async function skipStuckHumanTurn(reasonMsg){
 //   2) agree on a CLAIM number to tell the broke players — which may be a lie
 // Each broke player is told the claim and must decide whether to believe it (betting
 // it matches the real number) or distrust it and pick their own guess instead. Every
-// broke player answers independently, and results are only revealed once everyone
+// Every broke player answers independently, and results are only revealed once everyone
 // currently stuck has answered.
+
+// --- LONG PRESS CARD TOOLTIP LOGIC ---
+window.dodCardPressTimer = null;
+window.dodIsLongPressing = false;
+
+function handleCardPointerDown(e, type, value, tier) {
+    window.dodIsLongPressing = false;
+    
+    let title = '', desc = '';
+    if (type === 'number') { title = `Number ${value}`; desc = `Standard play. Matches the required call.`; }
+    else if (type === 'wild') { title = `Wild Swap`; desc = `Matches anything. Costs 2 PC to play.`; }
+    else if (type === 'power') { title = `Power Card`; desc = `Drains ${tier || 2} PC from a target to the bank.`; }
+    else if (type === 'steal') { title = `Steal Card`; desc = `Steals ${tier || 3} PC from a target to you.`; }
+    else if (type === 'reverse') { title = `Reverse`; desc = `Reverses the direction of play.`; }
+    else if (type === 'insurance') { title = `Insurance`; desc = `Safely discard a dud card during a buy.`; }
+    else if (type === 'peek') { title = `Peek`; desc = `Look at the next player's hand.`; }
+
+    window.dodCardPressTimer = setTimeout(() => {
+        window.dodIsLongPressing = true;
+        try { sfx.uiClick(); } catch(err){} // Tiny haptic feedback
+        const tt = document.getElementById('cardTooltip');
+        if (tt) {
+            tt.innerHTML = `<b style="font-family:'Cinzel Decorative',serif;font-size:13px;color:var(--brass-bright);display:block;margin-bottom:4px;text-shadow:0 1px 4px #000;">${title}</b>${desc}`;
+            tt.style.display = 'block';
+            
+            // Attempt to grab touch coordinates or mouse coordinates
+            let x = e.clientX;
+            let y = e.clientY;
+            if (e.touches && e.touches.length > 0) {
+                x = e.touches[0].clientX;
+                y = e.touches[0].clientY;
+            } else if (!x || !y) {
+                x = window.innerWidth / 2;
+                y = window.innerHeight / 2;
+            }
+            
+            // Keep it safely inside screen bounds
+            if (x < 90) x = 90;
+            if (x > window.innerWidth - 90) x = window.innerWidth - 90;
+            
+            tt.style.left = x + 'px';
+            tt.style.top = (y - 55) + 'px'; // Float just above the finger
+            
+            tt.style.animation = 'none';
+            void tt.offsetWidth; // Reflow
+            tt.style.animation = 'pulseIn 0.2s ease-out forwards';
+        }
+    }, 400); // Trigger after holding for 400ms
+}
+
+function handleCardPointerUp() {
+    if (window.dodCardPressTimer) clearTimeout(window.dodCardPressTimer);
+    const tt = document.getElementById('cardTooltip');
+    if (tt) tt.style.display = 'none';
+    
+    // Clear flag after a tiny delay so the onclick event catches the block
+    setTimeout(() => { window.dodIsLongPressing = false; }, 50);
+}
+
 function computeHasMatch(player){
   return player.hand.some(c => {
      if (c.type === 'number') {
@@ -10563,6 +10663,9 @@ function returnToMenuFromEndgame() {
 
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     localStorage.removeItem('dod_active_match');
+    
+    VoiceChat.leaveRoom(); // FIX: Disconnect from finished match voice chat
+    
     currentMatchId = null;
     window.onlineMatchSeats = null; // Clear seats so friends list updates properly
     state = null;
@@ -10584,6 +10687,7 @@ function returnToMenuFromEndgame() {
         if (currentPartyId) {
             showMenuScreen('hub');
             showPartyLobbyCinematic();
+            VoiceChat.joinRoom(currentPartyId); // FIX: Return to party voice chat!
             if (window.firebase) {
                 // Tell server the match is over so we can queue again
                 firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
@@ -11058,6 +11162,8 @@ async function leaveParty() {
 
     if (partyListenerUnsub) partyListenerUnsub();
     
+    VoiceChat.leaveRoom(); // FIX: Disconnect microphone when leaving party
+    
     currentPartyId = null;
     isPartyLeader = true; 
     window.currentPartyMembers = []; // Clear members on leave 
@@ -11499,6 +11605,9 @@ async function leaveMatchLobby() {
     
     if (matchLobbyUnsub) matchLobbyUnsub();
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+    
+    VoiceChat.leaveRoom(); // FIX: Disconnect from the match room
+    if (currentPartyId) VoiceChat.joinRoom(currentPartyId); // Return to party voice chat
     
     showMenuScreen('social');
     applyEquippedSkins(window.DoDAuth ? DoDAuth.getProfile() : null); // Revert to personal table
@@ -12174,7 +12283,11 @@ function cancelMatchmakingPubg() {
     clearInterval(pubgMmIntervalId);
     if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
     
+    VoiceChat.leaveRoom(); // FIX: Disconnect from match voice
+
     if (currentPartyId && partyLobbyCinematicActive) {
+        VoiceChat.joinRoom(currentPartyId); // Return to party voice chat
+        
         const overlay = document.getElementById('pubgMatchmakingOverlay');
         if (overlay) overlay.classList.remove('show');
         resetPubgPlayBtn();
@@ -12749,10 +12862,11 @@ async function executeDailyDraw(selectedIndex) {
                 totalCopies += 1;
                 rollData.rewardType = 'shard';
                 
+                const isFrameItem = ['Bone&Metal', 'DarkMarble', 'DarkSteel', 'Dice&Filigree', 'HammeredIron', 'OxidizedCopper', 'StoneAge', 'TarnishedSilver', 'VerdigrisBronze', 'Wood&Brass'].includes(targetShard.id);
                 let iconStr = '🎁';
                 if(targetShard.id.startsWith('cf_') || targetShard.id.startsWith('cb_')) iconStr = '🎴';
                 else if(targetShard.id.startsWith('tb_')) iconStr = '🎰';
-                else if(['Bone&Metal', 'DarkMarble', 'DarkSteel', 'Dice&Filigree', 'HammeredIron', 'OxidizedCopper', 'StoneAge', 'TarnishedSilver', 'VerdigrisBronze', 'Wood&Brass'].includes(targetShard.id)) iconStr = '🖼️';
+                else if(isFrameItem) iconStr = `<img src="Frames/${targetShard.id}.webp" style="width:42px; height:42px; object-fit:contain;" alt="${targetShard.name}">`;
                 else iconStr = '👤';
                 
                 if (newShards[targetShard.id] >= targetShard.req && !newInventory.includes(targetShard.id)) {
@@ -12760,9 +12874,9 @@ async function executeDailyDraw(selectedIndex) {
                     rollData.icon = '🎉';
                     rollData.msg = `Unlocked ${targetShard.name}!`;
                 } else {
-                    rollData.icon = `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(232,196,84,0.8));">${iconStr}</div>`;
+                    rollData.icon = isFrameItem ? iconStr : `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(232,196,84,0.8));">${iconStr}</div>`;
                     // FIX: Visually display how many copies out of the total required!
-                    rollData.msg = `+1 Copy: ${targetShard.name}<br><span style="color:var(--brass-bright); font-size:9px;">(${newShards[targetShard.id]} / ${targetShard.req} Copies)</span>`;
+                    rollData.msg = `+1 Copy: ${targetShard.name}<br><span style="color:var(--ink-soft); font-size:9px;">(${newShards[targetShard.id]} / ${targetShard.req} Copies)</span>`;
                 }
             } else if (r < 0.80) { 
                 // 65% Chance for Random Coins (20 to 100 PC)
@@ -12962,7 +13076,7 @@ async function executeRewardCardOpen() {
 
     } catch(e) {
         console.error("Card open error:", e);
-        subtitle.textContent = "Error communicating with the Dealer. Try again later.";
+        subtitle.textContent = e && e.message ? `Error: ${e.message}` : "Error communicating with the Dealer. Try again later.";
         subtitle.style.color = "var(--danger-bright)";
         wrap.classList.remove('locked');
         card.onclick = () => executeRewardCardOpen();
