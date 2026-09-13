@@ -248,7 +248,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
   background: var(--felt-dark); overflow: hidden; /* Lock the background and title */
   transition: opacity 0.8s ease; text-align: center; padding: 24px;
-  padding-top: 80px; padding-bottom: max(24px, 4vh); /* Safely clears the top widgets */
+  padding-top: calc(80px + env(safe-area-inset-top, 0px)); /* Clears the top widgets AND the notch/Dynamic Island/camera cutout */
+  padding-bottom: max(24px, 4vh, env(safe-area-inset-bottom, 0px)); /* Clears the home-indicator bar on iPhone */
   opacity: 0; /* Hidden until intro clicked */
 }
 /* Centers the hub screen contents vertically */
@@ -263,13 +264,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .menu-table {
   position: absolute; inset: 0;
   /* Layers a dark vignette spotlight over your AI texture */
-  background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.9) 90%), var(--my-table);
+  background: radial-gradient(circle at center, rgba(0,0,0,0.05) 0%, rgba(0,0,0,0.75) 90%), var(--my-table);
   background-size: cover;
   background-position: center;
 }
 .menu-vignette {
   position: fixed; inset: 0;
-  background: radial-gradient(circle at center, rgba(0,0,0,0) 10%, rgba(0,0,0,0.85) 90%);
+  background: radial-gradient(circle at center, rgba(0,0,0,0) 10%, rgba(0,0,0,0.55) 90%);
   z-index: 1; pointer-events: none;
 }
 .menu-box {
@@ -543,7 +544,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* GAME UI */
 #game{display:none;height:100%;
- background:radial-gradient(ellipse at 50% 0%, rgba(var(--table-glow, 30,74,61), 0.75) 0%, rgba(0,0,0,0.8) 45%, rgba(0,0,0,0.98) 100%), var(--my-table);
+ background:radial-gradient(ellipse at 50% 0%, rgba(var(--table-glow, 30,74,61), 0.75) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.85) 100%), var(--my-table);
  background-size:cover; background-position:center;
  padding:8px 12px;flex-direction:column;gap:6px;position:relative;overflow:hidden}
 .topbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
@@ -3046,6 +3047,19 @@ window.dodImagesLoaded = false;
   <button id="tutBtn" class="btn small" style="margin-top:10px; padding:10px 0; font-size:13px;" onclick="tutNext()">Continue</button>
 </div>
 
+<!-- IOS SAFARI LIMITATION WARNING (shown once, only to iPhone/iPad Safari tab users, not standalone home-screen users) -->
+<div id="iosWarningBanner" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(6,4,3,0.96); align-items:center; justify-content:center; padding:24px;">
+  <div style="max-width:360px; width:100%; background:linear-gradient(135deg, rgba(20,15,10,0.98), rgba(6,4,3,0.98)); border:2px solid var(--brass-bright); border-radius:8px; padding:24px 20px; text-align:center; box-shadow:0 10px 40px rgba(0,0,0,0.9);">
+    <div style="font-size:32px; margin-bottom:10px;">⚠️</div>
+    <div style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:18px; margin-bottom:10px;">Heads Up, iPhone Players</div>
+    <div style="font-family:'Inter',sans-serif; font-size:13px; line-height:1.6; color:rgba(242,234,216,0.9); margin-bottom:18px;">
+      Due to iOS Safari limitations, some features (fullscreen and volume controls) only work correctly when you add this game to your Home Screen.<br><br>
+      Tap the <b>Share</b> icon in Safari, then <b>"Add to Home Screen"</b>, and launch it from there for the best experience.
+    </div>
+    <button class="btn small" style="width:100%;" onclick="document.getElementById('iosWarningBanner').style.display='none'; localStorage.setItem('dod_ios_warning_seen','1');">Got it</button>
+  </div>
+</div>
+
 <!-- UNIVERSAL UNLOCK POPUP -->
 <div id="achievementPopup">
   <div class="ach-banner">
@@ -4926,6 +4940,13 @@ function proceedWithBoot(overlayEl) {
             menu.classList.add('menu-visible');
         } else {
             openTutorial(false);
+        }
+
+        // Show the iOS Safari limitation warning once, only for iPhone/iPad Safari tab users
+        const isIosSafariTab = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
+        if (isIosSafariTab && !localStorage.getItem('dod_ios_warning_seen')) {
+            const banner = document.getElementById('iosWarningBanner');
+            if (banner) banner.style.display = 'flex';
         }
     }, bootTime);
 }
