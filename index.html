@@ -96,6 +96,29 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js">
 <style>
 
+  * {
+    /* Disable long-press popup menu (iOS Safari) */
+    -webkit-touch-callout: none;
+    
+    /* Disable text selection */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    
+    /* Disable image dragging */
+    -webkit-user-drag: none;
+    
+    box-sizing: border-box; 
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* CRITICAL: Re-enable text selection for input fields so players can type their names and chat! */
+input, textarea {
+    -webkit-user-select: auto !important;
+    user-select: auto !important;
+}
+
 /* ============================================================
    PUBG-STYLE AIRPLANE / TABLE SHOWCASE OVERLAY (RESPONSIVE)
    ============================================================ */
@@ -1959,9 +1982,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* The horizontal textured banner */
 .ach-banner {
   width: 100%; position: relative;
-  /* Blends your table texture with a dark vignette to keep text readable */
-  background: linear-gradient(90deg, rgba(6,5,5,0.98) 0%, rgba(20,15,12,0.85) 50%, rgba(6,5,5,0.98) 100%), var(--my-table);
-  background-size: cover; background-position: center; background-blend-mode: overlay;
+  background: linear-gradient(90deg, rgba(6,5,5,0.98) 0%, rgba(20,15,12,0.95) 50%, rgba(6,5,5,0.98) 100%);
   border-top: 1px solid rgba(201,162,39,0.5); border-bottom: 1px solid rgba(201,162,39,0.5);
   padding: 40px 20px; text-align: center;
   box-shadow: 0 15px 50px rgba(0,0,0,0.95), inset 0 0 40px rgba(0,0,0,0.8);
@@ -2642,91 +2663,131 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 .rank-item.current{ box-shadow:0 0 22px rgba(226,189,74,0.3); }
 .pubg-icon-btn{ border-radius:14px; }
 
-/* AAA SEASON PASS STYLES */
-.pass-track-container { 
-    display: flex; overflow-x: auto; overflow-y: hidden; width: 100%; 
-    gap: 12px; padding: 10px 20px 30px; scroll-snap-type: x mandatory; 
-    align-items: stretch; -webkit-overflow-scrolling: touch; 
-    position: relative; 
-    /* AAA GPU OPTIMIZATION: Force hardware acceleration for smooth scrolling */
-    will-change: scroll-position;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+/* =========================================
+   PUBG-STYLE SEASON PASS SPLIT LAYOUT
+   ========================================= */
+.season-pass-split {
+    display: flex; flex-direction: row; width: 100%; height: 100%; gap: 35px; align-items: stretch;
 }
+.season-pass-left {
+    display: flex; flex-direction: column; flex: 0 0 36%; max-width: 360px; justify-content: center; gap: clamp(8px, 3vh, 24px); padding-bottom: 10px; z-index: 10;
+}
+.season-pass-right {
+    flex: 1; min-width: 0; background: rgba(10, 12, 15, 0.85); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; overflow: hidden; box-shadow: -10px 0 40px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5); display: flex; flex-direction: column; position: relative;
+}
+/* Fix the scrolling gap where contents peek through behind the sticky labels */
+.pass-row-labels {
+    background: #0c0e12 !important;
+    box-shadow: 6px 0 20px rgba(0,0,0,0.95);
+    clip-path: inset(0px -20px 0px 0px); /* Blocks rendering overflow on the right side gap */
+}
+
+@media (max-width: 840px), (max-height: 500px) {
+    #screen-seasonpass { padding: 65px 10px 10px 10px !important; }
+    .season-pass-split { gap: 15px; }
+    .season-pass-left { flex: 0 0 35%; max-width: 280px; }
+    .season-pass-left h2 { font-size: clamp(20px, 5vh, 28px) !important; }
+    .season-pass-left .btn { padding: clamp(6px, 1.5vh, 10px) !important; font-size: 11px !important; }
+    .season-pass-right { border-radius: 8px; }
+    .season-pass-right > div:first-child { padding: 6px 10px !important; }
+    .season-pass-right > div:first-child span { font-size: 12px !important; }
+}
+
+/* =========================================
+   AAA SEASON PASS STYLES - PUBG GRID REDESIGN
+   ========================================= */
+.pass-track-container {
+    display: flex; flex-direction: row; width: 100%; height: 100%;
+    overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch; align-items: stretch;
+    background: rgba(10, 12, 15, 0.8);
+    border: 1px solid rgba(255,255,255,0.05); border-radius: 8px;
+    position: relative; will-change: scroll-position;
+}
+/* Clean minimal scrollbar */
 .pass-track-container::-webkit-scrollbar { height: 4px; }
-.pass-track-container::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.5); border-radius: 4px; }
+.pass-track-container::-webkit-scrollbar-thumb { background: var(--brass); border-radius: 4px; }
 
-.pass-level-col { 
-    display: flex; flex-direction: column; align-items: center; gap: 6px; flex-shrink: 0; scroll-snap-align: center; width: 110px; position: relative; z-index: 2; 
-    /* AAA GPU OPTIMIZATION: Isolate columns to prevent layout thrashing */
-    transform: translateZ(0);
-    contain: layout style;
+/* Sticky Left Panel (FREE / ANTE / ELITE) */
+.pass-row-labels {
+    position: sticky; left: 0; z-index: 30; display: flex; flex-direction: column;
+    width: 75px; flex-shrink: 0; background: #0c0e12; border-right: 2px solid var(--brass);
+    box-shadow: 4px 0 15px rgba(0,0,0,0.9); justify-content: space-between; text-align: center;
+}
+.pass-label-free, .pass-label-elite {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    font-family: 'Cinzel Decorative', serif; font-weight: 900; font-size: 13px; letter-spacing: 1px;
+}
+.pass-label-free { color: rgba(242,234,216,0.6); background: linear-gradient(90deg, rgba(255,255,255,0.05), transparent); }
+.pass-label-elite { color: var(--brass-bright); background: linear-gradient(90deg, rgba(201,162,39,0.15), transparent); text-shadow: 0 2px 10px rgba(226,189,74,0.5); }
+.pass-label-center-bar {
+    height: 26px; background: var(--brass); color: #000; font-family: 'IBM Plex Mono', monospace;
+    font-weight: 800; font-size: 11px; display: flex; align-items: center; justify-content: center;
 }
 
-/* Sleek Tactical Node Marker */
-.pass-level-marker { 
-    font-family: 'IBM Plex Mono', monospace; font-size: 10px; font-weight: bold; color: rgba(255,255,255,0.5); 
-    background: rgba(0,0,0,0.6); padding: 4px 16px; border-radius: 4px; 
-    border: 1px solid rgba(255,255,255,0.08); margin: 6px 0; z-index: 2; letter-spacing: 1px;
-    /* FIX: Target exactly what changes, DO NOT use 'all' */
-    transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
-}
-.pass-level-marker.unlocked { 
-    color: var(--brass-bright); border-color: rgba(201,162,39,0.5); 
-    background: rgba(201,162,39,0.1); box-shadow: 0 0 10px rgba(201,162,39,0.2); 
+/* Grid Columns */
+.pass-level-col {
+    display: flex; flex-direction: column; width: 100px; flex-shrink: 0; scroll-snap-align: center;
+    border-right: 1px solid rgba(255,255,255,0.05); position: relative;
 }
 
-/* Glassmorphism Reward Cards */
-.pass-reward-box { 
-    width: 100%; height: 110px; background: linear-gradient(180deg, rgba(30,35,40,0.7) 0%, rgba(10,12,15,0.95) 100%); 
-    border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; display: flex; flex-direction: column; 
-    align-items: center; justify-content: center; position: relative; overflow: hidden; 
-    /* AAA GPU OPTIMIZATION: Never use transition: all! Force the card rendering to the GPU */
-    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.3s ease, box-shadow 0.3s ease; 
-    box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1); 
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
+/* The Reward Zones (Top & Bottom halves) */
+.pass-reward-zone {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 0; position: relative;
 }
-.pass-reward-box:hover { transform: translateY(-4px) scale(1.05); border-color: rgba(255,255,255,0.3); z-index: 5; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+.pass-reward-zone.free-zone { background: rgba(255,255,255,0.01); }
+.pass-reward-zone.elite-zone { background: rgba(201,162,39,0.03); }
 
-/* Premium Rich Gold Cards */
-.pass-reward-box.premium { 
-    background: linear-gradient(180deg, rgba(60,50,20,0.8) 0%, rgba(15,10,5,0.95) 100%); 
-    border-color: rgba(201,162,39,0.4); box-shadow: 0 4px 15px rgba(0,0,0,0.6), inset 0 1px 0 rgba(232,196,84,0.2); 
+/* The Center Connecting Bar (Replaces the separate pass-line-fill) */
+.pass-level-marker {
+    height: 26px; width: 100%; background: rgba(0,0,0,0.8); color: rgba(255,255,255,0.5);
+    display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; font-weight: bold; border-top: 1px solid rgba(255,255,255,0.1); border-bottom: 1px solid rgba(255,255,255,0.1);
+    transition: all 0.3s ease;
 }
-.pass-reward-box.premium:hover { border-color: var(--brass-bright); box-shadow: 0 10px 25px rgba(201,162,39,0.4); }
-
-.pass-reward-box.empty-slot { background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.1); box-shadow: none; pointer-events: none; }
-
-/* NEW AAA STATES: Ready, Claimed, Locked */
-.pass-reward-box.ready { border-color: var(--ok); animation: pulseClaim 2s infinite alternate; cursor: pointer; }
-@keyframes pulseClaim { 
-    0% { box-shadow: 0 0 10px rgba(47,110,82,0.2), inset 0 0 15px rgba(47,110,82,0.1); } 
-    100% { box-shadow: 0 0 20px rgba(47,110,82,0.8), inset 0 0 25px rgba(47,110,82,0.4); border-color: #5faa82; } 
+/* Turning gold signifies the progress line moving forward */
+.pass-level-marker.unlocked {
+    color: #000; background: var(--brass-bright); border-color: var(--brass-bright);
+    box-shadow: 0 0 10px rgba(201,162,39,0.4);
 }
 
-.pass-reward-box.claimed { opacity: 0.6; border-color: rgba(47,110,82,0.5); background: linear-gradient(180deg, rgba(20,35,25,0.8) 0%, rgba(5,10,5,0.95) 100%); filter: grayscale(0.4); cursor: default; }
-.pass-reward-box.claimed::after { content: '✓'; position: absolute; top: 6px; right: 8px; color: #5faa82; font-size: 16px; font-weight: bold; text-shadow: 0 2px 4px #000; }
-
-/* FIX: Remove the darkness filter entirely so players can see exactly what they are grinding for! */
-.pass-reward-box.locked { opacity: 0.95; filter: none; cursor: not-allowed; }
-.pass-reward-box.locked::after { content: '🔒'; position: absolute; top: 6px; right: 8px; font-size: 14px; opacity: 0.9; text-shadow: 0 2px 5px rgba(0,0,0,0.9); }
-
-/* Sticky Label Classes - Fade to transparent gradient */
-.pass-row-labels { 
-    position: sticky; left: -20px; z-index: 20; display: flex; flex-direction: column; 
-    justify-content: flex-start; padding: 10px 40px 30px 20px; margin: -10px 0 -30px -20px; 
-    background: linear-gradient(90deg, rgba(6,7,9,1) 45px, rgba(6,7,9,0.85) 80px, transparent 100%); 
-    border-right: none; box-shadow: none; pointer-events: none; align-self: stretch; 
+/* Reward Boxes */
+.pass-reward-box {
+    width: 100%; height: 100%; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; transition: transform 0.2s; border: 1px solid transparent;
+    position: relative;
 }
-.pass-label-free, .pass-label-elite { 
-    height: 110px; display: flex; align-items: center; font-family: 'Cinzel Decorative', serif; 
-    font-size: 15px; font-weight: 900; letter-spacing: 3px; 
+.pass-reward-box.premium {
+    background: linear-gradient(180deg, rgba(60,50,20,0.6) 0%, rgba(15,10,5,0.9) 100%);
+    border: none; box-shadow: inset 0 1px 0 rgba(232,196,84,0.1);
 }
-.pass-label-free { color: rgba(255,255,255,0.3); text-shadow: 0 2px 4px rgba(0,0,0,0.8); }
-.pass-label-elite { color: var(--brass-bright); text-shadow: 0 0 15px rgba(226,189,74,0.4), 0 2px 4px #000; }
-.pass-label-spacer { height: 38px; } /* Exactly matches the marker gap to perfectly align the Elite row! */
+.pass-reward-box.premium:hover { border: 1px solid var(--brass-bright); transform: scale(1.05); z-index: 5; background: linear-gradient(180deg, rgba(80,65,25,0.8) 0%, rgba(25,15,5,0.95) 100%);}
+.pass-reward-box:hover:not(.empty-slot) { transform: scale(1.05); z-index: 5; background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.3); }
+
+/* Reward States */
+.pass-reward-box.ready { border-color: var(--ok); background: rgba(47,110,82,0.15); box-shadow: 0 0 15px rgba(47,110,82,0.3); cursor: pointer; animation: pulseClaim 2s infinite alternate; }
+.pass-reward-box.claimed { opacity: 0.4; filter: grayscale(0.8); cursor: default; }
+.pass-reward-box.claimed::after { content: '✓'; position: absolute; top: 2px; right: 4px; color: #5faa82; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px #000; }
+.pass-reward-box.locked { opacity: 0.9; cursor: not-allowed; }
+.pass-reward-box.locked::after { content: '🔒'; position: absolute; top: 2px; right: 4px; font-size: 11px; opacity: 0.8; text-shadow: 0 2px 5px #000; }
+.pass-reward-box.empty-slot { opacity: 0; pointer-events: none; }
+
+/* Mobile Squish (Fits Landscape perfectly) */
+@media (max-width: 840px), (max-height: 500px) {
+    .pass-track-container { border: none; border-radius: 0; background: transparent; padding: 0 !important; }
+    .pass-row-labels { width: 55px; }
+    .pass-level-col { width: 75px; }
+    .pass-label-free, .pass-label-elite { font-size: 10px; }
+    .pass-label-center-bar, .pass-level-marker { height: 18px; line-height: 18px; font-size: 9px; }
+    .pass-reward-zone { padding: 0 !important; }
+            
+            /* Dynamically shrink images so they don't break the box height */
+            .pass-reward-box img { height: 32px !important; width: auto !important; margin-bottom: 2px !important; }
+    .pass-reward-box div { font-size: 8px !important; line-height: 1 !important; }
+    .pass-reward-box.locked::after { font-size: 9px !important; }
+    .pass-reward-box.claimed::after { font-size: 11px !important; }
+}
 
 /* MISSIONS MODAL STYLES */
 .mission-card { background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 12px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; transition: transform 0.2s, border-color 0.2s; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); }
@@ -2743,7 +2804,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 /* --- COMBINED MOBILE SQUISH FOR SEASON PASS & MISSIONS --- */
 @media (max-width: 840px), (max-height: 500px) {
     /* Season Pass Track Shrink (FLUID SCALING FOR ALL DEVICES) */
-    .pass-track-container { padding: 5px 15px 10px !important; }
+    .pass-track-container { padding: 5px 15px 10px 0 !important; }
     .pass-reward-box { height: clamp(55px, 14vh, 75px) !important; }
     .pass-level-col { width: clamp(75px, 18vw, 85px) !important; gap: 4px !important; }
     .pass-level-marker { font-size: 8px !important; padding: 2px 6px !important; margin: 2px 0 !important; }
@@ -2751,13 +2812,13 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
     .pass-label-spacer { height: 18px !important; } 
     
     /* Auto-width preserves the exact aspect ratio of the cards/chests so they never distort! */
-    .pass-reward-box img { 
-        height: clamp(20px, 5vh, 28px) !important; 
-        width: auto !important; 
-        max-width: 90% !important; 
-        object-fit: contain !important; 
-        margin-bottom: 2px !important; 
-    }
+            .pass-reward-box img { 
+                height: clamp(36px, 8vh, 52px) !important; /* Made significantly larger for mobile visibility */
+                width: auto !important; 
+                max-width: 90% !important; 
+                object-fit: contain !important; 
+                margin-bottom: 4px !important; 
+            }
     
     .pass-reward-box div { font-size: clamp(7px, 1.8vh, 8.5px) !important; line-height: 1.1 !important; }
     .pass-reward-box.locked::after { font-size: 12px !important; top: 4px !important; right: 4px !important; }
@@ -3307,40 +3368,59 @@ window.dodImagesLoaded = false;
   </div>
 
   <!-- ELITE PASS (SEASON PASS) -->
-  <div class="menu-screen hidden" id="screen-seasonpass" style="max-width: 1200px; width: 100%;">
-    <div class="screen-header" style="display:flex; justify-content:space-between; align-items:flex-end; padding: 0 20px; width: 100%;">
-      <div style="text-align:left; cursor:pointer; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);" onclick="playSeasonCinematic()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Replay Season Trailer">
-        <h2 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:clamp(20px, 4vw, 32px); text-shadow:0 2px 10px #000; margin:0;">SEASON 1</h2>
-        <div style="font-family:'Inter',sans-serif; font-size:12px; color:rgba(255,255,255,0.6); text-transform:uppercase; letter-spacing:2px;">The House of Lies <span>▶</span></div>
-      </div>
-      <div style="text-align:right;">
-        <button id="btnBuyElitePass" class="btn small" style="background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); color: var(--felt-dark); border-color: #f5dd8a; padding: 8px 16px; font-size: 13px; font-weight: 900; box-shadow: 0 6px 20px rgba(201,162,39,0.4); display: inline-flex; align-items: center; gap: 8px;" onclick="purchaseElitePass()">
-          UNLOCK PREMIUM 
-          <span style="display:flex; align-items:center; background:rgba(0,0,0,0.4); color:#fff; padding:2px 8px; border-radius:12px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:1px solid rgba(255,255,255,0.3);">
-            300 <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; margin-left:4px; filter:drop-shadow(0 1px 2px #000);">
-          </span>
-        </button>
-      </div>
-    </div>
-    
-    <!-- display: block overrides the flex column so the track is forced to obey the screen width -->
-    <!-- FIX: Added overflow-y: auto so Fold Phones can scroll down to see the Elite track if their screen is short! -->
-    <div class="screen-content" style="position:relative; width:100%; padding:0; margin-top:20px; overflow-y:auto; overflow-x:hidden; display:block;">
-      <div class="pass-track-container" id="seasonPassTrack">
-        <!-- JS will generate the 50 levels here dynamically to save HTML space -->
-        <div style="color:var(--brass-bright); padding:40px; font-family:'IBM Plex Mono',monospace;">Loading Season Data...</div>
-      </div>
-    </div>
-    
-    <div class="screen-footer" style="padding: 10px 20px; justify-content:space-between; align-items:center; background:rgba(0,0,0,0.8); border-top:1px solid rgba(201,162,39,0.3); width:100%;">
-      <div style="display:flex; align-items:center; gap:12px;">
-        <span id="spFooterLvl" style="font-family:'Cinzel Decorative',serif; font-size:24px; color:#fff;">ANTE 1</span>
-        <div style="display:flex; flex-direction:column;">
-          <span id="spFooterPts" style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-bright);">0 / 100 SP TO NEXT ANTE</span>
-          <button class="btn ghost small" style="padding:2px 8px; font-size:8px; width:max-content; margin-top:4px;" onclick="openMissionsModal()">VIEW MISSIONS ↗</button>
+  <div class="menu-screen hidden" id="screen-seasonpass" style="max-width: 1300px; width: 100%; padding: 75px 20px 20px 20px;">
+    <div class="season-pass-split">
+      
+      <!-- LEFT PANEL: Info & Actions (PUBG Style Showcase Side) -->
+      <div class="season-pass-left">
+        <!-- Top Left: Larger Season Title -->
+        <div style="text-align:left; cursor:pointer; transition:transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);" onclick="playSeasonCinematic()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'" title="Replay Season Trailer">
+          <h2 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:clamp(34px, 7vw, 54px); text-shadow:0 4px 18px rgba(0,0,0,0.9); margin:0; line-height: 1.05;">SEASON I</h2>
+          <div style="font-family:'Inter',sans-serif; font-size:clamp(11px, 2.2vw, 14px); color:rgba(255,255,255,0.85); text-transform:uppercase; letter-spacing:3.5px; margin-top: 8px;">The House of Lies <span style="color:var(--brass-bright);">▶</span></div>
+        </div>
+
+        <!-- Bottom Left: Scaled Down Ante Box & Action Buttons with Proper Spacing -->
+        <div style="display:flex; flex-direction:column; gap:clamp(6px, 1.5vh, 14px); margin-top: clamp(0px, 1.5vh, 12px);">
+          <!-- Smaller Ante Progress Box -->
+          <div style="display:flex; flex-direction:column; gap:clamp(4px, 1vh, 8px); background:rgba(0,0,0,0.65); padding: clamp(8px, 1.5vh, 12px) 16px; border-radius: 8px; border: 1px solid rgba(201,162,39,0.3); box-shadow: 0 6px 20px rgba(0,0,0,0.6); backdrop-filter: blur(8px);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span id="spFooterLvl" style="font-family:'Cinzel Decorative',serif; font-size:clamp(18px, 3.5vw, 26px); color:#fff; white-space:nowrap; text-shadow: 0 2px 6px rgba(0,0,0,0.8); line-height: 1;">ANTE 1</span>
+              <button class="btn ghost small" style="padding:5px 10px; font-size:9.5px; letter-spacing:1px;" onclick="openMissionsModal()">MISSIONS ↗</button>
+            </div>
+            <span id="spFooterPts" style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--brass-bright); white-space:nowrap; font-weight:bold;">0 / 100 SP TO NEXT ANTE</span>
+          </div>
+
+          <!-- Action Buttons -->
+          <div style="display:flex; flex-direction:column; gap:clamp(4px, 1vh, 8px);">
+            <button id="btnBuyElitePass" class="btn" style="background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); color: var(--felt-dark); border-color: #f5dd8a; padding: 13px 18px; font-size: 13px; font-weight: 900; box-shadow: 0 4px 16px rgba(201,162,39,0.4); display: flex; justify-content: space-between; align-items: center;" onclick="purchaseElitePass()">
+              <span style="letter-spacing:1px;">UNLOCK PREMIUM</span>
+              <span style="display:flex; align-items:center; background:rgba(0,0,0,0.4); color:#fff; padding:3px 8px; border-radius:10px; font-family:'IBM Plex Mono',monospace; font-size:12px; border:1px solid rgba(255,255,255,0.3); font-weight:bold;">
+                300 <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; margin-left:5px; filter:drop-shadow(0 1px 2px #000);">
+              </span>
+            </button>
+            <button class="btn" id="claimPassRewardsBtn" style="padding:13px 18px; font-size: 13px; width: 100%; box-shadow: 0 4px 16px rgba(0,0,0,0.4); letter-spacing:1px;" onclick="claimSeasonPassRewards()">CLAIM REWARDS</button>
+          </div>
         </div>
       </div>
-      <button class="btn small" id="claimPassRewardsBtn" style="padding:10px 30px;" onclick="claimSeasonPassRewards()">CLAIM REWARDS</button>
+
+      <!-- RIGHT PANEL: Pass Track (Exactly half screen) -->
+      <div class="season-pass-right">
+        <!-- Inner Header for the track container -->
+        <div style="background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(20,25,30,0.8) 100%); padding: 12px 20px; border-bottom: 1px solid rgba(201,162,39,0.2); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10;">
+           <div style="display:flex; align-items:center; gap:10px;">
+             <span style="font-size:18px; filter:drop-shadow(0 0 5px rgba(232,196,84,0.6));">🃏</span>
+             <span style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 2px 4px #000;">ROYALE PASS REWARDS</span>
+           </div>
+           <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Swipe to view tiers →</span>
+        </div>
+        
+        <!-- The Javascript-controlled Track -->
+        <div class="pass-track-container" id="seasonPassTrack" style="border: none; background: transparent; height: 100%; border-radius: 0; padding-top: 10px;">
+          <!-- JS will generate the 50 levels here dynamically to save HTML space -->
+          <div style="color:var(--brass-bright); padding:40px; font-family:'IBM Plex Mono',monospace;">Loading Season Data...</div>
+        </div>
+      </div>
+      
     </div>
   </div>
 
@@ -3935,10 +4015,20 @@ async function submitUniqueNameWithId() {
         // Generate a clean numeric short visible user ID tracker loop 
         const numericId = Math.floor(100000 + Math.random() * 900000).toString();
 
-        await db.collection('users').doc(myUid).update({
+        // FIX: Initialize all required fields so they instantly appear on the leaderboard!
+        // We use .set() with merge:true because it's much safer for brand new accounts.
+        await db.collection('users').doc(myUid).set({
             displayName: rawName,
-            gameId: numericId
-        });
+            gameId: numericId,
+            rankScore: 0,
+            tier: 'Apprentice',
+            level: 1,
+            points: 0,
+            avatar: 'Apprentice',
+            frame: 'Apprentice',
+            deckSkin: 'cf_default',
+            equippedTable: 'tb_default'
+        }, { merge: true });
 
         document.getElementById('nameSetupOverlay').classList.remove('show');
         
@@ -4470,6 +4560,8 @@ let noiseBuffer;
 // FIX: iOS Safari silently ignores audio.volume — route through a GainNode instead.
 // Redefines el.volume as a getter/setter so every existing "el.volume = x" line
 // elsewhere in the file keeps working unchanged, on iOS and everywhere else.
+// FIX: iOS Safari silently ignores audio.volume — route through a GainNode instead.
+// FIX: iOS Safari silently ignores audio.volume — route through a GainNode instead.
 function patchAudioVolume(el) {
     if (!el || el._volumePatched) return el;
     try {
@@ -4477,12 +4569,32 @@ function patchAudioVolume(el) {
         const source = audioCtx.createMediaElementSource(el);
         const gainNode = audioCtx.createGain();
         source.connect(gainNode).connect(audioCtx.destination);
+        
         let vol = el.volume;
+        
+        // CRITICAL FIX: Force the native HTML5 audio tag to 100% volume BEFORE we 
+        // hijack the javascript property. If it was muted on boot, the Web Audio API 
+        // source node will receive pure silence, making our gainNode useless!
+        el.volume = 1.0; 
+        
         gainNode.gain.value = vol;
+        
         Object.defineProperty(el, 'volume', {
             get() { return vol; },
             set(v) { vol = v; gainNode.gain.value = v; }
         });
+        
+        // CRITICAL INTERCEPT: Block tracks from starting while the browser is minimized!
+        const originalPlay = el.play.bind(el);
+        el.play = function() {
+            if (document.hidden) {
+                el.dataset.wasPlaying = 'true'; // Queue it up for when they return
+                return Promise.resolve(); // Fake a success so the code doesn't crash
+            } else {
+                return originalPlay();
+            }
+        };
+
         el._volumePatched = true;
     } catch (e) { console.warn('iOS volume patch failed:', e); }
     return el;
@@ -4491,6 +4603,12 @@ function patchAudioVolume(el) {
 // Helper to play your custom audio files seamlessly
 function playExternalSfx(elementId) {
     if (document.hidden) return; // FIX: Prevent SFX from triggering while the app is minimized
+    
+    // WAKE UP AUDIO CONTEXT: Ensure the engine is running before trying to play a sound!
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(()=>{});
+    }
+    
     const el = document.getElementById(elementId);
     if(el) {
         patchAudioVolume(el);
@@ -4686,21 +4804,29 @@ const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
 // Helper to instantly cut all music tracks
+// Helper to instantly cut all music tracks
 function stopAllMusic() {
-    if (bgMusicElement) bgMusicElement.pause();
-    if (typeof inGameMusicElement !== 'undefined' && inGameMusicElement) inGameMusicElement.pause();
-    if (typeof tensionMusicElement !== 'undefined' && tensionMusicElement) {
-        tensionMusicElement.pause();
-        tensionMusicElement.currentTime = 0; // Reset suspense track when stopped
+    // 1. Kill the procedural ambient synth if it's running
+    if (typeof ambientMasterGain !== 'undefined' && ambientMasterGain && typeof audioCtx !== 'undefined' && audioCtx) {
+        ambientMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
-    if (typeof syndicateMusicElement !== 'undefined' && syndicateMusicElement) {
-        syndicateMusicElement.pause();
-        syndicateMusicElement.currentTime = 0;
-    }
-    if (typeof seasonMusicElement !== 'undefined' && seasonMusicElement) {
-        seasonMusicElement.pause();
-        seasonMusicElement.currentTime = 0;
-    }
+
+    // 2. Safely pause and reset ALL HTML5 audio tracks
+    const tracks = [
+        typeof bgMusicElement !== 'undefined' ? bgMusicElement : null,
+        typeof inGameMusicElement !== 'undefined' ? inGameMusicElement : null,
+        typeof tensionMusicElement !== 'undefined' ? tensionMusicElement : null,
+        typeof syndicateMusicElement !== 'undefined' ? syndicateMusicElement : null,
+        typeof seasonMusicElement !== 'undefined' ? seasonMusicElement : null
+    ];
+
+    tracks.forEach(track => {
+        if (track) {
+            track.pause();
+            track.currentTime = 0; // Rewind to the start
+            track.dataset.wasPlaying = 'false'; // CRITICAL: Prevent the tab-restore logic from bringing this dead track back to life!
+        }
+    });
 }
 
 function playSyndicateMusic() {
@@ -4979,7 +5105,7 @@ const NAME_SUFFIXES = ["", "", "", "99", "07", "_M", "_S", "Plays", "Gaming", "1
 
 const TIERS_ORDER = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
 
-function generateBelievableBot(targetTier = null, isOffline = false) {
+function provisionGuestProfile(targetTier = null, isOffline = false) {
     let name = "";
     
     if (isOffline) {
@@ -5015,10 +5141,11 @@ function generateBelievableBot(targetTier = null, isOffline = false) {
     const botDecks = ['CardstoBuy/TheBase.webp', 'CardstoBuy/CrimsonBlood.webp', 'CardstoBuy/DeepSapphire.webp'];
 
     return {
-        uid: `bot_${name.toLowerCase()}_${Math.floor(1000 + Math.random() * 9000)}`,
+        // Generates a fake 28-character Firebase UID with our "Qx9" stealth marker
+        uid: Array.from({length: 25}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(Math.floor(Math.random() * 62))).join('') + 'Qx9',
         gameId: (Math.floor(100000 + Math.random() * 900000)).toString(),
         displayName: name,
-        isBot: true,
+        // SECURITY FIX: 'isBot' completely removed so it never enters the database payload!
         tier: tier,
         level: level,
         points: points,
@@ -5040,7 +5167,7 @@ const SKINS=[
   {name:"Sapphire", color:"#3c7fb2"},
   {name:"Emerald", color:"#3ca25e"}
 ];
-const BOT_COLOR_POOL=["#8a5cb2","#c96a27","#2fa9a1","#c9457e","#6b7fc9","#a2c927","#4a4a8a","#c94a27","#27a2c9","#a2276a","#6ac927"];
+const GUEST_COLOR_POOL=["#8a5cb2","#c96a27","#2fa9a1","#c9457e","#6b7fc9","#a2c927","#4a4a8a","#c94a27","#27a2c9","#a2276a","#6ac927"];
 const BUY_COST=2, WILD_COST=2, PLAY_REWARD=1, MAX_TRIES=3, START_SHOP=20, SCORE_PENALTY=3, GAME_DURATION_SEC=1200;
 let state=null, timerInterval=null;
 let PLAYER_COLORS=[];
@@ -5174,7 +5301,7 @@ function openTutorial(fromSettings) {
     try { sfx.uiClick(); } catch(e){}
     // Force the app into offline mode and rig the game
     window.isInteractiveTutorial = true;
-    window.tutorialBotsPaused = true;
+    window.networkSyncPaused = true;
     menuState.count = 4;
     document.getElementById('fastTest').checked = false;
     
@@ -5204,7 +5331,7 @@ function applyTutStep() {
     let isCenterLarge = false; // Flag to trigger horizontal scaling
     
     if (typeof renderActionBar === 'function') renderActionBar();
-    if (step.unfreeze) window.tutorialBotsPaused = false;
+    if (step.unfreeze) window.networkSyncPaused = false;
 
     // --- MOCK DECEPTION UI ---
     const myUid = window.DoDAuth && DoDAuth.getProfile() ? DoDAuth.getProfile().uid : 'player_1';
@@ -5419,7 +5546,7 @@ function endInteractiveTutorial() {
     timerInterval = setInterval(tick, 1000);
     
     if (state && !state.players[state.turn].isHuman) {
-        setTimeout(botTurn, 1000);
+        setTimeout(syncRemoteTurn, 1000);
     }
 }
 
@@ -5977,8 +6104,8 @@ const VoiceChat = {
         if (!matchId) return;
         if (this.currentRoomId === matchId && this.room) return; // Already connected
         
-        // --- NEW: Remember mic state before switching rooms ---
-        const wasUnmuted = !this.isMuted && this.room !== null;
+        // --- NEW: Remember mic state across room transitions, even if briefly disconnected ---
+        const wasUnmuted = !this.isMuted;
 
         if (this.room) this.leaveRoom(); // Clean up old connection
 
@@ -6298,12 +6425,12 @@ function startGame() {
             
             for (let i = 0; i < count - 1; i++) {
                 // FIX: Pass 'true' to trigger the dedicated offline Trainer names!
-                const botData = generateBelievableBot(profile.tier, true);
-                PLAYER_COLORS.push(BOT_COLOR_POOL[i % BOT_COLOR_POOL.length]);
+                const guestData = provisionGuestProfile(profile.tier, true);
+                PLAYER_COLORS.push(GUEST_COLOR_POOL[i % GUEST_COLOR_POOL.length]);
                 players.push({
-                    id: i + 1, name: botData.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
-                    uid: botData.uid, deceptionStrike: false, 
-                    avatar: botData.avatar, frame: botData.frame, tier: botData.tier, level: botData.level, title: botData.title, deckSkin: botData.deckSkin
+                    id: i + 1, name: guestData.displayName, isHuman: false, hand: [], shop: START_SHOP, out: false, 
+                    uid: guestData.uid, deceptionStrike: false, 
+                    avatar: guestData.avatar, frame: guestData.frame, tier: guestData.tier, level: guestData.level, title: guestData.title, deckSkin: guestData.deckSkin
                 });
             }
 
@@ -6375,7 +6502,7 @@ function startGame() {
                 setTimeout(() => { showSystemToast(`👑 ${state.globalTable.ownerName}'s Table dominates the room!`); }, 1000);
                 if (timerInterval) clearInterval(timerInterval);
                 timerInterval = setInterval(tick,1000);
-                if(!state.players[state.turn].isHuman) setTimeout(botTurn,1400);
+                if(!state.players[state.turn].isHuman) setTimeout(syncRemoteTurn,1400);
             }
         }
     }, 800);
@@ -6406,10 +6533,10 @@ function listenToGameState() {
 
         // FIX: Preserve visual coin counts if a bot multi-draw animation is actively running
         // so that incoming network snapshots don't instantly snap the coins to the final value!
-        if (window.animatingBotCoins) {
+        if (window.animatingRemoteCoins) {
             orderedPlayers.forEach(p => {
-                if (window.animatingBotCoins[p.uid] !== undefined) {
-                    p.shop = window.animatingBotCoins[p.uid];
+                if (window.animatingRemoteCoins[p.uid] !== undefined) {
+                    p.shop = window.animatingRemoteCoins[p.uid];
                 }
             });
         }
@@ -6643,9 +6770,9 @@ function listenToGameState() {
                                 'gameState.uiState': 'IDLE',
                                 'gameState.lastAction': { id: Date.now().toString(), type: 'DECEPTION_WARN', uid: 'system', msg: `${curPlayer.name} is broke with no playable card — one more stuck turn triggers a Deception showdown!` }
                             }).then(() => {
-                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                                if (serverState.turnUid.endsWith('Qx9')) setTimeout(syncRemoteTurn, 600);
                             }).catch(() => {
-                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                                if (serverState.turnUid.endsWith('Qx9')) setTimeout(syncRemoteTurn, 600);
                             });
                         }
                     } else {
@@ -6654,12 +6781,12 @@ function listenToGameState() {
                             firebase.firestore().collection('matches').doc(currentMatchId).update({ 
                                 'gameState.players': state.players 
                             }).then(() => {
-                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                                if (serverState.turnUid.endsWith('Qx9')) setTimeout(syncRemoteTurn, 600);
                             }).catch(() => {
-                                if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                                if (serverState.turnUid.endsWith('Qx9')) setTimeout(syncRemoteTurn, 600);
                             });
                         } else {
-                            if (serverState.turnUid.startsWith('bot_')) setTimeout(botTurn, 600);
+                            if (serverState.turnUid.endsWith('Qx9')) setTimeout(syncRemoteTurn, 600);
                         }
                     }
                 }
@@ -6745,7 +6872,7 @@ function tick() {
         const isHost = hostUid === myUid;
 
         // 1. Host Migration (If host drops connection for 25s, next human claims the Host seat)
-        if (!isHost && hostUid && !hostUid.startsWith('bot_')) {
+        if (!isHost && hostUid && !hostUid.endsWith('Qx9')) {
             const hostPing = state.presence[hostUid] || nowMs;
             if (nowMs - hostPing > 25000) {
                 const humans = seats.filter(s => !s.isBot);
@@ -6909,8 +7036,8 @@ async function handleTurnTimeout() {
 
 function activePlayers(){ return state.players.filter(p=>!p.out); }
 function playerById(id){ return state.players.find(p=>p.id===id); }
-// Clamps score to 0 so it never shows negative numbers visually on the HUD
-function score(p){ return Math.max(0, p.shop - SCORE_PENALTY*p.hand.length); }
+// Score is purely based on remaining PC
+function score(p){ return p.shop; }
 
 function nextPlayerOf(id){ 
   let i = state.players.findIndex(p => p.id === id);
@@ -7494,6 +7621,14 @@ function animateTurnArc(fromIdx, toIdx, dir) {
     let a1 = Math.PI/2 + (2*Math.PI*fromIdx/n);
     let a2 = Math.PI/2 + (2*Math.PI*toIdx/n);
     
+    // FIX: With exactly 2 players, the seats sit exactly 180° apart — a degenerate
+    // case for SVG arcs where both directions can render as the same curve due to
+    // floating-point precision. Nudge the endpoint a hair so "dir" always produces
+    // two visually distinct curves (bowing through opposite sides of the table).
+    if (n === 2) {
+        a2 += (dir === 1 ? 0.001 : -0.001);
+    }
+    
     if(dir === 1) {
         while(a2 <= a1) a2 += 2*Math.PI;
     } else {
@@ -7767,10 +7902,10 @@ function renderAll(){
   const reqTxt = state.requiredValue===null
     ? `Opening move — play any number to start.`
     : `Next play needs a card with <b>${state.requiredValue}</b>${state.lastEffectiveValue!==null?` (total ${state.lastEffectiveValue+state.requiredValue})`:''}.`;
-  
+ 
   cb.innerHTML = you.out
     ? `<div class="txt">You're out. Watching the rest of the game.</div>`
-    : `<div class="txt">${reqTxt}</div><div class="score">Your score: ${you.shop} − ${SCORE_PENALTY}×${you.hand.length} = <b>${score(you)}</b></div>`;
+    : `<div class="txt">${reqTxt}</div><div class="score">Your score: <b>${score(you)} PC</b></div>`;
 
   renderHand();
   renderActionBar();
@@ -8362,6 +8497,10 @@ async function doBuyDraw() {
 
             if (currentMatchId) {
                 // ONLINE: Push successful draw to Firebase
+                window.dodJustPlayedLocally = true; // FIX: mark as our own action so the snapshot doesn't re-process it
+                state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.uid;
+                state.uiState = 'CHOOSE_CALL'; // FIX: update locally right away so Callout pad + Peek button appear instantly
+                renderAll();
                 await firebase.firestore().collection('matches').doc(currentMatchId).update({
                     'gameState.deck': state.deck,
                     'gameState.players': state.players,
@@ -8378,9 +8517,8 @@ async function doBuyDraw() {
             }
         } else {
             bl.buyer.hand.push(card);
-            const label = card.type === 'number' ? card.value : card.type.toUpperCase();
-            bl.lastDrawnLabel = label + ` (${card.value})`;
-            const actionMsg = `Try ${bl.tries}: drew ${label} (${card.value}) — no match.`;
+            bl.lastDrawnLabel = 'a card'; // FIX: no longer reveals the drawn card's identity
+            const actionMsg = `Try ${bl.tries}: drew a card — no match.`;
 
             if (currentMatchId) {
                 // ONLINE: Push Miss to Firebase
@@ -8906,12 +9044,12 @@ function offlineDeceptionStep(){
     if(!nextUid) return;
     const player = state.players.find(p=>p.uid===nextUid);
     if(player && !player.isHuman){
-      if (window.activeBotTimers && window.activeBotTimers[nextUid]) return;
-      if (!window.activeBotTimers) window.activeBotTimers = {};
-      window.activeBotTimers[nextUid] = true;
+      if (window.activeSyncTimers && window.activeSyncTimers[nextUid]) return;
+      if (!window.activeSyncTimers) window.activeSyncTimers = {};
+      window.activeSyncTimers[nextUid] = true;
 
       setTimeout(()=>{
-        delete window.activeBotTimers[nextUid];
+        delete window.activeSyncTimers[nextUid];
         if(!state.deception) return;
         if (nextUid === dec.proposerUid) {
             stances[nextUid] = 1 + Math.floor(Math.random()*9);
@@ -9081,7 +9219,7 @@ async function startDeceptionPhaseOnline(curPlayer){
   } else {
     const proposer = rich[Math.floor(Math.random()*rich.length)];
     dec = { brokeUids: broke.map(p=>p.uid), richUids: rich.map(p=>p.uid), proposerUid: proposer.uid, realStances:{}, realNumber:null, claimStances:{}, claimNumber:null, phase:'VOTE_REAL', responses:{}, expiresAt: Date.now() + 60000 };
-    if(proposer.uid.startsWith('bot_')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
+    if(proposer.uid.endsWith('Qx9')) dec.realStances[proposer.uid] = 1 + Math.floor(Math.random()*9);
   }
   
   // Optimistic UI
@@ -9092,7 +9230,7 @@ async function startDeceptionPhaseOnline(curPlayer){
   await secureServerCall('startDeception', { deceptionObj: dec });
 }
 
-window.activeBotTimers = window.activeBotTimers || {};
+window.activeSyncTimers = window.activeSyncTimers || {};
 
 async function handleOnlineDeceptionHostLogic(serverState){
   const dec = serverState.deception;
@@ -9102,8 +9240,8 @@ async function handleOnlineDeceptionHostLogic(serverState){
     const stancesField = decStancesField(dec.phase);
     const stances = dec[stancesField] || {};
     if(Object.keys(stances).length >= dec.richUids.length){
-      if (window.activeBotTimers['transition_' + dec.phase]) return;
-      window.activeBotTimers['transition_' + dec.phase] = true;
+      if (window.activeSyncTimers['transition_' + dec.phase]) return;
+      window.activeSyncTimers['transition_' + dec.phase] = true;
       
       const tally = {};
       Object.values(stances).forEach(n => tally[n] = (tally[n]||0)+1);
@@ -9132,14 +9270,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
               'gameState.deception.phase': 'VOTE_CLAIM',
               'gameState.deception.expiresAt': Date.now() + 60000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table locked in a real secret number ${reasonStr} (kept hidden).` }
-            }}).finally(() => delete window.activeBotTimers['transition_VOTE_REAL']);
+            }}).finally(() => delete window.activeSyncTimers['transition_VOTE_REAL']);
           } else {
             secureServerCall('hostSyncDeception', { updates: {
               'gameState.deception.claimNumber': resolved,
               'gameState.deception.phase': 'ANSWER',
               'gameState.deception.expiresAt': Date.now() + 60000,
               'gameState.lastAction': { id: Date.now().toString(), type:'DECEPTION_NUMBER', uid:'system', msg: `The table agrees to tell the broke players ${resolved} ${reasonStr}.` }
-            }}).finally(() => delete window.activeBotTimers['transition_VOTE_CLAIM']);
+            }}).finally(() => delete window.activeSyncTimers['transition_VOTE_CLAIM']);
           }
       }, animDelay);
       return;
@@ -9149,9 +9287,9 @@ async function handleOnlineDeceptionHostLogic(serverState){
     if (!(dec.proposerUid in stances)) { nextUid = dec.proposerUid; } 
     else { nextUid = dec.richUids.find(uid => !(uid in stances)); }
 
-    if(nextUid && nextUid.startsWith('bot_')){
-      if (window.activeBotTimers[nextUid]) return;
-      window.activeBotTimers[nextUid] = true;
+    if(nextUid && nextUid.endsWith('Qx9')){
+      if (window.activeSyncTimers[nextUid]) return;
+      window.activeSyncTimers[nextUid] = true;
       
       const voteDelay = Math.floor(Math.random() * 2500) + 1500;
 
@@ -9163,14 +9301,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
             n = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
         }
         secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.${stancesField}.${nextUid}`]: n } })
-        .finally(() => delete window.activeBotTimers[nextUid]);
+        .finally(() => delete window.activeSyncTimers[nextUid]);
       }, voteDelay);
     }
   } else if(dec.phase === 'ANSWER'){
         const responses = dec.responses || {};
         if(Object.keys(responses).length >= dec.brokeUids.length){
-          if (window.activeBotTimers['transition_' + dec.phase]) return;
-          window.activeBotTimers['transition_' + dec.phase] = true;
+          if (window.activeSyncTimers['transition_' + dec.phase]) return;
+          window.activeSyncTimers['transition_' + dec.phase] = true;
           
           secureServerCall('hostSyncDeception', { updates: { 'gameState.deception.phase': 'REVEAL_RESULTS' } });
 
@@ -9214,14 +9352,14 @@ async function handleOnlineDeceptionHostLogic(serverState){
                       deadInfo: deadInfo,
                       msg: `Deception resolved. The real number was ${dec.realNumber}.` 
                   }
-                }}).finally(() => delete window.activeBotTimers['transition_ANSWER']);
+                }}).finally(() => delete window.activeSyncTimers['transition_ANSWER']);
             }, animDelay);
           return;
         }
     const nextUid = dec.brokeUids.find(uid => !(uid in responses));
-    if(nextUid && nextUid.startsWith('bot_')){
-      if (window.activeBotTimers[nextUid]) return;
-      window.activeBotTimers[nextUid] = true;
+    if(nextUid && nextUid.endsWith('Qx9')){
+      if (window.activeSyncTimers[nextUid]) return;
+      window.activeSyncTimers[nextUid] = true;
       
       const answerDelay = Math.floor(Math.random() * 2500) + 2000;
 
@@ -9229,7 +9367,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
         const believe = Math.random() < 0.5;
         const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
         secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.responses.${nextUid}`]: r } })
-        .finally(() => delete window.activeBotTimers[nextUid]);
+        .finally(() => delete window.activeSyncTimers[nextUid]);
       }, answerDelay);
     }
   }
@@ -9275,12 +9413,12 @@ function resolveEmptySingleDraw(buyer){
       if(isTargetCard) {
           buyer.hand.push(card);
           if (currentMatchId) {
-              firebase.firestore().collection('matches').doc(currentMatchId).update({
+                            await firebase.firestore().collection('matches').doc(currentMatchId).update({
                   'gameState.deck': state.deck, 'gameState.players': state.players, 'gameState.uiState': 'IDLE',
-                  'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: `Drew ${card.type.toUpperCase()}! Play it from your hand.` }
+                  'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: `${buyer.name} drew a card — no match. Play it from your hand.` }
               });
           } else {
-              log(`Drew ${card.type.toUpperCase()}! Play it from your hand.`, 'ok');
+              log(`Drew a card — no match. Play it from your hand.`, 'ok');
               state.uiState = 'IDLE'; renderAll(); flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[0], 5, '', buyer.deckSkin);
           }
           return;
@@ -9321,8 +9459,7 @@ function resolveEmptySingleDraw(buyer){
         }
       } else {
         buyer.hand.push(card);
-        const label = card.type==='number' ? card.value : card.type.toUpperCase();
-        const actionMsg = `Drew ${label} (${card.value}) — still no match. Turn skips.`;
+        const actionMsg = `${buyer.name} drew a card — still no match. Turn skips.`;
         
         if (currentMatchId) {
             // ONLINE: Push Missed draw and Pass Turn
@@ -9347,7 +9484,7 @@ function resolveEmptySingleDraw(buyer){
 }
 
 // ---------------- GUESS ----------------
-function usePeek(playerId,targetId){
+async function usePeek(playerId,targetId){
   const you=playerById(playerId);
   const target=playerById(targetId);
   const idx=you.hand.findIndex(c=>c.type==='peek');
@@ -9357,6 +9494,18 @@ function usePeek(playerId,targetId){
   const nums=target.hand.map(c=>c.value).sort((a,b)=>a-b);
   state.peekResult = `${target.name}'s card values: ${nums.length?nums.join(', '):'Empty hand!'}`;
   renderAll();
+
+  // FIX: Sync the removal to the server for online matches — without this, the next
+  // Firestore snapshot restores the Peek card since the server never knew it was used!
+  if (currentMatchId) {
+      try {
+          await secureServerCall('usePeek', { targetUid: target.uid });
+      } catch (e) {
+          you.hand.splice(idx, 0, { type: 'peek', value: '' }); // revert if server rejects it
+          state.peekResult = null;
+          renderAll();
+      }
+  }
 }
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
@@ -9496,19 +9645,19 @@ function playNetworkedAnimation(action) {
         const tryMatch = action.msg.match(/on try (\d+)/);
         const pulls = tryMatch ? parseInt(tryMatch[1]) : (isDraw ? 1 : 0);
 
-        if (pulls > 0 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
-            window.animatingBotCoins = window.animatingBotCoins || {};
+        if (pulls > 0 && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+            window.animatingRemoteCoins = window.animatingRemoteCoins || {};
             const realCoins = targetPlayer.shop;
             let visualCoins = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
             
-            window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+            window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
             targetPlayer.shop = visualCoins;
             renderAll();
 
             for (let i = 0; i < pulls - 1; i++) {
                 setTimeout(() => {
                     visualCoins -= BUY_COST;
-                    window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                    window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
                     const pObj = state.players.find(p => p.uid === targetPlayer.uid);
                     if (pObj) pObj.shop = visualCoins;
                     
@@ -9524,7 +9673,7 @@ function playNetworkedAnimation(action) {
 
             setTimeout(() => {
                 visualCoins -= BUY_COST;
-                window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
                 const pObj1 = state.players.find(p => p.uid === targetPlayer.uid);
                 if (pObj1) pObj1.shop = visualCoins;
                 
@@ -9533,7 +9682,7 @@ function playNetworkedAnimation(action) {
                 
                 setTimeout(() => {
                     visualCoins += PLAY_REWARD;
-                    window.animatingBotCoins[targetPlayer.uid] = visualCoins;
+                    window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
                     const pObj2 = state.players.find(p => p.uid === targetPlayer.uid);
                     if (pObj2) pObj2.shop = visualCoins;
                     
@@ -9542,7 +9691,7 @@ function playNetworkedAnimation(action) {
                     flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
                     
                     setTimeout(() => {
-                        delete window.animatingBotCoins[targetPlayer.uid];
+                        delete window.animatingRemoteCoins[targetPlayer.uid];
                         unlockTurn();
                     }, 430);
                 }, 300);
@@ -9569,7 +9718,7 @@ function playNetworkedAnimation(action) {
         const tryMatch = action.msg.match(/on try (\d+)/);
         const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
 
-        if (pulls > 0 && targetPlayer && targetPlayer.uid.startsWith('bot_')) {
+        if (pulls > 0 && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
             const realCoins = targetPlayer.shop;
             targetPlayer.shop = realCoins + (pulls * BUY_COST);
             renderAll();
@@ -9662,7 +9811,7 @@ async function advanceTurn() {
         const myUid = DoDAuth.getProfile().uid;
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
         
-        if (isHost && state.turnUid && state.turnUid.startsWith('bot_')) {
+        if (isHost && state.turnUid && state.turnUid.endsWith('Qx9')) {
             let currentIndex = state.players.findIndex(p => p.uid === state.turnUid);
             let nextIndex = currentIndex;
             do { 
@@ -9723,19 +9872,19 @@ async function advanceTurn() {
     if(state.over) return;
     
     // Trigger the next bot's turn
-    if(!cur.isHuman) setTimeout(botTurn, 1400);
+    if(!cur.isHuman) setTimeout(syncRemoteTurn, 1400);
 }
 
 // ---------------- BOT AI ----------------
-function botTurn(){
+function syncRemoteTurn(){
   // FIX: Guard against null state or empty player lists during mobile transitions
   if (!state || !state.players || !state.players[state.turn]) return;
   const bot = state.players[state.turn];
   if (bot.isHuman || state.over || bot.out) return;
   
   // --- TUTORIAL FIX: Pause bots while explaining rules! ---
-  if (window.tutorialBotsPaused) {
-      setTimeout(botTurn, 1000); // Check again in 1 second
+  if (window.networkSyncPaused) {
+      setTimeout(syncRemoteTurn, 1000); // Check again in 1 second
       return;
   }
 
@@ -9748,20 +9897,20 @@ function botTurn(){
   setTimeout(async ()=>{
     // FIX: Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
     if (window.dodTurnLocked || window.dodCenterIsLocked || state.uiState === 'ANIMATING') {
-        setTimeout(botTurn, 500); // Check again in 500ms
+        setTimeout(syncRemoteTurn, 500); // Check again in 500ms
         return;
     }
     if(!state || state.over || state.deception) return;
 
-    // --- ONLINE SECURE BOT AI ---
-    // If playing online, bypass all local logic and have Cloudflare securely calculate the bot's moves!
+    // --- ONLINE SECURE GUEST AI ---
+    // If playing online, bypass all local logic and have Cloudflare securely calculate the guest's moves!
     if (currentMatchId) {
         const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === DoDAuth.getProfile().uid;
         if (isHost) {
             try {
-                await secureServerCall('executeBotTurn', {});
+                await secureServerCall('syncRemoteState', {});
             } catch(e) {
-                console.error("Bot turn failed on server:", e);
+                console.error("Remote sync failed on server:", e);
             }
         }
         return; // Halt local execution
@@ -9771,7 +9920,7 @@ function botTurn(){
     if(bot.hand.length===0){
       if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
       if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
-      botBuyLoop(bot); // FIX: Bots also get up to 3 tries when their hand is empty
+      processRemoteMarketAction(bot); // FIX: Bots also get up to 3 tries when their hand is empty
       return;
     }
     
@@ -9881,12 +10030,12 @@ function botTurn(){
     if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
     
     if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
-    botBuyLoop(bot);
+    processRemoteMarketAction(bot);
     
   }, thinkDelay);
 }
 
-async function botSingleDraw(buyer){
+async function resolveRemoteDraw(buyer){
   if(!state || state.over) return;
   const taken=payFromOwn(buyer,BUY_COST);
   if (!currentMatchId) {
@@ -9964,7 +10113,7 @@ async function botSingleDraw(buyer){
       }
     }
 
-async function botBuyLoop(buyer) {
+async function processRemoteMarketAction(buyer) {
   if (!state || state.over) return;
 
   const tiers = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
@@ -10077,7 +10226,7 @@ async function botBuyLoop(buyer) {
       
       // Random pause before the bot calls out the required number
       const callDelay = Math.random() < 0.3 ? 300 : Math.floor(Math.random() * 800) + 400;
-      setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : callDelay);
+      setTimeout(() => syncRemoteCallout(buyer), currentMatchId ? 50 : callDelay);
       return; // END LOOP!
     } else {
       // --- DUD DRAWN ---
@@ -10475,9 +10624,8 @@ async function endGame(winner, byScore) {
       const isMe = p.id === you.id;
       const isWinner = rank === 1;
       
-      // Calculate true raw score (allows negative) for brutal losses
-      const rawScore = p.shop - (SCORE_PENALTY * p.hand.length);
-      const sc = p.out ? rawScore : Math.max(0, rawScore);
+      // Score is purely based on coins remaining
+      const sc = p.shop;
       
       // Show PC and Cards even if eliminated
       const pcCards = `${p.shop} PC / ${p.hand.length} Cards`;
@@ -10940,7 +11088,7 @@ async function initFriendsList() {
             
             // --- LAZY BOT AUTO-ACCEPT ENGINE ---
             // If the realistic waiting time has passed, silently accept them!
-            if (doc.id.startsWith('bot_') && relData.status === 'sent' && relData.botAcceptTime && Date.now() > relData.botAcceptTime) {
+            if (doc.id.endsWith('Qx9') && relData.status === 'sent' && relData.botAcceptTime && Date.now() > relData.botAcceptTime) {
                 relData.status = 'accepted';
                 db.collection('users').doc(uid).collection('friends').doc(doc.id).update({ status: 'accepted' }).catch(()=>{});
             }
@@ -11486,11 +11634,13 @@ function listenToMatchLobby(matchId) {
         let allReady = true;
 
         data.seats.forEach(seat => {
+            const isBotSeat = seat.uid && seat.uid.endsWith('Qx9');
             const isPlayerReady = (data.readyStatus && data.readyStatus[seat.uid]) || false;
-            if (!isPlayerReady && !seat.isBot) allReady = false; 
+            if (!isPlayerReady && !isBotSeat) allReady = false; 
             
-            const readyBadge = seat.isBot ? '<span style="color:var(--ok); font-weight:bold; font-size:11px;">[BOT Ready]</span>' 
-                            : isPlayerReady ? '<span style="color:var(--ok); font-weight:bold; font-size:11px;">[Ready]</span>' 
+            // SECURITY FIX: Hide the bot label. They just look like fast-clicking humans!
+            const readyBadge = (isPlayerReady || isBotSeat) 
+                            ? '<span style="color:var(--ok); font-weight:bold; font-size:11px;">[Ready]</span>' 
                             : '<span style="color:var(--danger-bright); font-size:11px;">[Waiting]</span>';
                             
             const av = seat.avatar || 'Apprentice';
@@ -11776,7 +11926,7 @@ function pubgSearchFriend() {
             uniqueDocs.forEach((doc, docId) => {
                 const data = doc.data();
                 const name = data.displayName;
-                const isBot = docId.startsWith('bot_');
+                const isBot = docId.endsWith('Qx9');
                 const isMe = (docId === myUid);
 
                 let displayId = data.gameId;
@@ -11844,7 +11994,7 @@ async function sendPubgFriendRequest(targetUid, targetName, btn, isBot) {
     const myProfile = DoDAuth.getProfile();
     const db = firebase.firestore();
     try {
-        if (isBot || targetUid.startsWith('bot_')) {
+        if (isBot || targetUid.endsWith('Qx9')) {
             if (btn) { btn.textContent = 'Sent ✓'; btn.disabled = true; btn.className = 'pubg-friend-action sent'; }
             showSystemToast("Friend request sent!");
             
@@ -12257,19 +12407,18 @@ function listenToPubgMatchFilling(matchId, timerEl, statusEl, overlay) {
             const hostTier = seats.length > 0 ? seats[0].tier : 'Apprentice';
             while (seats.length < data.tableSize) {
                 const idx = seats.length;
-                const botData = generateBelievableBot(hostTier);
+                const guestData = provisionGuestProfile(hostTier);
                 seats.push({ 
                     seat: idx, 
-                    uid: botData.uid, 
-                    displayName: botData.displayName, 
-                    isBot: true,
-                    avatar: botData.avatar,
-                    frame: botData.frame,
-                    tier: botData.tier,
-                    level: botData.level,
-                    title: botData.title,
-                    deckSkin: botData.deckSkin,
-                    equippedTable: botData.equippedTable,
+                    uid: guestData.uid, 
+                    displayName: guestData.displayName, 
+                    avatar: guestData.avatar,
+                    frame: guestData.frame,
+                    tier: guestData.tier,
+                    level: guestData.level,
+                    title: guestData.title,
+                    deckSkin: guestData.deckSkin,
+                    equippedTable: guestData.equippedTable,
                     points: 0
                 });
                 pSeats[idx.toString()] = { shop: 20, handCount: 5, out: false };
@@ -12883,19 +13032,20 @@ async function executeDailyDraw(selectedIndex) {
                 totalCopies += 1;
                 rollData.rewardType = 'shard';
                 
-                const isFrameItem = ['Bone&Metal', 'DarkMarble', 'DarkSteel', 'Dice&Filigree', 'HammeredIron', 'OxidizedCopper', 'StoneAge', 'TarnishedSilver', 'VerdigrisBronze', 'Wood&Brass'].includes(targetShard.id);
-                let iconStr = '🎁';
-                if(targetShard.id.startsWith('cf_') || targetShard.id.startsWith('cb_')) iconStr = '🎴';
-                else if(targetShard.id.startsWith('tb_')) iconStr = '🎰';
-                else if(isFrameItem) iconStr = `<img src="Frames/${targetShard.id}.webp" style="width:42px; height:42px; object-fit:contain;" alt="${targetShard.name}">`;
-                else iconStr = '👤';
+                const isFrameItem = ['Bone&Metal', 'DarkMarble', 'DarkSteel', 'Dice&Filigree', 'HammeredIron', 'OxidizedCopper', 'StoneAge', 'TarnishedSilver', 'VerdigrisBronze', 'Wood&Brass', 'TheDealersGrasp'].includes(targetShard.id);
+                let customIcon = '';
+                if (targetShard.id.startsWith('cb_')) customIcon = `<img src="CardstoBuy/${targetShard.id.replace('cb_','')}.webp" style="width:34px; height:48px; border-radius:4px; box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                else if (targetShard.id.startsWith('tb_')) customIcon = `<img src="Tables/${targetShard.id.replace('tb_','')}.webp" style="width:48px; height:48px; border-radius:50%; object-fit:cover; border:2px solid var(--brass-bright); box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                else if (targetShard.id.startsWith('cf_')) customIcon = `<div style="width:34px; height:48px; border-radius:4px; background-image:url('Cards/CardPhase.webp'); background-size:100% 100%; border:2px solid var(--brass-bright); display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; color:#20190f; font-weight:bold; box-shadow:0 4px 10px rgba(0,0,0,0.8);">A</div>`;
+                else if (isFrameItem) customIcon = `<img src="Frames/${targetShard.id}.webp" style="width:56px; height:56px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));">`;
+                else customIcon = `<img src="Avatars/${targetShard.id}.webp" style="width:48px; height:48px; object-fit:cover; border-radius:4px; box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
                 
                 if (newShards[targetShard.id] >= targetShard.req && !newInventory.includes(targetShard.id)) {
                     newInventory.push(targetShard.id);
                     rollData.icon = '🎉';
                     rollData.msg = `Unlocked ${targetShard.name}!`;
                 } else {
-                    rollData.icon = isFrameItem ? iconStr : `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(232,196,84,0.8));">${iconStr}</div>`;
+                    rollData.icon = customIcon;
                     // FIX: Visually display how many copies out of the total required!
                     rollData.msg = `+1 Copy: ${targetShard.name}<br><span style="color:var(--ink-soft); font-size:9px;">(${newShards[targetShard.id]} / ${targetShard.req} Copies)</span>`;
                 }
@@ -14115,15 +14265,14 @@ function renderSeasonPass() {
     const currentSP = profile ? (profile.seasonPoints || 0) : 0;
     const hasPremium = profile ? (profile.hasPremiumPass || false) : false;
     
-    // Arrays to track what we already grabbed
     const claimedFree = profile ? (profile.claimedFreeRewards || []) : [];
     const claimedPrem = profile ? (profile.claimedPremiumRewards || []) : [];
 
-    // Create sticky row labels (FREE / ELITE) on the left side
+    // PUBG-STYLE ROW LABELS (Sticky Left Column)
     let html = `
         <div class="pass-row-labels">
             <div class="pass-label-free">FREE</div>
-            <div class="pass-label-spacer"></div>
+            <div class="pass-label-center-bar">ANTE</div>
             <div class="pass-label-elite">ELITE</div>
         </div>
     `;
@@ -14131,19 +14280,17 @@ function renderSeasonPass() {
     for (let i = 1; i <= 50; i++) {
         const isUnlocked = currentLevel >= i;
 
-        // Generate Reward Data based on Level
         let freeData = { type: 'none', val: '' };
-        let premData = { type: 'pc', val: '25 PC' }; // Default premium filler reward
+        let premData = { type: 'pc', val: '25 PC' }; // Default premium filler
 
-        // --- AAA PSYCHOLOGICAL MILESTONES (WITH REAL IMAGES & PREVIEW LINKS) ---
+        // --- REWARDS MILESTONES ---
         if (i === 1) { 
             freeData = { type: 'pc', val: '50 PC' }; 
-            premData = { type: 'cosmetic', val: 'Avatar: Dealer', img: 'Avatars/TheGrandDealer.webp', style: 'width:42px; height:42px; border-radius:4px; object-fit:cover;', previewId: 'TheGrandDealer', previewTab: 'avatars' }; 
+            premData = { type: 'cosmetic', val: 'Avatar: Dealer', img: 'Avatars/TheGrandDealer.webp', style: 'width:56px; height:56px; border-radius:4px; object-fit:cover;', previewId: 'TheGrandDealer', previewTab: 'avatars' }; 
         }
         else if (i === 5) { 
             freeData = { type: 'chest', val: 'Basic' }; 
-            // Make absolutely sure your folder is spelled exactly "CardstoBuy" and your file is exactly "TheOne.webp"
-            premData = { type: 'cosmetic', val: 'Back: Lies', img: 'CardstoBuy/TheOne.webp', style: 'width:28px; height:40px; border-radius:4px;', previewId: 'cb_theone', previewTab: 'cardBacks' }; 
+            premData = { type: 'cosmetic', val: 'Back: Lies', img: 'CardstoBuy/TheOne.webp', style: 'width:40px; height:58px; border-radius:4px;', previewId: 'cb_theone', previewTab: 'cardBacks' }; 
         }
         else if (i === 10) { 
             freeData = { type: 'pc', val: '100 PC' }; 
@@ -14151,23 +14298,21 @@ function renderSeasonPass() {
         }
         else if (i === 15) { 
             freeData = { type: 'chest', val: 'Basic' }; 
-            premData = { type: 'cosmetic', val: 'Frame: Gilded', img: 'Frames/TheDealersGrasp.webp', style: 'width:48px; height:48px; object-fit:contain;', previewId: 'TheDealersGrasp', previewTab: 'frames' }; 
+            premData = { type: 'cosmetic', val: 'Frame: Gilded', img: 'Frames/TheDealersGrasp.webp', style: 'width:64px; height:64px; object-fit:contain;', previewId: 'TheDealersGrasp', previewTab: 'frames' }; 
         }
         else if (i === 20) { 
             freeData = { type: 'pc', val: '150 PC' }; 
             premData = { type: 'sc', val: '50 SC' }; 
         }
         else if (i === 25) { 
-            // FIX: Removed exclusive Avatar from Free track! Replaced with a solid PC drop.
             freeData = { type: 'pc', val: '250 PC' }; 
-            premData = { type: 'cosmetic', val: 'Face: Crimson', img: 'Cards/CrimsonRoyal.webp', style: 'width:28px; height:40px; border-radius:4px;', previewId: 'cf_crimsonroyal', previewTab: 'cardFaces' }; 
+            premData = { type: 'cosmetic', val: 'Face: Crimson', img: 'Cards/CrimsonRoyal.webp', style: 'width:40px; height:58px; border-radius:4px;', previewId: 'cf_crimsonroyal', previewTab: 'cardFaces' }; 
         }
         else if (i === 30) { 
             freeData = { type: 'chest', val: 'Basic' }; 
             premData = { type: 'sc', val: '50 SC' }; 
         }
         else if (i === 35) { 
-            // FIX: Removed exclusive Title from Free track. Replaced with PC.
             freeData = { type: 'pc', val: '300 PC' }; 
             premData = { type: 'cosmetic', val: 'Title: High Roller', isTitle: true, titleClass: 'mythic', titleText: 'High Roller', previewId: 't_rich', previewTab: 'titles' }; 
         }
@@ -14180,14 +14325,9 @@ function renderSeasonPass() {
             premData = { type: 'cosmetic', val: 'VFX: Sparks', isVFX: true }; 
         }
         else if (i === 50) { 
-            // FIX: Free track capstone is now a highly valuable Mythic Chest instead of an exclusive Title
             freeData = { type: 'chest', val: 'Mythic' }; 
-            // The Capstone Flex (Exclusive Table)
-            premData = { type: 'cosmetic', val: 'Table: Sanctum', img: 'Tables/InnerSanctum.webp', style: 'width:44px; height:44px; border-radius:50%; object-fit:cover; border:2px solid var(--brass);', previewId: 'tb_sanctum', previewTab: 'tables' }; 
-        }
-
-        else {
-            // FIX: Give a small 10 PC reward on EVERY level so there are no ugly blank slots!
+            premData = { type: 'cosmetic', val: 'Table: Sanctum', img: 'Tables/InnerSanctum.webp', style: 'width:60px; height:60px; border-radius:50%; object-fit:cover; border:2px solid var(--brass);', previewId: 'tb_sanctum', previewTab: 'tables' }; 
+        } else {
             freeData = { type: 'pc', val: '10 PC' };
         }
 
@@ -14196,33 +14336,26 @@ function renderSeasonPass() {
             if (data.type === 'none') return '';
             let inner = '';
             
-            if (data.type === 'pc') inner = `<img src="Coins/Coins.webp" style="width:36px; height:36px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">`;
-            else if (data.type === 'sc') inner = `<img src="Coins/SyndicateChips.webp" style="width:36px; height:36px; filter:drop-shadow(0 4px 10px rgba(194,59,74,0.6)); margin-bottom:8px;">`;
-            else if (data.type === 'chest') inner = `<img src="Cards/${data.val}Card.webp" style="width:28px; height:40px; border-radius:3px; box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:8px;">`;
+            if (data.type === 'pc') inner = `<img src="Coins/Coins.webp" style="height:48px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:6px;">`;
+            else if (data.type === 'sc') inner = `<img src="Coins/SyndicateChips.webp" style="height:48px; filter:drop-shadow(0 4px 10px rgba(194,59,74,0.6)); margin-bottom:6px;">`;
+            else if (data.type === 'chest') inner = `<img src="Cards/${data.val}Card.webp" style="height:56px; border-radius:4px; box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:6px;">`;
             else if (data.type === 'cosmetic') {
-                // FIX: Dynamically render real images, titles, and VFX instead of emojis!
-                if (data.img) {
-                    inner = `<img src="${data.img}" style="${data.style} box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:8px;">`;
-                } else if (data.isTitle) {
-                    inner = `<div style="margin-bottom:8px; transform:scale(0.85);"><div class="player-title title-${data.titleClass}" style="height:18px; font-size:8px; padding:0 10px 0 4px;"><span>${data.titleText}</span></div></div>`;
-                } else if (data.isVFX) {
-                    inner = `<div style="font-size:28px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">✨</div>`;
-                } else {
-                    inner = `<div style="font-size:28px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:8px;">🎁</div>`;
-                }
+                if (data.img) inner = `<img src="${data.img}" style="${data.style} box-shadow:0 4px 10px rgba(0,0,0,0.8); margin-bottom:6px;">`;
+                else if (data.isTitle) inner = `<div style="margin-bottom:6px; transform:scale(0.75);"><div class="player-title title-${data.titleClass}" style="height:18px; font-size:8px; padding:0 10px 0 4px;"><span>${data.titleText}</span></div></div>`;
+                else if (data.isVFX) inner = `<div style="font-size:24px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:6px;">✨</div>`;
+                else inner = `<div style="font-size:24px; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.8)); margin-bottom:6px;">🎁</div>`;
             }
             
-            // If the reward is SC, make the text color Pop with the Danger/Red theme so they notice it!
             let txtColor = isPrem ? 'var(--brass-bright)' : '#fff';
             if (data.type === 'sc') txtColor = 'var(--danger-bright)';
 
-            return `${inner}<div style="font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:bold; color:${txtColor}; text-align:center; padding: 0 6px; line-height: 1.2;">${data.val}</div>`;
+            return `${inner}<div style="font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:bold; color:${txtColor}; text-align:center; padding: 0 4px; line-height: 1.1;">${data.val}</div>`;
         };
 
+        // Render States
         let freeHtml = buildInner(freeData, false);
         const freeIsClaimed = claimedFree.includes(i);
         let freeClass = `pass-reward-box ${freeData.type === 'none' ? 'empty-slot' : (!isUnlocked ? 'locked' : (freeIsClaimed ? 'claimed' : 'ready'))}`;
-        // If there's a preview link attached, inject the onclick event!
         let freeOnClick = freeData.previewId ? `onclick="openShopPreview('${freeData.previewId}', '${freeData.previewTab}')"` : '';
         
         let premHtml = buildInner(premData, true);
@@ -14230,66 +14363,55 @@ function renderSeasonPass() {
         let premClass = `pass-reward-box premium ${(!hasPremium || !isUnlocked) ? 'locked' : (premIsClaimed ? 'claimed' : 'ready')}`;
         let premOnClick = premData.previewId ? `onclick="openShopPreview('${premData.previewId}', '${premData.previewTab}')"` : '';
 
+        // NEW 3-ZONE COLUMN LAYOUT
         html += `
             <div class="pass-level-col">
-                <div class="${freeClass}" ${freeOnClick} style="${freeData.previewId ? 'cursor:pointer;' : ''}">${freeHtml}</div>
-                <div class="pass-level-marker ${isUnlocked ? 'unlocked' : ''}">ANTE ${i}</div>
-                <div class="${premClass}" ${premOnClick} style="${premData.previewId ? 'cursor:pointer;' : ''}">${premHtml}</div>
+                <div class="pass-reward-zone free-zone">
+                    <div class="${freeClass}" ${freeOnClick} style="${freeData.previewId ? 'cursor:pointer;' : ''}">${freeHtml}</div>
+                </div>
+                
+                <div class="pass-level-marker ${isUnlocked ? 'unlocked' : ''}">${i}</div>
+                
+                <div class="pass-reward-zone elite-zone">
+                    <div class="${premClass}" ${premOnClick} style="${premData.previewId ? 'cursor:pointer;' : ''}">${premHtml}</div>
+                </div>
             </div>
         `;
     }
 
     track.innerHTML = html;
 
-    // Update the visual background line to map the exact 50-level progress
-    const lineFill = document.querySelector('.pass-line-fill');
-    if (lineFill) {
-        const progress = Math.min(100, Math.max(0, ((currentLevel - 1) / 50) * 100));
-        setTimeout(() => { lineFill.style.width = progress + '%'; }, 100);
-    }
-    
-    // Update the footer text safely
-    // Update the footer text safely
-        // Hide the purchase button if they already own the Elite Pass
+    // Update the footer text securely
     const buyBtn = document.getElementById('btnBuyElitePass');
-    if (buyBtn) {
-        if (hasPremium) {
-            buyBtn.style.display = 'none';
+    if (buyBtn) buyBtn.style.display = hasPremium ? 'none' : 'inline-flex';
+
+    const footerLvlText = document.getElementById('spFooterLvl');
+    const footerSpText = document.getElementById('spFooterPts');
+    if (footerLvlText) footerLvlText.textContent = `ANTE ${currentLevel}`;
+    if (footerSpText) footerSpText.textContent = `${currentSP} / 100 SP TO NEXT ANTE`;
+
+    const claimBtn = document.getElementById('claimPassRewardsBtn');
+    if (claimBtn) {
+        let hasUnclaimed = false;
+        for (let i = 1; i <= currentLevel; i++) {
+            if (!claimedFree.includes(i)) hasUnclaimed = true;
+            if (hasPremium && !claimedPrem.includes(i)) hasUnclaimed = true;
+        }
+
+        if (hasUnclaimed) {
+            claimBtn.disabled = false;
+            claimBtn.textContent = "CLAIM REWARDS";
+            claimBtn.style.background = "var(--ok)";
+            claimBtn.style.color = "#fff";
+            claimBtn.style.borderColor = "#5faa82";
         } else {
-            buyBtn.style.display = 'inline-flex';
+            claimBtn.disabled = true;
+            claimBtn.textContent = "ALL CLAIMED ✓";
+            claimBtn.style.background = "rgba(255,255,255,0.05)";
+            claimBtn.style.color = "rgba(255,255,255,0.3)";
+            claimBtn.style.borderColor = "transparent";
         }
     }
-
-    // Update the footer text safely
-    // Update the footer text safely
-        const footerLvlText = document.getElementById('spFooterLvl');
-        const footerSpText = document.getElementById('spFooterPts');
-        if (footerLvlText) footerLvlText.textContent = `ANTE ${currentLevel}`;
-        if (footerSpText) footerSpText.textContent = `${currentSP} / 100 SP TO NEXT ANTE`;
-
-        // FULL FIX: Disable the claim button visually if everything is already claimed
-        const claimBtn = document.getElementById('claimPassRewardsBtn');
-        if (claimBtn) {
-            let hasUnclaimed = false;
-            for (let i = 1; i <= currentLevel; i++) {
-                if (!claimedFree.includes(i)) hasUnclaimed = true;
-                if (hasPremium && !claimedPrem.includes(i)) hasUnclaimed = true;
-            }
-
-            if (hasUnclaimed) {
-                claimBtn.disabled = false;
-                claimBtn.textContent = "CLAIM REWARDS";
-                claimBtn.style.background = "var(--ok)";
-                claimBtn.style.color = "#fff";
-                claimBtn.style.borderColor = "#5faa82";
-            } else {
-                claimBtn.disabled = true;
-                claimBtn.textContent = "ALL CLAIMED ✓";
-                claimBtn.style.background = "rgba(255,255,255,0.05)";
-                claimBtn.style.color = "rgba(255,255,255,0.3)";
-                claimBtn.style.borderColor = "transparent";
-            }
-        }
 }
 
 function renderShopItems() {
@@ -14529,6 +14651,16 @@ async function buyShopItem(itemId, price, event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || (profile.currency || 0) < price) return;
 
+    // --- NEW: UI LOCK TO PREVENT MASHING ---
+    let btn = event ? (event.currentTarget || event.target) : null;
+    if (btn && btn.tagName !== 'BUTTON') btn = btn.closest('button');
+    if (btn) {
+        if (btn.dataset.locked === "true") return;
+        btn.dataset.locked = "true";
+        btn.style.pointerEvents = "none";
+        btn.style.opacity = "0.5";
+    }
+
     // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
     const backupCurrency = profile.currency;
     const backupInventory = [...(profile.inventory || [])];
@@ -14566,12 +14698,29 @@ async function buyShopItem(itemId, price, event) {
         renderShopItems();
         
         showSystemToast("Transaction rejected. Coins refunded.");
+    } finally {
+        // --- UNLOCK UI ---
+        if (btn) {
+            btn.dataset.locked = "false";
+            btn.style.pointerEvents = "all";
+            btn.style.opacity = "1";
+        }
     }
 }
 
 async function buyShard(itemId, price, requiredAmount, event) {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || (profile.currency || 0) < price) return;
+
+    // --- NEW: UI LOCK TO PREVENT MASHING ---
+    let btn = event ? (event.currentTarget || event.target) : null;
+    if (btn && btn.tagName !== 'BUTTON') btn = btn.closest('button');
+    if (btn) {
+        if (btn.dataset.locked === "true") return;
+        btn.dataset.locked = "true";
+        btn.style.pointerEvents = "none";
+        btn.style.opacity = "0.5";
+    }
 
     // --- 0. SAVE BACKUP STATE FOR ROLLBACK ---
     const backupCurrency = profile.currency;
@@ -14595,7 +14744,6 @@ async function buyShard(itemId, price, requiredAmount, event) {
     if (event) triggerNotificationVfx('equip', event);
 
     if (isUnlockedNow) {
-        // Suppress toast and trigger the PUBG Popup!
         setTimeout(() => triggerUnlockPopupFromId(itemId), 500); 
     } else {
         try { sfx.uiEquip(); } catch(e){} 
@@ -14643,6 +14791,13 @@ async function buyShard(itemId, price, requiredAmount, event) {
         }
         
         showSystemToast("Transaction rejected. Coins refunded.");
+    } finally {
+        // --- UNLOCK UI ---
+        if (btn) {
+            btn.dataset.locked = "false";
+            btn.style.pointerEvents = "all";
+            btn.style.opacity = "1";
+        }
     }
 }
 
@@ -14899,22 +15054,26 @@ function generateLeaderboardRowHtml(p, rankNum, isMe) {
     // FIX: Show IDs for everyone. If a bot is missing an ID, deterministically generate a fake 
     // 6-digit ID based on their uid string so it stays consistently the same every time!
     let displayId = p.gameId;
-    if (!displayId || displayId === '----' || displayId === 'undefined') {
-        let hash = 0;
-        for(let i=0; i<p.uid.length; i++) hash = Math.imul(31, hash) + p.uid.charCodeAt(i) | 0;
-        displayId = Math.abs(hash).toString().substring(0, 6).padEnd(6, '0');
-    }
-    
-    let idHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); font-weight:normal; margin-left:8px;">ID ${displayId}</span>`;
+        if (!displayId || displayId === '----' || displayId === 'undefined') {
+            let hash = 0;
+            for(let i=0; i<p.uid.length; i++) hash = Math.imul(31, hash) + p.uid.charCodeAt(i) | 0;
+            displayId = Math.abs(hash).toString().substring(0, 6).padEnd(6, '0');
+        }
+        
+        let idHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); font-weight:normal; margin-left:8px;">ID ${displayId}</span>`;
 
-    return `
-      <div class="lb-row ${topClass} ${meClass}">
-        <div class="lb-rank">#${rankNum}</div>
-        <div class="lb-player">
-          <div class="avatar-frame-wrap" style="width:44px; height:44px; flex-shrink:0;">
-            <img src="Avatars/${p.avatar || 'Apprentice'}.webp" class="af-avatar" alt="Avatar">
-            <img src="Frames/${p.frame || 'Apprentice'}.webp" class="af-frame" alt="Frame">
-          </div>
+        // FIX: Handle empty strings from new/guest accounts to prevent broken images
+        const safeAvatar = (p.avatar && p.avatar.trim() !== '') ? p.avatar : 'Apprentice';
+        const safeFrame = (p.frame && p.frame.trim() !== '') ? p.frame : 'Apprentice';
+
+        return `
+          <div class="lb-row ${topClass} ${meClass}">
+            <div class="lb-rank">#${rankNum}</div>
+            <div class="lb-player">
+              <div class="avatar-frame-wrap" style="width:44px; height:44px; flex-shrink:0;">
+                <img src="Avatars/${safeAvatar}.webp" class="af-avatar" alt="Avatar">
+                <img src="Frames/${safeFrame}.webp" class="af-frame" alt="Frame">
+              </div>
           <div style="display:flex; flex-direction:column; justify-content:center;">
             <div style="font-family:'Inter',sans-serif; font-weight:700; font-size:14px; color:#fff; line-height:1;">
               ${p.displayName}${idHtml}
@@ -15346,6 +15505,10 @@ async function purchaseElitePass() {
         }
     }
 }
+
+// Globally prevent the native browser right-click / long-press menu
+document.addEventListener('contextmenu', event => event.preventDefault());
+
 </script>
 </body>
 </html>
