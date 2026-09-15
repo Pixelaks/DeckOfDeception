@@ -3945,19 +3945,35 @@ function handleRatingDecision(action) {
     localStorage.setItem('dod_rating_status', action); 
 }
 
+let randomRatingTimeout = null;
+
 function triggerRandomRatingPopup() {
     const status = localStorage.getItem('dod_rating_status');
     if (status === 'submitted' || status === 'skipped') return;
 
+    // Prevent multiple overlapping timers if they play multiple matches
+    if (randomRatingTimeout) clearTimeout(randomRatingTimeout);
+
     // Random delay between 15 and 45 seconds
     const delay = Math.floor(Math.random() * 30000) + 15000;
     
-    setTimeout(() => {
-        const hubScreen = document.getElementById('screen-hub');
+    randomRatingTimeout = setTimeout(() => {
         const overlay = document.getElementById('ratingPopupOverlay');
+        const hubScreen = document.getElementById('screen-hub');
+        const menuEl = document.getElementById('menu');
+        const gameEl = document.getElementById('game');
+        // Handle both pubg and squad naming conventions just in case
+        const lobbyView = document.getElementById('squadLobbyView') || document.getElementById('pubgLobbyView');
         
-        // Ensure user is idle on the main menu before interrupting
-        if (hubScreen && !hubScreen.classList.contains('hidden') && overlay) {
+        // Strict checks to ensure the player is actually sitting idle on the main hub
+        const isMenuVisible = menuEl && menuEl.style.display !== 'none';
+        const isGameHidden = !gameEl || gameEl.style.display === 'none';
+        const isHubActive = hubScreen && !hubScreen.classList.contains('hidden');
+        const notInMatch = typeof currentMatchId === 'undefined' || !currentMatchId;
+        const notInLobby = !lobbyView || !lobbyView.classList.contains('show');
+
+        // Only show the popup if ALL safe conditions are met
+        if (isMenuVisible && isGameHidden && isHubActive && notInMatch && notInLobby && overlay) {
             overlay.classList.add('show');
         }
     }, delay);
