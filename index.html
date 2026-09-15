@@ -10185,14 +10185,15 @@ async function advanceTurn() {
 
 // ---------------- BOT AI ----------------
 function syncRemoteTurn(){
-  // Note: Guard against null state or empty player lists during mobile transitions
   if (!state || !state.players || !state.players[state.turn]) return;
   const bot = state.players[state.turn];
   if (bot.isHuman || state.over || bot.out) return;
   
-  // --- TUTORIAL Note: Pause bots while explaining rules! ---
+  // Ensure the server state still agrees it is this specific bot's turn
+  if (state.turnUid !== bot.uid) return;
+
   if (window.networkSyncPaused) {
-      setTimeout(syncRemoteTurn, 1000); // Check again in 1 second
+      setTimeout(syncRemoteTurn, 1000); 
       return;
   }
 
