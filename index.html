@@ -2571,9 +2571,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* CINEMATIC MATCH START OVERLAY */
 #matchIntroOverlay {
   position: fixed; inset: 0; z-index: 4000;
-  background: radial-gradient(circle at center, rgba(21,12,18,0.4) 0%, rgba(0,0,0,0.9) 100%);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  /* Make background solid to hide the empty placeholder table while Firestore syncs the cards! */
+  background: #060709;
   display: none; align-items: center; justify-content: center; pointer-events: none;
 }
 /* CINEMATIC DECEPTION OVERLAY */
@@ -7000,9 +6999,19 @@ function listenToGameState() {
             if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
                 if (!window.dodJustPassedTurnLocally) {
                     if (willAnimateAction) {
-                        // Note: Store the turn arc to execute LATER once the card finishes flying
+                        // FIX: Store the turn arc to execute LATER once the card finishes flying
                         window.pendingTurnArc = { from: fromIdx, to: toIdx, dir: serverState.direction };
                         window.dodTurnLocked = true; 
+                        
+                        // CRITICAL BOT FREEZE FIX: Guarantee the lock releases even if an animation drops
+                        clearTimeout(window.dodTurnLockFailsafe);
+                        window.dodTurnLockFailsafe = setTimeout(() => {
+                            window.dodTurnLocked = false;
+                            if (window.pendingHostTurnLogic) {
+                                window.pendingHostTurnLogic();
+                                window.pendingHostTurnLogic = null;
+                            }
+                        }, 1500);
                     } else {
                         animateTurnArc(fromIdx, toIdx, serverState.direction);
                         sfx.turn(); 
@@ -8397,7 +8406,8 @@ function renderActionBar(){
 
   // 3. INLINE DRAW RESOLUTION
   if (state.uiState === 'RESOLVING_BUY') {
-      const bl = state.buyLoop;
+      // Fallback object if network sync clears the local buy loop memory
+      const bl = state.buyLoop || { buyer: you, tries: 1, lastDrawnLabel: 'a card' };
       let html = `<span style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:rgba(242,234,216,0.85);">Try ${bl.tries}: Drew <b>${bl.lastDrawnLabel}</b> — no match. </span>`;
       
       if (bl.tries < MAX_TRIES && state.deck.length > 0 && bl.buyer.shop >= BUY_COST && !bl.buyer.out) {
@@ -8470,6 +8480,10 @@ function renderActionBar(){
 
 // ---------------- PLAY ACTIONS ----------------
 function triggerCalloutPhase(delay = 500) {
+    // Instantly clear any stuck callout locks from previous turns
+    window.dodCalloutPending = false; 
+    clearTimeout(window.dodCalloutFailsafe);
+    
     setTimeout(() => {
        state.uiState = 'CHOOSE_CALL';
        renderAll();
@@ -9820,6 +9834,10 @@ async function confirmGuess(v) {
     log(`${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`, '', myUid);
     window.dodJustPlayedLocally = true; 
 
+    // Failsafe: Ensure the anti-rubberband lock NEVER gets permanently stuck
+    clearTimeout(window.dodCalloutFailsafe);
+    window.dodCalloutFailsafe = setTimeout(() => { window.dodCalloutPending = false; }, 2500);
+
     // --- TUTORIAL TRIGGER ---
     if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number') {
         setTimeout(tutNext, 600);
@@ -9853,6 +9871,7 @@ async function confirmGuess(v) {
             state.turnTimeLeft = 30;
             state.turnExpiresAt = Date.now() + 30000; // <--- FIX
             window.dodJustPassedTurnLocally = false;
+            window.dodCalloutPending = false; // RELEASE LOCK ON ERROR
             renderAll();
             animateTurnArc(nextIndex, currentIndex, state.direction * -1); 
         }
