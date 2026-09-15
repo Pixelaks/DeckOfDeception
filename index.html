@@ -7322,17 +7322,23 @@ async function handleTurnTimeout() {
     renderActionBar();
     
     if (isOnline) {
-        // Prevent API spam: Only the host pushes the timeout ping to the server.
-        const myUid = DoDAuth.getProfile().uid;
-        const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
-        if (!isHost) return; 
-        
-        try {
-            await secureServerCall('triggerTimeout', {});
-        } catch (e) {
-            console.warn("Timeout rejection:", e);
-        }
-    } else {
+          // Prevent API spam: Only the host pushes the timeout ping to the server.
+          const myUid = DoDAuth.getProfile().uid;
+          const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
+          if (!isHost) return; 
+          
+          try {
+              await secureServerCall('triggerTimeout', {});
+          } catch (e) {
+              console.warn("Timeout rejection:", e);
+              // CLOCK DESYNC FIX: If the server rejects the timeout, the phone's clock is running faster than the server.
+              // Add 5 seconds to the local timer and unlock the UI to prevent an infinite spam loop!
+              state.turnExpiresAt += 5000;
+              state.turnTimeLeft = 5;
+              state.uiState = wasChoosingCall ? 'CHOOSE_CALL' : 'IDLE';
+              renderAll();
+          }
+      } else {
         // OFFLINE BOT MODE LOGIC
         const penalty = 2;
         curPlayer.shop = Math.max(0, curPlayer.shop - penalty);
@@ -10220,12 +10226,16 @@ function syncRemoteTurn(){
   const thinkDelay = Math.random() < 0.25 ? Math.floor(Math.random() * 400) + 300 : baseDelay;
 
   setTimeout(async ()=>{
-    // Note: Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
+    // Re-verify it is STILL the bot's turn after the thinking delay!
+    if (!state || !state.players || !state.players[state.turn]) return;
+    if (state.turnUid !== bot.uid) return;
+
+    // FIX: Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
     if (window.dodTurnLocked || window.dodCenterIsLocked || state.uiState === 'ANIMATING') {
         setTimeout(syncRemoteTurn, 500); // Check again in 500ms
         return;
     }
-    if(!state || state.over || state.deception) return;
+    if(state.over || state.deception) return;
 
     // --- ONLINE SECURE GUEST AI ---
     // If playing online, bypass all local logic and have Cloudflare securely calculate the guest's moves!
