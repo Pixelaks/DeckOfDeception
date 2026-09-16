@@ -4289,8 +4289,6 @@ async function submitUniqueNameWithId() {
     const db = firebase.firestore();
     let myUid = null;
 
-    // DIAGNOSTIC: split into two separate try/catches so the console tells us
-    // exactly which Firestore call is being denied, instead of one generic error.
     try {
         const snapshot = await db.collection('users').where('displayName', '==', rawName).limit(1).get();
         if (!snapshot.empty) {
@@ -4311,18 +4309,30 @@ async function submitUniqueNameWithId() {
         myUid = firebase.auth().currentUser.uid;
         const numericId = Math.floor(100000 + Math.random() * 900000).toString();
 
-        await db.collection('users').doc(myUid).set({
+        // 1. Read the user document to see if they already exist
+        const userDoc = await db.collection('users').doc(myUid).get();
+        const isFirstTimeSetup = !userDoc.exists || !userDoc.data().displayName;
+
+        // 2. Base payload: Only update the fields that are allowed to be changed
+        const payload = {
             displayName: rawName,
-            gameId: numericId,
-            rankScore: 0,
-            tier: 'Apprentice',
-            level: 1,
-            points: 0,
-            avatar: 'Apprentice',
-            frame: 'Apprentice',
-            deckSkin: 'cf_default',
-            equippedTable: 'tb_default'
-        }, { merge: true });
+            gameId: numericId
+        };
+
+        // 3. Only inject the protected stats if this is their very first time
+        if (isFirstTimeSetup) {
+            payload.rankScore = 0;
+            payload.tier = 'Apprentice';
+            payload.level = 1;
+            payload.points = 0;
+            payload.avatar = 'Apprentice';
+            payload.frame = 'Apprentice';
+            payload.deckSkin = 'cf_default';
+            payload.equippedTable = 'tb_default';
+        }
+
+        // Send the payload. The rules will now allow it because we aren't touching protected keys!
+        await db.collection('users').doc(myUid).set(payload, { merge: true });
 
         document.getElementById('nameSetupOverlay').classList.remove('show');
 
