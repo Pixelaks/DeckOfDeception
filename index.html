@@ -641,7 +641,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* GAME UI */
 #game{display:none;height:100%;
- background:radial-gradient(ellipse at 50% 0%, rgba(var(--table-glow, 30,74,61), 0.75) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.85) 100%), var(--my-table);
+ background:radial-gradient(ellipse at 50% 0%, rgba(var(--table-glow, 30,74,61), 0.5) 0%, rgba(0,0,0,0.4) 45%, rgba(0,0,0,0.7) 100%), var(--my-table);
  background-size:cover; background-position:center;
  padding:8px 12px;flex-direction:column;gap:6px;position:relative;overflow:hidden}
 .topbar{flex-shrink:0;display:flex;justify-content:space-between;align-items:center;padding:2px 4px}
@@ -715,8 +715,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .tablering{position:relative;}
 .tablefelt{
   position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;
-  /* Layers the gameplay spotlight over your AI texture */
-  background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.6) 55%, rgba(0,0,0,0.95) 100%), var(--my-table);
+  /* Layers the gameplay spotlight over your texture */
+  background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.7) 100%), var(--my-table);
   background-size: cover;
   background-position: center;
   border:2px solid var(--brass);
@@ -2938,7 +2938,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 /* SYNDICATE MODE: Removes heavy tint and vignette so the table shines */
 #menu.syndicate-mode .menu-table { background: radial-gradient(circle at center, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.5) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 #menu.syndicate-mode .menu-vignette { opacity: 0.3; }
-.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.85) 55%, rgba(0,0,0, 0.98) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.tablefelt { background: radial-gradient(ellipse at 50% 36%, rgba(var(--table-glow), 0.4) 0%, rgba(0,0,0, 0.4) 55%, rgba(0,0,0, 0.75) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 #bootstrapOverlay { background: radial-gradient(circle at center, rgba(var(--table-glow), 0.7) 0%, rgba(0,0,0, 0.95) 100%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 .event-banner::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; mix-blend-mode: overlay !important; }
 #finaleModal::before, #progressionModal::before { background-image: var(--my-table) !important; background-size: cover !important; background-position: center !important; }
@@ -3779,6 +3779,7 @@ window.dodImagesLoaded = false;
   <div class="topbar">
     <div class="title">DECK OF DECEPTION</div>
     <div class="right">
+      <span id="networkPing" style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#5faa82; margin-right:8px; display:none;" title="Network Ping">📶 --ms</span>
       <span id="turnIndicator">—</span>
       <span class="timer" id="timerDisplay">20:00</span>
       <div style="display:flex; align-items:center; gap:4px; background:rgba(0,0,0,0.5); padding:2px 6px; border-radius:12px; border:1px solid rgba(255,255,255,0.15);">
@@ -5344,11 +5345,7 @@ function proceedWithBoot(overlayEl) {
     setTimeout(() => {
         window.minimumBootTimePassed = true;
         setTimeout(runAdaptiveVfxBenchmark, 1500);
-        if (localStorage.getItem('dod_seen_tutorial')) {
-            menu.classList.add('menu-visible');
-        } else {
-            openTutorial(false);
-        }
+        menu.classList.add('menu-visible'); // Always show menu first so login overlay can appear
 
         // Show the iOS Safari limitation warning once, only for iPhone/iPad Safari tab users
         const isIosSafariTab = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
@@ -5986,17 +5983,21 @@ if(window.DoDAuth){
         }
     };
 
-    // Note: Show Season 1 Cinematic ONLY after successful sign-in!
-    if (!localStorage.getItem('dod_season_1_intro') && localStorage.getItem('dod_seen_tutorial') && !currentMatchId && !currentPartyId) {
-        setTimeout(() => {
-            playSeasonCinematic(() => {
+    // Note: Show Season 1 Cinematic or Tutorial ONLY after successful sign-in!
+            if (!localStorage.getItem('dod_seen_tutorial')) {
+                setTimeout(() => {
+                    openTutorial(false);
+                }, 400); // Small delay to let auth modals fade out cleanly
+            } else if (!localStorage.getItem('dod_season_1_intro') && !currentMatchId && !currentPartyId) {
+                setTimeout(() => {
+                    playSeasonCinematic(() => {
+                        initHubUI();
+                        switchToMenuMusic();
+                    });
+                }, 400); // Small delay to let auth modals fade out cleanly
+            } else {
                 initHubUI();
-                switchToMenuMusic();
-            });
-        }, 400); // Small delay to let auth modals fade out cleanly
-    } else {
-        initHubUI();
-    }
+            }
   });
 } else {
   const loading = document.getElementById('accountLoading');
@@ -6006,6 +6007,29 @@ if(window.DoDAuth){
 }
 
 let micDuckMult = 1.0; // Drops when microphone is active
+
+function updatePingUI(pingMs) {
+    const pingEl = document.getElementById('networkPing');
+    if (!pingEl) return;
+    
+    // Only show during active online matches
+    if (!currentMatchId) {
+        pingEl.style.display = 'none';
+        return;
+    }
+    
+    pingEl.style.display = 'inline-block';
+    pingEl.innerHTML = `📶 ${pingMs}ms`;
+    
+    // Green for good, Yellow for okay, Red for bad
+    if (pingMs < 120) {
+        pingEl.style.color = '#5faa82'; // Green (var(--ok))
+    } else if (pingMs < 250) {
+        pingEl.style.color = '#e8c454'; // Yellow (var(--brass-bright))
+    } else {
+        pingEl.style.color = '#c23b4a'; // Red (var(--danger-bright))
+    }
+}
 
 // Call this when your voice chat connects or disconnects!
 function setMicActive(isActive) {
@@ -6822,10 +6846,34 @@ function listenToGameState() {
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
+    // RECONNECT FIX: flag the next update to do a full clean resync when the
+    // phone regains network, or the app comes back into view (covers a real
+    // dropped connection AND a screen lock / app switch — both look the same
+    // to the player).
+    if (!window.dodResyncListenersAdded) {
+        window.dodResyncListenersAdded = true;
+        window.addEventListener('online', () => { window.dodForceResync = true; });
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'visible') window.dodForceResync = true;
+        });
+    }
+
     gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
         if (!doc.exists) return; // Note: Prevent the entire renderer from crashing if the match drops mid-load
         const data = doc.data();
         if (!data || !data.gameState) return; 
+
+        // RECONNECT FIX: wipe stale local state/UI locks and rebuild clean.
+        let justResynced = false;
+        if (window.dodForceResync) {
+            window.dodForceResync = false;
+            justResynced = true;
+            state = null;
+            window.dodTurnLocked = false;
+            window.dodCenterIsLocked = false;
+            window.dodCalloutPending = false;
+            window.animatingRemoteCoins = null;
+        }
 
         const serverState = data.gameState;
 
@@ -6944,20 +6992,31 @@ function listenToGameState() {
             lastAction: serverState.lastAction || null
         };
 
+        // RECONNECT FIX: fill in any chat-log lines we missed while disconnected.
+        if (justResynced) backfillMissedLog(serverState.actionLog);
+
         // --- START SECURE HEARTBEAT PING ---
         if (!window.presenceIntervalId && currentMatchId) {
-            // Note: Use Firebase's synchronized clock instead of the device's local clock!
-            firebase.firestore().collection('matches').doc(currentMatchId).update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() }).catch(()=>{});
+            // Use Firebase's synchronized clock and measure the round-trip time for our Ping UI!
+            const initPingStart = Date.now();
+            firebase.firestore().collection('matches').doc(currentMatchId).update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() })
+                .then(() => updatePingUI(Date.now() - initPingStart))
+                .catch(()=>{});
             
             window.presenceIntervalId = setInterval(() => {
                 if (currentMatchId) {
+                    const pingStart = Date.now();
                     firebase.firestore().collection('matches').doc(currentMatchId)
-                        .update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() }).catch(()=>{});
+                        .update({ [`presence.${myUid}`]: firebase.firestore.Timestamp.now().toMillis() })
+                        .then(() => updatePingUI(Date.now() - pingStart))
+                        .catch(()=>{});
                 } else {
                     clearInterval(window.presenceIntervalId);
                     window.presenceIntervalId = null;
+                    const pingEl = document.getElementById('networkPing');
+                    if (pingEl) pingEl.style.display = 'none';
                 }
-            }, 10000); // Ping every 10 seconds for higher low-network reliability
+            }, 5000); // Increased to every 5 seconds to keep the Ping UI feeling responsive
         }
 
         // 4. RENDER THE GAME — rAF-batched so rapid Firestore snapshots never
@@ -7368,9 +7427,8 @@ function nextPlayerOf(id){
   return state.players[i]; 
 }
 
-function log(msg, cls, explicitUid = null){
+function log(msg, cls, explicitUid = null, overwrite = false){
   const el = document.getElementById('log');
-  const div = document.createElement('div');
   
   let p = null;
   // 1. Try to use explicit UID (for online multiplayer)
@@ -7384,21 +7442,48 @@ function log(msg, cls, explicitUid = null){
       if (msg.startsWith(`You`)) p = state.players[0]; // Special catch for "You played..."
   }
 
-  // Render Chat Bubble with Player Profile
+  // Clean the message to prevent repeating the name
+  let cleanMsg = msg;
+  if (p && cls !== 'system') {
+      if (cls === 'quote') cleanMsg = msg.replace(new RegExp(`^${p.name}:\\s*`), '');
+      else cleanMsg = cleanMsg.replace(new RegExp(`^${p.name}\\s*`), '').trim();
+      cleanMsg = cleanMsg.charAt(0).toUpperCase() + cleanMsg.slice(1);
+  }
+
+  const uidToMatch = p ? p.uid : (explicitUid || 'system');
+  const lastEntry = el.lastElementChild;
+
+  // MERGE LOGIC: 1 Turn = 1 Chat Box
+  if (lastEntry && lastEntry.dataset.uid === uidToMatch && !lastEntry.classList.contains('system') && cls !== 'system') {
+      const msgContainer = lastEntry.querySelector('.log-msg');
+      if (msgContainer) {
+          if (overwrite) {
+              // Bot Animation Replacement: "Try 1: drew..." becomes "draws on try 2 and plays..."
+              msgContainer.innerHTML = cleanMsg; 
+          } else {
+              // Standard Merge: "Plays a 5" -> "Calls for a 7"
+              msgContainer.innerHTML += ` <br><span style="color:var(--brass-bright); font-size:12px; vertical-align:middle; line-height:1;">→</span> ` + cleanMsg;
+          }
+          
+          // Flash effect to show it updated
+          lastEntry.style.animation = 'none';
+          void lastEntry.offsetWidth; // Force Reflow
+          lastEntry.style.animation = 'chatPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
+          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          if(typeof sfx !== 'undefined' && cls === 'hi') sfx.alert();
+          return; // Exit out, we successfully merged!
+      }
+  }
+
+  // CREATE NEW BUBBLE (If no merge was possible)
+  const div = document.createElement('div');
+  div.dataset.uid = uidToMatch;
+
   if (p && cls !== 'system') {
       div.className = 'entry' + (cls ? (' ' + cls) : '');
       const av = p.avatar || 'Apprentice';
       const fr = p.frame || 'Apprentice';
       const pColor = (typeof PLAYER_COLORS !== 'undefined' && PLAYER_COLORS[p.id]) ? PLAYER_COLORS[p.id] : 'var(--brass-bright)';
-      
-      let cleanMsg = msg;
-      // Clean up "Name: 'Quote'" so the name doesn't repeat twice
-      if (cls === 'quote') cleanMsg = msg.replace(new RegExp(`^${p.name}:\\s*`), '');
-      // Clean up "Name played..." since their name is already in the header
-      else cleanMsg = cleanMsg.replace(new RegExp(`^${p.name}\\s*`), '').trim();
-      
-      // Capitalize the first letter of the cleaned message
-      cleanMsg = cleanMsg.charAt(0).toUpperCase() + cleanMsg.slice(1);
       
       div.innerHTML = `
           <div class="log-profile">
@@ -7411,13 +7496,12 @@ function log(msg, cls, explicitUid = null){
           <div class="log-msg">${cleanMsg}</div>
       `;
   } else {
-      // Generic System Message (Centered, no profile)
+      // Generic System Message
       div.className = 'entry system' + (cls ? (' ' + cls) : '');
-      div.innerHTML = `<div class="log-msg">${msg}</div>`;
+      div.innerHTML = `<div class="log-msg">${cleanMsg}</div>`;
   }
 
   el.appendChild(div); 
-  // Smooth scroll to bottom
   el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   if(typeof sfx !== 'undefined' && cls === 'hi') sfx.alert();
 }
@@ -8726,16 +8810,19 @@ async function confirmActionTarget(target, actionType){
   
   // REPLACE THIS ENTIRE IF/ELSE BLOCK:
   if(actionType === 'POWER') {
+      const targetBefore = target.shop;
       const taken = transferToBank(target, tier); 
       label = 'PWR';
-      const msg = `${you.name} played Power on ${target.name}, draining ${taken} coins.`;
+      const msg = `${you.name} played Power on ${target.name} (${targetBefore}→${target.shop} PC), draining ${taken} coins.`;
       log(msg, 'ok', myUid);
       state.lastAction = { msg: msg };
       // The coin animation is now perfectly timed inside flyCard()
   } else if (actionType === 'STEAL') {
+      const targetBefore = target.shop;
+      const youBefore = you.shop;
       const taken = transferToPlayer(target, you, tier); 
       label = 'STL';
-      const msg = `${you.name} played Steal on ${target.name}, stealing ${taken} coins!`;
+      const msg = `${you.name} (${youBefore}→${you.shop + 1} PC) played Steal on ${target.name} (${targetBefore}→${target.shop} PC), stealing ${taken} coins!`;
       log(msg, 'ok', myUid);
       state.lastAction = { msg: msg };
       // The coin animation is now perfectly timed inside flyCard()
@@ -8809,38 +8896,54 @@ async function doBuyDraw() {
         if (card.type === 'wild' && bl.buyer.shop >= 2) { isMatch = true; bl.buyer.shop -= 2; }
 
         if (isMatch) {
-            let effective, label;
-            if (card.type === 'number') { effective = card.value; label = card.value; }
-            else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
-            else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; state.direction *= -1; }
-            else if (card.type === 'steal') { effective = state.requiredValue; label = 'STL'; }
-            else { effective = state.requiredValue; label = `PWR`; } // Fallback for power cards
+    let effective, label;
+    if (card.type === 'number') { effective = card.value; label = card.value; }
+    else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
+    else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; state.direction *= -1; }
+    else if (card.type === 'steal') { effective = state.requiredValue; label = 'STL'; }
+    else { effective = state.requiredValue; label = `PWR`; }
 
-            bl.buyer.shop += PLAY_REWARD;
-            const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Paid ${taken}c out of pocket.`;
-            state.buyLoop = null;
+    bl.buyer.shop += PLAY_REWARD;
+    const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Paid ${taken}c out of pocket.`;
+    state.buyLoop = null;
 
-            if (currentMatchId) {
-                // ONLINE: Push successful draw to Firebase
-                window.dodJustPlayedLocally = true; // Note: mark as our own action so the snapshot doesn't re-process it
-                state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.uid;
-                state.uiState = 'CHOOSE_CALL'; // Note: update locally right away so Callout pad + Peek button appear instantly
+    if (currentMatchId) {
+        // --- MISSING CODE ADDED HERE ---
+        log(actionMsg, 'ok', bl.buyer.uid);
+        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[0], 18, card.value);
+        // -------------------------------
+
+        window.dodJustPlayedLocally = true;
+        state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.uid;
+
+        state.uiState = 'ANIMATING';
+        renderAll();
+        setTimeout(() => {
+            if (state && state.uiState === 'ANIMATING') {
+                state.uiState = 'CHOOSE_CALL';
                 renderAll();
-                await firebase.firestore().collection('matches').doc(currentMatchId).update({
-                    'gameState.deck': state.deck,
-                    'gameState.players': state.players,
-                    'gameState.lastEffectiveValue': effective,
-                    'gameState.lastPlayedCardLabel': label,
-                    'gameState.lastPlayedBy': bl.buyer.uid,
-                    'gameState.uiState': 'CHOOSE_CALL',
-                    'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: bl.buyer.uid, cardValue: card.value, msg: actionMsg }
-                });
-            } else {
-                // OFFLINE
-                state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.id;
-                log(actionMsg, 'ok'); flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[bl.buyer.id], 15, card.value); triggerCalloutPhase();
             }
-        } else {
+        }, 500);
+
+        await firebase.firestore().collection('matches').doc(currentMatchId).update({
+    'gameState.deck': state.deck,
+    'gameState.players': state.players,
+    'gameState.direction': state.direction, // <-- ADD THIS LINE
+    'gameState.lastEffectiveValue': effective,
+    'gameState.lastPlayedCardLabel': label,
+    'gameState.lastPlayedBy': bl.buyer.uid,
+    'gameState.uiState': 'CHOOSE_CALL',
+    'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: bl.buyer.uid, cardValue: card.value, msg: actionMsg }
+});
+    } else {
+        // OFFLINE
+        log(actionMsg,'ok');
+        state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=bl.buyer.id;
+        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[bl.buyer.id], 15, card.value);
+        sweepEliminations();
+        triggerCalloutPhase();
+    }
+} else {
             bl.buyer.hand.push(card);
             bl.lastDrawnLabel = 'a card'; // Note: no longer reveals the drawn card's identity
             const actionMsg = `Try ${bl.tries}: drew a card — no match.`;
@@ -9849,11 +9952,10 @@ async function confirmGuess(v) {
     
     const nextPlayerObj = state.players[nextIndex];
     const myPlayerObj = state.players[currentIndex]; 
-    const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue+v}.` : '';
 
     // --- INSTANT OPTIMISTIC UI ---
     state.requiredValue = v;
-    log(`${myPlayerObj.name} calls it — ${nextPlayerObj.name} needs a ${v}.${totalTxt}`, '', myUid);
+    log(`${myPlayerObj.name} calls for a ${v}.`, '', myUid);
     window.dodJustPlayedLocally = true; 
 
     // Failsafe: Ensure the anti-rubberband lock NEVER gets permanently stuck
@@ -9905,6 +10007,22 @@ async function confirmGuess(v) {
 
 let localLastActionId = null;
 
+// RECONNECT FIX: fills in chat-log lines for actions that happened while we
+// were disconnected. Deliberately does NOT trigger card-fly animations for
+// these — only the live action (the very latest one) gets that, via
+// playNetworkedAnimation below. Replaying animations for old actions against
+// a board that's already moved on would look wrong. This only backfills TEXT.
+function backfillMissedLog(actionLog) {
+    if (!actionLog || actionLog.length === 0) return;
+    const startIdx = actionLog.findIndex(a => a.id === localLastActionId);
+    const missed = startIdx === -1 ? actionLog.slice(0, -1) : actionLog.slice(startIdx + 1, -1);
+    missed.forEach(a => {
+        if (!a || !a.msg) return;
+        const cleanMsg = a.msg.split('|').join(' — ');
+        log(cleanMsg, a.type === 'DECEPTION_RESULT' ? 'system' : null, a.uid === 'system' ? null : a.uid);
+    });
+}
+
 function playNetworkedAnimation(action) {
     if (localLastActionId === action.id) return;
     localLastActionId = action.id;
@@ -9917,11 +10035,8 @@ function playNetworkedAnimation(action) {
         return;
     }
 
-    // --- OPTIMISTIC UI UPGRADE ---
     if (action.uid === DoDAuth.getProfile().uid && window.dodJustPlayedLocally) {
         window.dodJustPlayedLocally = false;
-        
-        // CLEAR LOCKS SO THE UI DOESN'T FREEZE ON YOUR TURN
         window.pendingTurnArc = null;
         window.dodTurnLocked = false;
         if (window.pendingHostTurnLogic) {
@@ -9944,38 +10059,43 @@ function playNetworkedAnimation(action) {
             window.dodTurnLocked = false;
             renderAll();
         }
-        // Execute pending host evaluations (like starting Deception) ONLY after animations finish!
         if (window.pendingHostTurnLogic) {
             window.pendingHostTurnLogic();
             window.pendingHostTurnLogic = null;
         }
     };
 
+    // NEW: Parse split messages for delayed "Thinking" logic
+    let msgParts = action.msg.split('|');
+    let initialMsg = msgParts[0];
+    let calloutMsg = msgParts[1];
+
     if (action.type === 'PLAY_NUMBER') {
-        log(action.msg, 'ok', action.uid); 
         window.dodCenterIsLocked = true; 
         
         let actionTargetRect = null;
-        // Note: Safely and reliably parse the victim's name directly from the action log
-        if (action.msg.includes('Steal on')) {
-            const match = action.msg.match(/Steal on (.*?),/);
+        if (initialMsg.includes('Steal on')) {
+            const match = initialMsg.match(/Steal on (.*?),/);
             if (match) {
                 const target = state.players.find(p => p.name === match[1]);
                 if (target) actionTargetRect = getSeatOrPanelRect(target.id);
             }
-        } else if (action.msg.includes('Power on')) {
-            const match = action.msg.match(/Power on (.*?),/);
+        } else if (initialMsg.includes('Power on')) {
+            const match = initialMsg.match(/Power on (.*?),/);
             if (match) {
                 const target = state.players.find(p => p.name === match[1]);
                 if (target) actionTargetRect = getSeatOrPanelRect(target.id);
             }
         }
         
-        const isDraw = action.msg.includes('drew') || action.msg.includes('draws');
-        const tryMatch = action.msg.match(/on try (\d+)/);
+        const isDraw = initialMsg.includes('drew') || initialMsg.includes('draws');
+        const tryMatch = initialMsg.match(/on try (\d+)/);
         const pulls = tryMatch ? parseInt(tryMatch[1]) : (isDraw ? 1 : 0);
 
         if (pulls > 0 && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+            // START BOT DRAW SEQUENCE
+            log(`Try 1: drew a card — no match.`, '', targetPlayer.uid);
+            
             window.animatingRemoteCoins = window.animatingRemoteCoins || {};
             const realCoins = targetPlayer.shop;
             let visualCoins = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
@@ -9997,6 +10117,8 @@ function playNetworkedAnimation(action) {
                     
                     setTimeout(() => {
                         flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5, '', pSkin);
+                        // Merge the next attempt into the bubble
+                        log(`Try ${i+2}: drew a card — no match.`, '', targetPlayer.uid);
                     }, 300);
                 }, i * 1200);
             }
@@ -10020,35 +10142,65 @@ function playNetworkedAnimation(action) {
                     flyCard(bankRect(), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
                     flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
                     
-                    setTimeout(() => {
-                        delete window.animatingRemoteCoins[targetPlayer.uid];
-                        unlockTurn();
-                    }, 430);
+                    // OVERWRITE the last "no match" message with the true play message
+                    log(initialMsg, 'ok', action.uid, true);
+
+                    if (calloutMsg) {
+                        setTimeout(() => {
+                            log(calloutMsg, '', action.uid); // Merges!
+                            delete window.animatingRemoteCoins[targetPlayer.uid];
+                            unlockTurn();
+                        }, 1200); // 1.2s thinking delay before callout
+                    } else {
+                        setTimeout(() => {
+                            delete window.animatingRemoteCoins[targetPlayer.uid];
+                            unlockTurn();
+                        }, 430);
+                    }
                 }, 300);
             }, Math.max(0, (pulls - 1) * 1200));
         } else {
+            // INSTANT PLAY
+            log(initialMsg, 'ok', action.uid);
+            
             const startRect = isDraw ? bankRect() : getSeatOrPanelRect(actorSeatIndex);
             flyCard(startRect, centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
             flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
             
-            setTimeout(unlockTurn, 430);
+            if (calloutMsg && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+                setTimeout(() => {
+                    log(calloutMsg, '', action.uid); // Merges!
+                    unlockTurn();
+                }, 1200); // Thinking delay
+            } else {
+                setTimeout(unlockTurn, 430);
+            }
         }
     } 
     else if (action.type === 'CALLOUT') {
-        log(action.msg, '', action.uid); 
+        log(initialMsg, '', action.uid); // Automatically merges into previous bubble
+        
+        if (initialMsg.includes("fails all tries") || initialMsg.includes("stop drawing to save coins")) {
+            const actorPlayer = state.players[actorSeatIndex];
+            const pSkin = actorPlayer ? actorPlayer.deckSkin : null;
+            flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
+            flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
+        }
     }
     else if (action.type === 'TIMEOUT_PENALTY') {
-        log(action.msg, 'alert', action.uid);
+        log(initialMsg, 'alert', action.uid);
         if (actorSeatIndex !== -1) flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
         setTimeout(unlockTurn, 430);
-    } else if (action.type === 'MISS_DRAW') {
-        log(action.msg, 'alert', action.uid); 
+    } 
+    else if (action.type === 'MISS_DRAW') {
         const pSkin = targetPlayer ? targetPlayer.deckSkin || null : null;
-
-        const tryMatch = action.msg.match(/on try (\d+)/);
+        const tryMatch = initialMsg.match(/on try (\d+)/);
         const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
 
         if (pulls > 0 && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+            // START BOT FULL MISS SEQUENCE
+            log(`Try 1: drew a card — no match.`, '', targetPlayer.uid);
+            
             const realCoins = targetPlayer.shop;
             targetPlayer.shop = realCoins + (pulls * BUY_COST);
             renderAll();
@@ -10059,14 +10211,22 @@ function playNetworkedAnimation(action) {
                     renderAll();
                     flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
                     
-                    // Delay flyCard by 300ms
                     setTimeout(() => {
                         flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 8, '', pSkin);
-                        if (i === pulls - 1) setTimeout(unlockTurn, 500);
+                        
+                        if (i < pulls - 1) {
+                            log(`Try ${i+2}: drew a card — no match.`, '', targetPlayer.uid);
+                        } else {
+                            // Final pull, overwrite with the final alert message
+                            log(initialMsg, 'alert', action.uid, true);
+                            setTimeout(unlockTurn, 500);
+                        }
                     }, 300);
                 }, i * 1200);
             }
         } else {
+            log(initialMsg, 'alert', action.uid);
+            
             let targetRect = getSeatOrPanelRect(actorSeatIndex);
             let newCardEl = null;
 
@@ -10075,7 +10235,7 @@ function playNetworkedAnimation(action) {
                 if (handCards.length > 0) {
                     newCardEl = handCards[handCards.length - 1];
                     targetRect = newCardEl.getBoundingClientRect();
-                    newCardEl.style.opacity = '0'; // Hide it temporarily
+                    newCardEl.style.opacity = '0'; 
                 }
             }
 
@@ -10085,7 +10245,7 @@ function playNetworkedAnimation(action) {
             setTimeout(() => {
                 if (newCardEl) {
                     newCardEl.style.opacity = '1';
-                    newCardEl.classList.add('flip-reveal'); // Flip and reveal!
+                    newCardEl.classList.add('flip-reveal');
                 }
                 unlockTurn();
             }, 430);
@@ -10260,115 +10420,118 @@ function syncRemoteTurn(){
     }
     
     const matchIdx=bot.hand.findIndex(c=>c.type==='number' && (state.requiredValue===null || c.value===state.requiredValue));
-    if(matchIdx>=0){
-      const card=bot.hand[matchIdx];
-      bot.hand.splice(matchIdx,1);
-      bot.shop+=PLAY_REWARD;
-      state.lastEffectiveValue=card.value; state.lastPlayedCardLabel=card.value; state.lastPlayedBy=bot.id;
-      bot._tempActionStr = `plays a ${card.value}`;
-      
-      if (!currentMatchId) {
-          log(`${bot.name} plays a ${card.value}. +${PLAY_REWARD} coin.`);
-          renderAll(); 
-          flyCard(getSeatOrPanelRect(bot.id), centerRect(), card.value, PLAYER_COLORS[bot.id], 15, card.value);
-      }
-      setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
-    }
-    
-    const actCheck = (type) => bot.hand.findIndex(c=>c.type===type);
-    
-    let playIdx = actCheck('steal');
-    if(playIdx>=0 && (Math.random()<0.7 || bot.shop < BUY_COST)){
-        const card=bot.hand[playIdx];
-        const opts=activePlayers().filter(p=>p.id!==bot.id);
-        if(opts.length>0){
-            bot.hand.splice(playIdx,1);
-            const target=opts.sort((a,b)=>b.shop-a.shop)[0];
-            const taken=transferToPlayer(target,bot,card.tier);
-            bot.shop+=PLAY_REWARD;
-            state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='STL'; state.lastPlayedBy=bot.id;
-            bot._tempActionStr = `plays Steal on ${target.name}, taking ${taken}c`;
-            
-            if (!currentMatchId) {
-                flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(bot.id), 0);
-                const msg = `${bot.name} plays Steal (${card.value}) on ${target.name}, stealing ${taken}.`;
-                log(msg);
-                state.lastAction = { msg: msg };
-                if(!target.out) protestFrom(target);
-                renderAll();
-                flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
-            }
-            setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
-        }
-    }
-    
-    playIdx = actCheck('power');
-    if(playIdx>=0 && (Math.random()<0.6 || bot.shop < BUY_COST)){
-        const card=bot.hand[playIdx];
-        const opts=activePlayers().filter(p=>p.id!==bot.id);
-        if(opts.length>0){
-            bot.hand.splice(playIdx,1);
-            const target=opts.sort((a,b)=>b.shop-a.shop)[0];
-            const taken=transferToBank(target,card.tier);
-            bot.shop+=PLAY_REWARD;
-            state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='PWR'; state.lastPlayedBy=bot.id;
-            bot._tempActionStr = `plays Power on ${target.name}, draining ${taken}c`;
-            
-            if (!currentMatchId) {
-                flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
-                const msg = `${bot.name} plays Power (${card.value}) on ${target.name}, draining ${taken} to bank.`;
-                log(msg);
-                state.lastAction = { msg: msg };
-                if(!target.out) protestFrom(target);
-                renderAll();
-                flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
-            }
-            setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
-        }
-    }
-    
-    playIdx = actCheck('reverse');
-    if(playIdx>=0 && (Math.random()<0.8 || bot.shop < BUY_COST)){
-        const card=bot.hand[playIdx];
-        bot.hand.splice(playIdx,1);
-        state.direction *= -1;
+      if(matchIdx>=0){
+        const card=bot.hand[matchIdx];
+        bot.hand.splice(matchIdx,1);
         bot.shop+=PLAY_REWARD;
-        state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=bot.id;
-        bot._tempActionStr = `plays Reverse`;
+        state.lastEffectiveValue=card.value; state.lastPlayedCardLabel=card.value; state.lastPlayedBy=bot.id;
+        bot._tempActionStr = `plays a ${card.value}`;
         
         if (!currentMatchId) {
-            log(`${bot.name} plays Reverse (${card.value}). Direction changed!`);
-            renderAll();
-            flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'REV', '#d16b24', 20, card.value);
+            log(`${bot.name} plays a ${card.value}. +${PLAY_REWARD} coin.`, '', bot.uid);
+            renderAll(); 
+            flyCard(getSeatOrPanelRect(bot.id), centerRect(), card.value, PLAYER_COLORS[bot.id], 15, card.value);
         }
-        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
-    }
-    
-    playIdx = actCheck('wild');
-    if(playIdx>=0 && bot.shop>=WILD_COST && Math.random()<0.5){
-      const card=bot.hand[playIdx];
-      bot.hand.splice(playIdx,1);
-      payFromOwn(bot,WILD_COST);
-      bot.shop+=PLAY_REWARD;
-      state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='W'; state.lastPlayedBy=bot.id;
-      bot._tempActionStr = `plays Wild Swap`;
-      
-      if (!currentMatchId) {
-          flyCoin(getSeatOrPanelRect(bot.id), bankRect(), 0);
-          log(`${bot.name} plays Wild Swap (matched ${card.value}).`);
-          renderAll();
-          flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'W', PLAYER_COLORS[bot.id], 18, card.value);
+        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
       }
-      setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 600); return;
-    }
-    
-    if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
-    
-    if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
-    processRemoteMarketAction(bot);
-    
-  }, thinkDelay);
-}
+      
+      const actCheck = (type) => bot.hand.findIndex(c=>c.type===type);
+      
+      let playIdx = actCheck('steal');
+      if(playIdx>=0 && (Math.random()<0.7 || bot.shop < BUY_COST)){
+          const card=bot.hand[playIdx];
+          const opts=activePlayers().filter(p=>p.id!==bot.id);
+          if(opts.length>0){
+              bot.hand.splice(playIdx,1);
+              const target=opts.sort((a,b)=>b.shop-a.shop)[0];
+              const targetBefore = target.shop;
+              const youBefore = bot.shop;
+              const taken=transferToPlayer(target,bot,card.tier);
+              bot.shop+=PLAY_REWARD;
+              state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='STL'; state.lastPlayedBy=bot.id;
+              bot._tempActionStr = `(${youBefore}→${bot.shop} PC) plays Steal on ${target.name} (${targetBefore}→${target.shop} PC), taking ${taken}c`;
+              
+              if (!currentMatchId) {
+                  flyCoin(getSeatOrPanelRect(target.id), getSeatOrPanelRect(bot.id), 0);
+                  const msg = `${bot.name} (${youBefore}→${bot.shop} PC) plays Steal (${card.value}) on ${target.name} (${targetBefore}→${target.shop} PC), stealing ${taken}.`;
+                  log(msg, '', bot.uid);
+                  state.lastAction = { msg: msg };
+                  if(!target.out) protestFrom(target);
+                  renderAll();
+                  flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
+              }
+              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+          }
+      }
+      
+      playIdx = actCheck('power');
+      if(playIdx>=0 && (Math.random()<0.6 || bot.shop < BUY_COST)){
+          const card=bot.hand[playIdx];
+          const opts=activePlayers().filter(p=>p.id!==bot.id);
+          if(opts.length>0){
+              bot.hand.splice(playIdx,1);
+              const target=opts.sort((a,b)=>b.shop-a.shop)[0];
+              const targetBefore = target.shop;
+              const taken=transferToBank(target,card.tier);
+              bot.shop+=PLAY_REWARD;
+              state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='PWR'; state.lastPlayedBy=bot.id;
+              bot._tempActionStr = `plays Power on ${target.name} (${targetBefore}→${target.shop} PC), draining ${taken}c`;
+              
+              if (!currentMatchId) {
+                  flyCoin(getSeatOrPanelRect(target.id), bankRect(), 0);
+                  const msg = `${bot.name} plays Power (${card.value}) on ${target.name} (${targetBefore}→${target.shop} PC), draining ${taken} to bank.`;
+                  log(msg, '', bot.uid);
+                  state.lastAction = { msg: msg };
+                  if(!target.out) protestFrom(target);
+                  renderAll();
+                  flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
+              }
+              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+          }
+      }
+      
+      playIdx = actCheck('reverse');
+      if(playIdx>=0 && (Math.random()<0.8 || bot.shop < BUY_COST)){
+          const card=bot.hand[playIdx];
+          bot.hand.splice(playIdx,1);
+          state.direction *= -1;
+          bot.shop+=PLAY_REWARD;
+          state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='REV'; state.lastPlayedBy=bot.id;
+          bot._tempActionStr = `plays Reverse`;
+          
+          if (!currentMatchId) {
+              log(`${bot.name} plays Reverse (${card.value}). Direction changed!`, '', bot.uid);
+              renderAll();
+              flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'REV', '#d16b24', 20, card.value);
+          }
+          setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+      }
+      
+      playIdx = actCheck('wild');
+      if(playIdx>=0 && bot.shop>=WILD_COST && Math.random()<0.5){
+        const card=bot.hand[playIdx];
+        bot.hand.splice(playIdx,1);
+        payFromOwn(bot,WILD_COST);
+        bot.shop+=PLAY_REWARD;
+        state.lastEffectiveValue=state.requiredValue||5; state.lastPlayedCardLabel='W'; state.lastPlayedBy=bot.id;
+        bot._tempActionStr = `plays Wild Swap`;
+        
+        if (!currentMatchId) {
+            flyCoin(getSeatOrPanelRect(bot.id), bankRect(), 0);
+            log(`${bot.name} plays Wild Swap (matched ${card.value}).`, '', bot.uid);
+            renderAll();
+            flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'W', PLAYER_COLORS[bot.id], 18, card.value);
+        }
+        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+      }
+      
+      if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
+      if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name} needs to buy but can't afford it. Turn passes.`); advanceTurn(); return; }
+      
+      processRemoteMarketAction(bot);
+      
+    }, thinkDelay);
+  }
 
 async function resolveRemoteDraw(buyer){
   if(!state || state.over) return;
@@ -10483,6 +10646,11 @@ async function processRemoteMarketAction(buyer) {
     if (buyer.shop < BUY_COST) { if (!currentMatchId) log(`${buyer.name} ran out of coins mid-loop.`); break; }
     
     tries++;
+    
+    if (!currentMatchId) {
+        log(`Try ${tries}: drew a card — no match.`, '', buyer.uid);
+    }
+
     const taken = payFromOwn(buyer, BUY_COST);
     
     // 1. INSTANT VISUAL SYNC: Deduct coin and show it flying FIRST
@@ -10554,14 +10722,13 @@ async function processRemoteMarketAction(buyer) {
       } else {
           // OFFLINE VISUALS: Show the matching card fly out!
           let actStr = buyer._tempActionStr || `draws a match on try ${tries} (${card.value})`;
-          log(`${buyer.name} ${actStr}.`, 'ok');
+          // OVERWRITE the "Try X: drew a card - no match" log with the successful play!
+          log(`${buyer.name} ${actStr}.`, 'ok', buyer.uid, true);
           renderAll();
           flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value, null, actionTargetRect);
       }
       
-      // Random pause before the bot calls out the required number
-      const callDelay = Math.random() < 0.3 ? 300 : Math.floor(Math.random() * 800) + 400;
-      setTimeout(() => syncRemoteCallout(buyer), currentMatchId ? 50 : callDelay);
+      setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : 1200);
       return; // END LOOP!
     } else {
       // --- DUD DRAWN ---
@@ -10575,7 +10742,7 @@ async function processRemoteMarketAction(buyer) {
               'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: buyer.uid, msg: msg }
           });
       } else {
-          log(msg);
+          // We already logged "Try X: drew a card - no match." above! Just animate.
           renderAll(); // Updates UI to show the new card in their hand count
           flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5, '', buyer.deckSkin);
       }
@@ -10614,7 +10781,8 @@ async function processRemoteMarketAction(buyer) {
           });
       }, currentMatchId ? 1200 : 0);
   } else {
-      log(stopMsg, 'alert'); 
+      // Overwrite the final attempt with the stop message
+      log(stopMsg, 'alert', buyer.uid, true); 
       renderAll();
       setTimeout(() => advanceTurn(), 800); 
   }
@@ -10623,8 +10791,7 @@ async function processRemoteMarketAction(buyer) {
 async function botDeclare(bot) {
     if(!state || state.over) return;
 
-    // 1. Existing AI Logic: Bot picks a number
-    const target = nextPlayerOf(bot.id); // Visual target for offline mode
+    const target = nextPlayerOf(bot.id);
     let chosen;
     const peekIdx = bot.hand.findIndex(c => c.type === 'peek' && (state.requiredValue === null || c.value === state.requiredValue));
     
@@ -10637,31 +10804,26 @@ async function botDeclare(bot) {
         chosen = 1 + Math.floor(Math.random() * 9);
     }
     
-    const totalTxt = state.lastEffectiveValue !== null ? ` Total: ${state.lastEffectiveValue + chosen}.` : '';
-
-    // Formulate a proper message based on what the bot played
     let playedStr = bot._tempActionStr || `played a card`;
     delete bot._tempActionStr;
 
     if (currentMatchId) {
-        // --- ONLINE MODE (Host pushes the bot's entirely calculated turn to Firebase) ---
         const db = firebase.firestore();
-        
-        // Calculate the exact UID of the next player to pass the turn to
         let nextIndex = state.players.findIndex(p => p.uid === bot.uid);
         do { 
             nextIndex = (nextIndex + state.direction + state.players.length) % state.players.length; 
         } while (state.players[nextIndex].out);
         const nextPlayer = state.players[nextIndex];
 
-        const msg = `${bot.name} ${playedStr} and calls it — ${nextPlayer.name} needs a ${chosen}.${totalTxt}`;
+        // Use the | delimiter so the client can split the play and the callout
+        const msg = `${bot.name} ${playedStr}.|calls for a ${chosen}.`;
 
         await db.collection('matches').doc(currentMatchId).update({
             'gameState.players': state.players, 
             'gameState.deck': state.deck,
             'gameState.requiredValue': chosen,
             'gameState.turnUid': nextPlayer.uid,
-            'gameState.turnExpiresAt': Date.now() + 30000, // RESET TIMER
+            'gameState.turnExpiresAt': Date.now() + 30000,
             'gameState.direction': state.direction,
             'gameState.lastEffectiveValue': state.lastEffectiveValue,
             'gameState.lastPlayedCardLabel': state.lastPlayedCardLabel,
@@ -10675,10 +10837,9 @@ async function botDeclare(bot) {
             }
         });
     } else {
-        // --- OFFLINE MODE (Original Logic) ---
         state.requiredValue = chosen;
-        const offlineMsg = `${bot.name} ${playedStr} and calls it — ${target.name} needs a ${chosen}.${totalTxt}`;
-        log(offlineMsg);
+        // Only log the callout part! The merge logic adds the arrow.
+        log(`calls for a ${chosen}.`, '', bot.uid);
         renderAll();
         advanceTurn();
     }
