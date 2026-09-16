@@ -75,17 +75,20 @@ dodAuth.onAuthStateChanged(function(user){
         ? legacy.ownedSkins.filter(id => SHOP_LOCKED_CATALOG.some(item => item.id === id))
         : [];
       const newProfile = {
-        displayName: null, // Always force the Name Setup prompt for new players!
+        // 1. COMPLETELY REMOVED 'displayName: null'. 
+        // This ensures the Firestore rule allows the HTML file to set up the account!
         currency: safeLegacyCurrency,
         ownedSkins: safeLegacyOwnedSkins,
-        // PUBG Profile & Progression Defaults
+        
+        // 2. UPDATED DEFAULTS: Match the exact 'Apprentice' stats your HTML file expects
         level: 1,
         points: 0,
-        tier: 'Bronze V',
-        avatar: 'default_avatar',
-        frame: 'default_frame',
-        unlockedAvatars: ['default_avatar'],
-        unlockedFrames: ['default_frame'],
+        rankScore: 0,
+        tier: 'Apprentice',
+        avatar: 'Apprentice',
+        frame: 'Apprentice',
+        deckSkin: 'cf_default',
+        equippedTable: 'tb_default',
         createdAt: firebase.firestore.FieldValue.serverTimestamp()
       };
       ref.set(newProfile).then(function(){
