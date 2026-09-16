@@ -5312,6 +5312,13 @@ function proceedWithBoot(overlayEl) {
     overlayEl.style.opacity = '0';
     setTimeout(() => overlayEl.style.display = 'none', 800);
     
+    // Smoothly fade out and remove the bootstrap "Connecting..." screen
+    const bootOverlay = document.getElementById('bootstrapOverlay');
+    if (bootOverlay) {
+        bootOverlay.style.opacity = '0';
+        setTimeout(() => bootOverlay.style.display = 'none', 800);
+    }
+    
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
