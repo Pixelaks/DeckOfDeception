@@ -4286,24 +4286,31 @@ async function submitUniqueNameWithId() {
     btn.disabled = true;
     errorEl.style.display = "none";
 
+    const db = firebase.firestore();
+    let myUid = null;
+
+    // DIAGNOSTIC: split into two separate try/catches so the console tells us
+    // exactly which Firestore call is being denied, instead of one generic error.
     try {
-        const db = firebase.firestore();
-        // Check if username is already taken globally
         const snapshot = await db.collection('users').where('displayName', '==', rawName).limit(1).get();
-        
         if (!snapshot.empty) {
             errorEl.textContent = "This name is already taken! Try another.";
             errorEl.style.display = "block";
             btn.disabled = false;
             return;
         }
+    } catch (e) {
+        console.error("FAILED ON UNIQUENESS QUERY:", e);
+        errorEl.textContent = "Error saving name. Try again.";
+        errorEl.style.display = "block";
+        btn.disabled = false;
+        return;
+    }
 
-        const myUid = firebase.auth().currentUser.uid;
-        // Generate a clean numeric short visible user ID tracker loop 
+    try {
+        myUid = firebase.auth().currentUser.uid;
         const numericId = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Note: Initialize all required fields so they instantly appear on the leaderboard!
-        // We use .set() with merge:true because it's much safer for brand new accounts.
         await db.collection('users').doc(myUid).set({
             displayName: rawName,
             gameId: numericId,
@@ -4318,15 +4325,14 @@ async function submitUniqueNameWithId() {
         }, { merge: true });
 
         document.getElementById('nameSetupOverlay').classList.remove('show');
-        
-        // Let the state flow naturally refresh widgets
+
         if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
             await DoDAuth.refreshProfile();
         } else {
             window.location.reload();
         }
     } catch (e) {
-        console.error(e);
+        console.error("FAILED ON PROFILE SET (uid:", myUid, "):", e);
         errorEl.textContent = "Error saving name. Try again.";
         errorEl.style.display = "block";
         btn.disabled = false;
