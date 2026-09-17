@@ -681,7 +681,6 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     background-size: 100% 100% !important;
     background-position: center !important;
     background-repeat: no-repeat !important;
-    image-rendering: high-quality;
 }
 
 @media(min-width: 840px) {
@@ -791,8 +790,9 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* ENLARGED CENTER CARDS */
 .ringcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:14px;z-index:2}
 .minicard{
-  width:52px;height:74px;border-radius:6px;background-image:url('Cards/CardPhase.webp');background-size:100% 100%;background-repeat:no-repeat;background-position:center;image-rendering:high-quality;color:var(--ink);border:2px solid var(--paper-dark);
+  width:52px;height:74px;border-radius:6px;background-image:url('Cards/CardPhase.webp');background-size:100% 100%;background-repeat:no-repeat;background-position:center;color:var(--ink);border:2px solid var(--paper-dark);
   display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:24px;font-weight:700;transition:transform .2s;position:relative;box-shadow:1px 2px 8px rgba(0,0,0,0.5);
+  will-change: transform; transform: translateZ(0);
 }
 @media(min-width: 840px) {
   .minicard { width:68px; height:96px; font-size:32px; border-width:3px; }
@@ -886,7 +886,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .card{width:46px;height:66px;border-radius:5px;cursor:pointer;user-select:none;transition:transform .12s;
   display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0; position:relative; overflow:hidden;
   background-size: 100% 100%; background-repeat: no-repeat; background-position: center; 
-  image-rendering: high-quality; border: 1px solid rgba(0,0,0,0.5);
+  border: 1px solid rgba(0,0,0,0.5);
   box-shadow: 1px 2px 6px rgba(0,0,0,0.4); will-change: transform; transform: translateZ(0);
 }
 .card:hover{transform:translateY(-4px)}
@@ -1327,13 +1327,15 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   transition: transform .42s cubic-bezier(.2,.8,.2,1), opacity .3s;
   background-image:url('Cards/CardPhase.webp');background-size:100% 100% !important;background-repeat:no-repeat;background-position:center;
   box-shadow: 2px 4px 12px rgba(0,0,0,0.5);
-  will-change: transform; transform: translate3d(0,0,0); /* GPU-only compositing, no layout thrash */
+  will-change: transform; transform: translate3d(0,0,0);
+  contain: strict; /* Massively boosts FPS by ignoring layout */
 }
 .ghost-coin{position:fixed;z-index:200;border-radius:50%;pointer-events:none;
   transition: transform .48s ease, opacity .48s;
   background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;
   box-shadow: 1px 2px 6px rgba(0,0,0,0.5);
-  will-change: transform; transform: translate3d(0,0,0); /* GPU-only compositing, no layout thrash */
+  will-change: transform; transform: translate3d(0,0,0);
+  contain: strict; /* Massively boosts FPS by ignoring layout */
 }
 
 .particle{position:fixed;z-index:250;pointer-events:none;}
@@ -2484,7 +2486,6 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   position: absolute; inset: 0; border-radius: 4px;
   -webkit-backface-visibility: hidden; backface-visibility: hidden;
   background-size: 100% 100%; background-position: center; background-repeat: no-repeat;
-  image-rendering: high-quality;
   background-color: var(--paper-dark); /* Prevents the card from turning invisible if network is slow */
 }
 .b-front { 
@@ -6933,6 +6934,13 @@ function listenToGameState() {
         // that try to drag the UI back into the CHOOSE_CALL phase!
         let mappedUiState = serverState.uiState === 'DECEPTION' ? 'DECEPTION' : (serverState.turnUid === myUid ? serverState.uiState : 'IDLE');
         let mappedTurnUid = serverState.turnUid;
+
+        // CRITICAL TARGETING FIX: Prevent background pings from erasing local targeting UI
+        if (typeof state !== 'undefined' && state && serverState.turnUid === myUid) {
+            if (state.uiState === 'CHOOSE_TARGET_POWER' || state.uiState === 'CHOOSE_TARGET_STEAL') {
+                mappedUiState = state.uiState; // Keep the local targeting state alive!
+            }
+        }
         
         if (window.dodCalloutPending) {
             if (serverState.lastAction && serverState.lastAction.type === 'CALLOUT' && serverState.lastAction.uid === myUid) {
@@ -7102,6 +7110,12 @@ function listenToGameState() {
                         window.dodTurnLocked = true; 
                         
                         // CRITICAL BOT FREEZE FIX: Guarantee the lock releases even if an animation drops
+                        let failsafeDelay = 1500;
+                        if (serverState.lastAction && serverState.lastAction.msg) {
+                            const tryMatch = serverState.lastAction.msg.match(/on try (\d+)/);
+                            const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
+                            failsafeDelay = (pulls * 1200) + 1000;
+                        }
                         clearTimeout(window.dodTurnLockFailsafe);
                         window.dodTurnLockFailsafe = setTimeout(() => {
                             window.dodTurnLocked = false;
@@ -7109,7 +7123,7 @@ function listenToGameState() {
                                 window.pendingHostTurnLogic();
                                 window.pendingHostTurnLogic = null;
                             }
-                        }, 1500);
+                        }, failsafeDelay);
                     } else {
                         animateTurnArc(fromIdx, toIdx, serverState.direction);
                         sfx.turn(); 
