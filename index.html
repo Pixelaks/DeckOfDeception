@@ -14776,10 +14776,10 @@ const SHOP_DB = {
     ],
     coins: [
     // --- SYNDICATE CHIPS (PREMIUM SC) ---
-    { id: 'iap_1', name: 'Handful of SC', price: '₹49', reward: 100, type: 'sc', img: 'Coins/HandfulofSyndicate.webp' },
-    { id: 'iap_2', name: 'SC Pouch', price: '₹249', reward: 550, type: 'sc', img: 'Coins/SyndicatePouch.webp' },
-    { id: 'iap_3', name: 'SC Chest', price: '₹499', reward: 1200, type: 'sc', img: 'Coins/SyndicateChest.webp' },
-    { id: 'iap_4', name: 'Syndicate Vault', price: '₹999', reward: 3000, type: 'sc', img: 'Coins/SyndicateVault.webp' },
+    { id: 'sc_1', name: 'Handful of SC', price: '₹49', reward: 100, type: 'sc', img: 'Coins/HandfulofSyndicate.webp' },
+    { id: 'sc_2', name: 'SC Pouch', price: '₹249', reward: 550, type: 'sc', img: 'Coins/SyndicatePouch.webp' },
+    { id: 'sc_3', name: 'SC Chest', price: '₹499', reward: 1200, type: 'sc', img: 'Coins/SyndicateChest.webp' },
+    { id: 'sc_4', name: 'Syndicate Vault', price: '₹999', reward: 3000, type: 'sc', img: 'Coins/SyndicateVault.webp' },
 
     // --- REWARD CARDS (BOUGHT WITH SC) ---
     { id: 'buy_chest_mythic', name: 'Mythic Card', scPrice: 25, tier: 'mythic', type: 'sc_chest', img: 'Cards/MythicCard.webp' },
@@ -15546,7 +15546,7 @@ async function purchaseIAP(itemId, rewardAmount, currencyType = 'sc', event) {
                 const res = await secureServerCall('economy/iap', {
                     itemId: itemId,
                     purchaseToken: purchaseToken,
-                    packageName: "com.yourdomain.deckofdeception" // ⚠️ CHANGE THIS to your exact Android package name
+                    packageName: "com.pixelaks.deckofdeception" // ⚠️ CHANGE THIS to your exact Android package name
                 });
 
                 // Tell Google Play the item was consumed so the user can buy it again in the future
