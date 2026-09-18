@@ -17,6 +17,16 @@ firebase.initializeApp(firebaseConfig);
 const dodAuth = firebase.auth();
 const dodDb = firebase.firestore();
 
+// Enable PWA Offline Persistence
+dodDb.enablePersistence({ synchronizeTabs: true })
+  .catch(function(err) {
+      if (err.code === 'failed-precondition') {
+          console.warn('Multiple tabs open, offline mode disabled.');
+      } else if (err.code === 'unimplemented') {
+          console.warn('Browser does not support offline persistence.');
+      }
+  });
+
 let _dodProfile = null;          
 let _dodProfileReadyCallbacks = [];
 
@@ -25,13 +35,12 @@ function dodOnProfileReady(cb){
   else { _dodProfileReadyCallbacks.push(cb); }
 }
 function _dodFireReady(){
-  // Wait for the 2.5 second intro animation to finish before proceeding
   if (typeof window !== 'undefined' && window.minimumBootTimePassed === false) {
      setTimeout(_dodFireReady, 100);
      return;
   }
   
-  dodHideBootstrap(); // Returning player detected! Hide loader and go straight to game.
+  dodHideBootstrap(); // <-- Make sure this actually exists in auth.js or index.html
   _dodProfileReadyCallbacks.forEach(cb=>cb(_dodProfile));
   _dodProfileReadyCallbacks = [];
 }
@@ -106,15 +115,23 @@ dodAuth.onAuthStateChanged(function(user){
   });
 });
 
-function dodSignInWithGoogle(){
+function dodSignInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
-  dodAuth.signInWithPopup(provider).then(function(result) {
-      // REMOVE forceEnterFullscreen() from here. The browser will block it.
-  }).catch(function(error){
+  
+  // Mobile PWAs and TWAs require Redirect instead of Popup to avoid window blocking
+  dodAuth.signInWithRedirect(provider).catch(function(error) {
       console.error("Google Sign-In Error:", error);
-      // REMOVE forceEnterFullscreen() from here as well.
+      if (typeof resetAuthButtons === 'function') resetAuthButtons();
   });
 }
+
+// Catch redirect errors when the page reloads after returning from Google
+dodAuth.getRedirectResult().catch(function(error) {
+    console.error("Redirect Auth Error:", error);
+    if (error.code === 'auth/credential-already-in-use') {
+        alert("This Google account is already registered! Please use a different one.");
+    }
+});
 
 function dodSignInAnonymously(){
   dodAuth.signInAnonymously().catch(function(err){
