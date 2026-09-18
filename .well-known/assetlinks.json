@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.pixelaks.deckofdeception",
+        "sha256_cert_fingerprints": ["78:2E:1F:83:52:FA:1E:D9:E0:6F:6C:F6:E0:A1:16:52:64:7B:C9:CB:D7:78:21:31:CA:B1:E0:AE:7B:1D:51:71"]
+      }
+    }]
