@@ -385,8 +385,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     min-height: 40px; flex-shrink: 0;
 }
 .shop-content { padding: 5px 10px 10px 10px; width: 100%; }
-/* Drop minmax width and padding to stop cards from stretching massively */
-.shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 150px)); gap: 14px; width: 100%; justify-content: center; }
+/* Adjusted to enforce 3+ columns for the compact horizontal design */
+.shop-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; width: 100%; justify-content: center; }
 .shop-item { padding: 10px 8px !important; }
 .menu-screen.hidden { display:none; }
 .screen-header { flex-shrink:0; width:100%; text-align:center; z-index:10; margin-bottom: 12px; }
@@ -478,11 +478,11 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 @keyframes lsFadeIn { 0% { opacity: 0; } 100% { opacity: 1; } }
 @keyframes lsTextPulse { 0% { opacity: 0.5; } 100% { opacity: 1; } }
 
-/* ORIGINAL SHOP GRID WITH BROWN GLASS */
+/* UPDATED SHOP GRID FOR COMPACT HORIZONTAL CARDS (3+ COLUMNS) */
 .shop-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fit, 140px); 
-    gap: 14px; 
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
+    gap: 12px; 
     width: 100%; 
     justify-content: center; 
     margin-top: 16px; 
@@ -1242,9 +1242,9 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .dd-card-wrapper:hover:not(.locked) .dd-card { transform: translateY(-16px) rotateZ(3deg); box-shadow: 0 15px 40px rgba(226,189,74,0.5); }
 /* Fly to the center, push down 40px to clear text, and scale up */
 .dd-card.flipped { 
-    transform: translateX(var(--target-x, 0)) translateY(var(--target-y, 40px)) rotateY(180deg) scale(1.4); 
-    z-index: 10; 
-    box-shadow: 0 0 40px rgba(226,189,74,0.6);
+    transform: translateX(var(--target-x, 0)) translateY(var(--target-y, 40px)) rotateY(180deg) scale(1.55); 
+    z-index: 15; 
+    box-shadow: 0 0 60px 10px rgba(232,196,84,0.7), 0 0 120px rgba(255,255,255,0.4);
 }
 
 /* Add a floating/rotating animation after the flip finishes */
@@ -1253,8 +1253,45 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 
 @keyframes luckyCardFloat {
-    0% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) + 0px)) rotateY(180deg) scale(1.4) rotateZ(-2deg); }
-    100% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) - 15px)) rotateY(180deg) scale(1.45) rotateZ(2deg); box-shadow: 0 0 60px rgba(226,189,74,1); }
+    0% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) + 0px)) rotateY(180deg) scale(1.55) rotateZ(-2deg); }
+    100% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) - 15px)) rotateY(180deg) scale(1.6) rotateZ(2deg); box-shadow: 0 0 80px rgba(226,189,74,1); }
+}
+
+/* NEW INTENSE LIGHT BURST ANIMATION */
+.dd-reveal-flash {
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 200vmax; height: 200vmax;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+    z-index: 5; /* Spawns directly behind the card */
+    mix-blend-mode: screen;
+}
+.dd-reveal-core {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(232,196,84,0.8) 5%, transparent 35%);
+    opacity: 0;
+    animation: ddFlashCore 2s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+.dd-reveal-rays {
+    position: absolute;
+    inset: 0;
+    background: repeating-conic-gradient(from 0deg, transparent 0deg 10deg, rgba(255, 230, 120, 0.5) 10deg 20deg);
+    mask-image: radial-gradient(circle, black 5%, transparent 35%);
+    -webkit-mask-image: radial-gradient(circle, black 5%, transparent 35%);
+    opacity: 0;
+    animation: ddFlashRays 6s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+}
+@keyframes ddFlashCore {
+    0% { opacity: 0; transform: scale(0.1); }
+    10% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.5); }
+}
+@keyframes ddFlashRays {
+    0% { opacity: 0; transform: rotate(0deg) scale(0.2); }
+    10% { opacity: 1; transform: rotate(30deg) scale(1); }
+    100% { opacity: 0; transform: rotate(120deg) scale(1.2); }
 }
 .dd-card-wrapper.fade-out { opacity: 0; transform: scale(0.5) translateY(50px); pointer-events: none; filter: blur(5px); }
 .dd-face {
@@ -2147,13 +2184,10 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   
   /* Compress Grid Items */
   .shop-content { padding-top: 4px !important; }
-  .shop-grid { margin-top: 4px; gap: 8px; grid-template-columns: repeat(auto-fit, 110px) !important; justify-content: center !important; }
-  .shop-item { padding: 8px 6px !important; border-radius: 6px !important; }
-  .shop-item .shop-name { font-size: 9px !important; margin-bottom: 2px !important; }
-  .shop-item .shop-swatch { width: 26px !important; height: 26px !important; margin-bottom: 2px !important; }
-  .shop-item button { padding: 4px !important; font-size: 9px !important; }
-  /* Force JS inline card-backs to scale down */
-  .shop-item > div > div[style*="width:34px"] { width: 24px !important; height: 34px !important; margin: 4px auto !important; }
+  .shop-grid { margin-top: 4px; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; justify-content: center !important; }
+  .shop-item { border-radius: 6px !important; padding: 0 !important; }
+  .shop-item .shop-name { font-size: 9.5px !important; margin-bottom: 4px !important; white-space: normal !important; }
+  .shop-item button { padding: 6px !important; font-size: 8.5px !important; }
 
   /* =========================================
      RANKS SCREEN COMPRESSION (HORIZONTAL)
@@ -2863,7 +2897,11 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 .pass-reward-box.claimed { opacity: 0.4; filter: grayscale(0.8); cursor: default; }
 .pass-reward-box.claimed::after { content: '✓'; position: absolute; top: 2px; right: 4px; color: #5faa82; font-size: 14px; font-weight: bold; text-shadow: 0 2px 4px #000; }
 .pass-reward-box.locked { opacity: 0.9; cursor: not-allowed; }
-.pass-reward-box.locked::after { content: '🔒'; position: absolute; top: 2px; right: 4px; font-size: 11px; opacity: 0.8; text-shadow: 0 2px 5px #000; }
+.pass-reward-box.locked::after { 
+    content: ''; position: absolute; top: 4px; right: 4px; width: 12px; height: 12px; 
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' stroke='white' stroke-width='2' fill='none' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='11' width='18' height='11' rx='2' ry='2'%3E%3C/rect%3E%3Cpath d='M7 11V7a5 5 0 0 1 10 0v4'%3E%3C/path%3E%3C/svg%3E");
+    background-size: contain; background-repeat: no-repeat; opacity: 0.7; filter: drop-shadow(0 2px 2px #000); 
+}
 .pass-reward-box.empty-slot { opacity: 0; pointer-events: none; }
 
 /* Mobile Squish (Fits Landscape perfectly) */
@@ -2878,7 +2916,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
             /* Dynamically shrink images so they don't break the box height */
             .pass-reward-box img { height: 32px !important; width: auto !important; margin-bottom: 2px !important; }
     .pass-reward-box div { font-size: 8px !important; line-height: 1 !important; }
-    .pass-reward-box.locked::after { font-size: 9px !important; }
+    .pass-reward-box.locked::after { width: 10px !important; height: 10px !important; }
     .pass-reward-box.claimed::after { font-size: 11px !important; }
 }
 
@@ -2914,7 +2952,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
             }
     
     .pass-reward-box div { font-size: clamp(7px, 1.8vh, 8.5px) !important; line-height: 1.1 !important; }
-    .pass-reward-box.locked::after { font-size: 12px !important; top: 4px !important; right: 4px !important; }
+    .pass-reward-box.locked::after { width: 14px !important; height: 14px !important; top: 4px !important; right: 4px !important; }
     .pass-reward-box.claimed::after { font-size: 10px !important; top: 4px !important; right: 4px !important; }
 
     /* Missions Modal Shrink */
@@ -3266,11 +3304,11 @@ window.dodImagesLoaded = false;
   <!-- TOP-RIGHT CURRENCY CHIPS -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:16px; flex-direction:row;">
     <!-- Pixel Coins (PC - Free) -->
-    <div style="display:flex; align-items:center; gap:6px;" title="Pixel Coins">
+    <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition: transform 0.2s;" title="Pixel Coins" onclick="showMenuScreen('shop'); switchShopTab('coins', document.querySelector('#shopTabsContainer button:nth-child(3)'));" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
       <img src="Coins/Coins.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC"> <span id="hubCurrency">0</span>
     </div>
     <!-- Syndicate Chips (SC - Premium) -->
-    <div style="display:flex; align-items:center; gap:6px; color:var(--danger-bright);" title="Syndicate Chips">
+    <div style="display:flex; align-items:center; gap:6px; color:var(--danger-bright); cursor:pointer; transition: transform 0.2s;" title="Syndicate Chips" onclick="showMenuScreen('shop'); switchShopTab('coins', document.querySelector('#shopTabsContainer button:nth-child(3)'));" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">
       <img src="Coins/SyndicateChips.webp" style="width:20px; height:20px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="SC"> <span id="hubPremiumCurrency" style="color:#fff;">0</span>
     </div>
   </div>
@@ -3473,31 +3511,60 @@ window.dodImagesLoaded = false;
 
   <!-- LEADERBOARD SCREEN -->
   <div class="menu-screen hidden" id="screen-leaderboard" style="max-width: 900px; width: 100%;">
-    <div class="screen-header">
+    <div class="screen-header" style="margin-bottom: 0;">
       <div class="screen-title">Global Rankings</div>
     </div>
-    <div class="screen-content" style="padding: 0 10px; width: 100%;">
-      <p class="blurb" style="text-align:center; margin-top:0;">Compete against the world. Only the Top 100 agents are displayed.</p>
-      <div style="display:flex; justify-content:space-between; padding: 0 16px 8px; border-bottom:1px solid rgba(201,162,39,0.3); margin-bottom: 8px; width:100%;">
-          <span class="mono" style="color:var(--brass-bright); font-size:10px;">RANK & AGENT</span>
-          <span class="mono" style="color:var(--brass-bright); font-size:10px;">TIER & SCORE</span>
+    
+    <!-- LEADERBOARD MAIN BOX WRAPPER -->
+    <div style="width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px;">
+      
+      <!-- Top Blurb Header -->
+      <div style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); padding: 12px 16px;">
+        <p class="blurb" style="text-align:center; margin:0; color:rgba(242,234,216,0.7); font-size:12px;">Compete against the world. Only the Top 100 players are displayed.</p>
       </div>
-      <div id="leaderboardList" style="width: 100%; display: flex; flex-direction: column; gap: 4px; padding-bottom: 20px;">
-        <!-- Populated by JS -->
+      
+      <!-- Scrollable List Area -->
+      <div class="screen-content" style="padding: 15px 15px 25px 15px; width: 100%;">
+        <div style="display:flex; justify-content:space-between; padding: 0 16px 8px; border-bottom:1px solid rgba(201,162,39,0.3); margin-bottom: 8px; width:100%;">
+            <span class="mono" style="color:var(--brass-bright); font-size:10px; font-weight:bold; letter-spacing:0.5px;">RANKS</span>
+            <span class="mono" style="color:var(--brass-bright); font-size:10px; font-weight:bold; letter-spacing:0.5px;">TIER & SCORE</span>
+        </div>
+        <div id="leaderboardList" style="width: 100%; display: flex; flex-direction: column; gap: 4px;">
+          <!-- Populated by JS -->
+        </div>
       </div>
+      
     </div>
   </div>
 
   <!-- RANKS / TIERS -->
-  <div class="menu-screen hidden" id="screen-ranks">
-    <div class="screen-header">
+  <div class="menu-screen hidden" id="screen-ranks" style="max-width: 1150px; width: 100%;">
+    <style>
+      /* Force Center Alignment on large screens, safe scroll alignment on mobile */
+      .ranks-list { justify-content: center !important; }
+      @media (max-width: 840px) { 
+          .ranks-list { justify-content: flex-start !important; padding-left: 20px !important; padding-right: 20px !important; } 
+      }
+    </style>
+    <div class="screen-header" style="margin-bottom: 0;">
       <div class="screen-title">Ranked Tiers</div>
     </div>
-    <div class="screen-content">
-      <p class="blurb" style="text-align:center; margin-top:0;">Climb the ranks by winning matches. Reach Level 5 with 100 points to unlock the next tier and claim its rewards.</p>
-      <div class="ranks-list" id="ranksListContainer">
-        <!-- Dynamically injected -->
+    
+    <!-- RANKS MAIN BOX WRAPPER -->
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px;">
+      
+      <!-- Top Blurb Header -->
+      <div style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); padding: 12px 16px; width: 100%;">
+        <p class="blurb" style="text-align:center; margin:0; color:rgba(242,234,216,0.7); font-size:12px;">Climb the ranks by winning matches. Reach Level 5 with 100 points to unlock the next tier and claim its rewards.</p>
       </div>
+      
+      <!-- Scrollable Ranks Container -->
+      <div class="screen-content" style="width: 100%; padding: 10px 0 20px 0;">
+        <div class="ranks-list" id="ranksListContainer">
+          <!-- Dynamically injected -->
+        </div>
+      </div>
+      
     </div>
   </div>
 
@@ -3542,7 +3609,6 @@ window.dodImagesLoaded = false;
         <!-- Inner Header for the track container -->
         <div style="background: linear-gradient(90deg, rgba(0,0,0,0.7) 0%, rgba(20,25,30,0.8) 100%); padding: 12px 20px; border-bottom: 1px solid rgba(201,162,39,0.2); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(0,0,0,0.5); z-index: 10;">
            <div style="display:flex; align-items:center; gap:10px;">
-             <span style="font-size:18px; filter:drop-shadow(0 0 5px rgba(232,196,84,0.6));">🃏</span>
              <span style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:15px; font-weight:bold; letter-spacing:2px; text-shadow:0 2px 4px #000;">ROYALE PASS REWARDS</span>
            </div>
            <span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); text-transform:uppercase;">Swipe to view tiers →</span>
@@ -3559,24 +3625,29 @@ window.dodImagesLoaded = false;
   </div>
 
   <!-- SHOP -->
-  <div class="menu-screen hidden" id="screen-shop" style="max-width: 800px; width: 100%;">
+  <div class="menu-screen hidden" id="screen-shop" style="max-width: 900px; width: 100%;">
     <div class="screen-header shop-header" style="margin-bottom: 0;">
       <div class="screen-title">Marketplace</div>
     </div>
     
-    <!-- FIXED Shop Tabs (Moved outside scrollable content) -->
-    <div id="shopTabsContainer" class="shop-tabs-container">
-      <button class="squad-subtab-btn active" onclick="switchShopTab('cardBacks', this)">Backs</button>
-      <button class="squad-subtab-btn" onclick="switchShopTab('tables', this)">Tables</button>
-      <button class="squad-subtab-btn" onclick="switchShopTab('coins', this)">Coins</button>
-      <button class="squad-subtab-btn" onclick="switchShopTab('cardFaces', this)">Faces</button>
-    </div>
-    
-    <!-- SCROLLABLE Dynamic Grid -->
-    <div class="screen-content shop-content">
-      <div id="shopRoot" class="shop-grid">
-         <!-- Handled by JS -->
+    <!-- SHOP MAIN BOX WRAPPER -->
+    <div class="shop-main-box" style="width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px;">
+      
+      <!-- FIXED Shop Tabs (Integrated into the box) -->
+      <div id="shopTabsContainer" class="shop-tabs-container" style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); margin: 0; padding: 12px 10px;">
+        <button class="squad-subtab-btn active" onclick="switchShopTab('cardBacks', this)">Backs</button>
+        <button class="squad-subtab-btn" onclick="switchShopTab('tables', this)">Tables</button>
+        <button class="squad-subtab-btn" onclick="switchShopTab('coins', this)">Coins</button>
+        <button class="squad-subtab-btn" onclick="switchShopTab('cardFaces', this)">Faces</button>
       </div>
+      
+      <!-- SCROLLABLE Dynamic Grid -->
+      <div class="screen-content shop-content" style="padding: 10px 15px 25px 15px;">
+        <div id="shopRoot" class="shop-grid">
+           <!-- Handled by JS -->
+        </div>
+      </div>
+      
     </div>
   </div>
 
@@ -3603,48 +3674,52 @@ window.dodImagesLoaded = false;
   </div>
 
   <!-- SETTINGS -->
-  <div class="menu-screen hidden" id="screen-settings">
-    <div class="screen-header">
+  <div class="menu-screen hidden" id="screen-settings" style="max-width: 700px; width: 100%;">
+    <div class="screen-header" style="margin-bottom: 0;">
       <div class="screen-title">Settings</div>
     </div>
-    <div class="screen-content">
-      <div class="section-label" style="margin-top:0;">Audio & Voice</div>
-      <div class="settings-row"><span>Ambient Music</span><input type="range" id="musicVol" min="0" max="100" value="60" oninput="setMusicVolume(this.value)"></div>
-      <div class="settings-row"><span>Sound Effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
-      <div class="settings-row"><span>Voice Chat Master</span><input type="range" id="voiceVol" min="0" max="100" value="80" oninput="setVoiceVolume(this.value)"></div>
+    
+    <!-- SETTINGS MAIN BOX WRAPPER -->
+    <div style="width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px; padding: 20px 10px;">
+        <div class="screen-content" style="width: 100%; margin: 0 auto; padding: 0 10px;">
+          <div class="section-label" style="margin-top:0;">Audio & Voice</div>
+          <div class="settings-row"><span>Ambient Music</span><input type="range" id="musicVol" min="0" max="100" value="60" oninput="setMusicVolume(this.value)"></div>
+          <div class="settings-row"><span>Sound Effects</span><input type="range" id="sfxVol" min="0" max="100" value="60" oninput="setSfxVolume(this.value)"></div>
+          <div class="settings-row"><span>Voice Chat Master</span><input type="range" id="voiceVol" min="0" max="100" value="80" oninput="setVoiceVolume(this.value)"></div>
 
-      <div class="section-label" style="margin-top:20px;">Display & Gameplay</div>
-      <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('power')"><span>Battery Saver (Low VFX)</span><div class="toggle-switch" id="toggle-power"></div></div>
-      <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('sort')"><span>Auto-Sort Hand</span><div class="toggle-switch" id="toggle-sort"></div></div>
+          <div class="section-label" style="margin-top:20px;">Display & Gameplay</div>
+          <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('power')"><span>Battery Saver (Low VFX)</span><div class="toggle-switch" id="toggle-power"></div></div>
+          <div class="settings-row" style="cursor:pointer;" onclick="toggleGameSetting('sort')"><span>Auto-Sort Hand</span><div class="toggle-switch" id="toggle-sort"></div></div>
 
-      <div class="section-label" style="margin-top:20px;">Account Management</div>
-      <div class="settings-row" style="cursor:pointer; border-color:var(--brass-bright); background:rgba(201,162,39,0.1);" onclick="copyPlayerId()"><span>Copy My Player ID</span><span style="color:var(--brass-bright); font-size:14px;">📋</span></div>
-      <div id="settingsAccountArea" style="width:100%; max-width:340px; margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>
+          <div class="section-label" style="margin-top:20px;">Account Management</div>
+          <div class="settings-row" style="cursor:pointer; border-color:var(--brass-bright); background:rgba(201,162,39,0.1);" onclick="copyPlayerId()"><span>Copy My Player ID</span><span style="color:var(--brass-bright); font-size:14px;">📋</span></div>
+          <div id="settingsAccountArea" style="width:100%; max-width:340px; margin-top:14px; display:flex; flex-direction:column; gap:10px;"></div>
 
-      <div class="section-label" style="margin-top:20px;">Send Feedback</div>
-      <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:12px; padding: 16px; max-width: 100%; border-color: rgba(201,162,39,0.2);">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-            <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); margin:0;">Rate your experience:</p>
-            <div id="settingsStarContainer" style="font-size: 20px; color: rgba(255,255,255,0.15); cursor: pointer; user-select: none;">
-               <span onclick="setRatingValue('settings', 1)">★</span>
-               <span onclick="setRatingValue('settings', 2)">★</span>
-               <span onclick="setRatingValue('settings', 3)">★</span>
-               <span onclick="setRatingValue('settings', 4)">★</span>
-               <span onclick="setRatingValue('settings', 5)">★</span>
+          <div class="section-label" style="margin-top:20px;">Send Feedback</div>
+          <div class="settings-row" style="flex-direction:column; align-items:stretch; gap:12px; padding: 16px; max-width: 100%; border-color: rgba(201,162,39,0.2);">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); margin:0;">Rate your experience:</p>
+                <div id="settingsStarContainer" style="font-size: 20px; color: rgba(255,255,255,0.15); cursor: pointer; user-select: none;">
+                   <span onclick="setRatingValue('settings', 1)">★</span>
+                   <span onclick="setRatingValue('settings', 2)">★</span>
+                   <span onclick="setRatingValue('settings', 3)">★</span>
+                   <span onclick="setRatingValue('settings', 4)">★</span>
+                   <span onclick="setRatingValue('settings', 5)">★</span>
+                </div>
             </div>
-        </div>
-        <textarea id="settingsFeedbackInput" rows="3" placeholder="Have a suggestion or found a bug? Type here..." style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(201,162,39,0.3); border-radius:4px; color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px; resize:none; outline:none; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);"></textarea>
-        <button class="btn small" id="submitSettingsFeedbackBtn" onclick="submitPlayerFeedback('settings')" style="width:100%; padding:10px 0;">Submit Feedback ↗</button>
-      </div>
+            <textarea id="settingsFeedbackInput" rows="3" placeholder="Have a suggestion or found a bug? Type here..." style="width:100%; background:rgba(0,0,0,0.5); border:1px solid rgba(201,162,39,0.3); border-radius:4px; color:var(--paper); font-family:'IBM Plex Mono',monospace; font-size:12px; padding:8px; resize:none; outline:none; box-shadow: inset 0 2px 6px rgba(0,0,0,0.5);"></textarea>
+            <button class="btn small" id="submitSettingsFeedbackBtn" onclick="submitPlayerFeedback('settings')" style="width:100%; padding:10px 0;">Submit Feedback ↗</button>
+          </div>
 
-      <div class="section-label" style="margin-top:20px;">Legal & Policies</div>
-      <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/privacy-games', '_blank')"><span>Privacy Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
-      <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/terms-games', '_blank')"><span>Terms & Conditions</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
-      <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/refund', '_blank')"><span>Cancellation & Refund Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
-      <div class="settings-row" style="cursor:pointer;" onclick="window.location.href='mailto:pixelaks.technologies@gmail.com'"><span>Contact Us</span><span style="color:var(--brass-bright); font-size:16px;">✉</span></div>
-    </div>
-    <div class="screen-footer">
-      <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play Guide</button>
+          <div class="section-label" style="margin-top:20px;">Legal & Policies</div>
+          <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/privacy-games', '_blank')"><span>Privacy Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
+          <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/terms-games', '_blank')"><span>Terms & Conditions</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
+          <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/refund', '_blank')"><span>Cancellation & Refund Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
+          <div class="settings-row" style="cursor:pointer;" onclick="window.location.href='mailto:pixelaks.technologies@gmail.com'"><span>Contact Us</span><span style="color:var(--brass-bright); font-size:16px;">✉</span></div>
+        </div>
+        <div class="screen-footer" style="padding-top: 15px; padding-bottom: 0;">
+          <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play Guide</button>
+        </div>
     </div>
   </div>
 
@@ -3754,7 +3829,7 @@ window.dodImagesLoaded = false;
 
 <!-- ELIMINATION CINEMATIC OVERLAY -->
 <div id="eliminationOverlay" style="display:none; position:fixed; inset:0; z-index:8200; background:radial-gradient(circle, rgba(122,31,46,0.95) 0%, #060709 100%); flex-direction:column; align-items:center; justify-content:center; text-align:center; color:#fff; backdrop-filter:blur(10px);">
-    <div style="font-size:clamp(40px, 10vh, 72px); margin-bottom:clamp(10px, 3vh, 20px); animation: pulseIn 0.6s cubic-bezier(0.2, 1, 0.3, 1);">💀</div>
+    <img src="DeceptionIcon.webp" style="height:clamp(60px, 15vh, 100px); width:auto; object-fit:contain; filter:drop-shadow(0 4px 20px rgba(194,59,74,0.8)); margin-bottom:clamp(10px, 3vh, 20px); animation: pulseIn 0.6s cubic-bezier(0.2, 1, 0.3, 1);" alt="Eliminated">
     <h1 style="font-family:'Cinzel Decorative', serif; font-size:clamp(28px, 6vw, 64px); color:var(--danger-bright); text-shadow:0 4px 20px #000; margin:0 0 clamp(10px, 3vh, 30px); letter-spacing:4px; text-transform:uppercase;" id="elimTitle">ELIMINATED</h1>
     <div id="elimDetails" style="font-family:'IBM Plex Mono', monospace; font-size:clamp(12px, 2.5vh, 16px); color:rgba(255,255,255,0.85); max-width:600px; width:100%; line-height:1.6; padding: 0 20px; max-height: 50vh; overflow-y: auto;"></div>
 </div>
@@ -4445,7 +4520,7 @@ function renderUnderworldScreen() {
     
     if (!isUnlocked) {
             content.innerHTML = `
-                <div style="font-size: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px rgba(201,162,39,0.8));">🔒</div>
+                <svg viewBox="0 0 24 24" style="width: clamp(36px, 8vh, 56px); height: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px rgba(201,162,39,0.8)); stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
                 <p class="blurb" style="text-align:center; color: rgba(242,234,216,0.8); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Access Denied. You are not ready for the high stakes of the Syndicate. Meet the requirements below to receive your invitation.</p>
                 <div class="uw-locked-list">
                     <div class="uw-req-row ${metTier ? 'met' : 'failed'}">
@@ -4595,9 +4670,17 @@ function renderUnderworldScreen() {
       <!-- HEADER -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.05);">
         <h2 style="font-family:'Inter',sans-serif; font-size:18px; font-weight:700; color:#fff; margin:0 !important; letter-spacing:1px;">DATA</h2>
-        <div class="currency-badge" style="margin-top:0; padding:6px 14px; font-size:13px; display:flex; align-items:center; gap:6px;">
-          <img src="Coins/Coins.webp" style="width:16px; height:16px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC">
-          <span id="profileCurrency">0</span>
+        <div class="currency-badge" style="margin-top:0; padding:6px 14px; font-size:13px; display:flex; align-items:center; gap:16px; flex-direction:row;">
+          <!-- Pixel Coins (PC - Free) -->
+          <div style="display:flex; align-items:center; gap:6px; cursor:pointer; transition: transform 0.2s;" title="Pixel Coins" onclick="document.getElementById('profileModal').classList.remove('show'); showMenuScreen('shop'); switchShopTab('coins', document.querySelector('#shopTabsContainer button:nth-child(3)'));" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="Coins/Coins.webp" style="width:18px; height:18px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="PC">
+            <span id="profileCurrency">0</span>
+          </div>
+          <!-- Syndicate Chips (SC - Premium) -->
+          <div style="display:flex; align-items:center; gap:6px; color:var(--danger-bright); cursor:pointer; transition: transform 0.2s;" title="Syndicate Chips" onclick="document.getElementById('profileModal').classList.remove('show'); showMenuScreen('shop'); switchShopTab('coins', document.querySelector('#shopTabsContainer button:nth-child(3)'));" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <img src="Coins/SyndicateChips.webp" style="width:18px; height:18px; filter:drop-shadow(0 2px 4px rgba(0,0,0,0.6));" alt="SC">
+            <span id="profilePremiumCurrency" style="color:#fff;">0</span>
+          </div>
         </div>
       </div>
 
@@ -5594,7 +5677,7 @@ const tutScript = [
     // --- BACK TO REGULAR GAMEPLAY ---
     { target: 'log', text: "<b>The Log:</b> Keep an eye here to track who is broke and who is bluffing. Now, let's unfreeze the bots.", btn: "Unfreeze Bots", unfreeze: true },
     { target: 'actionbar', text: "The bots are playing. When it gets back to you, you won't have a match. Click <b>Forced Buy (2 PC)</b> when the button appears.", wait: 'forced_buy' },
-    { target: 'deckpile', text: "If you draw a match, it plays automatically! If you miss, you can try again (up to 3 times), stop, or use Insurance to discard the dud.", btn: "Understood" },
+    { target: 'deckpile', text: "If you draw a match, it goes to your hand and you choose when to play it. If you miss, you can try again (up to 3 times), stop, or use Insurance to discard the dud.", btn: "Understood" },
     { target: 'timerDisplay', text: "<b>Global Timer:</b> The match ends after <b>20 minutes</b>. The player with the highest score wins! Ranks increase based on your performance.", btn: "Almost ready" },
     { target: null, text: "Higher ranks unlock exclusive rewards and prove you are a Master of Cards. Find your strategy and dominate the table!", btn: "Play Full Match ↗" }
 ];
@@ -6122,11 +6205,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 const TIER_REWARDS = [
   { name: 'Apprentice', req: 'Starting Rank', reward: 'Basic Matchmaking' },
-  { name: 'Trickster', req: 'Reach Apprentice Lvl 5 + 100 Pts', reward: '500 Coins' },
-  { name: 'Phantom', req: 'Reach Trickster Lvl 5 + 100 Pts', reward: '1,500 Coins' },
-  { name: 'Mastermind', req: 'Reach Phantom Lvl 5 + 100 Pts', reward: '3,000 Coins' },
-  { name: 'Oracle', req: 'Reach Mastermind Lvl 5 + 100 Pts', reward: '5,000 Coins' },
-  { name: 'Legend', req: 'Reach Oracle Lvl 5 + 100 Pts', reward: '10,000 Coins' }
+  { name: 'Trickster', req: 'Reach Apprentice Lvl 5 + 100 Pts', reward: '250 Coins' },
+  { name: 'Phantom', req: 'Reach Trickster Lvl 5 + 100 Pts', reward: '500 Coins' },
+  { name: 'Mastermind', req: 'Reach Phantom Lvl 5 + 100 Pts', reward: '1,000 Coins' },
+  { name: 'Oracle', req: 'Reach Mastermind Lvl 5 + 100 Pts', reward: '2,500 Coins' },
+  { name: 'Legend', req: 'Reach Oracle Lvl 5 + 100 Pts', reward: '5,000 Coins' }
 ];
 
 function buildRanksScreen() {
@@ -6172,18 +6255,74 @@ function buildRanksScreen() {
     particleHtml += `</div>`;
     
     // Add the lock badge if this rank is higher than the player's current rank
-    let lockHtml = (idx > cIdx) ? '<div class="lock-badge">🔒</div>' : '';
+    let lockHtml = (idx > cIdx) ? '<div class="lock-badge"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg></div>' : '';
+
+    // Swap standard box-shadow for a filter drop-shadow so it perfectly traces the new banner shape!
+    let shadowFilter = idx === cIdx ? 'drop-shadow(0 0 12px rgba(226,189,74,0.6))' : 'drop-shadow(0 8px 12px rgba(0,0,0,0.7))';
+
+    // Build Dynamic Visual Reward Icons
+    let rewardVisuals = `<div style="display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; margin-top:14px; width:100%;">`;
+    
+    let iconsHtml = `<div style="display:flex; gap:8px; align-items:center; justify-content:center;">`;
+    
+    // Avatar & Frame (Native browser scaling)
+    iconsHtml += `<div title="Avatar & Frame" class="avatar-frame-wrap" style="width:36px; height:36px; border-radius:4px; background:rgba(0,0,0,0.6); box-shadow:0 4px 8px rgba(0,0,0,0.8);">
+        <img src="Avatars/${t.name}.webp" class="af-avatar" alt="Avatar" style="border-radius:3px;">
+        <img src="Frames/${t.name}.webp" class="af-frame" alt="Frame">
+    </div>`;
+
+    // Shop Item Unlocks
+    if (typeof SHOP_DB !== 'undefined') {
+        if (SHOP_DB.cardBacks) {
+            SHOP_DB.cardBacks.forEach(cb => {
+                if (cb.method === 'tier' && cb.unlockTier === t.name) {
+                    // Use standard <img> with object-fit for optimal browser anti-aliasing
+                    iconsHtml += `<img title="${cb.name}" src="CardstoBuy/${cb.img}" style="width:26px; height:36px; border-radius:3px; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                }
+            });
+        }
+        if (SHOP_DB.cardFaces) {
+            SHOP_DB.cardFaces.forEach(cf => {
+                if (cf.method === 'tier' && cf.unlockTier === t.name) {
+                    iconsHtml += `<div title="${cf.name}" style="width:26px; height:36px; border-radius:3px; border:2px solid ${cf.color}; box-shadow:0 4px 8px rgba(0,0,0,0.8); background-image:url('Cards/CardPhase.webp'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; font-weight:bold; color:#000;">A</div>`;
+                }
+            });
+        }
+        if (SHOP_DB.tables) {
+            SHOP_DB.tables.forEach(tb => {
+                if (tb.method === 'tier' && tb.unlockTier === t.name) {
+                    iconsHtml += `<img title="${tb.name}" src="Tables/${tb.img}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                }
+            });
+        }
+    }
+    iconsHtml += `</div>`;
+    rewardVisuals += iconsHtml;
+
+    // Coins or default text
+    if (t.reward.includes('Coins')) {
+        let coinAmt = t.reward.replace(' Coins', '');
+        rewardVisuals += `<div title="${t.reward}" style="display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass-bright); font-weight:bold; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);"><img src="Coins/Coins.webp" style="width:16px; height:16px; filter:drop-shadow(0 2px 2px rgba(0,0,0,0.8));"> ${coinAmt} PC</div>`;
+    } else {
+        rewardVisuals += `<div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#fff; font-weight:600; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);">${t.reward}</div>`;
+    }
+    rewardVisuals += `</div>`;
 
     return `
-      <div class="${classes}">
-        ${lockHtml}
-        ${particleHtml}
-        <div class="r-icon"><img src="Tiers/${t.name}.webp" class="tier-img" alt="${t.name}"></div>
-        <div class="r-info">
-          <h4 class="r-name">${t.name}</h4>
-          <div class="r-req">${t.req}</div>
-          <div class="r-reward">🎁 ${t.reward}</div>
+      <div class="${classes}" style="padding: 1.5px !important; border: none !important; border-radius: 0 !important; background: ${idx === cIdx ? 'var(--brass-bright)' : 'rgba(201,162,39,0.3)'} !important; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 25px), 50% 100%, 0 calc(100% - 25px)) !important; filter: ${shadowFilter} !important; box-shadow: none !important;">
+        
+        <!-- Inner Wrapper that acts as the dark background to preserve the 1.5px border -->
+        <div style="width: 100%; height: 100%; background: linear-gradient(180deg, rgba(20,20,25,0.95) 0%, rgba(5,6,8,1) 100%); clip-path: polygon(0 0, 100% 0, 100% calc(100% - 23.5px), 50% calc(100% - 1.5px), 0 calc(100% - 23.5px)); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 25px 8px 35px 8px; position: relative; z-index: 1;">
+            ${lockHtml}
+            ${particleHtml}
+            <div class="r-icon"><img src="Tiers/${t.name}.webp" class="tier-img" alt="${t.name}"></div>
+            <div class="r-info" style="width:100%;">
+              <h4 class="r-name">${t.name}</h4>
+              <div class="r-req">${t.req}</div>
+              ${rewardVisuals}
+            </div>
         </div>
+
       </div>
     `;
   }).join('');
@@ -7014,6 +7153,8 @@ function listenToGameState() {
             uiState: mappedUiState,
             buyLoop: preservedBuyLoop,
             peekResult: preservedPeek,
+            _pendingActionIdx: (typeof state !== 'undefined' && state) ? state._pendingActionIdx : undefined,
+            _pendingActionEl: (typeof state !== 'undefined' && state) ? state._pendingActionEl : undefined,
             deception: serverState.deception || null,
             gameExpiresAt: serverState.gameExpiresAt || (serverState.startedAtMs + (GAME_DURATION_SEC * 1000)),
             turnExpiresAt: localExpiresAt,
@@ -7113,7 +7254,7 @@ function listenToGameState() {
                         if (serverState.lastAction && serverState.lastAction.msg) {
                             const tryMatch = serverState.lastAction.msg.match(/on try (\d+)/);
                             const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
-                            failsafeDelay = (pulls * 1200) + 1000;
+                            failsafeDelay = (pulls * 1200) + 3000;
                         }
                         clearTimeout(window.dodTurnLockFailsafe);
                         window.dodTurnLockFailsafe = setTimeout(() => {
@@ -8825,6 +8966,8 @@ async function confirmActionTarget(target, actionType){
   const you = state.players.find(p => p.uid === myUid) || state.players[0];
   const idx = state._pendingActionIdx;
   const card = you.hand[idx];
+  // Safety: if the card is gone (stale index), cancel targeting instead of corrupting the hand
+  if (!card || (card.type !== 'steal' && card.type !== 'power')) { state.uiState = 'IDLE'; renderAll(); return; }
   const el = state._pendingActionEl;
   const rect = el ? el.getBoundingClientRect() : null;
   const srcRect = (rect && rect.width > 0) ? rect : getSeatOrPanelRect(0);
@@ -8929,57 +9072,43 @@ async function doBuyDraw() {
         }
 
         let isMatch = (card.type === 'number' && card.value === state.requiredValue) || (state.requiredValue === null) || card.type === 'reverse';
-        if (card.type === 'wild' && bl.buyer.shop >= 2) { isMatch = true; bl.buyer.shop -= 2; }
+        if (card.type === 'wild' && bl.buyer.shop >= 2) { isMatch = true; }
 
         if (isMatch) {
-    let effective, label;
-    if (card.type === 'number') { effective = card.value; label = card.value; }
-    else if (card.type === 'wild') { effective = state.requiredValue; label = 'W'; }
-    else if (card.type === 'reverse') { effective = state.requiredValue; label = 'REV'; state.direction *= -1; }
-    else if (card.type === 'steal') { effective = state.requiredValue; label = 'STL'; }
-    else { effective = state.requiredValue; label = `PWR`; }
+            // Matching draw goes to the hand. The player decides whether to play it.
+            bl.buyer.hand.push(card);
+            const actionMsg = `Try ${bl.tries}: drew a matching card! Paid ${taken}c out of pocket. Play it from your hand.`;
+            state.buyLoop = null;
 
-    bl.buyer.shop += PLAY_REWARD;
-    const actionMsg = `Try ${bl.tries}: drew a matching ${label}! Paid ${taken}c out of pocket.`;
-    state.buyLoop = null;
-
-    if (currentMatchId) {
-        // --- MISSING CODE ADDED HERE ---
-        log(actionMsg, 'ok', bl.buyer.uid);
-        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[0], 18, card.value);
-        // -------------------------------
-
-        window.dodJustPlayedLocally = true;
-        state.lastEffectiveValue = effective; state.lastPlayedCardLabel = label; state.lastPlayedBy = bl.buyer.uid;
-
-        state.uiState = 'ANIMATING';
-        renderAll();
-        setTimeout(() => {
-            if (state && state.uiState === 'ANIMATING') {
-                state.uiState = 'CHOOSE_CALL';
+            if (currentMatchId) {
+                // ONLINE: same sync as a normal draw, but the turn stays with you (IDLE)
+                await firebase.firestore().collection('matches').doc(currentMatchId).update({
+                    'gameState.deck': state.deck,
+                    'gameState.players': state.players,
+                    'gameState.uiState': 'IDLE',
+                    'gameState.lastAction': { id: Date.now().toString(), type: 'MISS_DRAW', uid: bl.buyer.uid, msg: actionMsg }
+                });
+            } else {
+                // OFFLINE
+                log(actionMsg, 'ok');
+                state.uiState = 'IDLE';
                 renderAll();
-            }
-        }, 500);
 
-        await firebase.firestore().collection('matches').doc(currentMatchId).update({
-    'gameState.deck': state.deck,
-    'gameState.players': state.players,
-    'gameState.direction': state.direction, // <-- ADD THIS LINE
-    'gameState.lastEffectiveValue': effective,
-    'gameState.lastPlayedCardLabel': label,
-    'gameState.lastPlayedBy': bl.buyer.uid,
-    'gameState.uiState': 'CHOOSE_CALL',
-    'gameState.lastAction': { id: Date.now().toString(), type: 'PLAY_NUMBER', uid: bl.buyer.uid, cardValue: card.value, msg: actionMsg }
-});
-    } else {
-        // OFFLINE
-        log(actionMsg,'ok');
-        state.lastEffectiveValue=effective; state.lastPlayedCardLabel=label; state.lastPlayedBy=bl.buyer.id;
-        flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[bl.buyer.id], 15, card.value);
-        sweepEliminations();
-        triggerCalloutPhase();
-    }
-} else {
+                const handEl = document.getElementById('hand');
+                const newCardEl = handEl ? handEl.lastElementChild : null;
+                const targetRect = newCardEl ? newCardEl.getBoundingClientRect() : getSeatOrPanelRect(0);
+                if (newCardEl) newCardEl.style.opacity = '0';
+
+                flyCard(bankRect(), targetRect, '', PLAYER_COLORS[0], 5, '', bl.buyer.deckSkin);
+
+                setTimeout(() => {
+                    if (newCardEl) {
+                        newCardEl.style.opacity = '1';
+                        newCardEl.classList.add('flip-reveal');
+                    }
+                }, 420);
+            }
+        } else {
             bl.buyer.hand.push(card);
             bl.lastDrawnLabel = 'a card'; // Note: no longer reveals the drawn card's identity
             const actionMsg = `Try ${bl.tries}: drew a card — no match.`;
@@ -9267,7 +9396,7 @@ function renderDeceptionOverlay(){
       html += `<div class="dec-ember" style="left:${left}; animation-duration:${dur}; animation-delay:${del};"></div>`;
   }
   html += `</div>`;
-  html += `<div style="font-size: clamp(24px, 6vh, 32px); margin-bottom: 4px; animation: pulseIn 1s infinite alternate;">💀</div>`;
+  html += `<img src="DeceptionIcon.webp" style="height: clamp(40px, 8vh, 60px); width: auto; object-fit: contain; filter: drop-shadow(0 4px 15px rgba(194,59,74,0.6)); margin-bottom: 4px; animation: pulseIn 1.5s infinite alternate;">`;
   html += `<h2 style="margin-top:0;">DECEPTION</h2>`;
 
   if(dec.phase === 'VOTE_REAL' || dec.phase === 'VOTE_CLAIM'){
@@ -10113,13 +10242,13 @@ function playNetworkedAnimation(action) {
         if (initialMsg.includes('Steal on')) {
             const match = initialMsg.match(/Steal on (.*?),/);
             if (match) {
-                const target = state.players.find(p => p.name === match[1]);
+                const target = state.players.find(p => p.name === match[1] || match[1].startsWith(p.name + ' ('));
                 if (target) actionTargetRect = getSeatOrPanelRect(target.id);
             }
         } else if (initialMsg.includes('Power on')) {
             const match = initialMsg.match(/Power on (.*?),/);
             if (match) {
-                const target = state.players.find(p => p.name === match[1]);
+                const target = state.players.find(p => p.name === match[1] || match[1].startsWith(p.name + ' ('));
                 if (target) actionTargetRect = getSeatOrPanelRect(target.id);
             }
         }
@@ -10130,6 +10259,14 @@ function playNetworkedAnimation(action) {
 
         if (pulls > 0 && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
             // START BOT DRAW SEQUENCE
+            // Re-arm the 1s center failsafe (armed by the next render) so it outlasts the draw + thinking pause
+            setTimeout(() => {
+                clearTimeout(window.dodCenterLockFailsafe);
+                window.dodCenterLockFailsafe = setTimeout(() => {
+                    window.dodCenterIsLocked = false;
+                    renderAll();
+                }, (pulls * 1200) + 3200);
+            }, 150);
             log(`Try 1: drew a card — no match.`, '', targetPlayer.uid);
             
             window.animatingRemoteCoins = window.animatingRemoteCoins || {};
@@ -10168,6 +10305,13 @@ function playNetworkedAnimation(action) {
                 renderAll();
                 flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
                 
+                // The drawn card lands in the bot's hand first, then the bot "thinks" before playing it
+                const decideDelay = 1200 + ((parseInt(String(action.id).slice(-3), 10) || 0) % 800);
+                setTimeout(() => {
+                    flyCard(bankRect(), getSeatOrPanelRect(actorSeatIndex), '?', actorColor, 5, '', targetPlayer.deckSkin || null);
+                    log(`Try ${pulls}: drew a card.`, '', targetPlayer.uid, true);
+                }, 300);
+
                 setTimeout(() => {
                     visualCoins += PLAY_REWARD;
                     window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
@@ -10175,7 +10319,7 @@ function playNetworkedAnimation(action) {
                     if (pObj2) pObj2.shop = visualCoins;
                     
                     renderAll();
-                    flyCard(bankRect(), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
+                    flyCard(getSeatOrPanelRect(actorSeatIndex), centerRect(), state.lastPlayedCardLabel, actorColor, 18, action.cardValue, null, actionTargetRect);
                     flyCoin(bankRect(), getSeatOrPanelRect(actorSeatIndex), 200);
                     
                     // OVERWRITE the last "no match" message with the true play message
@@ -10193,7 +10337,7 @@ function playNetworkedAnimation(action) {
                             unlockTurn();
                         }, 430);
                     }
-                }, 300);
+                }, 300 + decideDelay);
             }, Math.max(0, (pulls - 1) * 1200));
         } else {
             // INSTANT PLAY
@@ -10298,7 +10442,7 @@ function executeStandardNetworkAnimation(action, actorSeatIndex, actorColor) {
         if (state.lastPlayedCardLabel === 'STL' || state.lastPlayedCardLabel === 'PWR') {
             const match = action.msg.match(/ on (.*?),/);
             if (match) {
-                const targetPlayer = state.players.find(p => p.name === match[1]);
+                const targetPlayer = state.players.find(p => p.name === match[1] || match[1].startsWith(p.name + ' ('));
                 if (targetPlayer) actionTargetRect = getSeatOrPanelRect(targetPlayer.id);
             }
         }
@@ -10708,6 +10852,13 @@ async function processRemoteMarketAction(buyer) {
     
     const isMatch = (card.value === state.requiredValue) || (state.requiredValue === null) || card.type === 'reverse' || (card.type === 'wild' && buyer.shop >= 2) || ((card.type === 'steal' || card.type === 'power') && state.players.some(p => !p.out && p.id !== buyer.id));
       if (isMatch) {
+          // OFFLINE: the drawn card lands in the bot's hand first, then the bot "thinks" before playing it
+          if (!currentMatchId) {
+              log(`Try ${tries}: drew a card.`, '', buyer.uid, true);
+              flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5, '', buyer.deckSkin);
+              await new Promise(res => setTimeout(res, Math.floor(Math.random() * 800) + 1200));
+              if (!state || state.over) return;
+          }
           if (card.type === 'wild') buyer.shop -= 2;
       // --- MATCH FOUND ---
       let effective, label;
@@ -10761,7 +10912,7 @@ async function processRemoteMarketAction(buyer) {
           // OVERWRITE the "Try X: drew a card - no match" log with the successful play!
           log(`${buyer.name} ${actStr}.`, 'ok', buyer.uid, true);
           renderAll();
-          flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value, null, actionTargetRect);
+          flyCard(getSeatOrPanelRect(buyer.id), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value, null, actionTargetRect);
       }
       
       setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : 1200);
@@ -11543,13 +11694,16 @@ function listenForPartyInvites() {
                 activePartyInvite: firebase.firestore.FieldValue.delete()
             }).catch(e => console.error("Error clearing invite: ", e));
 
-            // Fetch party to find inviter name
+            // Fetch party to find inviter name and visuals
             const partyDoc = await db.collection('parties').doc(partyId).get().catch(() => null);
             const leader = partyDoc && partyDoc.exists ? (partyDoc.data().members || [])[0] : null;
             const inviterName = leader ? leader.displayName : 'A friend';
+            const inviterAvatar = leader ? (leader.avatar || 'Apprentice') : 'Apprentice';
+            const inviterFrame = leader ? (leader.frame || 'Apprentice') : 'Apprentice';
+            const inviterTitle = leader ? leader.title : null;
 
             // Show SQUAD-style invite popup — player must accept to join
-            showSquadInvitePopup(inviterName, async () => {
+            showSquadInvitePopup(inviterName, inviterAvatar, inviterFrame, inviterTitle, async () => {
                 // 2. The friend officially joins the party here
                 try {
                     await db.collection('parties').doc(partyId).update({
@@ -12586,15 +12740,26 @@ async function squadInviteFriend(friendUid, friendName) {
     showSystemToast('Invite sent to ' + friendName);
 }
 
-function showSquadInvitePopup(inviterName, onAccept) {
+function showSquadInvitePopup(inviterName, inviterAvatar, inviterFrame, inviterTitle, onAccept) {
     const old = document.getElementById('squadInvitePopup');
     if (old) old.remove();
     const popup = document.createElement('div');
     popup.id = 'squadInvitePopup';
     popup.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(6,3,5,0.97);border:1px solid var(--brass);border-radius:14px;padding:30px 40px;z-index:99999;text-align:center;box-shadow:0 8px 40px rgba(0,0,0,0.95);min-width:280px;';
+    
+    let titleHtml = '';
+    if (inviterTitle) {
+        const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === inviterTitle) : null;
+        if (tDef) titleHtml = `<div style="margin:6px auto 10px; display:flex; justify-content:center;"><div class="player-title title-${tDef.rarity}" style="height:16px; font-size:8px; padding:0 10px 0 4px;"><span>${tDef.name}</span></div></div>`;
+    }
+
     popup.innerHTML = `
-        <div style="font-size:32px;margin-bottom:10px;">🎴</div>
-        <h3 style="font-family:'Cinzel Decorative',serif;color:var(--brass-bright);font-size:15px;margin:0 0 6px;">${inviterName} is inviting you!</h3>
+        <div class="avatar-frame-wrap" style="width:64px; height:64px; margin:0 auto 10px; border-radius:6px; background:rgba(0,0,0,0.5); box-shadow:0 4px 15px rgba(0,0,0,0.6);">
+            <img src="Avatars/${inviterAvatar}.webp" class="af-avatar" alt="Avatar" style="border-radius:6px;">
+            <img src="Frames/${inviterFrame}.webp" class="af-frame" alt="Frame">
+        </div>
+        <h3 style="font-family:'Cinzel Decorative',serif;color:var(--brass-bright);font-size:15px;margin:0 0 2px;">${inviterName} is inviting you!</h3>
+        ${titleHtml}
         <p class="mono" style="font-size:11px;color:rgba(242,234,216,0.55);margin:0 0 22px;">Party Invite · Deck Of Deception</p>
         <div style="display:flex;gap:12px;justify-content:center;">
             <button id="_piAccept" class="btn" style="padding:10px 26px;font-size:13px;">Join ↗</button>
@@ -13235,8 +13400,10 @@ function updateProfileWidget(profile) {
     const modalBar = document.getElementById('modalLevelBar');
     const modalProgressText = document.getElementById('modalLevelProgressText');
     const profileCur = document.getElementById('profileCurrency');
+    const profilePremCur = document.getElementById('profilePremiumCurrency');
     
     if (profileCur) profileCur.textContent = profile.currency || 0;
+    if (profilePremCur) profilePremCur.textContent = profile.premiumCurrency || 0;
     
     if (modalName) {
         modalName.innerHTML = `${escapeHtml(profile.displayName)} 
@@ -13531,7 +13698,15 @@ async function executeDailyDraw(selectedIndex) {
         // Wait a beat for suspense, then flip the card!
         setTimeout(() => {
             try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
-            if (rollData.rewardType !== 'none') triggerNotificationVfx('gold');
+            if (rollData.rewardType !== 'none') {
+                triggerNotificationVfx('gold');
+                // INJECT INTENSE LIGHT BURST VFX
+                const flashWrapper = document.createElement('div');
+                flashWrapper.className = 'dd-reveal-flash';
+                flashWrapper.innerHTML = '<div class="dd-reveal-rays"></div><div class="dd-reveal-core"></div>';
+                document.getElementById('dailyDrawModalOverlay').appendChild(flashWrapper);
+                setTimeout(() => flashWrapper.remove(), 6000); // Clean up after fade
+            }
             
             selectedCard.classList.add('flipped');
             // Wait for the 0.8s CSS transition to finish, then start the floating animation
@@ -13554,7 +13729,7 @@ async function executeDailyDraw(selectedIndex) {
             console.warn("Server offline. Running local simulation for Daily Draw.");
             
             // --- OFFLINE / LOCAL SIMULATION FALLBACK ---
-            let rollData = { date: new Date().toDateString(), rewardType: 'none', icon: '💨', msg: 'Nothing today' };
+            let rollData = { date: new Date().toDateString(), rewardType: 'none', icon: '<img src="DeceptionIcon.webp" style="height:48px; width:auto; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(194,59,74,0.8));">', msg: 'Nothing today' };
             let newCurrency = profile.currency || 0;
             let newChests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
             let newShards = profile.shards || {};
@@ -13587,7 +13762,7 @@ async function executeDailyDraw(selectedIndex) {
                 
                 if (newShards[targetShard.id] >= targetShard.req && !newInventory.includes(targetShard.id)) {
                     newInventory.push(targetShard.id);
-                    rollData.icon = '🎉';
+                    rollData.icon = `<div style="filter:drop-shadow(0 0 15px rgba(255,255,255,0.8)); animation: pulseIn 1s infinite alternate;">${customIcon}</div>`;
                     rollData.msg = `Unlocked ${targetShard.name}!`;
                 } else {
                     rollData.icon = customIcon;
@@ -13614,16 +13789,16 @@ async function executeDailyDraw(selectedIndex) {
                 rollData.icon = `<img src="Cards/MythicCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
                 rollData.msg = 'Mythic Reward Card!';
             } else if (r < 0.95) { 
-                // 1% Chance for Legendary Chest
-                newChests.legendary += 1;
-                rollData.rewardType = 'chest';
-                rollData.icon = `<img src="Cards/LegendaryCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
-                rollData.msg = 'Legendary Reward Card!';
-            } else {
-                rollData.rewardType = 'none'; 
-                rollData.icon = `<div style="font-size:42px; filter:drop-shadow(0 0 10px rgba(194,59,74,0.8));">💀</div>`; 
-                rollData.msg = "The Dealer Wins.";
-            }
+                  // 1% Chance for Legendary Chest
+                  newChests.legendary += 1;
+                  rollData.rewardType = 'chest';
+                  rollData.icon = `<img src="Cards/LegendaryCard.webp" style="width:34px;height:48px;border-radius:4px;box-shadow:0 4px 10px rgba(0,0,0,0.8);">`;
+                  rollData.msg = 'Legendary Reward Card!';
+              } else {
+                  rollData.rewardType = 'none'; 
+                  rollData.icon = `<img src="DeceptionIcon.webp" style="height:48px; width:auto; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(194,59,74,0.8));">`; 
+                  rollData.msg = "The Dealer Wins.";
+              }
 
             // Sync Local Cache
             profile.lastSpinDate = rollData.date;
@@ -13772,6 +13947,13 @@ async function executeRewardCardOpen() {
         setTimeout(() => {
             try { sfx.win(); } catch(e){}
             triggerNotificationVfx('gold'); 
+            
+            // INJECT INTENSE LIGHT BURST VFX
+            const flashWrapper = document.createElement('div');
+            flashWrapper.className = 'dd-reveal-flash';
+            flashWrapper.innerHTML = '<div class="dd-reveal-rays"></div><div class="dd-reveal-core"></div>';
+            document.getElementById('rewardCardModalOverlay').appendChild(flashWrapper);
+            setTimeout(() => flashWrapper.remove(), 6000); // Clean up after fade
             
             card.classList.add('flipped');
             subtitle.textContent = "Reward Claimed!";
@@ -14046,7 +14228,7 @@ function updateEquipButtonState() {
             btn.onclick = (e) => buyShard(premiumDef.id, premiumDef.shardPrice, premiumDef.shardsNeeded, e);
         } else {
             btn.disabled = true;
-            btn.textContent = `🔒 ${unlockMessage}`;
+            btn.innerHTML = `<svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: text-top; margin-right: 4px;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> ${unlockMessage}`;
             btn.style.background = "rgba(0,0,0,0.5)";
             btn.style.color = "rgba(255,255,255,0.4)";
             btn.style.borderColor = "rgba(255,255,255,0.1)";
@@ -14076,6 +14258,8 @@ function renderUnlockSelectors(profile) {
     const eqAvatar = getEquippedAvatar(profile);
     const eqFrame = getEquippedFrame(profile);
 
+    const lockSvg = `<svg viewBox="0 0 24 24" width="10" height="10" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`;
+
     // 1. Render Avatars Grid
     let avatarsHtml = TIERS.map((tierName, idx) => {
         const isUnlocked = idx <= userTierIdx;
@@ -14085,7 +14269,7 @@ function renderUnlockSelectors(profile) {
         
         return `
           <div onclick="selectAvatarItem('${tierName}')" class="${classes}">
-            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            ${!isUnlocked ? `<div class="lock-badge">${lockSvg}</div>` : ''}
             <img src="Avatars/${tierName}.webp" style="width:70%; height:70%; object-fit:cover; border-radius:4px;" alt="${tierName}">
             <span class="item-label">${tierName}</span>
           </div>
@@ -14106,7 +14290,7 @@ function renderUnlockSelectors(profile) {
         
         return `
           <div onclick="selectAvatarItem('${avatar.id}')" class="${classes}">
-            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            ${!isUnlocked ? `<div class="lock-badge">${lockSvg}</div>` : ''}
             <img src="Avatars/${avatar.id}.webp" style="width:70%; height:70%; object-fit:cover; border-radius:4px;" alt="${avatar.name}">
             <span class="item-label">${avatar.name}</span>
           </div>
@@ -14124,7 +14308,7 @@ function renderUnlockSelectors(profile) {
         
         return `
           <div onclick="selectFrameItem('${tierName}')" class="${classes}">
-            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            ${!isUnlocked ? `<div class="lock-badge">${lockSvg}</div>` : ''}
             <img src="Frames/${tierName}.webp" style="width:70%; height:70%; object-fit:contain;" alt="${tierName}">
             <span class="item-label">${tierName}</span>
           </div>
@@ -14145,7 +14329,7 @@ function renderUnlockSelectors(profile) {
         
         return `
           <div onclick="selectFrameItem('${frame.id}')" class="${classes}">
-            ${!isUnlocked ? '<div class="lock-badge">🔒</div>' : ''}
+            ${!isUnlocked ? `<div class="lock-badge">${lockSvg}</div>` : ''}
             <img src="Frames/${frame.id}.webp" style="width:70%; height:70%; object-fit:contain;" alt="${frame.name}">
             <span class="item-label">${frame.id}</span>
           </div>
@@ -14175,7 +14359,7 @@ function renderUnlockSelectors(profile) {
                 </div>
                 <div>
                     ${isEquipped ? '<span style="color:var(--ok); font-family:\'IBM Plex Mono\',monospace; font-size:10px; font-weight:bold;">EQUIPPED</span>' : ''}
-                    ${!isUnlocked ? '<span style="color:rgba(255,255,255,0.4); font-size:14px;">🔒</span>' : ''}
+                    ${!isUnlocked ? '<svg viewBox="0 0 24 24" width="14" height="14" stroke="rgba(255,255,255,0.4)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>' : ''}
                 </div>
               </div>
             `;
@@ -14992,7 +15176,7 @@ function renderShopItems() {
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!root || !profile) return;
     
-    // NEW: Show "Coming Soon" for the Faces tab instead of placeholders
+    // Show "Coming Soon" for the Faces tab
     if (currentShopTab === 'cardFaces') {
         root.innerHTML = `<div style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; min-height: 250px; text-align: center; font-family: 'Cinzel Decorative', serif; color: rgba(242,234,216,0.3); font-size: clamp(24px, 4vw, 36px); letter-spacing: 4px; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">COMING SOON</div>`;
         return;
@@ -15001,7 +15185,7 @@ function renderShopItems() {
     const items = SHOP_DB[currentShopTab] || [];
     const inventory = profile.inventory || ['cf_default', 'cb_default', 'tb_default', 'vfx_default'];
     
-    const eqFace = profile.equippedFace || profile.equippedCard || 'cf_default'; // Fallback for old accounts
+    const eqFace = profile.equippedFace || profile.equippedCard || 'cf_default';
     const eqBack = profile.equippedBack || 'cb_default';
     const eqTable = profile.equippedTable || 'tb_default';
     const eqVfx = profile.equippedVfx || 'vfx_default';
@@ -15010,7 +15194,6 @@ function renderShopItems() {
         let isEquipped = (item.id === eqFace || item.id === eqBack || item.id === eqTable || item.id === eqVfx);
         let isOwned = inventory.includes(item.id) || item.method === 'default';
 
-        // Unlock Overrides
         if (item.method === 'tier') {
             const userTierIdx = TIERS.indexOf(profile.tier || 'Apprentice');
             isOwned = userTierIdx >= TIERS.indexOf(item.unlockTier);
@@ -15018,64 +15201,45 @@ function renderShopItems() {
             isOwned = inventory.includes(item.id); 
         }
 
-        let visualHtml = '';
-        if (currentShopTab === 'cardFaces') {
-            visualHtml = `<div class="shop-swatch" style="background:${item.color}; margin-top:10px; width:38px; height:38px; border-radius:50%; margin:10px auto; border:2px solid rgba(255,255,255,0.2);"></div>`;
-        } else if (currentShopTab === 'cardBacks') {
-            visualHtml = `<div style="width:34px; height:48px; border-radius:4px; margin:10px auto; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:100% 100%; background-repeat:no-repeat; background-position:center; border:2px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translateZ(0);"></div>`;
-        } else if (currentShopTab === 'tables') {
-            visualHtml = `<div style="width:100%; height:40px; border-radius:4px; margin:8px 0; background-image:url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; border:1px solid rgba(255,255,255,0.2); box-shadow: 0 4px 10px rgba(0,0,0,0.5); transform: translateZ(0);"></div><div style="font-size:9.5px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px; display:flex; align-items:center; justify-content:center; line-height:1.2;">${item.desc}</div>`;
-        } else if (currentShopTab === 'vfx') {
-            visualHtml = `<div style="font-size:24px; margin:10px 0;">✨</div><div style="font-size:9px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; height:24px;">${item.desc}</div>`;
-        } else if (currentShopTab === 'coins') {
-            const isSC = item.type === 'sc';
-            const isChest = item.type === 'sc_chest';
-            
-            let txtColor = isSC ? '#c23b4a' : 'var(--brass-bright)';
-            if (item.tier === 'mythic') txtColor = '#d094ff';
-            if (item.tier === 'legendary') txtColor = '#f5dd8a';
-            
-            const iconHtml = `<img src="${item.img}" style="width:clamp(65px, 12vh, 90px); height:clamp(65px, 12vh, 90px); object-fit:contain; margin:10px auto; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.6)); display:block;" alt="${item.name}">`;
-            
-            const subtitleText = isChest ? `1x ${item.name}` : `+${item.reward} ${isSC ? 'SC' : 'PC'}`;
-            visualHtml = `${iconHtml}<div style="font-family:'Cinzel Decorative',serif; font-size:14px; font-weight:bold; letter-spacing:1px; color:${txtColor}; margin-bottom:10px; text-shadow:0 2px 4px #000;">${subtitleText}</div>`;
-        }
-
-        // Build the Preview button (Hidden for Coins and VFX)
+        // Preview Button (Hidden for Coins and VFX)
         let previewBtn = '';
         if (currentShopTab !== 'coins' && currentShopTab !== 'vfx') {
-             previewBtn = `<button class="btn ghost small" style="width:100%; margin-bottom:6px; font-size:9.5px; padding:6px; border-color:rgba(201,162,39,0.3);" onclick="openShopPreview('${item.id}', '${currentShopTab}')">🔍 PREVIEW</button>`;
+             previewBtn = `<button class="btn ghost small" style="width:100%; margin-bottom:3px; font-size:9.5px; padding:5px; border-color:rgba(201,162,39,0.3);" onclick="openShopPreview('${item.id}', '${currentShopTab}')">🔍 PREVIEW</button>`;
         }
 
+        // Action Buttons
         let btnHtml = '';
         if (currentShopTab === 'coins') {
             if (item.type === 'sc_chest') {
-                // Bought with SC (Cards)
-                btnHtml = `<button class="btn small" style="background:linear-gradient(180deg, #8b3dff 0%, #4a148c 100%); border-color:#d094ff; color:#fff; width:100%; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 4px 10px rgba(0,0,0,0.4);" onclick="buyChestWithSC('${item.tier}', ${item.scPrice}, event)">
-                    ${item.scPrice} <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+                // Bought with SC (Cards) - Dark Royal Violet & Silver
+                btnHtml = `<button class="btn small" style="position:relative; overflow:hidden; background: linear-gradient(180deg, #581c87 0%, #3b0764 45%, #1b0238 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; display:flex; align-items:center; justify-content:flex-start; padding-left:14px !important; border-radius: 4px;" onclick="buyChestWithSC('${item.tier}', ${item.scPrice}, event)">
+                    <span style="position:relative; z-index:2; font-size:17px; font-weight:900;">${item.scPrice}</span>
+                    <img src="Coins/SyndicateChips.webp" style="position:absolute; right:-2px; top:50%; transform:translateY(-50%) rotate(25deg) scale(1.6); width:24px; height:24px; filter:drop-shadow(-2px 4px 6px rgba(0,0,0,0.8)); z-index:1; pointer-events:none;">
                 </button>`;
             } else if (item.scPrice) {
-                // Bought with SC (Pixel Coins)
-                btnHtml = `<button class="btn small" style="background:linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); border-color:#f5dd8a; color:var(--felt-dark); width:100%; font-weight:700; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onclick="exchangeSCToPC('${item.id}', ${item.scPrice}, ${item.reward}, event)">
-                    ${item.scPrice} <img src="Coins/SyndicateChips.webp" style="width:14px; height:14px; filter:drop-shadow(0 1px 2px rgba(0,0,0,0.5));">
+                // Bought with SC (Pixel Coins) - Shiny Amber/Gold & Silver
+                btnHtml = `<button class="btn small" style="position:relative; overflow:hidden; background: linear-gradient(180deg, #fbbf24 0%, #d97706 45%, #78350f 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; display:flex; align-items:center; justify-content:flex-start; padding-left:14px !important; border-radius: 4px;" onclick="exchangeSCToPC('${item.id}', ${item.scPrice}, ${item.reward}, event)">
+                    <span style="position:relative; z-index:2; font-size:17px; font-weight:900;">${item.scPrice}</span>
+                    <img src="Coins/SyndicateChips.webp" style="position:absolute; right:-2px; top:50%; transform:translateY(-50%) rotate(25deg) scale(1.6); width:24px; height:24px; filter:drop-shadow(-2px 4px 6px rgba(0,0,0,0.8)); z-index:1; pointer-events:none;">
                 </button>`;
             } else {
-                // Bought with Real Money
-                btnHtml = `<button class="btn small" style="background:linear-gradient(180deg, #3d8f68, #2f6e52); border-color:#5faa82; color:#fff; width:100%; font-weight:700; box-shadow: 0 4px 10px rgba(47,110,82,0.4);" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
+                // Bought with Real Money - Dark Emerald Green & Silver
+                btnHtml = `<button class="btn small" style="background: linear-gradient(180deg, #047857 0%, #064e3b 45%, #022018 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; border-radius: 4px;" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
             }
         } else if (isEquipped) {
-            btnHtml = `<button class="btn small equipped" style="width:100%;" disabled>EQUIPPED ✓</button>`;
+            btnHtml = `<button class="btn small equipped" style="width:100%; border:none; background:rgba(47,110,82,0.3); color:#9fd9b8; box-shadow:none;" disabled>EQUIPPED ✓</button>`;
         } else if (isOwned) {
-            btnHtml = `<button class="btn small owned" style="background:var(--brass); color:var(--felt-dark); width:100%; font-weight:bold;" onclick="equipShopItem('${item.id}', '${currentShopTab}', event)">EQUIP</button>`;
+            // EQUIP - Solid Yellow/Gold Theme
+            btnHtml = `<button class="btn small" style="width:100%; font-weight:bold; background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); color: var(--felt-dark); border: 1px solid #f5dd8a; text-shadow: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onclick="equipShopItem('${item.id}', '${currentShopTab}', event)">EQUIP</button>`;
         } else if (item.method === 'coins') {
             if (item.shardsNeeded) {
                 let shards = (profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
                 let canAffordShard = (profile.currency || 0) >= item.shardPrice;
                 btnHtml = `<button class="btn small locked" style="width:100%; font-size:9.5px; padding:6px 2px;" ${!canAffordShard ? 'disabled' : ''} onclick="buyShard('${item.id}', ${item.shardPrice}, ${item.shardsNeeded}, event)">Buy Copy (${item.shardPrice}c)</button>
-                           <div style="font-size:9.5px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:6px; background:rgba(0,0,0,0.5); padding:2px; border-radius:3px;">Copies: ${shards}/${item.shardsNeeded}</div>`;
+                           <div style="font-size:9.5px; font-family:'IBM Plex Mono',monospace; color:var(--brass-bright); margin-top:4px; background:rgba(0,0,0,0.5); padding:2px; border-radius:3px; text-align:center;">Copies: ${shards}/${item.shardsNeeded}</div>`;
             } else {
                 let canAfford = (profile.currency || 0) >= item.price;
-                btnHtml = `<button class="btn small locked" style="width:100%;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event)">${item.price} PC</button>`;
+                btnHtml = `<button class="btn small locked" style="width:100%; font-size:11px;" ${!canAfford ? 'disabled' : ''} onclick="buyShopItem('${item.id}', ${item.price}, event)">${item.price} PC</button>`;
             }
         } else if (item.method === 'tier') {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Unlocks at ${item.unlockTier}</button>`;
@@ -15083,7 +15247,7 @@ function renderShopItems() {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Achievement Unlock</button>`;
         } else if (item.method === 'spin') {
             let shards = (profile && profile.shards && profile.shards[item.id]) ? profile.shards[item.id] : 0;
-            let req = item.shardsNeeded || 25; // Defaults to 25 copies needed
+            let req = item.shardsNeeded || 25;
             let pct = Math.min(100, (shards / req) * 100);
             btnHtml = `<button class="btn small locked" style="width:100%; padding:4px 2px; border-color: rgba(201,162,39,0.3);" disabled>
                            <span style="font-size:8px; opacity:0.8; display:block; margin-bottom:2px;">LUCKY SPIN ONLY</span>
@@ -15092,23 +15256,74 @@ function renderShopItems() {
                                <div style="width:${pct}%; height:100%; background:var(--brass-bright); box-shadow:0 0 4px var(--brass-bright);"></div>
                            </div>
                        </button>`;
+        } else if (item.method === 'season') {
+            btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Season Pass Exclusive</button>`;
         }
 
-        // SMART FILTER: Only modify proportions if we are looking at Playing Cards!
+        // Layout Filters
         const isCard = (currentShopTab === 'cardBacks' || currentShopTab === 'cardFaces');
-        const customHeight = isCard ? 'min-height: 260px;' : '';
-        const customVisualWrap = isCard ? `<div style="transform: scale(1.7); margin: 25px 0 25px 0;">${visualHtml}</div>` : visualHtml;
+        const isTable = (currentShopTab === 'tables');
+        const isCoin = (currentShopTab === 'coins');
+        
+        const customHeight = 'min-height: 110px;';
+        
+        let bgLayer = '';
+        let fadeLayer = '';
+        let baseBgColor = '#08090b';
+        let coinSubtitleHtml = '';
+
+        if (isCard) {
+            baseBgColor = '#0a0210';
+            fadeLayer = 'linear-gradient(90deg, rgba(10,2,16,1) 0%, rgba(10,2,16,0.85) 50%, transparent 100%)';
+            if (currentShopTab === 'cardBacks') {
+                bgLayer = `<div style="position:absolute; right:-15%; top:-40%; bottom:-40%; width:70%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; transform: rotate(15deg) scale(1.15); opacity: 0.95; z-index:1; pointer-events:none;"></div>`;
+            } else {
+                const faceUrl = getCardFaceUrl(item.id, '');
+                bgLayer = `<div style="position:absolute; right:-15%; top:-40%; bottom:-40%; width:70%; background-image:${faceUrl}; background-size:cover; background-position:center; transform: rotate(15deg) scale(1.15); opacity: 0.95; z-index:1; pointer-events:none; border: 2px solid ${item.color}; border-radius: 8px;"></div>`;
+            }
+        } else if (isTable) {
+            baseBgColor = '#08090b';
+            fadeLayer = 'linear-gradient(90deg, rgba(8,9,11,0.95) 0%, rgba(8,9,11,0.5) 60%, transparent 100%)';
+            bgLayer = `<div style="position:absolute; inset:0; width:100%; background-image:url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; opacity: 0.8; z-index:1; pointer-events:none;"></div>`;
+        } else if (isCoin) {
+            baseBgColor = '#08090b';
+            fadeLayer = 'linear-gradient(90deg, rgba(8,9,11,1) 0%, rgba(8,9,11,0.85) 55%, transparent 100%)';
+            
+            if (item.type === 'sc_chest') {
+                bgLayer = `<div style="position:absolute; right: -5%; top:-25%; bottom:-25%; width:50%; background-image:url('${item.img}'); background-size:contain; background-repeat:no-repeat; background-position:center right; transform: rotate(10deg) scale(1.2); opacity: 0.95; z-index:1; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));"></div>`;
+            } else {
+                bgLayer = `<div style="position:absolute; right:-5%; top:0; bottom:0; width:55%; background-image:url('${item.img}'); background-size:contain; background-repeat:no-repeat; background-position:center right; transform: scale(1.2); opacity: 0.95; z-index:1; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));"></div>`;
+            }
+            
+            // Large Readable Reward Amount Text
+            const isSC = item.type === 'sc';
+            const isChest = item.type === 'sc_chest';
+            let txtColor = isSC ? '#c23b4a' : 'var(--brass-bright)';
+            if (item.tier === 'mythic') txtColor = '#d094ff';
+            if (item.tier === 'legendary') txtColor = '#f5dd8a';
+            const subtitleText = isChest ? `Reward Card` : `+${item.reward} ${isSC ? 'SC' : 'PC'}`;
+            coinSubtitleHtml = `<div style="font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:800; color:${txtColor}; margin-bottom:5px; text-shadow:0 1px 3px #000; letter-spacing:0.5px;">${subtitleText}</div>`;
+        }
 
         return `
-            <div class="shop-item" style="${customHeight} display:flex; flex-direction:column; justify-content:space-between; background: linear-gradient(180deg, rgba(82, 54, 27, 0.7) 0%, rgba(38, 20, 8, 0.95) 100%); border:1px solid ${isEquipped ? 'var(--brass-bright)' : 'rgba(201,162,39,0.25)'}; border-radius:8px; padding:14px 10px; text-align:center;">
-                <div>
-                    <div class="shop-name" style="font-size:12px; font-weight:bold; color:${isEquipped ? 'var(--brass-bright)' : '#fff'}; font-family:'Cinzel',serif;">${item.name}</div>
-                    ${customVisualWrap}
+            <div class="shop-item" style="${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : 'rgba(139, 61, 255, 0.35)'}; border-radius:6px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transform: skewX(-6deg);">
+                
+                <!-- Background Layer -->
+                <div style="position:absolute; inset:0; transform: skewX(6deg) scale(1.05); overflow:hidden; pointer-events:none; z-index:1;">
+                    ${bgLayer}
+                    <div style="position:absolute; inset:-5%; background:${fadeLayer}; z-index:2;"></div>
                 </div>
-                <div style="margin-top:auto;">
-                    ${previewBtn}
-                    ${btnHtml}
+                
+                <!-- Foreground Text & Buttons -->
+                <div style="position:relative; z-index:3; padding: 10px 14px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; width: 65%; height: 100%; transform: skewX(6deg);">
+                    <div class="shop-name" style="font-size:10px; font-weight:bold; color:${isEquipped ? 'var(--brass-bright)' : '#fff'}; font-family:'Cinzel',serif; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; width:100%; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
+                    ${coinSubtitleHtml}
+                    <div style="display:flex; flex-direction:column; gap:4px; width:100%; max-width: 140px;">
+                        ${previewBtn}
+                        ${btnHtml}
+                    </div>
                 </div>
+
             </div>
         `;
     }).join('');
@@ -15144,7 +15359,16 @@ function openShopPreview(itemId, tab) {
     // 2. Render high-res showcase on top of particles
     let innerHtml = '';
     if (tab === 'tables') {
-        innerHtml = `<div style="width:180px; height:180px; max-width:85%; max-height:85%; border-radius:50%; background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.7) 100%), url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; z-index:2; position:relative; transform: perspective(800px) rotateX(55deg) rotateZ(-15deg); border: 3px solid var(--brass-bright); box-shadow: -4px 12px 0 #150c12, -8px 24px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);"></div>`;
+        // Includes dynamic zoom-toggle CSS and a small magnifying glass hint
+        innerHtml = `
+        <style>
+            .preview-table-zoom { transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.4s ease !important; cursor: zoom-in; }
+            .preview-table-zoom.zoomed { transform: perspective(800px) rotateX(0deg) rotateZ(0deg) scale(1.65) !important; cursor: zoom-out !important; box-shadow: 0 15px 40px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8) !important; z-index: 100 !important; }
+        </style>
+        <div class="preview-table-zoom" onclick="this.classList.toggle('zoomed')" style="width:180px; height:180px; max-width:85%; max-height:85%; border-radius:50%; background: radial-gradient(circle at 50% 30%, rgba(255,255,255,0.15) 0%, rgba(0,0,0,0.7) 100%), url('Tables/${encodeURIComponent(item.img)}'); background-size:cover; background-position:center; z-index:2; position:relative; transform: perspective(800px) rotateX(55deg) rotateZ(-15deg); border: 3px solid var(--brass-bright); box-shadow: -4px 12px 0 #150c12, -8px 24px 30px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.8);">
+            <!-- Magnifying glass hint -->
+            <div style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.6); border-radius:50%; width:24px; height:24px; display:flex; align-items:center; justify-content:center; font-size:11px; pointer-events:none; border:1px solid rgba(201,162,39,0.5);">🔍</div>
+        </div>`;
     } else if (tab === 'cardBacks') {
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); z-index:2; position:relative;"></div>`;
     } else if (tab === 'cardFaces') {
