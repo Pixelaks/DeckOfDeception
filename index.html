@@ -7254,7 +7254,7 @@ function listenToGameState() {
                         if (serverState.lastAction && serverState.lastAction.msg) {
                             const tryMatch = serverState.lastAction.msg.match(/on try (\d+)/);
                             const pulls = tryMatch ? parseInt(tryMatch[1]) : 1;
-                            failsafeDelay = (pulls * 1200) + 3000;
+                            failsafeDelay = (pulls * 1200) + 5500;
                         }
                         clearTimeout(window.dodTurnLockFailsafe);
                         window.dodTurnLockFailsafe = setTimeout(() => {
@@ -8153,6 +8153,7 @@ function flyCoin(srcRect,dstRect,delay){
     const startTop = c1.y-size/2;
     g.style.left=startLeft+'px'; g.style.top=startTop+'px';
     document.body.appendChild(g);
+    void g.offsetWidth; // force reflow so the CSS transition actually runs (flyCard already does this)
     requestAnimationFrame(()=>{
       const c2=rectCenter(dstRect);
       const endLeft = c2.x-size/2;
@@ -8448,7 +8449,7 @@ function renderAll(){
        lastHtml = `<div class="minicard" style="border-color:${lastColor}; background-image:${bgImg};">${innerContent}</div>`;
     }
     
-    const nextHtml = state.requiredValue===null
+    const nextHtml = (state.requiredValue===null || window.dodHideCalledNumber)
       ? `<div class="minicard empty">?</div>`
       : `<div class="minicard empty">${state.requiredValue}</div>`;
       
@@ -8480,7 +8481,9 @@ function renderAll(){
 
   const you=state.players[0];
   const cb=document.getElementById('chainBox');
-  const reqTxt = state.requiredValue===null
+  const reqTxt = window.dodHideCalledNumber
+    ? `The next number is being called...`
+    : state.requiredValue===null
     ? `Opening move — play any number to start.`
     : `Next play needs a card with <b>${state.requiredValue}</b>${state.lastEffectiveValue!==null?` (total ${state.lastEffectiveValue+state.requiredValue})`:''}.`;
  
@@ -8520,7 +8523,7 @@ function renderHand(){
     else if (c.type === 'wild' || c.type === 'reverse') isCardMatch = true;
     else if (c.type === 'power' || c.type === 'steal') isCardMatch = state.players.some(p => !p.out && p.id !== you.id);
     
-    const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isCardMatch;
+    const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isCardMatch && !window.dodHideCalledNumber;
 
     // Note: Only render corner numbers for actual Number cards!
     
@@ -10217,6 +10220,7 @@ function playNetworkedAnimation(action) {
     const targetPlayer = state.players[actorSeatIndex];
 
     const unlockTurn = () => {
+        if (window.dodHideCalledNumber) { window.dodHideCalledNumber = false; renderAll(); } // reveal the number the bot just called
         if (window.pendingTurnArc) {
             animateTurnArc(window.pendingTurnArc.from, window.pendingTurnArc.to, window.pendingTurnArc.dir);
             sfx.turn();
@@ -10234,6 +10238,15 @@ function playNetworkedAnimation(action) {
     let msgParts = action.msg.split('|');
     let initialMsg = msgParts[0];
     let calloutMsg = msgParts[1];
+    // Human-like thinking time before a bot calls a number (same on every phone, derived from the action id)
+    const callDelay = 1300 + ((parseInt(String(action.id).slice(-4), 10) || 0) % 1900);
+    if (action.type === 'PLAY_NUMBER' && calloutMsg && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+        window.dodHideCalledNumber = true;
+        clearTimeout(window.dodHideNumberFailsafe);
+        window.dodHideNumberFailsafe = setTimeout(() => { window.dodHideCalledNumber = false; renderAll(); }, 15000);
+    } else {
+        window.dodHideCalledNumber = false;
+    }
 
     if (action.type === 'PLAY_NUMBER') {
         window.dodCenterIsLocked = true; 
@@ -10271,7 +10284,10 @@ function playNetworkedAnimation(action) {
             
             window.animatingRemoteCoins = window.animatingRemoteCoins || {};
             const realCoins = targetPlayer.shop;
-            let visualCoins = realCoins + (pulls * BUY_COST) - PLAY_REWARD;
+            const stolenM = initialMsg.match(/taking (\d+) coins/);
+            const stolenAmt = stolenM ? parseInt(stolenM[1], 10) : 0;
+            const wildCost = /plays W\b/.test(initialMsg) ? BUY_COST : 0;
+            let visualCoins = realCoins + (pulls * BUY_COST) - PLAY_REWARD - stolenAmt + wildCost;
             
             window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
             targetPlayer.shop = visualCoins;
@@ -10313,7 +10329,7 @@ function playNetworkedAnimation(action) {
                 }, 300);
 
                 setTimeout(() => {
-                    visualCoins += PLAY_REWARD;
+                    visualCoins += PLAY_REWARD + stolenAmt - wildCost;
                     window.animatingRemoteCoins[targetPlayer.uid] = visualCoins;
                     const pObj2 = state.players.find(p => p.uid === targetPlayer.uid);
                     if (pObj2) pObj2.shop = visualCoins;
@@ -10330,7 +10346,7 @@ function playNetworkedAnimation(action) {
                             log(calloutMsg, '', action.uid); // Merges!
                             delete window.animatingRemoteCoins[targetPlayer.uid];
                             unlockTurn();
-                        }, 1200); // 1.2s thinking delay before callout
+                        }, callDelay); // human-like thinking time before the bot calls a number
                     } else {
                         setTimeout(() => {
                             delete window.animatingRemoteCoins[targetPlayer.uid];
@@ -10351,7 +10367,7 @@ function playNetworkedAnimation(action) {
                 setTimeout(() => {
                     log(calloutMsg, '', action.uid); // Merges!
                     unlockTurn();
-                }, 1200); // Thinking delay
+                }, callDelay); // human-like thinking time before the bot calls a number
             } else {
                 setTimeout(unlockTurn, 430);
             }
@@ -10976,6 +10992,8 @@ async function processRemoteMarketAction(buyer) {
 }
 
 async function botDeclare(bot) {
+    // Human-like thinking time before calling a number (offline bots; online bots are timed in the animation)
+    if (!currentMatchId) await new Promise(res => setTimeout(res, Math.floor(Math.random() * 1800)));
     if(!state || state.over) return;
 
     const target = nextPlayerOf(bot.id);
