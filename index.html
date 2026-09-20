@@ -77,7 +77,7 @@ function escapeForJsAttr(str) {
 <link rel="preload" as="image" href="Coins/Coins.webp">
 <link rel="preload" as="image" href="Cards/SteelCard.webp">
 <link rel="preload" as="image" href="Cards/ReverseCard.webp">
-<link rel="preload" as="image" href="Cards/PeekCard.webp">
+
 <link rel="preload" as="image" href="Cards/InsuranceCard.webp">
 <!-- Open-source MIT particle engine for VFX -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
@@ -932,7 +932,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .card.number    { background-image: url('Cards/CardPhase.webp'); border: 1.5px solid var(--myskin, var(--brass)); }
 .card.wild      { background-image: url('Cards/SwapCard.webp'); }
 .card.insurance { background-image: url('Cards/InsuranceCard.webp'); }
-.card.peek      { background-image: url('Cards/PeekCard.webp'); }
+
 .card.power     { background-image: url('Cards/PowerCard.webp'); }
 .card.reverse   { background-image: url('Cards/ReverseCard.webp'); }
 .card.steal     { background-image: url('Cards/SteelCard.webp'); }
@@ -944,7 +944,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 .actionbar{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;align-items:center;flex-shrink:0}
 .actionbar .hint{font-size:9.5px;color:rgba(242,234,216,0.55);font-family:'IBM Plex Mono',monospace}
-.peekbox{background:#eee3c8;border-radius:6px;padding:6px 10px;margin-top:6px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink);}
+
 
 .modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);align-items:center;justify-content:center;z-index:2000;padding:16px}
 .modal-bg.show{display:flex}
@@ -1205,6 +1205,23 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--brass-bright); margin-top: 20px;
   text-transform: uppercase; letter-spacing: 1px; background: rgba(0,0,0,0.5); display: inline-block; padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(201,162,39,0.3); box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
 }
+.dec-pickgrid { display: grid; gap: clamp(5px, 1.2vh, 8px); margin: clamp(6px, 1.6vh, 12px) 0 clamp(4px, 1vh, 8px); }
+.dec-pick {
+  display: flex; align-items: center; justify-content: space-between; gap: 6px; min-width: 0;
+  padding: clamp(6px, 1.6vh, 10px) 8px; cursor: pointer;
+  background: linear-gradient(180deg, rgba(201,162,39,0.15) 0%, rgba(0,0,0,0.6) 100%);
+  border: 1px solid rgba(201,162,39,0.5); border-radius: 8px; color: var(--paper);
+  font-family: 'Inter', sans-serif; font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.1);
+  transition: transform .15s, border-color .15s;
+}
+.dec-pick:hover { border-color: var(--brass-bright); transform: translateY(-2px); }
+.dec-pick:active { transform: scale(0.97); }
+.dec-pick .dp-name { flex: 1 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: left; font-size: 13px; }
+.dec-pick .dp-num { flex: none; font-family: 'Cinzel', serif; font-size: 15px; font-weight: 700; color: var(--brass-bright); background: rgba(0,0,0,0.55); border: 1px solid rgba(201,162,39,0.35); border-radius: 6px; padding: 0 7px; line-height: 1.5; }
+.dec-pickgrid { --pg: clamp(5px, 1.2vh, 8px); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--pg); }
+.dec-pick { flex: 0 0 calc((100% - (var(--cols, 4) - 1) * var(--pg)) / var(--cols, 4)); justify-content: center; }
+.dec-pick .dp-name { flex: 1 1 auto; white-space: normal; text-overflow: clip; text-align: center; line-height: 1.15; max-height: 2.3em; }
 .tension-box { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; text-align: center; }
 .tension-vote { opacity: 0; animation: fadeUpIn 0.5s ease forwards; font-family: 'IBM Plex Mono', monospace; color: rgba(242,234,216,0.9); font-size: 13px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); padding: 8px; border-radius: 6px; }
 .tension-spin { opacity: 0; animation: pulseSpinIn 0.5s ease forwards, slowPulse 1.5s infinite alternate 0.5s; font-family: 'Cinzel Decorative', serif; color: var(--brass-bright); font-size: 18px; letter-spacing: 2px; margin: 10px 0; }
@@ -2414,7 +2431,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .actionbar { margin-top: 6px; gap: 6px; flex-shrink: 0 !important; }
   .actionbar .btn { padding: 8px 14px; font-size: 11px; }
   .actionbar .hint { font-size: 9.5px; }
-  .peekbox { padding: 4px 8px; font-size: 9.5px; margin-top: 4px; }
+
 
   /* SHRINK SQUAD HUD FOR COMPACT SCREENS (e.g., iPhone SE) */
   .squad-friends-panel { width: 140px !important; left: 15px !important; top: auto !important; bottom: clamp(120px, 26vh, 140px) !important; max-height: 160px !important; }
@@ -2537,7 +2554,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   20%  { background-image: url('Cards/PowerCard.webp'); }
   40%  { background-image: url('Cards/SteelCard.webp'); }
   60%  { background-image: url('Cards/ReverseCard.webp'); }
-  80%  { background-image: url('Cards/PeekCard.webp'); }
+  80%  { background-image: url('Cards/InsuranceCard.webp'); }
   100% { background-image: url('Cards/SwapCard.webp'); }
 }
 
@@ -3080,7 +3097,7 @@ window.dodImagesLoaded = false;
     // --- CRIMSON ROYAL CARD FACES ---
     'Cards/CrimsonRoyal.webp', 'Cards/CrimsonRoyalSwapCard.webp', 'Cards/CrimsonRoyalInsuranceCard.webp',
     'Cards/CrimsonRoyalPowerCard.webp', 'Cards/CrimsonRoyalReverseCard.webp', 'Cards/CrimsonRoyalStealCard.webp',
-    'Cards/CrimsonRoyalPeekCard.webp',
+
     // --- TIERS & AVATARS ---
     'Tiers/Apprentice.webp', 'Tiers/Trickster.webp', 'Tiers/Phantom.webp',
     'Tiers/Mastermind.webp', 'Tiers/Oracle.webp', 'Tiers/Legend.webp',
@@ -3662,7 +3679,7 @@ window.dodImagesLoaded = false;
         <div style="margin-top:6px"><b>No match (hand not empty):</b> forced buy, first draw mandatory, then try again / stop / discard with Insurance, up to 3 tries.</div>
         <div style="margin-top:6px"><b>Hand completely empty:</b> single forced draw only — play it if it matches, otherwise skip.</div>
         <div style="margin-top:6px"><b>Elimination:</b> only when shop AND hand both hit zero. Broke but holding cards? You can still climb back.</div>
-        <div style="margin-top:6px"><b>Wild Swap</b> matches anything for 2 PC. <b>Power 2/4/6</b> matches anything and drains a rival instead. <b>Peek</b> reveals the next player's hand before you call.</div>
+        <div style="margin-top:6px"><b>Wild Swap</b> matches anything for 2 PC. <b>Power 2/4/6</b> matches anything and drains a rival instead.</div>
       </div>
       <div class="section-label" style="margin-top:20px; text-align:center;">Table size (Bots)</div>
       <div id="countRow" style="width:100%; max-width:240px; margin-top:14px;"></div>
@@ -5577,7 +5594,7 @@ function initMenuBackground() {
     'url("Cards/CardPhase.webp")', 
     'url("Cards/SwapCard.webp")',
     'url("Cards/InsuranceCard.webp")', 
-    'url("Cards/PeekCard.webp")', 
+ 
     'url("Cards/PowerCard.webp")',
     'url("Cards/ReverseCard.webp")', 
     'url("Cards/SteelCard.webp")'
@@ -5660,7 +5677,7 @@ const tutScript = [
     { target: null, text: "<b>Wild Swap:</b> Costs 2 PC to play, but it acts as a universal match. Extremely useful when you are trapped.", btn: "Next", showcaseCard: 'wild' },
     { target: null, text: "<b>Power Card:</b> Matches anything. Instead of paying coins, you select a rival to instantly drain their coins to the bank!", btn: "Next", showcaseCard: 'power' },
     { target: null, text: "<b>Steal Card:</b> Matches anything. You select a rival and steal their coins directly into your own pocket!", btn: "Next", showcaseCard: 'steal' },
-    { target: null, text: "<b>Peek:</b> Look at the next player's hand before calling a number. Perfect for forcing them to buy from the market.", btn: "Next", showcaseCard: 'peek' },
+
     { target: null, text: "<b>Reverse:</b> Flips the turn direction. Great for bouncing the pressure back to the person who just targeted you.", btn: "Next", showcaseCard: 'reverse' },
     { target: null, text: "<b>Insurance:</b> A passive card. If you are Forced to Buy and draw a dud, use this to safely discard it without skipping your turn.", btn: "Got it", showcaseCard: 'insurance' },
 
@@ -5769,14 +5786,14 @@ function applyTutStep() {
     // --- SPECIAL CARDS SHOWCASE ---
     if (step.showcaseCard) {
         isCenterLarge = true;
-        const cards = ['wild', 'power', 'steal', 'peek', 'reverse', 'insurance'];
+        const cards = ['wild', 'power', 'steal', 'reverse', 'insurance'];
         let html = '';
         cards.forEach(c => {
             let bgImg = ''; let tBadge = '';
             if (c === 'wild') bgImg = "url('Cards/SwapCard.webp')";
             if (c === 'power') { bgImg = "url('Cards/PowerCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">-4</div>'; }
             if (c === 'steal') { bgImg = "url('Cards/SteelCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">+3</div>'; }
-            if (c === 'peek') bgImg = "url('Cards/PeekCard.webp')";
+
             if (c === 'reverse') bgImg = "url('Cards/ReverseCard.webp')";
             if (c === 'insurance') bgImg = "url('Cards/InsuranceCard.webp')";
             
@@ -6036,7 +6053,7 @@ if(window.DoDAuth){
                                 document.getElementById('game').style.display = 'flex';
                                 
                                 // BUG Note: Initialize match stats so actions don't crash after a mid-game refresh!
-                                window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, peeks:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
+                                window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
                                 
                                 // BUG Note: Restore the seats array so the Host knows they are the Host and wakes up the bots!
                                 window.onlineMatchSeats = data.seats;
@@ -6413,7 +6430,7 @@ const GAME_TIPS = [
   "Use Insurance to safely discard a dud card drawn during a Forced Buy.",
   "You can only use Wild cards if you can afford the 2 PC cost.",
   "Pay attention to the timer. The player with the highest score when the clock hits zero wins.",
-  "Peek lets you see the next player's hand. Use it before calling the required number!",
+
   "Reverse flips the table order, which is the perfect way to pass the burden onto someone else."
 ];
 
@@ -6476,7 +6493,7 @@ function makeDeck(){
     }
   }
   
-  addAction('peek', 6);
+
   addAction('wild', 6);
   addAction('insurance', 6);
   addAction('power', 5, 2); 
@@ -6822,7 +6839,7 @@ function startGame() {
     }
 
     // Initialize temporary match stat tracker for unlocking action-based titles
-    window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, peeks:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
+    window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
 
     menu.style.opacity = '0'; // Cinematic fade out transition
 
@@ -6931,7 +6948,7 @@ function startGame() {
             // Note: Added gameExpiresAt so the timer doesn't instantly end the game offline!
             state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
-                      buyLoop:null, uiState: 'IDLE', peekResult: null, deception: null, turnTimeLeft: 30,
+                      buyLoop:null, uiState: 'IDLE', deception: null, turnTimeLeft: 30,
                       gameExpiresAt: Date.now() + ((fast ? 120 : 1200) * 1000) };
             
             // Offline Global Table Calculation
@@ -6969,7 +6986,7 @@ function startGame() {
                     {type: 'wild', value: ''},
                     {type: 'power', value: '', tier: 4},
                     {type: 'steal', value: '', tier: 3},
-                    {type: 'peek', value: ''},
+
                     {type: 'reverse', value: ''},
                     {type: 'insurance', value: ''}
                 ];
@@ -7038,6 +7055,8 @@ function listenToGameState() {
         }
 
         const serverState = data.gameState;
+        // Remember the requirement shown before this update (kept on screen while a bot "thinks")
+        window.dodPrevRequiredValue = (typeof state !== 'undefined' && state) ? state.requiredValue : null;
 
         // 1. REORDER PLAYERS
         const myIndex = serverState.players.findIndex(p => p.uid === myUid);
@@ -7093,11 +7112,11 @@ function listenToGameState() {
 
         // We MUST save the buyLoop locally, otherwise the network sync wipes it out and breaks the retry button!
         let preservedBuyLoop = null;
-        let preservedPeek = null;
+
         if (typeof state !== 'undefined' && state !== null) {
             if (state.turnUid === mappedTurnUid) {
                 preservedBuyLoop = state.buyLoop;
-                preservedPeek = state.peekResult;
+
                 // Note: buyLoop.buyer was captured from the PREVIOUS state.players array.
                 // orderedPlayers below is a brand new set of objects rebuilt from this
                 // snapshot, so without re-pointing this reference, any further coin
@@ -7152,7 +7171,10 @@ function listenToGameState() {
             lastPlayedBy: serverState.lastPlayedBy ? orderedPlayers.findIndex(p => p.uid === serverState.lastPlayedBy) : null,
             uiState: mappedUiState,
             buyLoop: preservedBuyLoop,
-            peekResult: preservedPeek,
+
+            // Draws already taken this turn (max MAX_TRIES). Kept while it is still the same turn, reset when a new turn starts.
+            drawsKey: serverState.turnUid + ':' + (serverState.turnExpiresAt || 0),
+            drawsThisTurn: (typeof state !== 'undefined' && state && state.drawsKey === (serverState.turnUid + ':' + (serverState.turnExpiresAt || 0))) ? (state.drawsThisTurn || 0) : 0,
             _pendingActionIdx: (typeof state !== 'undefined' && state) ? state._pendingActionIdx : undefined,
             _pendingActionEl: (typeof state !== 'undefined' && state) ? state._pendingActionEl : undefined,
             deception: serverState.deception || null,
@@ -7258,6 +7280,7 @@ function listenToGameState() {
                         }
                         clearTimeout(window.dodTurnLockFailsafe);
                         window.dodTurnLockFailsafe = setTimeout(() => {
+                            setTimeout(() => { if (state) renderAll(); }, 0); // re-enable the hand once the lock is released
                             window.dodTurnLocked = false;
                             if (window.pendingHostTurnLogic) {
                                 window.pendingHostTurnLogic();
@@ -7766,7 +7789,9 @@ function layoutRing(){
 function rectCenter(r){ return {x:r.left+r.width/2, y:r.top+r.height/2}; }
 function seatRect(playerId){
   const el=document.getElementById('seat-'+playerId);
-  return el ? el.getBoundingClientRect() : document.getElementById('tableRing').getBoundingClientRect();
+  const r = el ? el.getBoundingClientRect() : document.getElementById('tableRing').getBoundingClientRect();
+  // Plain copy tagged as a seat, so flyCard never mistakes a tall seat for a card slot on the table
+  return { left: r.left, top: r.top, right: r.right, bottom: r.bottom, width: r.width, height: r.height, x: r.x, y: r.y, isSeat: true };
 }
 function centerRect(){ 
   const el=document.getElementById('ringCenter'); 
@@ -8133,7 +8158,8 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
     if(g && g.parentNode) g.parentNode.removeChild(g);
     
     // Exactly when the card lands, release the visual lock and reveal the new card!
-    if (isCardPlaceholder) {
+    // (only when it landed on the table, a card landing on a player's seat must not reveal the table card early)
+    if (isCardPlaceholder && !(dstRect && dstRect.isSeat)) {
         window.dodCenterIsLocked = false;
         if (state && state.uiState === 'ANIMATING') state.uiState = 'WAITING_FOR_CALLOUT'; 
         renderAll();
@@ -8449,7 +8475,9 @@ function renderAll(){
        lastHtml = `<div class="minicard" style="border-color:${lastColor}; background-image:${bgImg};">${innerContent}</div>`;
     }
     
-    const nextHtml = (state.requiredValue===null || window.dodHideCalledNumber)
+    const nextHtml = window.dodHideCalledNumber
+      ? `<div class="minicard empty">${(window.dodHeldRequiredValue === null || window.dodHeldRequiredValue === undefined) ? '?' : window.dodHeldRequiredValue}</div>`
+      : state.requiredValue===null
       ? `<div class="minicard empty">?</div>`
       : `<div class="minicard empty">${state.requiredValue}</div>`;
       
@@ -8482,7 +8510,7 @@ function renderAll(){
   const you=state.players[0];
   const cb=document.getElementById('chainBox');
   const reqTxt = window.dodHideCalledNumber
-    ? `The next number is being called...`
+    ? (window.dodHeldRequiredValue == null ? `The next number is being called...` : `Next play needs a card with <b>${window.dodHeldRequiredValue}</b>.`)
     : state.requiredValue===null
     ? `Opening move — play any number to start.`
     : `Next play needs a card with <b>${state.requiredValue}</b>${state.lastEffectiveValue!==null?` (total ${state.lastEffectiveValue+state.requiredValue})`:''}.`;
@@ -8500,7 +8528,7 @@ function renderHand(){
   wrap.innerHTML='';
   const you=state.players[0];
   
-  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState);
+  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked;
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
   // Note: Map to a visual array so we don't alter the true index required by Cloudflare!
@@ -8579,9 +8607,6 @@ function renderHand(){
             el.className='card insurance' + (playableIns ? '' : ' disabled');
             el.innerHTML= html; // Empty center
             if (playableIns) el.onclick = wrapClick(() => playInsuranceFromHand(idx, el));
-          } else if(c.type==='peek'){
-            el.className='card peek';
-            el.innerHTML= html; // Empty center
           }
 
           // Note: Perfect timing sync. Hide the real card while the ghost card is flying, then flip it when it lands.
@@ -8663,17 +8688,9 @@ function renderActionBar(){
       for(let i=1; i<=9; i++) {
           html += `<button class="btn small" style="padding:6px 12px; min-width:unset;" onclick="confirmGuess(${i})">${i}</button>`;
       }
-      if(you.hand.some(c=>c.type==='peek')) {
-          // Note: Hide the PEEK button during the 'callout' tutorial step so the player doesn't accidentally click it!
-          if (!(window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number')) {
-              const target = nextPlayerOf(0);
-              html += `<button class="btn ghost small" onclick="usePeek(0, ${target.id})">Peek at ${target.name}</button>`;
-          }
-      }
+
       html += `</div>`;
-      if (state.peekResult) {
-          html += `<div class="peekbox" style="margin-top:0">${state.peekResult}</div>`;
-      }
+
       html += `</div>`;
       bar.innerHTML = html;
       return;
@@ -8742,7 +8759,7 @@ function renderActionBar(){
   // ALWAYS show the draw button if they have money, but style it differently if it's optional
   const isTutForcedBuyStep = window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'forced_buy';
   const showAsForced = hasMatch && !isTutForcedBuyStep ? false : true;
-  if(you.shop >= BUY_COST){
+  if(you.shop >= BUY_COST && (state.drawsThisTurn || 0) < MAX_TRIES){
       const btn=document.createElement('button');
       btn.className = showAsForced ? 'btn' : 'btn ghost'; // Ghost style if optional, solid if forced
       btn.textContent = showAsForced ? `No match — Forced Buy (${BUY_COST} PC) ↗` : `Optional Draw (${BUY_COST} PC) ↗`;
@@ -9037,7 +9054,8 @@ function startForcedBuySelf(mode){
     }
     const you = state.players[0];
     // Note: Both 'BUY' (no match) and 'EMPTY' (0 cards) now allow up to 3 tries!
-    state.buyLoop = { buyer: you, tries: 0 };
+    if ((state.drawsThisTurn || 0) >= MAX_TRIES) return; // all draws for this turn are already used
+    state.buyLoop = { buyer: you, tries: state.drawsThisTurn || 0 };
     doBuyDraw();
 }
 
@@ -9055,6 +9073,7 @@ async function doBuyDraw() {
 
     if (bl.tries === 0 && bl.buyer.isHuman) window.matchStats.forcedBuys++;
     bl.tries++;
+    state.drawsThisTurn = bl.tries; // total draws taken this turn
     state.uiState = 'ANIMATING';
     renderAll();
 
@@ -9276,7 +9295,7 @@ function handleCardPointerDown(e, type, value, tier) {
     else if (type === 'steal') { title = `Steal Card`; desc = `Steals ${tier || 3} PC from a target to you.`; }
     else if (type === 'reverse') { title = `Reverse`; desc = `Reverses the direction of play.`; }
     else if (type === 'insurance') { title = `Insurance`; desc = `Safely discard a dud card during a buy.`; }
-    else if (type === 'peek') { title = `Peek`; desc = `Look at the next player's hand.`; }
+
 
     window.dodCardPressTimer = setTimeout(() => {
         window.dodIsLongPressing = true;
@@ -9337,7 +9356,7 @@ function computeHasMatch(player){
      // Reverse can always be played
      if (c.type === 'reverse') return true;
      
-     // Peek and Insurance can NEVER be played into the chain
+     // Insurance can NEVER be played into the chain
      return false; 
   });
 }
@@ -9365,6 +9384,7 @@ function renderDeceptionOverlay(){
   // TRIGGER CINEMATIC ONCE PER DECEPTION PHASE
   if (!localWasInDeception) {
     localWasInDeception = true;
+    window.dodDecGuessMode = false;
     const intro = document.getElementById('deceptionIntroOverlay');
     if (intro) {
         intro.style.display = 'flex';
@@ -9427,7 +9447,7 @@ function renderDeceptionOverlay(){
         ? `<div class="dec-sub"><b>${proposerName}</b> wants to tell the broke players <b>${stances[dec.proposerUid]}</b>. Go along with it, or propose a different number to claim.</div>`
         : `<div class="dec-sub"><b>${proposerName}</b> proposes <b>${stances[dec.proposerUid]}</b> as the real secret number. Accept it, or propose your own instead.</div>`;
       html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionAccept()">Accept ${stances[dec.proposerUid]}</button><button class="btn ghost" onclick="showDeceptionCounterPicker()">Propose my own</button></div>`;
-      html += `<div id="decCounterGrid"></div>`;
+      html += `<div id="decCounterGrid">${window.dodDecCounterMode === (dec.phase + ':' + dec.proposerUid) ? numGrid('submitDeceptionCounter') : ''}</div>`;
     } else {
       const waitingOn = dec.richUids.filter(u => !(u in stances));
       html += `<div class="dec-sub">Waiting on ${waitingOn.map(nameOf).join(', ') || 'the table'} to lock in ${isClaimRound ? 'what to tell the broke players' : 'the real number'}…</div>`;
@@ -9460,7 +9480,7 @@ function renderDeceptionOverlay(){
         Object.entries(stances).forEach(([uid, val]) => {
             html += `<div class="tension-vote" style="animation: none; opacity: 1;">${nameOf(uid)} chose <b style="font-size:18px; color:var(--brass-bright);">${val}</b></div>`;
         });
-        html += `<div class="tension-final" style="animation: none; opacity: 1; margin-top: 15px;">Final ${isClaim ? 'Claim' : 'Real Number'}: <span>${resolved}</span></div>`;
+        if (!isClaim) html += `<div class="tension-final" style="animation: none; opacity: 1; margin-top: 15px;">Final Real Number: <span>${resolved}</span></div>`;
     } else {
         html += `<div class="tension-vote" style="animation: none; opacity: 1; color: rgba(242,234,216,0.7);">The real number has been chosen and is kept hidden.</div>`;
     }
@@ -9470,7 +9490,24 @@ function renderDeceptionOverlay(){
     const iAmBroke = dec.brokeUids.includes(myUid);
     const myResponse = dec.responses[myUid];
 
-    if(iAmBroke && !myResponse){
+    if(iAmBroke && !myResponse && decClaimerUids(dec).length > 0){
+      const claimers = decClaimerUids(dec);
+      if(window.dodDecGuessMode){
+        html += `<div class="dec-sub" style="font-size:15px;">Pick the number you think is real.</div>`;
+        html += numGrid('submitDeceptionGuess');
+        html += `<div class="dec-row"><button class="btn ghost" onclick="decBackToBelieve()">Back</button></div>`;
+      } else {
+        html += `<div class="dec-sub" style="font-size:15px;">Whom do you believe?</div>`;
+        const groups = decClaimGroups(dec);
+        html += `<div class="dec-pickgrid" style="--cols:${Math.min(groups.length, 4)};">`;
+        groups.forEach((g, i) => {
+          html += `<button class="dec-pick" onclick="submitDeceptionTrust(${i})"><span class="dp-name">${escapeHtml(g.uids.map(nameOf).join(', '))}</span><span class="dp-num">${escapeHtml(g.num)}</span></button>`;
+        });
+        html += `</div>`;
+        html += `<div class="dec-row"><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't believe them</button></div>`;
+      }
+      html += `<div class="dec-sub" style="margin-top:8px">Right = <b>+15 coins</b>. Wrong = <b>eliminated</b>.</div>`;
+    } else if(iAmBroke && !myResponse){
       let dissentText = '';
       if (dec.claimStances) {
           let uniqueDissenting = [...new Set(Object.values(dec.claimStances).filter(v => v !== dec.claimNumber))];
@@ -9497,7 +9534,7 @@ function renderDeceptionOverlay(){
     dec.brokeUids.forEach(uid => {
         const r = dec.responses[uid];
         const guess = r.believe ? dec.claimNumber : r.guess;
-        html += `<div class="tension-vote" style="animation-delay:${delay}s">${nameOf(uid)} ${r.believe ? 'believed the claim' : 'guessed'} <b style="font-size:18px; color:var(--brass-bright);">${guess}</b></div>`;
+        html += `<div class="tension-vote" style="animation-delay:${delay}s">${nameOf(uid)} ${r.trusted ? 'believed ' + [].concat(r.trusted).map(nameOf).join(', ') + ' and picked' : (r.believe ? 'believed the claim' : 'guessed')} <b style="font-size:18px; color:var(--brass-bright);">${guess}</b></div>`;
         delay += 1.0;
     });
     html += `<div class="tension-spin" style="animation-delay:${delay}s">The REAL number was <b style="font-size:24px; color:#fff;">${dec.realNumber}</b>...</div>`;
@@ -9506,20 +9543,65 @@ function renderDeceptionOverlay(){
   }
 
   content.innerHTML = html;
+  fitDecPickNames();
 }
 
 function showDeceptionCounterPicker(){
   const dec = state.deception; if(!dec) return;
-  const grid = document.getElementById('decCounterGrid');
-  if(!grid) return;
-  let h = '<div class="dec-numgrid">';
-  for(let n=1;n<=9;n++) h += `<button class="dec-num" onclick="submitDeceptionCounter(${n})">${n}</button>`;
-  grid.innerHTML = h + '</div>';
+  // Remember that the pad is open (per phase), otherwise the next screen refresh wipes it
+  window.dodDecCounterMode = dec.phase + ':' + dec.proposerUid;
+  renderDeceptionOverlay();
 }
 
 // Broke player chose "I don't buy it" — reveal the number grid so they can pick
 // their own guess before we actually submit their answer.
+// Rich players who told the broke players a number (one button each on the "Whom do you believe?" screen)
+function decClaimerUids(dec){
+  if(!dec || !dec.claimStances || !dec.richUids) return [];
+  return dec.richUids.filter(u => dec.claimStances[u] !== undefined);
+}
+// Broke player chose to believe one rich player: their guess becomes that player's claim
+// Rich players grouped by the number they told the broke players: [{ num, uids: [...] }], lowest number first
+function decClaimGroups(dec){
+  const groups = [];
+  decClaimerUids(dec).forEach(uid => {
+    const num = Number(dec.claimStances[uid]);
+    let g = groups.find(x => x.num === num);
+    if(!g){ g = { num, uids: [] }; groups.push(g); }
+    g.uids.push(uid);
+  });
+  return groups.sort((a, b) => a.num - b.num);
+}
+// Bots answer like players: believe a group of players (bigger groups are more likely) or guess a number alone
+function decBotAnswer(dec){
+  if(Math.random() >= 0.5) return { believe: false, guess: 1 + Math.floor(Math.random()*9) };
+  const groups = decClaimGroups(dec);
+  if(groups.length === 0) return { believe: true, guess: null }; // everyone was broke, nobody to believe
+  let total = 0; groups.forEach(g => total += g.uids.length);
+  let roll = Math.random() * total, pick = groups[groups.length - 1];
+  for(const g of groups){ roll -= g.uids.length; if(roll < 0){ pick = g; break; } }
+  return { believe: false, guess: pick.num, trusted: pick.uids };
+}
+async function submitDeceptionTrust(i){
+  const dec = state.deception; if(!dec) return;
+  const grp = decClaimGroups(dec)[i];
+  if(!grp) return;
+  const myUid = myDeceptionUid();
+  window.dodDecGuessMode = false;
+  await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe: false, guess: grp.num, trusted: grp.uids });
+}
+function decBackToBelieve(){ window.dodDecGuessMode = false; renderDeceptionOverlay(); }
+// Shrink long names until they fit inside their button
+function fitDecPickNames(){
+  document.querySelectorAll('#deceptionContent .dp-name').forEach(el => {
+    let fs = 13; el.style.fontSize = fs + 'px';
+    while((el.scrollWidth > el.clientWidth || el.scrollHeight > el.clientHeight) && fs > 8){ fs -= 0.5; el.style.fontSize = fs + 'px'; }
+  });
+}
+
 function showDeceptionAnswerGrid(){
+  // New layout: swap the player buttons for the number pad so everything stays inside the box
+  if(decClaimerUids(state.deception).length > 0){ window.dodDecGuessMode = true; renderDeceptionOverlay(); return; }
   const grid = document.getElementById('decAnswerGrid');
   if(!grid) return;
   let h = '<div class="dec-numgrid">';
@@ -9669,7 +9751,7 @@ function offlineDeceptionStep(){
       setTimeout(()=>{
         if(!state.deception) return;
         const believe = Math.random() < 0.5;
-        dec.responses[nextUid] = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
+        dec.responses[nextUid] = decBotAnswer(dec);
         renderAll();
         offlineDeceptionStep();
       }, 2500);
@@ -9961,7 +10043,7 @@ async function handleOnlineDeceptionHostLogic(serverState){
 
       setTimeout(()=>{
         const believe = Math.random() < 0.5;
-        const r = believe ? { believe:true, guess:null } : { believe:false, guess: 1 + Math.floor(Math.random()*9) };
+        const r = decBotAnswer(dec);
         secureServerCall('hostSyncDeception', { updates: { [`gameState.deception.responses.${nextUid}`]: r } })
         .finally(() => delete window.activeSyncTimers[nextUid]);
       }, answerDelay);
@@ -10080,29 +10162,7 @@ function resolveEmptySingleDraw(buyer){
 }
 
 // ---------------- GUESS ----------------
-async function usePeek(playerId,targetId){
-  const you=playerById(playerId);
-  const target=playerById(targetId);
-  const idx=you.hand.findIndex(c=>c.type==='peek');
-  if(idx===-1) return;
-  you.hand.splice(idx,1);
-  if (you.isHuman) window.matchStats.peeks++;
-  const nums=target.hand.map(c=>c.value).sort((a,b)=>a-b);
-  state.peekResult = `${target.name}'s card values: ${nums.length?nums.join(', '):'Empty hand!'}`;
-  renderAll();
 
-  // Note: Sync the removal to the server for online matches — without this, the next
-  // Firestore snapshot restores the Peek card since the server never knew it was used!
-  if (currentMatchId) {
-      try {
-          await secureServerCall('usePeek', { targetUid: target.uid });
-      } catch (e) {
-          you.hand.splice(idx, 0, { type: 'peek', value: '' }); // revert if server rejects it
-          state.peekResult = null;
-          renderAll();
-      }
-  }
-}
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
     if(state.uiState !== 'CHOOSE_CALL') return; // Note: Prevent double-click sending two server requests
@@ -10241,6 +10301,7 @@ function playNetworkedAnimation(action) {
     // Human-like thinking time before a bot calls a number (same on every phone, derived from the action id)
     const callDelay = 1300 + ((parseInt(String(action.id).slice(-4), 10) || 0) % 1900);
     if (action.type === 'PLAY_NUMBER' && calloutMsg && targetPlayer && targetPlayer.uid.endsWith('Qx9')) {
+        window.dodHeldRequiredValue = window.dodPrevRequiredValue;
         window.dodHideCalledNumber = true;
         clearTimeout(window.dodHideNumberFailsafe);
         window.dodHideNumberFailsafe = setTimeout(() => { window.dodHideCalledNumber = false; renderAll(); }, 15000);
@@ -10398,12 +10459,20 @@ function playNetworkedAnimation(action) {
             log(`Try 1: drew a card — no match.`, '', targetPlayer.uid);
             
             const realCoins = targetPlayer.shop;
-            targetPlayer.shop = realCoins + (pulls * BUY_COST);
+            window.animatingRemoteCoins = window.animatingRemoteCoins || {};
+            let visualCoinsMiss = realCoins + (pulls * BUY_COST);
+            window.animatingRemoteCoins[targetPlayer.uid] = visualCoinsMiss; // stops incoming snapshots from snapping the coins early
+            targetPlayer.shop = visualCoinsMiss;
+            // Failsafe: never leave a bot's coin display frozen if this animation is interrupted
+            setTimeout(() => { if (window.animatingRemoteCoins) { delete window.animatingRemoteCoins[targetPlayer.uid]; renderAll(); } }, (pulls * 1200) + 4000);
             renderAll();
 
             for (let i = 0; i < pulls; i++) {
                 setTimeout(() => {
-                    targetPlayer.shop -= BUY_COST;
+                    visualCoinsMiss -= BUY_COST;
+                    window.animatingRemoteCoins[targetPlayer.uid] = visualCoinsMiss;
+                    const pObjMiss = state.players.find(p => p.uid === targetPlayer.uid); // fresh object, a snapshot may have replaced the old one
+                    if (pObjMiss) pObjMiss.shop = visualCoinsMiss;
                     renderAll();
                     flyCoin(getSeatOrPanelRect(actorSeatIndex), bankRect(), 0);
                     
@@ -10415,7 +10484,7 @@ function playNetworkedAnimation(action) {
                         } else {
                             // Final pull, overwrite with the final alert message
                             log(initialMsg, 'alert', action.uid, true);
-                            setTimeout(unlockTurn, 500);
+                            setTimeout(() => { if (window.animatingRemoteCoins) delete window.animatingRemoteCoins[targetPlayer.uid]; unlockTurn(); }, 500);
                         }
                     }, 300);
                 }, i * 1200);
@@ -10427,9 +10496,18 @@ function playNetworkedAnimation(action) {
             let newCardEl = null;
 
             if (actorSeatIndex === 0) {
+                renderHand(); // put the new card into the DOM first, so we measure where it will really land
+                const handEl0 = document.getElementById('hand');
+                if (handEl0) { handEl0.scrollTop = handEl0.scrollHeight; void handEl0.offsetHeight; }
                 const handCards = document.getElementById('hand').children;
                 if (handCards.length > 0) {
-                    newCardEl = handCards[handCards.length - 1];
+                    newCardEl = document.getElementById('hand-card-' + (state.players[0].hand.length - 1)) || handCards[handCards.length - 1];
+                    // The batched render queued by the snapshot rebuilds the hand right after this,
+                    // so re-grab and re-hide the fresh element once that render has run.
+                    requestAnimationFrame(() => {
+                        const fresh = document.getElementById('hand-card-' + (state.players[0].hand.length - 1));
+                        if (fresh) { newCardEl = fresh; fresh.style.opacity = '0'; }
+                    });
                     targetRect = newCardEl.getBoundingClientRect();
                     newCardEl.style.opacity = '0'; 
                 }
@@ -10516,8 +10594,8 @@ async function advanceTurn() {
 
     // OFFLINE MODE
     state.uiState = 'IDLE'; 
-    state.peekResult = null;
     state.turnTimeLeft = 30; // Reset turn timer
+    state.drawsThisTurn = 0; // new turn, the 3-draw allowance is back
  
     
     if(state.over) return;
@@ -10996,18 +11074,10 @@ async function botDeclare(bot) {
     if (!currentMatchId) await new Promise(res => setTimeout(res, Math.floor(Math.random() * 1800)));
     if(!state || state.over) return;
 
-    const target = nextPlayerOf(bot.id);
     let chosen;
-    const peekIdx = bot.hand.findIndex(c => c.type === 'peek' && (state.requiredValue === null || c.value === state.requiredValue));
+
     
-    if (peekIdx >= 0 && Math.random() < 0.5) {
-        bot.hand.splice(peekIdx, 1);
-        const theirValues = new Set(target.hand.map(c => c.value));
-        const missing = [1,2,3,4,5,6,7,8,9].filter(v => !theirValues.has(v));
-        chosen = missing.length > 0 ? missing[Math.floor(Math.random() * missing.length)] : (1 + Math.floor(Math.random() * 9));
-    } else {
-        chosen = 1 + Math.floor(Math.random() * 9);
-    }
+    chosen = 1 + Math.floor(Math.random() * 9);
     
     let playedStr = bot._tempActionStr || `played a card`;
     delete bot._tempActionStr;
@@ -11263,6 +11333,8 @@ async function endGame(winner, byScore) {
   if(modal && modal.classList.contains('show')) return;
   
   window.isEndGameRunning = true; // Lock the gates!
+  // Is the match really finished? (must be worked out BEFORE state.over is forced to true below)
+  const gameReallyOver = !!state.over || !!byScore || state.players.filter(p => !p.out).length <= 1;
 
   state.over = true;
   clearInterval(timerInterval);
@@ -11300,7 +11372,7 @@ async function endGame(winner, byScore) {
   });
   
   const myRank = sorted.findIndex(p => p.id === you.id) + 1;
-  const isMyWin = myRank === 1;
+  const isMyWin = myRank === 1 && gameReallyOver;
 
   // Inject Rank and Score into matchStats so Cloudflare can calculate SQUAD Placement Math
   if (window.matchStats) {
@@ -11309,17 +11381,17 @@ async function endGame(winner, byScore) {
   }
 
   // Note: Check if game is actually over, or just an early exit
-  const matchStatusText = state.over ? (byScore ? 'Time Limit Reached' : 'Match Concluded') : 'Match Ongoing (Early Exit)';
+  const matchStatusText = gameReallyOver ? (byScore ? 'Time Limit Reached' : 'Match Concluded') : 'Match Ongoing (Early Exit)';
 
   let headerHtml = `<div class="finale-header">
-      <h1 class="finale-status ${isMyWin && state.over ? 'win' : 'loss'}">${isMyWin && state.over ? 'WINNER!' : `LOSS #${myRank}`}</h1>
+      <h1 class="finale-status ${isMyWin && state.over ? 'win' : 'loss'}">${isMyWin && state.over ? 'WINNER!' : (gameReallyOver ? `LOSS #${myRank}` : 'ELIMINATED')}</h1>
       <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${matchStatusText}</div>
   </div>`;
 
   let listHtml = `<div class="finale-list">`;
   sorted.forEach((p, idx) => {
       // Note: If the game is still ongoing, ONLY show players who have been eliminated!
-      if (!state.over && !p.out) return;
+      if (!gameReallyOver && !p.out) return;
 
       const rank = idx + 1;
       const isMe = p.id === you.id;
@@ -11343,7 +11415,7 @@ async function endGame(winner, byScore) {
 
       listHtml += `
         <div class="finale-row ${isMe ? 'is-me' : ''} ${isWinner && state.over ? 'is-winner' : ''}">
-          <div class="finale-rank">#${rank}</div>
+          <div class="finale-rank">${gameReallyOver ? `#${rank}` : '💀'}</div>
           <div class="finale-name" style="display:flex; flex-direction:column; justify-content:center;">
               <span style="line-height:1.2;">${p.name} ${isMe ? '(You)' : ''}</span>
               <span style="font-size:10px; color:rgba(255,255,255,0.5); font-family:'IBM Plex Mono',monospace; margin-top:2px;">${perfTag}</span>
@@ -13227,7 +13299,7 @@ const TITLES_DB = [
   { id: 't_uturn', name: 'U-Turn', rarity: 'common', desc: 'Play 500 Reverse cards.', reqKey: 'reverses', reqVal: 500 },
   { id: 't_switcher', name: 'Switcher', rarity: 'common', desc: 'Play 500 Wild cards.', reqKey: 'wilds', reqVal: 500 },
   { id: 't_cautious', name: 'Cautious', rarity: 'common', desc: 'Use Insurance 500 times.', reqKey: 'insurances', reqVal: 500 },
-  { id: 't_peepingtom', name: 'Peeping Tom', rarity: 'common', desc: 'Use Peek 500 times.', reqKey: 'peeks', reqVal: 500 },
+
   { id: 't_trickster', name: 'The Trickster', rarity: 'common', desc: 'Reach Trickster Tier.', reqKey: 'tierLevel', reqVal: 1 },
   { id: 't_pennypincher', name: 'Penny Pincher', rarity: 'common', desc: 'End a match with exactly 1 coin.', reqKey: 'maxCoinsMatch', reqVal: 1 },
 
@@ -13243,7 +13315,7 @@ const TITLES_DB = [
   { id: 't_dizzy', name: 'Dizzy', rarity: 'rare', desc: 'Play 2,500 Reverse cards.', reqKey: 'reverses', reqVal: 2500 },
   { id: 't_wildthing', name: 'Wild Thing', rarity: 'rare', desc: 'Play 2,500 Wild cards.', reqKey: 'wilds', reqVal: 2500 },
   { id: 't_safebet', name: 'Safe Bet', rarity: 'rare', desc: 'Use Insurance 2,000 times.', reqKey: 'insurances', reqVal: 2000 },
-  { id: 't_spy', name: 'Spy', rarity: 'rare', desc: 'Use Peek 2,500 times.', reqKey: 'peeks', reqVal: 2500 },
+
   { id: 't_wealthy', name: 'Wealthy', rarity: 'rare', desc: 'Accumulate 50,000 total score.', reqKey: 'totalScore', reqVal: 50000 },
   { id: 't_phantom', name: 'The Phantom', rarity: 'rare', desc: 'Reach Phantom Tier.', reqKey: 'tierLevel', reqVal: 2 },
 
@@ -13256,7 +13328,7 @@ const TITLES_DB = [
   { id: 't_masterthief', name: 'Master Thief', rarity: 'mythic', desc: 'Use 15,000 Steal cards.', reqKey: 'steals', reqVal: 15000 },
   { id: 't_oppressor', name: 'Oppressor', rarity: 'mythic', desc: 'Use 15,000 Power cards.', reqKey: 'powers', reqVal: 15000 },
   { id: 't_eraser', name: 'The Eraser', rarity: 'mythic', desc: 'Use Insurance 10,000 times.', reqKey: 'insurances', reqVal: 10000 },
-  { id: 't_clairvoyant', name: 'Clairvoyant', rarity: 'mythic', desc: 'Use Peek 15,000 times.', reqKey: 'peeks', reqVal: 15000 },
+
   { id: 't_unpredictable', name: 'Unpredictable', rarity: 'mythic', desc: 'Play 15,000 Wild cards.', reqKey: 'wilds', reqVal: 15000 },
   { id: 't_rich', name: 'High Roller', rarity: 'mythic', desc: 'Accumulate 500,000 total score.', reqKey: 'totalScore', reqVal: 500000 },
   { id: 't_tycoon', name: 'Tycoon', rarity: 'mythic', desc: 'End a single match with 150+ coins.', reqKey: 'maxCoinsMatch', reqVal: 150 },
@@ -14856,7 +14928,7 @@ function getCardFaceUrl(faceId, typeLabel) {
         if (t === 'steal') return "url('Cards/CrimsonRoyalStealCard.webp')";
         if (t === 'power') return "url('Cards/CrimsonRoyalPowerCard.webp')";
         if (t === 'insurance') return "url('Cards/CrimsonRoyalInsuranceCard.webp')";
-        if (t === 'peek') return "url('Cards/CrimsonRoyalPeekCard.webp')";
+
         return "url('Cards/CrimsonRoyal.webp')"; // The base number card
     }
     
@@ -14866,7 +14938,7 @@ function getCardFaceUrl(faceId, typeLabel) {
     if (t === 'steal') return "url('Cards/SteelCard.webp')";
     if (t === 'power') return "url('Cards/PowerCard.webp')";
     if (t === 'insurance') return "url('Cards/InsuranceCard.webp')";
-    if (t === 'peek') return "url('Cards/PeekCard.webp')";
+
     
     return "url('Cards/CardPhase.webp')";
 }
@@ -15189,14 +15261,33 @@ function renderSeasonPass() {
     }
 }
 
+// --- DYNAMIC RARITY ENGINE ---
+function getItemRarity(item) {
+    if (item.method === 'season') return { label: 'Season Pass', color: '#ff6b7a', bg: 'linear-gradient(90deg, #c23b4a, #7a1f2e)', text: '#fff' };
+    if (item.method === 'tier') return { label: 'Ranked Rewards', color: '#e8c454', bg: 'linear-gradient(90deg, #c9a227, #8a6a1c)', text: '#000' };
+    if (item.method === 'spin' || item.method === 'achievement') return { label: 'Special Event', color: '#4fd1c5', bg: 'linear-gradient(90deg, #319795, #234e52)', text: '#fff' };
+    
+    const shards = item.shardsNeeded || 0;
+    const price = item.price || item.shardPrice || 0;
+    
+    if (shards >= 100 || price >= 3000 || item.id.includes('Legendary')) return { label: 'Legendary', color: '#f5dd8a', bg: 'linear-gradient(90deg, #c9a227, #8a6a1c)', text: '#000' };
+    if (shards >= 40 || price >= 2000 || item.id.includes('Mythic')) return { label: 'Mythic', color: '#d094ff', bg: 'linear-gradient(90deg, #8b3dff, #4a148c)', text: '#fff' };
+    if (shards >= 20 || price >= 1500) return { label: 'Rare', color: '#82c4f5', bg: 'linear-gradient(90deg, #3c7fb2, #1a4b70)', text: '#fff' };
+    
+    return { label: 'Basic', color: '#e4d8bd', bg: 'linear-gradient(90deg, #5a5140, #20190f)', text: '#fff' };
+}
+
 function renderShopItems() {
     const root = document.getElementById('shopRoot');
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!root || !profile) return;
     
+    // Override the grid CSS with block so our new centered flex groups can stack cleanly
+    root.style.display = 'block';
+
     // Show "Coming Soon" for the Faces tab
     if (currentShopTab === 'cardFaces') {
-        root.innerHTML = `<div style="grid-column: 1 / -1; display:flex; align-items:center; justify-content:center; min-height: 250px; text-align: center; font-family: 'Cinzel Decorative', serif; color: rgba(242,234,216,0.3); font-size: clamp(24px, 4vw, 36px); letter-spacing: 4px; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">COMING SOON</div>`;
+        root.innerHTML = `<div style="display:flex; align-items:center; justify-content:center; min-height: 250px; text-align: center; font-family: 'Cinzel Decorative', serif; color: rgba(242,234,216,0.3); font-size: clamp(24px, 4vw, 36px); letter-spacing: 4px; text-shadow: 0 4px 10px rgba(0,0,0,0.8);">COMING SOON</div>`;
         return;
     }
 
@@ -15208,7 +15299,18 @@ function renderShopItems() {
     const eqTable = profile.equippedTable || 'tb_default';
     const eqVfx = profile.equippedVfx || 'vfx_default';
 
-    root.innerHTML = items.map(item => {
+    // 1. Group items cleanly by their calculated rarity
+    const groupedItems = {};
+    
+    items.forEach(item => {
+        const rarityInfo = getItemRarity(item);
+        if (!groupedItems[rarityInfo.label]) {
+            groupedItems[rarityInfo.label] = {
+                info: rarityInfo,
+                elements: []
+            };
+        }
+
         let isEquipped = (item.id === eqFace || item.id === eqBack || item.id === eqTable || item.id === eqVfx);
         let isOwned = inventory.includes(item.id) || item.method === 'default';
 
@@ -15219,7 +15321,7 @@ function renderShopItems() {
             isOwned = inventory.includes(item.id); 
         }
 
-        // Preview Button (Hidden for Coins and VFX)
+        // Preview Button
         let previewBtn = '';
         if (currentShopTab !== 'coins' && currentShopTab !== 'vfx') {
              previewBtn = `<button class="btn ghost small" style="width:100%; margin-bottom:3px; font-size:9.5px; padding:5px; border-color:rgba(201,162,39,0.3);" onclick="openShopPreview('${item.id}', '${currentShopTab}')">🔍 PREVIEW</button>`;
@@ -15229,25 +15331,21 @@ function renderShopItems() {
         let btnHtml = '';
         if (currentShopTab === 'coins') {
             if (item.type === 'sc_chest') {
-                // Bought with SC (Cards) - Dark Royal Violet & Silver
                 btnHtml = `<button class="btn small" style="position:relative; overflow:hidden; background: linear-gradient(180deg, #581c87 0%, #3b0764 45%, #1b0238 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; display:flex; align-items:center; justify-content:flex-start; padding-left:14px !important; border-radius: 4px;" onclick="buyChestWithSC('${item.tier}', ${item.scPrice}, event)">
                     <span style="position:relative; z-index:2; font-size:17px; font-weight:900;">${item.scPrice}</span>
                     <img src="Coins/SyndicateChips.webp" style="position:absolute; right:-2px; top:50%; transform:translateY(-50%) rotate(25deg) scale(1.6); width:24px; height:24px; filter:drop-shadow(-2px 4px 6px rgba(0,0,0,0.8)); z-index:1; pointer-events:none;">
                 </button>`;
             } else if (item.scPrice) {
-                // Bought with SC (Pixel Coins) - Shiny Amber/Gold & Silver
                 btnHtml = `<button class="btn small" style="position:relative; overflow:hidden; background: linear-gradient(180deg, #fbbf24 0%, #d97706 45%, #78350f 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; display:flex; align-items:center; justify-content:flex-start; padding-left:14px !important; border-radius: 4px;" onclick="exchangeSCToPC('${item.id}', ${item.scPrice}, ${item.reward}, event)">
                     <span style="position:relative; z-index:2; font-size:17px; font-weight:900;">${item.scPrice}</span>
                     <img src="Coins/SyndicateChips.webp" style="position:absolute; right:-2px; top:50%; transform:translateY(-50%) rotate(25deg) scale(1.6); width:24px; height:24px; filter:drop-shadow(-2px 4px 6px rgba(0,0,0,0.8)); z-index:1; pointer-events:none;">
                 </button>`;
             } else {
-                // Bought with Real Money - Dark Emerald Green & Silver
                 btnHtml = `<button class="btn small" style="background: linear-gradient(180deg, #047857 0%, #064e3b 45%, #022018 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; border-radius: 4px;" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
             }
         } else if (isEquipped) {
             btnHtml = `<button class="btn small equipped" style="width:100%; border:none; background:rgba(47,110,82,0.3); color:#9fd9b8; box-shadow:none;" disabled>EQUIPPED ✓</button>`;
         } else if (isOwned) {
-            // EQUIP - Solid Yellow/Gold Theme
             btnHtml = `<button class="btn small" style="width:100%; font-weight:bold; background: linear-gradient(180deg, var(--brass-bright) 0%, var(--brass) 100%); color: var(--felt-dark); border: 1px solid #f5dd8a; text-shadow: none; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" onclick="equipShopItem('${item.id}', '${currentShopTab}', event)">EQUIP</button>`;
         } else if (item.method === 'coins') {
             if (item.shardsNeeded) {
@@ -15278,17 +15376,21 @@ function renderShopItems() {
             btnHtml = `<button class="btn small locked" style="width:100%; opacity:0.6; font-size:9px;" disabled>Season Pass Exclusive</button>`;
         }
 
-        // Layout Filters
+        // Layout Filters & Visuals
         const isCard = (currentShopTab === 'cardBacks' || currentShopTab === 'cardFaces');
         const isTable = (currentShopTab === 'tables');
         const isCoin = (currentShopTab === 'coins');
-        
         const customHeight = 'min-height: 110px;';
         
         let bgLayer = '';
         let fadeLayer = '';
         let baseBgColor = '#08090b';
         let coinSubtitleHtml = '';
+        let rarityTagHtml = '';
+        
+        if (!isCoin) {
+            rarityTagHtml = `<div style="position:absolute; top:0; right:0; background:${rarityInfo.bg}; color:${rarityInfo.text}; font-size:7px; font-weight:900; padding:4px 8px; border-bottom-left-radius:6px; z-index:10; font-family:'IBM Plex Mono', monospace; text-transform:uppercase; box-shadow: -2px 2px 8px rgba(0,0,0,0.8); border-left: 1px solid ${rarityInfo.color}; border-bottom: 1px solid ${rarityInfo.color}; letter-spacing:0.5px;">${rarityInfo.label}</div>`;
+        }
 
         if (isCard) {
             baseBgColor = '#0a0210';
@@ -15313,7 +15415,6 @@ function renderShopItems() {
                 bgLayer = `<div style="position:absolute; right:-5%; top:0; bottom:0; width:55%; background-image:url('${item.img}'); background-size:contain; background-repeat:no-repeat; background-position:center right; transform: scale(1.2); opacity: 0.95; z-index:1; pointer-events:none; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.8));"></div>`;
             }
             
-            // Large Readable Reward Amount Text
             const isSC = item.type === 'sc';
             const isChest = item.type === 'sc_chest';
             let txtColor = isSC ? '#c23b4a' : 'var(--brass-bright)';
@@ -15323,16 +15424,13 @@ function renderShopItems() {
             coinSubtitleHtml = `<div style="font-family:'IBM Plex Mono',monospace; font-size:13.5px; font-weight:800; color:${txtColor}; margin-bottom:5px; text-shadow:0 1px 3px #000; letter-spacing:0.5px;">${subtitleText}</div>`;
         }
 
-        return `
-            <div class="shop-item" style="${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : 'rgba(139, 61, 255, 0.35)'}; border-radius:6px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transform: skewX(-6deg);">
-                
-                <!-- Background Layer -->
+        const cardHtml = `
+            <div class="shop-item" style="flex: 1 1 200px; max-width: 280px; ${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : 'rgba(139, 61, 255, 0.35)'}; border-radius:6px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transform: skewX(-6deg);">
+                ${rarityTagHtml}
                 <div style="position:absolute; inset:0; transform: skewX(6deg) scale(1.05); overflow:hidden; pointer-events:none; z-index:1;">
                     ${bgLayer}
                     <div style="position:absolute; inset:-5%; background:${fadeLayer}; z-index:2;"></div>
                 </div>
-                
-                <!-- Foreground Text & Buttons -->
                 <div style="position:relative; z-index:3; padding: 10px 14px; display:flex; flex-direction:column; justify-content:center; align-items:flex-start; width: 65%; height: 100%; transform: skewX(6deg);">
                     <div class="shop-name" style="font-size:10px; font-weight:bold; color:${isEquipped ? 'var(--brass-bright)' : '#fff'}; font-family:'Cinzel',serif; margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; width:100%; line-height:1.2; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.name}</div>
                     ${coinSubtitleHtml}
@@ -15341,10 +15439,48 @@ function renderShopItems() {
                         ${btnHtml}
                     </div>
                 </div>
-
             </div>
         `;
-    }).join('');
+        
+        groupedItems[rarityInfo.label].elements.push(cardHtml);
+    });
+
+    // 2. Exact requested display order: Basic goes first!
+    const displayOrder = [
+        'Basic',
+        'Rare',
+        'Mythic',
+        'Legendary',
+        'Season Pass',
+        'Ranked Rewards',
+        'Special Event',
+        'Standard'
+    ];
+
+    let finalHtml = '';
+    
+    displayOrder.forEach(category => {
+        if (groupedItems[category] && groupedItems[category].elements.length > 0) {
+            const group = groupedItems[category];
+            
+            // Generate Header
+            finalHtml += `
+                <div style="width: 100%; margin-top: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-family:'Cinzel Decorative', serif; font-size:14px; color:${group.info.color}; font-weight:bold; letter-spacing:2px; text-transform:uppercase; text-shadow: 0 2px 6px rgba(0,0,0,0.9);">${group.info.label}</span>
+                    <div style="flex:1; height:1px; background:linear-gradient(90deg, ${group.info.color}88, transparent);"></div>
+                </div>
+            `;
+            
+            // Flex container with center alignment so cards float gracefully to the middle
+            finalHtml += `
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; width: 100%; margin-bottom: 24px;">
+                    ${group.elements.join('')}
+                </div>
+            `;
+        }
+    });
+
+    root.innerHTML = finalHtml;
 }
 
 function openShopPreview(itemId, tab) {
@@ -16059,7 +16195,7 @@ const ALL_MISSIONS = {
         { id: 'd1', title: 'Complete 3 Matches', target: 3, reqKey: 'matchesPlayed', sp: 30 },
         { id: 'd2', title: 'Perform 8 Forced Buys', target: 8, reqKey: 'forcedBuys', sp: 30 },
         { id: 'd3', title: 'Play 4 Wild Cards', target: 4, reqKey: 'wilds', sp: 25 },
-        { id: 'd4', title: 'Use Peek 5 Times', target: 5, reqKey: 'peeks', sp: 25 },
+
         { id: 'd5', title: 'Play 5 Reverse Cards', target: 5, reqKey: 'reverses', sp: 25 },
         { id: 'd6', title: 'Win 1 Match', target: 1, reqKey: 'wins', sp: 30 },
         { id: 'd7', title: 'Use Insurance 3 Times', target: 3, reqKey: 'insurances', sp: 25 },
