@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta name="google-site-verification" content="IOLS3r_lWxVSIWGCjJDVOs2YwSqZC7cH4NX2kQbin2U" />
+  <meta name="google-site-verification" content="IOLS3r_lWxVSIWGCjJDVOs2YwSqZC7cH4NX2kQbin2U" />
 <!-- Initialize debug console (Dev environment only) -->
 <script>
 (function(){
@@ -3981,13 +3981,24 @@ window.dodImagesLoaded = false;
 </div>
 
 <!-- LOGIN CHOICE MODAL -->
-<div class="modal-bg" id="loginChoiceOverlay" style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 6000; flex-direction: column; justify-content: center; align-items: center;">
-  <h1 style="font-family: 'Cinzel Decorative', serif; font-size: clamp(24px, 5vw, 40px); color: var(--brass-bright); letter-spacing: 2px; margin-bottom: 15px; text-shadow: 0 4px 16px rgba(224,189,74,0.4); text-align: center;">DECK OF DECEPTION</h1>
-  <div class="modal" style="position: relative; z-index: 2; text-align:center; background:rgba(15,10,12,0.85); border:1px solid var(--brass); padding: clamp(20px, 4vh, 30px); border-radius:12px; max-width:400px; width:90%; box-shadow: 0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
-    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:24px;">Sign In</h3>
-    <p class="mono" style="font-size:12px; color:rgba(242,234,216,0.7); margin-bottom:24px;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
-    <button id="btnGoogleLogin" class="btn" style="width:100%; margin-bottom:14px; background:#e8c454; color:#150c12; font-family:'Inter', sans-serif; font-weight:600; font-size:14px; letter-spacing:0;" onclick="handleAuthClick('google')">Sign in with Google</button>
-    <button id="btnGuestLogin" class="btn ghost" style="width:100%; font-family:'Inter', sans-serif; font-size:14px; letter-spacing:0;" onclick="handleAuthClick('guest')">Play as Guest</button>
+<div class="modal-bg" id="loginChoiceOverlay" style="background: linear-gradient(rgba(0,0,0,0.1), rgba(0,0,0,0.6)), url('SigninBg.webp') center/cover no-repeat; z-index: 6000; flex-direction: column; justify-content: center; align-items: center;">
+  <div class="modal" style="position: relative; z-index: 2; text-align:center; background: rgba(15, 10, 12, 0.4); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,0.1); padding: 28px 24px; border-radius: 20px; max-width:360px; width:90%; box-shadow: 0 25px 60px rgba(0,0,0,0.9), inset 0 1px 15px rgba(255,255,255,0.05);">
+    
+    <h1 style="font-family: 'Cinzel Decorative', serif; font-size: clamp(28px, 6vw, 36px); color: var(--brass-bright); letter-spacing: 2px; margin: 0 0 8px 0; text-shadow: 0 4px 20px rgba(224,189,74,0.6); line-height: 1.1;">DECK OF DECEPTION</h1>
+    
+    <p class="mono" style="font-size:11.5px; color:rgba(242,234,216,0.85); margin-bottom:24px; line-height: 1.5;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
+    
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+        <button id="btnGoogleLogin" class="btn" style="width:100%; border-radius: 50px; background: linear-gradient(135deg, #f5dd8a 0%, #c9a227 100%); color:#150c12; font-family:'Inter', sans-serif; font-weight:800; font-size:13px; letter-spacing:1px; border: none; padding: 12px 0; box-shadow: 0 4px 15px rgba(201,162,39,0.3); text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="handleAuthClick('google')">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
+            Sign in with Google
+        </button>
+        
+        <button id="btnGuestLogin" class="btn ghost" style="width:100%; border-radius: 50px; font-family:'Inter', sans-serif; font-size:12px; font-weight: 600; letter-spacing:1px; padding: 10px 0; border: 2px solid rgba(242,234,216,0.25); color: var(--paper); transition: all 0.3s; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="handleAuthClick('guest')" onmouseover="this.style.borderColor='var(--brass-bright)'; this.style.color='var(--brass-bright)';" onmouseout="this.style.borderColor='rgba(242,234,216,0.25)'; this.style.color='var(--paper)';">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            Play as Guest
+        </button>
+    </div>
   </div>
 </div>
 
@@ -7021,6 +7032,47 @@ let gameListenerUnsub = null;
 let initialDealDone = false;
 let localLastTurnUid = null; // Tracks the turn to trigger animations
 
+// PHASE 2: the shared match document no longer holds the deck, anybody's hand or the hidden Deception numbers.
+// Your own hand (and the real Deception votes, if you had coins) arrive in matches/{id}/private/{your uid}.
+// This puts everything back together, so the rest of the game code sees the same shape as before.
+function dodMergePrivate(rawDoc, myUid) {
+    if (!rawDoc || !rawDoc.exists) return rawDoc;
+    const data = rawDoc.data();
+    if (!data || !data.gameState) return rawDoc;
+    const gs = data.gameState;
+    const players = gs.players || [];
+    const me = players.find(p => p.uid === myUid);
+    const priv = window.dodPriv;
+
+    // Wait until our private document has caught up with the version this update was written with
+    if (me && me.pv !== undefined && (!priv || (priv.pv || 0) < me.pv) && !window.dodForcePrivProcess) {
+        window.dodPendingRawDoc = rawDoc;
+        clearTimeout(window.dodPrivTimer);
+        window.dodPrivTimer = setTimeout(() => { // safety net: never freeze the game if the private doc is slow
+            if (window.dodPendingRawDoc && window.dodRunMatchCb) {
+                const pd = window.dodPendingRawDoc;
+                window.dodPendingRawDoc = null;
+                window.dodForcePrivProcess = true;
+                try { window.dodRunMatchCb(pd); } finally { window.dodForcePrivProcess = false; }
+            }
+        }, 4000);
+        return null;
+    }
+    clearTimeout(window.dodPrivTimer);
+
+    const merged = Object.assign({}, data);
+    merged.gameState = Object.assign({}, gs);
+    merged.gameState.players = players.map(p => {
+        const q = Object.assign({}, p);
+        if (p.uid === myUid && priv && Array.isArray(priv.hand)) q.hand = priv.hand.slice();
+        else if (!Array.isArray(p.hand)) q.hand = new Array(p.handCount || 0).fill({ type: 'back', value: '' }); // other players: only how many cards
+        return q;
+    });
+    if (!Array.isArray(gs.deck)) merged.gameState.deck = new Array(gs.deckCount || 0).fill(null); // the market: only how many cards
+    if (gs.deception && priv && priv.deception) merged.gameState.deception = Object.assign({}, gs.deception, priv.deception);
+    return { exists: true, data: () => merged };
+}
+
 function listenToGameState() {
     if (currentMatchId) localStorage.setItem('dod_active_match', currentMatchId);
     const db = firebase.firestore();
@@ -7038,7 +7090,22 @@ function listenToGameState() {
         });
     }
 
-    gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(doc => {
+        // PHASE 2: second listener for the private document (your hand, and the real Deception votes if you had coins)
+    window.dodPriv = null;
+    window.dodPendingRawDoc = null;
+    if (window.dodPrivUnsub) { try { window.dodPrivUnsub(); } catch(e) {} }
+    window.dodPrivUnsub = db.collection('matches').doc(currentMatchId).collection('private').doc(myUid).onSnapshot(pdoc => {
+        window.dodPriv = pdoc.exists ? pdoc.data() : null;
+        if (window.dodPendingRawDoc && window.dodRunMatchCb) {
+            const pd = window.dodPendingRawDoc;
+            window.dodPendingRawDoc = null;
+            window.dodRunMatchCb(pd);
+        }
+    }, () => {});
+    gameListenerUnsub = db.collection('matches').doc(currentMatchId).onSnapshot(function dodMatchCb(rawDoc) {
+        window.dodRunMatchCb = dodMatchCb;
+        const doc = dodMergePrivate(rawDoc, myUid);
+        if (!doc) return; // waiting for our private data to catch up with this update
         if (!doc.exists) return; // Note: Prevent the entire renderer from crashing if the match drops mid-load
         const data = doc.data();
         if (!data || !data.gameState) return; 
@@ -7175,7 +7242,7 @@ function listenToGameState() {
 
             // Draws already taken this turn (max MAX_TRIES). Kept while it is still the same turn, reset when a new turn starts.
             drawsKey: serverState.turnUid + ':' + (serverState.turnExpiresAt || 0),
-            drawsThisTurn: (typeof state !== 'undefined' && state && state.drawsKey === (serverState.turnUid + ':' + (serverState.turnExpiresAt || 0))) ? (state.drawsThisTurn || 0) : 0,
+            drawsThisTurn: (serverState.drawsKey === (serverState.turnUid + ':' + (serverState.turnExpiresAt || 0))) ? (serverState.drawsThisTurn || 0) : 0,
             _pendingActionIdx: (typeof state !== 'undefined' && state) ? state._pendingActionIdx : undefined,
             _pendingActionEl: (typeof state !== 'undefined' && state) ? state._pendingActionEl : undefined,
             deception: serverState.deception || null,
@@ -7300,6 +7367,23 @@ function listenToGameState() {
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
             const executeHostLogic = () => {
                 if (isHost && !serverState.deception) {
+                    // The Worker now decides who is stuck (bankrupt, warning, Deception showdown), see /api/turnCheck
+                    (async () => {
+                        let outcome = 'NONE';
+                        const myToken = (window.dodTurnCheckToken = (window.dodTurnCheckToken || 0) + 1);
+                        try {
+                            const res = await secureServerCall('turnCheck', { _quiet: true });
+                            outcome = res.outcome || 'NONE';
+                        } catch (e) { console.warn('turnCheck failed', e); }
+                        if (outcome === 'WAIT' && window.dodTurnCheckToken === myToken) {
+                            setTimeout(function again() {
+                                if (!state || state.over || window.dodTurnCheckToken !== myToken) return;
+                                if (window.dodTurnLocked || window.dodCenterIsLocked || state.uiState === 'ANIMATING') { setTimeout(again, 500); return; }
+                                executeHostLogic();
+                            }, 600);
+                        }
+                    })();
+                    return;
                     const curPlayer = state.players.find(p => p.uid === serverState.turnUid);
                     const stuck = curPlayer && !curPlayer.out && serverState.uiState === 'IDLE' && curPlayer.shop < BUY_COST && !computeHasMatch(curPlayer);
                     if (curPlayer && stuck) {
@@ -7458,7 +7542,7 @@ function tick() {
                 if (myHumanIdx === hostHumanIdx + 1 || (hostHumanIdx === -1 && myHumanIdx === 0)) {
                     if (!window.claimingHost) {
                         window.claimingHost = true;
-                        secureServerCall('claimHost', {}).finally(() => { 
+                        secureServerCall('claimHost', { _quiet: true }).finally(() => { 
                             setTimeout(() => { window.claimingHost = false; }, 5000); 
                         });
                     }
@@ -7501,7 +7585,12 @@ function tick() {
             turnInd.style.color = dLeft <= 10 ? 'var(--danger-bright)' : 'var(--brass-bright)';
         }
         
-        if (currentMatchId && dLeft <= 0) {
+        if (currentMatchId) {
+            // Keep the Worker's Deception timeline moving even when no new update arrives (the host pings it once a second)
+            const myUidTick = DoDAuth.getProfile().uid;
+            if (window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUidTick) handleOnlineDeceptionHostLogic(state);
+        }
+        if (false && currentMatchId && dLeft <= 0) {
             const myUid = DoDAuth.getProfile().uid;
             const isHost = window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUid;
             
@@ -7588,7 +7677,7 @@ async function handleTurnTimeout() {
           if (!isHost) return; 
           
           try {
-              await secureServerCall('triggerTimeout', {});
+              await secureServerCall('triggerTimeout', { _quiet: true });
           } catch (e) {
               console.warn("Timeout rejection:", e);
               // CLOCK DESYNC FIX: If the server rejects the timeout, the phone's clock is running faster than the server.
@@ -7729,6 +7818,7 @@ function eliminate(p, reason, skipCinematic = false){
 }
 
 function sweepEliminations(){
+  if(!state) return;
   if(state.over) return;
   if(currentMatchId) return; // Note: In online mode, the Host and Server exclusively dictate eliminations to prevent desyncs!
   state.players.forEach(p=>{ 
@@ -8298,6 +8388,7 @@ function animateTurnArc(fromIdx, toIdx, dir) {
 
 // ---------------- RENDER ----------------
 function renderAll(){
+  if(!state) return; // delayed timers can fire after the match has ended
   sweepEliminations();
   if(state.over) return;
   renderDeceptionOverlay();
@@ -8816,7 +8907,7 @@ async function secureServerCall(endpoint, payload) {
 
         const data = await response.json();
         if (!data.success) {
-            log("Server rejected move: " + data.error, "alert");
+            if (!payload._quiet) log("Server rejected move: " + data.error, "alert");
             throw new Error(data.error);
         }
         return data;
@@ -9078,6 +9169,18 @@ async function doBuyDraw() {
     state.uiState = 'ANIMATING';
     renderAll();
 
+    if (currentMatchId) {
+        // ONLINE: the Worker takes the payment, draws the card and updates your hand (see /api/drawCard)
+        try {
+            await secureServerCall('drawCard', {});
+        } catch (e) {
+            bl.tries = Math.max(0, bl.tries - 1);
+            state.drawsThisTurn = bl.tries;
+            state.uiState = bl.tries > 0 ? 'RESOLVING_BUY' : 'IDLE';
+            renderAll();
+        }
+        return;
+    }
     const taken = payFromOwn(bl.buyer, BUY_COST);
     flyCoin(getSeatOrPanelRect(bl.buyer.id), bankRect(), 0);
     sweepEliminations();
@@ -9219,6 +9322,15 @@ async function playInsuranceFromHand(idx, el) {
 }
 
 async function finishBuyLoopFailure() {
+    if (currentMatchId) {
+        // ONLINE: the Worker passes the turn (see /api/passTurn)
+        state.buyLoop = null;
+        state.uiState = 'ANIMATING';
+        renderActionBar();
+        try { await secureServerCall('passTurn', { kind: 'FORCED_BUY_FAILED' }); }
+        catch (e) { state.uiState = 'IDLE'; renderAll(); }
+        return;
+    }
     const myUid = DoDAuth.getProfile().uid;
     state.buyLoop = null;
 
@@ -9248,6 +9360,13 @@ async function finishBuyLoopFailure() {
 // online branch is host-only, so a non-host human calling it directly here was a
 // dead end — this pushes the turn forward themselves, same as a normal call-out does.
 async function skipStuckHumanTurn(reasonMsg){
+  if (currentMatchId) {
+    // ONLINE: the Worker checks that you really are stuck and passes the turn (see /api/passTurn)
+    if (state && (state.deception || state.uiState !== 'IDLE')) return;
+    if (!isYourTurn()) return;
+    try { await secureServerCall('passTurn', { kind: /hand is empty/.test(reasonMsg) ? 'STUCK_EMPTY' : 'STUCK_NOMATCH' }); } catch (e) {}
+    return;
+  }
   if (state && state.deception) return;
   if (state && state.uiState === 'DECEPTION') return;
   if (state && state.uiState !== 'IDLE') return; // Note: Abort skip if the UI state progressed past IDLE!
@@ -9912,6 +10031,14 @@ async function startDeceptionPhaseOnline(curPlayer){
 window.activeSyncTimers = window.activeSyncTimers || {};
 
 async function handleOnlineDeceptionHostLogic(serverState){
+  // The Worker now runs the whole Deception timeline (bot votes, AFK fill-ins, reveal screens, result).
+  // The host only pings it; it does nothing unless something is due.
+  if(!serverState || !serverState.deception) return;
+  if(window.dodDecTickBusy) return;
+  window.dodDecTickBusy = true;
+  try { await secureServerCall('deceptionTick', { _quiet: true }); } catch(e) {}
+  setTimeout(() => { window.dodDecTickBusy = false; }, 900);
+  return;
   const dec = serverState.deception;
   if(!dec) return;
 
@@ -11194,6 +11321,7 @@ async function confirmLeaveGame(){
     // Stop the match listeners & timers instantly
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
+    if (window.dodPrivUnsub) { try { window.dodPrivUnsub(); } catch(e){} window.dodPrivUnsub = null; window.dodPriv = null; window.dodPendingRawDoc = null; }
     
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     const matchToLeave = currentMatchId;
@@ -11603,6 +11731,7 @@ function returnToMenuFromEndgame() {
 
     if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
+    if (window.dodPrivUnsub) { try { window.dodPrivUnsub(); } catch(e){} window.dodPrivUnsub = null; window.dodPriv = null; window.dodPendingRawDoc = null; }
 
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     localStorage.removeItem('dod_active_match');
@@ -13196,6 +13325,9 @@ function listenToSquadMatchFilling(matchId, timerEl, statusEl, overlay) {
             const myUid = DoDAuth.getProfile().uid;
             if (data.seats.length > 0 && data.seats[0].uid !== myUid) return;
 
+            // PHASE 3: the Worker fills empty seats with your real bot profiles (tier + rank matched)
+            await secureServerCall('fillBots', { matchId: matchId, _quiet: true });
+            return;
             let seats = data.seats, pSeats = data.publicSeats;
             const hostTier = seats.length > 0 ? seats[0].tier : 'Apprentice';
             while (seats.length < data.tableSize) {
@@ -13562,8 +13694,7 @@ function updateProfileWidget(profile) {
         { name: 'Steal', count: profile.steals || 0 },
         { name: 'Power', count: profile.powers || 0 },
         { name: 'Wild', count: profile.wilds || 0 },
-        { name: 'Reverse', count: profile.reverses || 0 },
-        { name: 'Peek', count: profile.peeks || 0 }
+        { name: 'Reverse', count: profile.reverses || 0 }
     ].sort((a,b) => b.count - a.count);
     
     let favCard = uses[0].count > 0 ? uses[0].name : 'None';
