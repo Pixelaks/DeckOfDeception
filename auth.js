@@ -75,21 +75,13 @@ dodAuth.onAuthStateChanged(function(user){
       }
     } else {
       const legacy = _dodReadLocalLegacyProgress();
-      // PRODUCTION FIX: legacy values come from the player's own localStorage and are
-      // fully attacker-controlled — never trust them beyond the same defaults a brand
-      // new player would get, or anyone can hand themselves free currency/skins by
-      // editing localStorage before their first sign-in.
-      const safeLegacyCurrency = Math.min(Number(legacy.currency) || 100, 100);
       const safeLegacyOwnedSkins = Array.isArray(legacy.ownedSkins)
-        ? legacy.ownedSkins.filter(id => SHOP_LOCKED_CATALOG.some(item => item.id === id))
+        ? legacy.ownedSkins.filter(id => typeof SHOP_LOCKED_CATALOG !== 'undefined' && SHOP_LOCKED_CATALOG.some(item => item.id === id))
         : [];
-      const newProfile = {
-        // 1. COMPLETELY REMOVED 'displayName: null'. 
-        // This ensures the Firestore rule allows the HTML file to set up the account!
-        currency: safeLegacyCurrency,
-        ownedSkins: safeLegacyOwnedSkins,
         
-        // 2. UPDATED DEFAULTS: Match the exact 'Apprentice' stats your HTML file expects
+      const newProfile = {
+        // REMOVED 'currency' completely to pass Firestore security rules.
+        ownedSkins: safeLegacyOwnedSkins,
         level: 1,
         points: 0,
         rankScore: 0,
@@ -117,11 +109,17 @@ dodAuth.onAuthStateChanged(function(user){
 
 function dodSignInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
+  provider.setCustomParameters({ prompt: 'select_account' });
   
-  // Mobile PWAs and TWAs require Redirect instead of Popup to avoid window blocking
-  return dodAuth.signInWithRedirect(provider).catch(function(error) {
+  // Use Popup to prevent the page from reloading and re-triggering the Tap to Start screen
+  dodAuth.signInWithPopup(provider).catch(function(error) {
       console.error("Google Sign-In Error:", error);
-      if (typeof resetAuthButtons === 'function') resetAuthButtons();
+      if (error.code === 'auth/popup-blocked') {
+          // Only fallback to redirect if the browser aggressively blocks the popup
+          dodAuth.signInWithRedirect(provider);
+      } else if (typeof resetAuthButtons === 'function') {
+          resetAuthButtons();
+      }
   });
 }
 
@@ -154,9 +152,6 @@ function dodShowLoginModal(){
      setTimeout(dodShowLoginModal, 100);
      return;
   }
-  
-  // FIX: Prevent the login modal from forcing itself open if the user resolved while waiting
-  if (dodAuth.currentUser) return; 
   
   dodHideBootstrap(); // Show login only AFTER hiding the loading screen
   const overlay = document.getElementById('loginChoiceOverlay');
