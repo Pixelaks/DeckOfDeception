@@ -5,7 +5,7 @@
 
 const firebaseConfig = {
   apiKey: "AIzaSyDNr3tNvKHswj5a98P6c6s33r6-GVQ2pUQ",
-  authDomain: "deckofdeception-ee478.firebaseapp.com",
+  authDomain: "auth.pixelaks.in", // <-- Change this to your actual custom domain
   projectId: "deckofdeception-ee478",
   storageBucket: "deckofdeception-ee478.firebasestorage.app",
   messagingSenderId: "238749670387",
