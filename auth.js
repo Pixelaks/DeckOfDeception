@@ -119,7 +119,7 @@ function dodSignInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   
   // Mobile PWAs and TWAs require Redirect instead of Popup to avoid window blocking
-  dodAuth.signInWithRedirect(provider).catch(function(error) {
+  return dodAuth.signInWithRedirect(provider).catch(function(error) {
       console.error("Google Sign-In Error:", error);
       if (typeof resetAuthButtons === 'function') resetAuthButtons();
   });
@@ -154,6 +154,9 @@ function dodShowLoginModal(){
      setTimeout(dodShowLoginModal, 100);
      return;
   }
+  
+  // FIX: Prevent the login modal from forcing itself open if the user resolved while waiting
+  if (dodAuth.currentUser) return; 
   
   dodHideBootstrap(); // Show login only AFTER hiding the loading screen
   const overlay = document.getElementById('loginChoiceOverlay');
