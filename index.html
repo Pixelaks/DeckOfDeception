@@ -7311,6 +7311,16 @@ function listenToGameState() {
             }
         }
 
+        // Same problem, different action: a routine presence-ping snapshot from ANY
+        // player can arrive while our own playCard/playWild/etc. is still in flight on a
+        // slow connection, and it was rubber-banding our local uiState back to something
+        // tappable before the server actually confirmed the play — letting a second tap
+        // submit the same card again. Hold our local uiState until playNetworkedAnimation
+        // sees our own confirmed action come back and clears this flag.
+        if (window.dodJustPlayedLocally && typeof state !== 'undefined' && state && serverState.turnUid === myUid) {
+            mappedUiState = state.uiState;
+        }
+
         // We MUST save the buyLoop locally, otherwise the network sync wipes it out and breaks the retry button!
         let preservedBuyLoop = null;
 
@@ -7675,7 +7685,7 @@ function tick() {
                 if (myHumanIdx === hostHumanIdx + 1 || (hostHumanIdx === -1 && myHumanIdx === 0)) {
                     if (!window.claimingHost) {
                         window.claimingHost = true;
-                        secureServerCall('claimHost', { _quiet: true }).finally(() => { 
+                        secureServerCall('claimHost', { _quiet: true }).catch(() => {}).finally(() => { 
                             setTimeout(() => { window.claimingHost = false; }, 5000); 
                         });
                     }
