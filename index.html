@@ -391,7 +391,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .shop-item { padding: 10px 8px !important; }
 .menu-screen.hidden { display:none; }
 .screen-header { flex-shrink:0; width:100%; text-align:center; z-index:10; margin-bottom: 12px; }
-.screen-content { flex:1; width:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; align-items:center; padding:0 5px; transform: translateZ(0); will-change: scroll-position; contain: content; }
+.screen-content { flex:1; width:100%; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; display:flex; flex-direction:column; align-items:center; padding:0 5px; transform: translateZ(0); overscroll-behavior-y: contain; }
 .screen-content::-webkit-scrollbar { display:none; }
 .screen-content { -ms-overflow-style:none; scrollbar-width:none; }
 .screen-footer { flex-shrink:0; width:100%; display:flex; justify-content:center; padding-top:16px; z-index:10; }
@@ -489,15 +489,13 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
     margin-top: 16px; 
 }
 .shop-item { 
-    /* NEW: Premium Solid Background (Blur removed for 60fps mobile scrolling) */
+    /* Solid background for 60fps mobile scrolling — no promoted GPU layers at rest */
     background: linear-gradient(180deg, rgba(82, 54, 27, 0.9) 0%, rgba(38, 20, 8, 1) 100%); 
     border: 1px solid rgba(201,162,39,0.25); 
     border-radius: 8px; 
     padding: 12px 10px; 
     text-align: center; 
     box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-    transform: translateZ(0);
-    will-change: transform;
 }
 .shop-item .shop-swatch{ width:38px; height:38px; border-radius:50%; margin:0 auto 8px; box-shadow:0 4px 10px rgba(0,0,0,0.4); }
 .shop-item .shop-name{ font-family:'Cinzel',serif; font-size:11.5px; color:var(--paper); margin-bottom:3px; }
@@ -1256,6 +1254,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   cursor: pointer;
   transform-style: preserve-3d; 
   transition: transform 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+  will-change: transform;
+  transform: translateZ(0);
 }
 .dd-card-wrapper:hover:not(.locked) .dd-card { transform: translateY(-16px) rotateZ(3deg); box-shadow: 0 15px 40px rgba(226,189,74,0.5); }
 /* Fly to the center, push down 40px to clear text, and scale up */
@@ -1272,18 +1272,19 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 @keyframes luckyCardFloat {
     0% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) + 0px)) rotateY(180deg) scale(1.55) rotateZ(-2deg); }
-    100% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) - 15px)) rotateY(180deg) scale(1.6) rotateZ(2deg); box-shadow: 0 0 80px rgba(226,189,74,1); }
+    100% { transform: translateX(var(--target-x, 0)) translateY(calc(var(--target-y, 40px) - 15px)) rotateY(180deg) scale(1.6) rotateZ(2deg); }
 }
 
 /* NEW INTENSE LIGHT BURST ANIMATION */
 .dd-reveal-flash {
     position: absolute;
     top: 50%; left: 50%;
-    width: 200vmax; height: 200vmax;
-    transform: translate(-50%, -50%);
+    width: min(200vmax, 1200px); height: min(200vmax, 1200px);
+    transform: translate(-50%, -50%) translateZ(0);
     pointer-events: none;
     z-index: 5; /* Spawns directly behind the card */
     mix-blend-mode: screen;
+    will-change: opacity;
 }
 .dd-reveal-core {
     position: absolute;
@@ -2702,13 +2703,11 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* SHOP: rarity-styled premium cards */
 /* SHOP: rarity-styled premium cards */
 .shop-item{
- background:linear-gradient(160deg,rgba(30,20,14,0.95),rgba(10,7,5,0.98));
- border:1px solid rgba(201,162,39,0.35); border-radius:12px;
+ background:linear-gradient(160deg,rgba(28,18,12,0.98),rgba(8,6,4,1));
+ border:1px solid rgba(201,162,39,0.3); border-radius:12px;
  padding:16px 12px; position:relative; overflow:hidden;
- box-shadow:0 6px 18px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.05);
- transition:transform .25s ease, box-shadow .25s ease, border-color .25s ease;
- transform: translateZ(0);
- will-change: transform;
+ box-shadow:0 4px 14px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.05);
+ transition:transform .22s cubic-bezier(0.34,1.4,0.64,1), box-shadow .22s ease, border-color .22s ease;
  contain: content;
 }
 .shop-item::before{
@@ -2741,8 +2740,16 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .shop-item button.locked:disabled{ background:rgba(255,255,255,0.05); color:rgba(242,234,216,0.3); border-color:rgba(255,255,255,0.08); }
 
 /* Shop / Profile tabs -> pill nav */
-.squad-subtab-btn{ padding:8px 16px; border:1px solid transparent; border-radius:999px; background:rgba(255,255,255,0.03); }
-.squad-subtab-btn.active{ background:rgba(232,196,84,0.12); border-color:var(--brass-bright); box-shadow:0 0 10px rgba(232,196,84,0.25); }
+.squad-subtab-btn{ padding:8px 16px; border:1px solid transparent; border-radius:999px; background:rgba(255,255,255,0.03); transition: background .18s ease, border-color .18s ease, box-shadow .18s ease; }
+.squad-subtab-btn.active{ background:rgba(232,196,84,0.12); border-color:var(--brass-bright); box-shadow:0 0 12px rgba(232,196,84,0.3); }
+
+/* Shop box — slow ambient border glow (disabled in Battery Saver) */
+@keyframes shopBorderGlow {
+  0%, 100% { border-color: rgba(201,162,39,0.28); }
+  50%       { border-color: rgba(201,162,39,0.52); }
+}
+.shop-main-box { animation: shopBorderGlow 5s ease-in-out infinite; }
+body.low-power-mode .shop-main-box { animation: none; }
 
 /* TRAINING: rules box as parchment ledger */
 .rules-box{
@@ -3261,30 +3268,75 @@ window.dodImagesLoaded = false;
 
 <div id="cardTooltip"></div>
 
-<!-- INTERACTIVE TUTORIAL ENGINE -->
+<!-- INTERACTIVE TUTORIAL ENGINE v2 — Spotlight + Arrow System -->
 <style>
-  #tutOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.85); z-index: 10000; display: none; pointer-events: auto; }
-  /* Note: Moved showcase slightly higher to leave room for the horizontal text box below it */
+  /* Full-screen dimmer — goes transparent when spotlight takes over */
+  #tutOverlay { position: absolute; inset: 0; background: rgba(0,0,0,0.82); z-index: 10000; display: none; pointer-events: none; transition: background 0.3s; }
+  #tutOverlay.spotlight-active { background: transparent; }
+
+  /* Card showcase (unchanged) */
   #tutShowcase { position: absolute; top: 35%; left: 50%; transform: translate(-50%, -50%); display: none; z-index: 10001; gap: 6px; align-items: center; justify-content: center; pointer-events: none; width: 100%; max-width: 90vw; flex-wrap: wrap; }
-  /* Note: Made the dialogue box padding tighter and width fluid so JavaScript can transform it dynamically! */
-  #tutDialogue { position: absolute; z-index: 10002; background: linear-gradient(135deg, rgba(20,15,10,0.98), rgba(6,4,3,0.98)); border: 2px solid var(--brass-bright); border-radius: 8px; padding: 16px 20px; width: 90%; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.9), 0 0 20px rgba(232,196,84,0.2); display: none; flex-direction: column; gap: 10px; color: #fff; transition: all 0.4s cubic-bezier(0.2, 1, 0.3, 1); pointer-events: auto; }
-  .tut-focused { z-index: 10001 !important; pointer-events: auto !important; box-shadow: 0 0 0 4px var(--brass-bright), 0 0 30px rgba(232,196,84,0.5) !important; border-radius: 8px; animation: tutPulse 1.5s infinite alternate; }
+
+  /* Spotlight cutout — box-shadow dims everything OUTSIDE the element */
+  #tutSpotlight {
+    position: absolute; z-index: 10001; pointer-events: none; border-radius: 10px; display: none;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.84);
+    border: 2px solid rgba(232,196,84,0.7);
+    transition: top 0.3s cubic-bezier(0.25,1,0.5,1), left 0.3s cubic-bezier(0.25,1,0.5,1),
+                width 0.3s cubic-bezier(0.25,1,0.5,1), height 0.3s cubic-bezier(0.25,1,0.5,1);
+  }
+  @keyframes spotGlow {
+    0%,100% { border-color:rgba(232,196,84,0.55); box-shadow:0 0 0 9999px rgba(0,0,0,0.84), 0 0 16px rgba(232,196,84,0.3); }
+    50%      { border-color:rgba(232,196,84,1);    box-shadow:0 0 0 9999px rgba(0,0,0,0.84), 0 0 34px rgba(232,196,84,0.75); }
+  }
+  #tutSpotlight.active { display: block; animation: spotGlow 1.8s ease-in-out infinite; }
+
+  /* Bouncing arrow pointer */
+  #tutArrow {
+    position: absolute; z-index: 10003; pointer-events: none; display: none;
+    font-size: 28px; line-height: 1;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.95)) drop-shadow(0 0 10px rgba(232,196,84,0.6));
+    transition: top 0.3s cubic-bezier(0.25,1,0.5,1), left 0.3s cubic-bezier(0.25,1,0.5,1);
+  }
+  @keyframes arrowBounceDown { 0%,100%{transform:translateY(0)} 50%{transform:translateY(8px)} }
+  @keyframes arrowBounceUp   { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
+  #tutArrow.active     { display: block; }
+  #tutArrow.bounce-down { animation: arrowBounceDown 0.6s ease-in-out infinite; }
+  #tutArrow.bounce-up   { animation: arrowBounceUp   0.6s ease-in-out infinite; }
+
+  /* Dialogue card */
+  #tutDialogue {
+    position: absolute; z-index: 10002; pointer-events: auto; display: none;
+    flex-direction: column; gap: 9px; color: #fff;
+    background: linear-gradient(150deg, rgba(16,11,7,0.99) 0%, rgba(4,3,2,0.99) 100%);
+    border: 2px solid var(--brass-bright); border-radius: 10px; padding: 13px 15px;
+    width: 90%; max-width: 340px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.95), 0 0 22px rgba(232,196,84,0.18);
+    transition: top 0.3s cubic-bezier(0.25,1,0.5,1), bottom 0.3s, left 0.3s, transform 0.3s, width 0.3s, max-width 0.3s;
+  }
+  .tut-dealer-row { display:flex; align-items:center; gap:9px; }
+  .tut-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--brass-bright),var(--brass)); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; box-shadow:0 0 14px rgba(232,196,84,0.45); }
+  .tut-dname  { font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:12px; }
+  .tut-prog   { width:100%; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:3px; }
+  /* Legacy — keep .tut-focused for showcase cards; spotlight handles in-game elements */
+  .tut-focused { z-index: 10001 !important; pointer-events: auto !important; border-radius: 8px; }
   .tut-focused * { pointer-events: auto !important; }
-  @keyframes tutPulse { 0% { box-shadow: 0 0 0 4px var(--brass-bright), 0 0 20px rgba(232,196,84,0.4); } 100% { box-shadow: 0 0 0 6px var(--brass-bright), 0 0 40px rgba(232,196,84,0.8); } }
 </style>
 <div id="tutOverlay"></div>
 <div id="tutShowcase"></div>
+<div id="tutSpotlight"></div>
+<div id="tutArrow"></div>
 <div id="tutDialogue">
-  <div style="display:flex; justify-content:space-between; align-items:center;">
-      <div style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:20px;">The Dealer</div>
-      <button onclick="endInteractiveTutorial()" style="background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:10px; text-transform:uppercase;">Skip ✕</button>
+  <div class="tut-dealer-row">
+    <div class="tut-avatar">🎰</div>
+    <div style="flex:1; min-width:0;">
+      <div class="tut-dname">The Dealer</div>
+      <div class="tut-prog"><div id="tutProgressFill" style="height:100%; width:0%; background:var(--brass-bright); transition:width 0.3s ease;"></div></div>
+    </div>
+    <button onclick="endInteractiveTutorial()" style="background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:0; flex-shrink:0;">SKIP ✕</button>
   </div>
-  <div style="width:100%; height:3px; background:rgba(255,255,255,0.1); border-radius:2px; overflow:hidden;">
-      <div id="tutProgressFill" style="height:100%; width:0%; background:var(--brass-bright); transition:width 0.3s ease;"></div>
-  </div>
-  <div id="tutStepLabel" style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:rgba(255,255,255,0.4); text-transform:uppercase; letter-spacing:1px;"></div>
-  <div id="tutText" style="font-family:'Inter',sans-serif; font-size:14px; line-height:1.6; color:rgba(242,234,216,0.9);"></div>
-  <button id="tutBtn" class="btn small" style="margin-top:10px; padding:10px 0; font-size:13px;" onclick="tutNext()">Continue</button>
+  <div id="tutText" style="font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.55; color:rgba(242,234,216,0.92);"></div>
+  <button id="tutBtn" class="btn small" style="padding:9px 0; font-size:12px; letter-spacing:1px;" onclick="tutNext()">Continue →</button>
 </div>
 
 <!-- IOS SAFARI LIMITATION WARNING (shown once, only to iPhone/iPad Safari tab users, not standalone home-screen users) -->
@@ -4972,6 +5024,27 @@ function createNoiseBuffer() {
 }
 let noiseBuffer;
 
+// Gives LiveKit voice tracks the same GainNode "beyond 1.0" headroom as music,
+// so voice can actually be louder than the game audio, not just equal to it.
+function boostVoiceAudio(el) {
+    if (!el || el._voiceBoosted) return el;
+    try {
+        if (!audioCtx) audioCtx = new AudioContext();
+        const source = audioCtx.createMediaElementSource(el);
+        const gainNode = audioCtx.createGain();
+        source.connect(gainNode).connect(audioCtx.destination);
+        let vol = el.volume;
+        el.volume = 1.0;
+        gainNode.gain.value = vol;
+        Object.defineProperty(el, 'volume', {
+            get() { return vol; },
+            set(v) { vol = v; gainNode.gain.value = v; }
+        });
+        el._voiceBoosted = true;
+    } catch (e) { console.warn('Voice boost patch failed:', e); }
+    return el;
+}
+
 // iOS Safari audio volume workaround via GainNode overrides
 function patchAudioVolume(el) {
     if (!el || el._volumePatched) return el;
@@ -5479,7 +5552,11 @@ function proceedWithBoot(overlayEl) {
     
     setTimeout(() => {
         window.minimumBootTimePassed = true;
-        setTimeout(runAdaptiveVfxBenchmark, 1500);
+        // First-time visitors are still downloading/decoding every asset for
+        // the first time right after boot — that extra load was making the
+        // benchmark misfire and wrongly flag good phones as "weak".
+        const isFirstTimeVisit = !localStorage.getItem('dod_assets_cached');
+        setTimeout(runAdaptiveVfxBenchmark, isFirstTimeVisit ? 6000 : 1500);
         menu.classList.add('menu-visible'); // Always show menu first so login overlay can appear
 
         // Show the iOS Safari limitation warning once, only for iPhone/iPad Safari tab users
@@ -5675,40 +5752,66 @@ window.isInteractiveTutorial = false;
 let tutStep = 0;
 
 const tutScript = [
-    { target: null, text: "Welcome to Deck of Deception! Everyone starts with equal cards and coins. Your goal is to survive, build wealth, and eliminate rivals.", btn: "Start Tutorial" },
-    { target: 'seat-0', text: "<b>Your Seat:</b> This is you. You start with 20 Pixel Coins (PC). If your coins hit 0 and your hand is empty, you are Eliminated.", btn: "Got it" },
-    { target: 'deckpile', text: "<b>The Market:</b> This is the main deck. If you don't have a matching card to play, you must pay 2 PC to buy a card from here.", btn: "Next" },
-    { target: 'turnIndicator', text: "<b>The Turn Timer:</b> Every player has exactly <b>30 seconds</b> to play. If time runs out, you lose 2 coins and your turn skips!", btn: "Got it" },
-    { target: 'chainBox', text: "<b>The Chain Box:</b> This shows your live score. <b>Score = Coins minus (Cards × 3)</b>. Never hoard cards at the end of the game!", btn: "Next" },
-    { target: 'ringCenter', text: "<b>The Chain:</b> The center shows what must be played. The last player put down a 5 and demanded a 7. You MUST play a 7.", btn: "Got it" },
-    { target: 'hand-wrap', text: "<b>Your Hand:</b> I've rigged your hand with a 7 and all the Special Cards. Click the <b>7</b> to play it!", wait: 'played_card' },
-    { target: 'actionbar', text: "Excellent! Playing a card earns you <b>+1 coin</b>. You now control the chain. Click any number below to demand what the next player must play.", wait: 'called_number' },
-    
-    // --- SPECIAL CARDS SHOWCASE ---
-    { target: null, text: "Let's pause and review the <b>Special Cards</b> you are holding.", btn: "Show me", showcaseCard: 'none' },
-    { target: null, text: "<b>Wild Swap:</b> Costs 2 PC to play, but it acts as a universal match. Extremely useful when you are trapped.", btn: "Next", showcaseCard: 'wild' },
-    { target: null, text: "<b>Power Card:</b> Matches anything. Instead of paying coins, you select a rival to instantly drain their coins to the bank!", btn: "Next", showcaseCard: 'power' },
-    { target: null, text: "<b>Steal Card:</b> Matches anything. You select a rival and steal their coins directly into your own pocket!", btn: "Next", showcaseCard: 'steal' },
+    // 1 — Welcome
+    { target: null,          text: "Welcome to <b>Deck of Deception!</b> 2-min guide — you learn by doing. Let's go.", btn: "Let's go →" },
 
-    { target: null, text: "<b>Reverse:</b> Flips the turn direction. Great for bouncing the pressure back to the person who just targeted you.", btn: "Next", showcaseCard: 'reverse' },
-    { target: null, text: "<b>Insurance:</b> A passive card. If you are Forced to Buy and draw a dud, use this to safely discard it without skipping your turn.", btn: "Got it", showcaseCard: 'insurance' },
+    // 2 — Your seat
+    { target: 'seat-0',      text: "👤 <b>That's you.</b> Start with <b>20 coins (PC)</b>. Hit 0 coins with an empty hand → eliminated.", btn: "Got it" },
 
-    // --- VISUAL DECEPTION EXPLANATION ---
-    { target: null, text: "Great! I've paused the bots. Let's explain the <b>Deception Showdown</b> — a mini-game that kicks in if a player is broke (0 PC) with no match. You'll play BOTH sides so it's crystal clear.", btn: "Show me" },
-    { target: 'deceptionContent', text: "<b>Side 1 — Players WITH Coins:</b> If the broke player is STILL stuck next turn, the Showdown begins! Coin-holders secretly agree on a hidden <b>Real Number</b>.", btn: "Next", action: 'mock_deception_rich_real' },
-    { target: 'deceptionContent', text: "<b>Side 1 — Players WITH Coins:</b> Now they agree on a <b>Claim Number</b> to tell the broke player. Truth, or bluff — their call.", btn: "Next", action: 'mock_deception_rich_claim' },
-    { target: 'deceptionContent', text: "<b>Side 2 — Switch seats, you're Broke now:</b> You only see the Claim. Do you Believe it, or click 'I don't buy it' and guess the real number yourself?", btn: "Let's practice", action: 'mock_deception_broke' },
-    // Note: Added 'unlock_deception_broke' to cleanly unlock the buttons only when reaching this exact step!
-    { target: 'deceptionContent', text: "Let's practice surviving! Click <b>Believe it</b> right now to trust the table's claim.", wait: 'clicked_believe', action: 'unlock_deception_broke' },
-    { target: 'deceptionContent', text: "<b>Success!</b> You survived and won <b>+15 coins</b>! (If you had clicked 'I don't buy it', a number pad would appear for your exact guess).", btn: "What if I miss?", action: 'mock_deception_result' },
-    { target: null, text: "Guess wrong? <b>Instant Elimination!</b> (Note: If EVERYONE is broke, the Game itself hides a number. If everyone guesses wrong, the game ends immediately!).", btn: "Intense!", action: 'hide_deception' },
-    
-    // --- BACK TO REGULAR GAMEPLAY ---
-    { target: 'log', text: "<b>The Log:</b> Keep an eye here to track who is broke and who is bluffing. Now, let's unfreeze the bots.", btn: "Unfreeze Bots", unfreeze: true },
-    { target: 'actionbar', text: "The bots are playing. When it gets back to you, you won't have a match. Click <b>Forced Buy (2 PC)</b> when the button appears.", wait: 'forced_buy' },
-    { target: 'deckpile', text: "If you draw a match, it goes to your hand and you choose when to play it. If you miss, you can try again (up to 3 times), stop, or use Insurance to discard the dud.", btn: "Understood" },
-    { target: 'timerDisplay', text: "<b>Global Timer:</b> The match ends after <b>20 minutes</b>. The player with the highest score wins! Ranks increase based on your performance.", btn: "Almost ready" },
-    { target: null, text: "Higher ranks unlock exclusive rewards and prove you are a Master of Cards. Find your strategy and dominate the table!", btn: "Play Full Match ↗" }
+    // 3 — Market deck
+    { target: 'deckpile',    text: "🃏 <b>The Market.</b> No matching card? Pay <b>2 PC</b> to draw from here. Don't go broke!", btn: "OK" },
+
+    // 4 — Turn timer
+    { target: 'turnIndicator', text: "⏱️ <b>30-second timer</b> per turn. Run out → lose 2 coins, turn skips.", btn: "Noted" },
+
+    // 5 — The chain
+    { target: 'ringCenter',  text: "🎯 <b>The Chain.</b> Last player demanded a <b>7</b>. You MUST play a 7 — I put one in your hand!", btn: "OK" },
+
+    // 6 — Interactive: play the 7
+    { target: 'hand-wrap',   text: "👆 <b>Tap the 7</b> in your hand to play it!", wait: 'played_card', arrow: 'bottom' },
+
+    // 7 — Interactive: call a number
+    { target: 'actionbar',   text: "🔥 +1 coin! You control the chain now. <b>Tap any number</b> below to demand a match.", wait: 'called_number', arrow: 'top' },
+
+    // 8 — Score
+    { target: 'chainBox',    text: "📊 <b>Score</b> = Coins − (Cards × 3). Don't hoard cards when the game ends!", btn: "Got it" },
+
+    // 9 — Special cards intro
+    { target: null, text: "You're holding <b>Special Cards</b> — each one is a power move. Let me show you fast.", btn: "Show me", showcaseCard: 'none' },
+
+    // 10–14 — Card showcase (short captions)
+    { target: null, text: "🔄 <b>Wild Swap</b> — Costs 2 PC. Plays as <b>any number</b>. Use when stuck.", btn: "Next →", showcaseCard: 'wild' },
+    { target: null, text: "⚡ <b>Power Card</b> — Free. Matches anything. Drains a <b>rival's coins</b> to the bank.", btn: "Next →", showcaseCard: 'power' },
+    { target: null, text: "💰 <b>Steal Card</b> — Free. Matches anything. Steals coins <b>into your pocket</b>.", btn: "Next →", showcaseCard: 'steal' },
+    { target: null, text: "↩️ <b>Reverse</b> — Flips turn direction. Bounce the pressure straight back.", btn: "Next →", showcaseCard: 'reverse' },
+    { target: null, text: "🛡️ <b>Insurance</b> — Discard a bad forced-draw for free. No turn skip.", btn: "Got it ✓", showcaseCard: 'insurance' },
+
+    // 15 — Deception intro
+    { target: null, text: "Last mechanic: <b>Deception Showdown.</b> Triggers when a player is broke with no match. Pure bluffing.", btn: "Show me" },
+
+    // 16 — Rich side: vote real number
+    { target: 'deceptionContent', text: "💎 <b>You have coins:</b> Secretly agree on a <b>Real Number</b> with other coin-holders.", btn: "Next →", action: 'mock_deception_rich_real' },
+
+    // 17 — Rich side: vote claim number
+    { target: 'deceptionContent', text: "🎭 Now pick a <b>Claim Number</b> to tell the broke player. Truth or bluff — your call.", btn: "Switch sides →", action: 'mock_deception_rich_claim' },
+
+    // 18 — Broke side (locked)
+    { target: 'deceptionContent', text: "💸 <b>You're broke.</b> You only see the claim. Believe them, or guess the real number yourself?", btn: "Let me try →", action: 'mock_deception_broke' },
+
+    // 19 — Interactive: click Believe it
+    { target: 'deceptionContent', text: "👆 <b>Tap 'Believe it'</b> to practice surviving!", wait: 'clicked_believe', action: 'unlock_deception_broke', arrow: 'top' },
+
+    // 20 — Show result
+    { target: 'deceptionContent', text: "✅ Survived! Right guess = <b>+15 coins.</b> Wrong guess = <b>instant elimination.</b>", btn: "Intense!", action: 'mock_deception_result' },
+
+    // 21 — Unfreeze
+    { target: 'log', text: "👁️ Watch the <b>log</b> — shows who's broke and who's bluffing. Unfreezing bots now!", btn: "Unfreeze →", action: 'hide_deception', unfreeze: true },
+
+    // 22 — Interactive: forced buy
+    { target: 'actionbar', text: "When it's your turn with no match, tap <b>Forced Buy (2 PC).</b> Up to 3 tries, or use Insurance to dump a dud.", wait: 'forced_buy', arrow: 'top' },
+
+    // 23 — Done
+    { target: null, text: "🏆 That's it! Score = coins − cards×3. Highest score wins after 20 min. Now go dominate!", btn: "Play! ↗" }
 ];
 
 function openTutorial(fromSettings) {
@@ -5719,9 +5822,11 @@ function openTutorial(fromSettings) {
     menuState.count = 4;
     document.getElementById('fastTest').checked = false;
     
-    // Physically move the HTML elements inside the #game container so they share the same z-index layout!
+    // Move ALL tutorial elements into #game so they share its z-index + position:relative context
     document.getElementById('game').appendChild(document.getElementById('tutOverlay'));
-    document.getElementById('game').appendChild(document.getElementById('tutShowcase')); // Added showcase injection
+    document.getElementById('game').appendChild(document.getElementById('tutShowcase'));
+    document.getElementById('game').appendChild(document.getElementById('tutSpotlight'));
+    document.getElementById('game').appendChild(document.getElementById('tutArrow'));
     document.getElementById('game').appendChild(document.getElementById('tutDialogue'));
 
     // Hide menu and trigger loading screen
@@ -5732,194 +5837,190 @@ function openTutorial(fromSettings) {
 }
 
 function applyTutStep() {
-    if (tutStep >= tutScript.length) {
-        endInteractiveTutorial();
-        return;
-    }
-    
-    const step = tutScript[tutStep];
-    const tutBtn = document.getElementById('tutBtn');
-    const tutText = document.getElementById('tutText');
-    const diag = document.getElementById('tutDialogue');
+    if (tutStep >= tutScript.length) { endInteractiveTutorial(); return; }
+
+    const step     = tutScript[tutStep];
+    const tutBtn   = document.getElementById('tutBtn');
+    const tutText  = document.getElementById('tutText');
+    const diag     = document.getElementById('tutDialogue');
+    const overlay  = document.getElementById('tutOverlay');
+    const spotlight= document.getElementById('tutSpotlight');
+    const arrow    = document.getElementById('tutArrow');
+    const showcase = document.getElementById('tutShowcase');
     const decModal = document.getElementById('deceptionModal');
-    let isCenterLarge = false; // Flag to trigger horizontal scaling
-    
+
     if (typeof renderActionBar === 'function') renderActionBar();
     if (step.unfreeze) window.networkSyncPaused = false;
 
-    // --- MOCK DECEPTION UI ---
+    // ── MOCK DECEPTION ACTIONS (logic identical to original) ──────────────────
     const myUid = window.DoDAuth && DoDAuth.getProfile() ? DoDAuth.getProfile().uid : 'player_1';
-    
+    const isDecepStep = step.target === 'deceptionContent' || (step.action && step.action.startsWith('mock_deception')) || step.action === 'unlock_deception_broke';
+
     if (step.action === 'mock_deception_rich_real') {
-        state.deception = { phase: 'VOTE_REAL', proposerUid: myUid, richUids: [myUid, 'bot_1'], brokeUids: ['bot_2'], realStances: {}, claimStances: {} };
+        state.deception = { phase:'VOTE_REAL', proposerUid:myUid, richUids:[myUid,'bot_1'], brokeUids:['bot_2'], realStances:{}, claimStances:{} };
         renderAll();
-        decModal.style.zIndex = '10001';
-        
-        // Note: Shift the Deception Modal to the absolute top of the screen to leave room for the text box!
-        decModal.style.alignItems = 'flex-start';
-        decModal.style.paddingTop = '10px';
+        decModal.style.zIndex = '10001'; decModal.style.alignItems = 'flex-start'; decModal.style.paddingTop = '10px';
         document.getElementById('deceptionContent').style.pointerEvents = 'none';
-        isCenterLarge = true;
     } else if (step.action === 'mock_deception_rich_claim') {
-        state.deception.phase = 'VOTE_CLAIM';
-        state.deception.realNumber = 8;
+        state.deception.phase = 'VOTE_CLAIM'; state.deception.realNumber = 8;
         renderAll();
-        isCenterLarge = true;
     } else if (step.action === 'mock_deception_broke') {
-        state.deception = { phase: 'ANSWER', claimNumber: 8, realNumber: 8, brokeUids: [myUid], richUids: ['bot_1', 'bot_2'], responses: {} };
+        state.deception = { phase:'ANSWER', claimNumber:8, realNumber:8, brokeUids:[myUid], richUids:['bot_1','bot_2'], responses:{} };
         renderAll();
-        // Note: Keep clicks LOCKED during the explanation so the player can't jump ahead!
         document.getElementById('deceptionContent').style.pointerEvents = 'none';
-        isCenterLarge = true;
+        decModal.style.zIndex = '10001'; decModal.style.alignItems = 'flex-start'; decModal.style.paddingTop = '10px';
     } else if (step.action === 'unlock_deception_broke') {
-        // Note: Unlock clicks ONLY when asking the player to practice!
         document.getElementById('deceptionContent').style.pointerEvents = 'auto';
-        isCenterLarge = true;
     } else if (step.action === 'mock_deception_result') {
         state.deception.phase = 'REVEAL_RESULTS';
-        state.deception.responses = { [myUid]: { believe: true, guess: null } };
+        state.deception.responses = { [myUid]: { believe:true, guess:null } };
         renderAll();
-        document.getElementById('deceptionContent').style.pointerEvents = 'none'; // Lock clicks again
-        isCenterLarge = true;
+        document.getElementById('deceptionContent').style.pointerEvents = 'none';
     } else if (step.action === 'hide_deception') {
-        state.deception = null;
-        renderAll();
-        decModal.style.zIndex = '';
-        decModal.style.alignItems = 'center'; // Restore centering
-        decModal.style.paddingTop = '16px';
+        state.deception = null; renderAll();
+        decModal.style.zIndex = ''; decModal.style.alignItems = 'center'; decModal.style.paddingTop = '16px';
         document.getElementById('deceptionContent').style.pointerEvents = '';
     }
 
+    // ── CLEAN PREVIOUS HIGHLIGHTS ────────────────────────────────────────────
     document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
-    
-    const showcase = document.getElementById('tutShowcase');
-    let targetRect = null;
-    
-    // --- SPECIAL CARDS SHOWCASE ---
-    if (step.showcaseCard) {
+    spotlight.className = '';
+    arrow.className = '';
+
+    // ── SPECIAL CARDS SHOWCASE ───────────────────────────────────────────────
+    let isCenterLarge = false;
+
+    if (step.showcaseCard !== undefined) {
         isCenterLarge = true;
-        const cards = ['wild', 'power', 'steal', 'reverse', 'insurance'];
+        overlay.classList.remove('spotlight-active');
+        const cards = ['wild','power','steal','reverse','insurance'];
         let html = '';
         cards.forEach(c => {
-            let bgImg = ''; let tBadge = '';
-            if (c === 'wild') bgImg = "url('Cards/SwapCard.webp')";
-            if (c === 'power') { bgImg = "url('Cards/PowerCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">-4</div>'; }
-            if (c === 'steal') { bgImg = "url('Cards/SteelCard.webp')"; tBadge = '<div class="tier-badge" style="top:12px; font-size:9px;">+3</div>'; }
-
-            if (c === 'reverse') bgImg = "url('Cards/ReverseCard.webp')";
-            if (c === 'insurance') bgImg = "url('Cards/InsuranceCard.webp')";
-            
-            const isFocused = step.showcaseCard === c;
-            // Note: Shrink cards slightly and pinch margins so they fit easily
-            const scale = isFocused ? 'scale(1.1)' : 'scale(0.75)';
-            const opacity = isFocused ? '1' : '0.4';
-            const focusClass = isFocused ? 'tut-focused' : '';
-            
-            html += `<div class="card ${focusClass}" style="width:48px; height:68px; background-image:${bgImg}; transform:${scale}; opacity:${opacity}; transition:all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); margin: 0 -2px;">${tBadge}</div>`;
+            let bg = '', badge = '';
+            if (c==='wild')      bg = "url('Cards/SwapCard.webp')";
+            if (c==='power')     { bg = "url('Cards/PowerCard.webp')"; badge='<div class="tier-badge" style="top:12px;font-size:9px;">-4</div>'; }
+            if (c==='steal')     { bg = "url('Cards/SteelCard.webp')"; badge='<div class="tier-badge" style="top:12px;font-size:9px;">+3</div>'; }
+            if (c==='reverse')   bg = "url('Cards/ReverseCard.webp')";
+            if (c==='insurance') bg = "url('Cards/InsuranceCard.webp')";
+            const f = step.showcaseCard === c;
+            html += `<div class="card ${f?'tut-focused':''}" style="width:48px;height:68px;background-image:${bg};transform:${f?'scale(1.1)':'scale(0.75)'};opacity:${f?'1':'0.4'};transition:all 0.4s cubic-bezier(0.2,0.8,0.2,1);margin:0 -2px;">${badge}</div>`;
         });
         showcase.innerHTML = html;
         showcase.style.display = 'flex';
     } else {
-        if (showcase) showcase.style.display = 'none';
-        if (step.target && step.target !== 'deceptionContent') {
-            const el = document.getElementById(step.target);
-            if (el) {
-                el.classList.add('tut-focused');
-                targetRect = el.getBoundingClientRect();
+        showcase.style.display = 'none';
+    }
+
+    // ── SPOTLIGHT + ARROW ─────────────────────────────────────────────────────
+    let targetEl = null;
+    if (!isCenterLarge && !isDecepStep && step.target && step.target !== 'deceptionContent') {
+        targetEl = document.getElementById(step.target);
+    }
+
+    if (targetEl) {
+        const r        = targetEl.getBoundingClientRect();
+        const gameRect = document.getElementById('game').getBoundingClientRect();
+        const pad      = 9;
+
+        // Position spotlight relative to #game
+        spotlight.style.top    = (r.top  - gameRect.top  - pad) + 'px';
+        spotlight.style.left   = (r.left - gameRect.left - pad) + 'px';
+        spotlight.style.width  = (r.width  + pad*2) + 'px';
+        spotlight.style.height = (r.height + pad*2) + 'px';
+        spotlight.classList.add('active');
+        overlay.classList.add('spotlight-active');
+        targetEl.classList.add('tut-focused');
+
+        // Arrow — only on interactive wait steps
+        if (step.wait) {
+            const cx = r.left - gameRect.left + r.width / 2;
+            if (step.arrow === 'bottom') {
+                // Arrow sits ABOVE the target pointing down
+                arrow.textContent = '👇';
+                arrow.style.top   = (r.top - gameRect.top - 48) + 'px';
+                arrow.style.left  = (cx - 14) + 'px';
+                arrow.className   = 'active bounce-up';
+            } else {
+                // Arrow sits BELOW the target pointing up
+                arrow.textContent = '👆';
+                arrow.style.top   = (r.bottom - gameRect.top + 8) + 'px';
+                arrow.style.left  = (cx - 14) + 'px';
+                arrow.className   = 'active bounce-down';
             }
         }
+    } else if (!isCenterLarge) {
+        overlay.classList.remove('spotlight-active');
     }
-    
-    // --- UNIFIED SMART POSITIONING ALGORITHM ---
-    const isLandscapeMobile = window.innerWidth <= 980 && window.innerWidth > window.innerHeight;
 
-    // Note: If highlighting the center (Showcase/Deception), stretch the box horizontally and lock it to the bottom!
+    // ── ARROW FOR DECEPTION PANEL ────────────────────────────────────────────
+    if (isDecepStep && step.wait === 'clicked_believe') {
+        isCenterLarge = true;
+        const decContent = document.getElementById('deceptionContent');
+        if (decContent) {
+            const r        = decContent.getBoundingClientRect();
+            const gameRect = document.getElementById('game').getBoundingClientRect();
+            const cx       = r.left - gameRect.left + r.width / 2;
+            arrow.textContent = '👆';
+            arrow.style.top   = (r.bottom - gameRect.top + 8) + 'px';
+            arrow.style.left  = (cx - 14) + 'px';
+            arrow.className   = 'active bounce-down';
+        }
+    }
+    if (isDecepStep) { isCenterLarge = true; overlay.classList.remove('spotlight-active'); }
+
+    // ── DIALOGUE POSITIONING ─────────────────────────────────────────────────
+    const isLandscape = window.innerWidth <= 980 && window.innerWidth > window.innerHeight;
+    diag.style.flexDirection = 'column';
+    diag.style.alignItems    = 'stretch';
+    tutText.style.fontSize   = '13.5px';
+    if (tutBtn) { tutBtn.style.marginTop=''; tutBtn.style.flexShrink=''; tutBtn.style.padding=''; }
+
     if (isCenterLarge) {
-        diag.style.top = 'auto';
-        diag.style.bottom = '8px';
-        diag.style.left = '50%';
-        diag.style.right = 'auto';
+        // Wide bar pinned to bottom — showcase + deception
+        diag.style.bottom    = '10px'; diag.style.top  = 'auto';
+        diag.style.left      = '50%';  diag.style.right= 'auto';
         diag.style.transform = 'translateX(-50%)';
-        diag.style.width = '95%';
-        diag.style.maxWidth = '600px'; 
-        
-        // Morphs into a horizontal bar on small screens
-        if (isLandscapeMobile) {
-            diag.style.flexDirection = 'row';
-            diag.style.alignItems = 'center';
+        diag.style.width     = '95%';  diag.style.maxWidth = '600px';
+        if (isLandscape) {
+            diag.style.flexDirection = 'row'; diag.style.alignItems = 'center';
             tutText.style.fontSize = '12px';
-            if (tutBtn) {
-                tutBtn.style.marginTop = '0';
-                tutBtn.style.flexShrink = '0';
-                tutBtn.style.padding = '10px 16px';
-            }
-        } else {
-            diag.style.flexDirection = 'column';
-            diag.style.alignItems = 'stretch';
-            tutText.style.fontSize = '14px';
+            if (tutBtn) { tutBtn.style.marginTop='0'; tutBtn.style.flexShrink='0'; tutBtn.style.padding='10px 16px'; }
         }
+    } else if (targetEl) {
+        const r        = targetEl.getBoundingClientRect();
+        const gameRect = document.getElementById('game').getBoundingClientRect();
+        diag.style.width    = '90%'; diag.style.maxWidth = '340px';
 
-    } else if (targetRect) {
-        // Restore standard layout for normal targets
-        diag.style.width = '90%';
-        diag.style.maxWidth = '340px';
-        diag.style.flexDirection = 'column';
-        diag.style.alignItems = 'stretch';
-        tutText.style.fontSize = '14px';
-        if (tutBtn) tutBtn.style.marginTop = '10px';
+        const spaceBelow = gameRect.bottom - r.bottom;
+        const spaceAbove = r.top - gameRect.top;
 
-        if (isLandscapeMobile) {
-            if (targetRect.left + (targetRect.width/2) >= window.innerWidth / 2) {
-                diag.style.left = '15px';
-                diag.style.right = 'auto';
-                diag.style.top = '50%';
-                diag.style.bottom = 'auto';
-                diag.style.transform = 'translateY(-50%)';
-            } else {
-                diag.style.right = '15px';
-                diag.style.left = 'auto';
-                diag.style.top = '50%';
-                diag.style.bottom = 'auto';
-                diag.style.transform = 'translateY(-50%)';
-            }
+        if (spaceBelow >= 180 || spaceBelow >= spaceAbove) {
+            diag.style.top    = (r.bottom - gameRect.top + 14) + 'px';
+            diag.style.bottom = 'auto';
         } else {
-            if (targetRect.top > window.innerHeight / 2) {
-                diag.style.top = '40px';
-                diag.style.bottom = 'auto';
-            } else {
-                diag.style.bottom = '40px';
-                diag.style.top = 'auto';
-            }
-            diag.style.left = '50%';
-            diag.style.right = 'auto'; 
-            diag.style.transform = 'translateX(-50%)';
+            diag.style.bottom = (gameRect.bottom - r.top + 14) + 'px';
+            diag.style.top    = 'auto';
         }
+        diag.style.left = '50%'; diag.style.right = 'auto';
+        diag.style.transform = 'translateX(-50%)';
     } else {
-        // Default center
-        diag.style.width = '90%';
-        diag.style.maxWidth = '340px';
-        diag.style.flexDirection = 'column';
-        diag.style.alignItems = 'stretch';
-        tutText.style.fontSize = '14px';
-        
-        diag.style.top = '50%';
-        diag.style.bottom = 'auto';
-        diag.style.left = '50%';
-        diag.style.right = 'auto';
-        diag.style.transform = 'translate(-50%, -50%)';
+        // No target — centre
+        diag.style.width    = '90%'; diag.style.maxWidth = '340px';
+        diag.style.top      = '50%'; diag.style.bottom   = 'auto';
+        diag.style.left     = '50%'; diag.style.right    = 'auto';
+        diag.style.transform= 'translate(-50%, -50%)';
     }
-    
+
+    // ── CONTENT ───────────────────────────────────────────────────────────────
     tutText.innerHTML = step.text;
-    const tutProgressFill = document.getElementById('tutProgressFill');
-    const tutStepLabel = document.getElementById('tutStepLabel');
-    if (tutProgressFill) tutProgressFill.style.width = (((tutStep + 1) / tutScript.length) * 100) + '%';
-    if (tutStepLabel) tutStepLabel.textContent = 'Step ' + (tutStep + 1) + ' of ' + tutScript.length;
-    
+    const fill = document.getElementById('tutProgressFill');
+    if (fill) fill.style.width = (((tutStep + 1) / tutScript.length) * 100) + '%';
+
     if (step.wait) {
         tutBtn.style.display = 'none';
     } else {
         tutBtn.style.display = 'block';
-        tutBtn.textContent = step.btn;
+        tutBtn.textContent   = step.btn || 'Continue →';
     }
 }
 
@@ -5932,9 +6033,11 @@ function tutNext() {
 function endInteractiveTutorial() {
     try { sfx.uiClick(); } catch(e){}
     localStorage.setItem('dod_seen_tutorial','1');
-    document.getElementById('tutOverlay').style.display = 'none';
+    const _ov = document.getElementById('tutOverlay');   if (_ov) { _ov.style.display = 'none'; _ov.classList.remove('spotlight-active'); }
     document.getElementById('tutShowcase').style.display = 'none';
     document.getElementById('tutDialogue').style.display = 'none';
+    const _sp = document.getElementById('tutSpotlight'); if (_sp) _sp.className = '';
+    const _ar = document.getElementById('tutArrow');     if (_ar) _ar.className  = '';
     document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
     window.isInteractiveTutorial = false;
     
@@ -5977,7 +6080,12 @@ if(window.DoDAuth){
     
     if (savedMatchId) {
         try {
-            const matchDoc = await db.collection('matches').doc(savedMatchId).get();
+            // Don't let a slow/stalled network leave "Signing you in..." stuck forever —
+            // race the reconnect check against a timeout and fall through to the normal
+            // hub if it doesn't resolve in time.
+            const matchDocPromise = db.collection('matches').doc(savedMatchId).get();
+            const matchDocTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Reconnect check timed out')), 6000));
+            const matchDoc = await Promise.race([matchDocPromise, matchDocTimeout]);
             if (matchDoc.exists) {
                 const data = matchDoc.data();
                 
@@ -5991,8 +6099,16 @@ if(window.DoDAuth){
                     menu.style.display = 'none';
                     document.getElementById('game').style.display = 'flex';
                     
-                    // Mock the state so the endgame modal can render the leaderboard safely
-                    state = { players: data.gameState.players, over: true };
+                    // Mock the state so the endgame modal can render the leaderboard safely.
+                    // data.gameState.players only carries handCount (not hand) under the
+                    // Phase 2 privacy split — give every player a placeholder hand array,
+                    // same as dodMergePrivate does mid-game, or endGame crashes on p.hand.length.
+                    state = {
+                        players: (data.gameState.players || []).map(p => Object.assign({}, p, {
+                            hand: Array.isArray(p.hand) ? p.hand : new Array(p.handCount || 0).fill({ type: 'back', value: '' })
+                        })),
+                        over: true
+                    };
                     
                     // Trigger the finale display, then clear the match from memory
                     setTimeout(() => {
@@ -6142,6 +6258,14 @@ if(window.DoDAuth){
 }
 
 let micDuckMult = 1.0; // Drops when microphone is active
+let isLocalMicActive = false;
+let isRemoteSpeaking = false;
+
+function updateVoiceDucking() {
+    // Duck music whenever YOU are talking OR someone else in the room is talking
+    micDuckMult = (isLocalMicActive || isRemoteSpeaking) ? 0.25 : 1.0;
+    setMusicVolume(musicVolumeSetting * 100);
+}
 
 function updatePingUI(pingMs) {
     const pingEl = document.getElementById('networkPing');
@@ -6168,9 +6292,8 @@ function updatePingUI(pingMs) {
 
 // Call this when your voice chat connects or disconnects!
 function setMicActive(isActive) {
-    // Drop the music to 30% only when the microphone is actively being used
-    micDuckMult = isActive ? 0.30 : 1.0;
-    setMusicVolume(musicVolumeSetting * 100); // Safely recalculates live volume
+    isLocalMicActive = isActive;
+    updateVoiceDucking();
 }
 
 function setMusicVolume(v){
@@ -6530,7 +6653,7 @@ function setVoiceVolume(v) {
     document.querySelectorAll('audio[id^="lkAudio_"]').forEach(audioEl => {
         const uid = audioEl.id.split('_')[1];
         const playerVol = window.playerVolumes[uid] !== undefined ? window.playerVolumes[uid] : 1.0;
-        audioEl.volume = playerVol * window.masterVoiceVolume;
+        audioEl.volume = playerVol * window.masterVoiceVolume * 1.6;
     });
 }
 
@@ -6589,7 +6712,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // during DOMContentLoaded was a false positive — every phone is busy loading
 // assets and Firebase at that moment, so it flagged good devices as weak too.
 // Only genuinely struggling devices get switched to Low Power Mode this way.
-function runAdaptiveVfxBenchmark() {
+function runAdaptiveVfxBenchmark(isConfirmationPass) {
     if (localStorage.getItem('dod_setting_power') !== null) return;
     let frames = 0;
     const benchStart = performance.now();
@@ -6600,6 +6723,12 @@ function runAdaptiveVfxBenchmark() {
         } else {
             const avgFps = frames / ((now - benchStart) / 1000);
             if (avgFps < 50) {
+                if (!isConfirmationPass) {
+                    // One slow sample isn't enough evidence on its own —
+                    // re-check once more after things settle down.
+                    setTimeout(() => runAdaptiveVfxBenchmark(true), 4000);
+                    return;
+                }
                 localStorage.setItem('dod_setting_power', 'true');
                 document.body.classList.add('low-power-mode');
                 const toggleEl = document.getElementById('toggle-power');
@@ -6660,9 +6789,10 @@ const VoiceChat = {
                 if (track.kind === 'audio') {
                     const audioEl = track.attach();
                     audioEl.id = `lkAudio_${participant.identity}`;
-                    if (window.playerVolumes && window.playerVolumes[participant.identity] !== undefined) {
-                        audioEl.volume = window.playerVolumes[participant.identity];
-                    }
+                    boostVoiceAudio(audioEl); // let voice gain exceed 1.0, like the music GainNodes do
+                    const playerVol = window.playerVolumes && window.playerVolumes[participant.identity] !== undefined
+                        ? window.playerVolumes[participant.identity] : 1.0;
+                    audioEl.volume = playerVol * window.masterVoiceVolume * 1.6; // 1.6 = headroom boost
                     document.body.appendChild(audioEl);
                 }
             });
@@ -6672,6 +6802,9 @@ const VoiceChat = {
             });
 
             this.room.on(LivekitClient.RoomEvent.ActiveSpeakersChanged, (speakers) => {
+                const localId = this.room.localParticipant ? this.room.localParticipant.identity : null;
+                isRemoteSpeaking = speakers.some(s => s.identity !== localId);
+                if (typeof updateVoiceDucking === 'function') updateVoiceDucking();
                 document.querySelectorAll('.speaking').forEach(el => el.classList.remove('speaking'));
                 speakers.forEach(speaker => {
                     const uid = speaker.identity;
@@ -15557,7 +15690,7 @@ function renderShopItems() {
         }
 
         const cardHtml = `
-            <div class="shop-item" style="flex: 1 1 200px; max-width: 280px; ${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : 'rgba(139, 61, 255, 0.35)'}; border-radius:6px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 15px rgba(0,0,0,0.6); transform: skewX(-6deg);">
+            <div class="shop-item" style="flex: 1 1 200px; max-width: 280px; ${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : rarityInfo.color + '55'}; border-radius:8px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 18px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04); transform: skewX(-6deg);">
                 ${rarityTagHtml}
                 <div style="position:absolute; inset:0; transform: skewX(6deg) scale(1.05); overflow:hidden; pointer-events:none; z-index:1;">
                     ${bgLayer}
@@ -15597,9 +15730,10 @@ function renderShopItems() {
             
             // Generate Header
             finalHtml += `
-                <div style="width: 100%; margin-top: 15px; margin-bottom: 10px; display: flex; align-items: center; gap: 12px;">
-                    <span style="font-family:'Cinzel Decorative', serif; font-size:14px; color:${group.info.color}; font-weight:bold; letter-spacing:2px; text-transform:uppercase; text-shadow: 0 2px 6px rgba(0,0,0,0.9);">${group.info.label}</span>
-                    <div style="flex:1; height:1px; background:linear-gradient(90deg, ${group.info.color}88, transparent);"></div>
+                <div style="width: 100%; margin-top: 22px; margin-bottom: 12px; display: flex; align-items: center; gap: 10px;">
+                    <div style="width:18px; height:1px; background:linear-gradient(270deg, ${group.info.color}55, transparent); flex-shrink:0;"></div>
+                    <span style="font-family:'Cinzel Decorative', serif; font-size:12px; color:${group.info.color}; font-weight:bold; letter-spacing:3px; text-transform:uppercase; text-shadow: 0 0 14px ${group.info.color}66, 0 2px 8px rgba(0,0,0,0.9); white-space:nowrap; flex-shrink:0;">${group.info.label}</span>
+                    <div style="flex:1; height:1px; background:linear-gradient(90deg, ${group.info.color}55, transparent);"></div>
                 </div>
             `;
             
