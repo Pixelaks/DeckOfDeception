@@ -2690,7 +2690,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   transform:skewX(-20deg); transition:left .5s ease; z-index:1; pointer-events:none;
 }
 .btn:hover::after{ left:130%; }
-.btn.ghost{ background:rgba(0,0,0,0.35); backdrop-filter:blur(6px); border:1px solid rgba(232,196,84,0.4); }
+.btn.ghost{ background:rgba(0,0,0,0.55); border:1px solid rgba(232,196,84,0.4); }
 .btn.ghost::after{ display:none; }
 
 /* Section labels: small gold tab */
@@ -3057,6 +3057,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 </style>
 </head>
 <body>
+  touch-action: manipulation;
 
   <!-- Rating & Feedback Popup -->
 <div class="modal-bg" id="ratingPopupOverlay" style="z-index: 100000; background: rgba(0,0,0,0.85);">
@@ -4989,8 +4990,7 @@ function renderUnderworldScreen() {
 <script src="https://cdnjs.cloudflare.com/ajax/libs/bodymovin/5.12.2/lottie.min.js"></script>
 
 <!-- AAA WebGL Particle Engine (Optimized v7 build for pure HTML drop-in) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pixi.js/7.3.2/pixi.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@pixi/particle-emitter@5.0.8/dist/particle-emitter.min.js"></script>
+
 
 <!-- Firebase SDK (compat build, plain script tags, no bundler required) -->
 <script src="https://cdn.jsdelivr.net/npm/livekit-client/dist/livekit-client.umd.min.js"></script>
