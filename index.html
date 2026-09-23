@@ -9769,17 +9769,30 @@ function renderDeceptionOverlay(){
     const myResponse = dec.responses[myUid];
 
     if(iAmBroke && !myResponse){
-      let dissentText = '';
-      if (dec.claimStances) {
-          let uniqueDissenting = [...new Set(Object.values(dec.claimStances).filter(v => v !== dec.claimNumber))];
-          if (uniqueDissenting.length > 0) {
-              dissentText = `<div style="color:#ff6b7a; font-size:13px; margin-bottom:16px; font-style:italic; border: 1px dashed rgba(194,59,74,0.6); padding: 10px; border-radius: 8px; background: rgba(122,31,46,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">You overheard whispers proposing <b>${uniqueDissenting.join(' and ')}</b> instead...</div>`;
-          }
+      const claimers = decClaimerUids(dec);
+      if (claimers.length > 0) {
+        html += `<div class="dec-sub" style="font-size:15px;">Whom do you believe?</div>`;
+        const groups = decClaimGroups(dec);
+        html += `<div class="dec-pickgrid" style="--cols:${Math.min(groups.length, 4)};">`;
+        groups.forEach((g, i) => {
+          html += `<button class="dec-pick" onclick="submitDeceptionTrust(${i})"><span class="dp-name">${escapeHtml(g.uids.map(nameOf).join(', '))}</span><span class="dp-num">${escapeHtml(g.num)}</span></button>`;
+        });
+        html += `</div>`;
+        html += `<div class="dec-row"><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't believe any of them</button></div>`;
+        html += `<div class="dec-sub" style="margin-top:8px">Right = <b>+15 coins</b>. Wrong = <b>eliminated</b>.</div>`;
+      } else {
+        let dissentText = '';
+        if (dec.claimStances) {
+            let uniqueDissenting = [...new Set(Object.values(dec.claimStances).filter(v => v !== dec.claimNumber))];
+            if (uniqueDissenting.length > 0) {
+                dissentText = `<div style="color:#ff6b7a; font-size:13px; margin-bottom:16px; font-style:italic; border: 1px dashed rgba(194,59,74,0.6); padding: 10px; border-radius: 8px; background: rgba(122,31,46,0.15); box-shadow: 0 4px 10px rgba(0,0,0,0.3);">You overheard whispers proposing <b>${uniqueDissenting.join(' and ')}</b> instead...</div>`;
+            }
+        }
+        html += `<div class="dec-sub" style="font-size:16px;">The table says the Deception card is <b style="font-size:24px; color:var(--danger-bright);">${dec.claimNumber}</b>. Do you believe that's true?</div>`;
+        html += dissentText;
+        html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionBelieve(true)">Believe it</button><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't buy it</button></div>`;
+        html += `<div class="dec-sub" style="margin-top:10px">Right either way and you're back in with <b>+15 coins</b>. Wrong and you're <b>eliminated</b>.</div>`;
       }
-      html += `<div class="dec-sub" style="font-size:16px;">The table says the Deception card is <b style="font-size:24px; color:var(--danger-bright);">${dec.claimNumber}</b>. Do you believe that's true?</div>`;
-      html += dissentText;
-      html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionBelieve(true)">Believe it</button><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't buy it</button></div>`;
-      html += `<div class="dec-sub" style="margin-top:10px">Right either way and you're back in with <b>+15 coins</b>. Wrong and you're <b>eliminated</b>.</div>`;
     } else if(iAmBroke){
       html += `<div class="dec-sub">Answer locked in. Waiting on the others…</div>`;
       html += `<div class="dec-status">${Object.keys(dec.responses).length}/${dec.brokeUids.length} answered</div>`;
@@ -10070,18 +10083,22 @@ function resolveDeceptionAnswersOffline(){
     const p = state.players.find(pp=>pp.uid===uid);
     if(!p || p.out) return;
     const r = dec.responses[uid];
-    // Believing is right only if the claim was true; not believing is right only if it was false.
-    const correct = r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber);
+    // Believing: right if the official claim was true. Trusting a specific player's named
+    // claim: right if THEIR number was real. Flatly disbelieving everyone: right if the
+    // official claim was false.
+    const hasExplicitGuess = !r.believe && r.guess !== null && r.guess !== undefined;
+    const effectiveNumber = hasExplicitGuess ? r.guess : dec.claimNumber;
+    const correct = hasExplicitGuess ? (r.guess === dec.realNumber) : (r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber));
+    const actionText = r.believe ? `believed the claim` : (hasExplicitGuess ? `trusted a different claim (${r.guess})` : `didn't buy it`);
 
     if(correct){
       p.shop += 15;
       correctCount++;
-      log(`${p.name} ${r.believe ? `believed the claim` : `didn't buy it`} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
+      log(`${p.name} ${actionText} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
     } else {
-      log(`${p.name} ${r.believe ? `believed the claim` : `didn't buy it`} — wrong! The real number was ${dec.realNumber}.`, 'hi');
-      deadInfo.push({ player: p, name: p.name, guess: dec.claimNumber });
-    }
-    p.deceptionStrike = false;
+      log(`${p.name} ${actionText} — wrong! The real number was ${dec.realNumber}.`, 'hi');
+      deadInfo.push({ player: p, name: p.name, guess: effectiveNumber });
+    }    p.deceptionStrike = false;
   });
 
   const resumeGameFlow = () => {
@@ -10258,9 +10275,10 @@ async function handleOnlineDeceptionHostLogic(serverState){
             const p = state.players.find(pp=>pp.uid===uid);
             if(!p || p.out) return;
             const r = responses[uid];
-            const correct = r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber);
+            const hasExplicitGuess = !r.believe && r.guess !== null && r.guess !== undefined;
+            const correct = hasExplicitGuess ? (r.guess === dec.realNumber) : (r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber));
             if(correct){ p.shop += 15; correctCount++; } 
-            else { p.out = true; deadInfo.push({ uid: p.uid, name: p.name, guess: dec.claimNumber }); }
+            else { p.out = true; deadInfo.push({ uid: p.uid, name: p.name, guess: hasExplicitGuess ? r.guess : dec.claimNumber }); }
             p.deceptionStrike = false;
           });
 
