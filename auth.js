@@ -64,7 +64,21 @@ dodAuth.onAuthStateChanged(function(user){
   }
   const uid = user.uid;
   const ref = dodDb.collection('users').doc(uid);
-  ref.get().then(function(doc){
+
+  // A slow/flaky connection can leave a plain ref.get() hanging for a very long
+  // time with no error at all — that's exactly what was freezing "Signing you
+  // in...". Race it against a timeout and fall back to the locally cached copy
+  // of the profile (from Firestore's offline persistence) so a returning player
+  // gets in immediately while a fresh sync happens in the background.
+  const profileFetch = Promise.race([
+    ref.get(),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timed out')), 8000))
+  ]).catch(function(err){
+    console.warn('Profile fetch stalled, trying cached copy instead:', err);
+    return ref.get({ source: 'cache' });
+  });
+
+  profileFetch.then(function(doc){
     if(doc.exists){
       _dodProfile = Object.assign({ uid: uid }, doc.data());
       if(_dodProfile.displayName){
