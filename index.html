@@ -315,7 +315,7 @@ input, textarea {
   --my-deck: url('Cards/Decks.webp');
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-body{margin:0;font-family:'Inter',sans-serif;background:#000;color:var(--paper);height:100vh;height:100dvh;overflow:hidden;}
+body{margin:0;font-family:'Inter',sans-serif;background:#000;color:var(--paper);height:100vh;height:100dvh;height:calc(var(--vh, 1vh) * 100);overflow:hidden;}
 h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .mono{font-family:'IBM Plex Mono',monospace}
 
@@ -785,7 +785,12 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .stat-pill{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);
   border-radius:3px;padding:1px 4px;font-family:'IBM Plex Mono',monospace;font-size:8.5px;color:rgba(242,234,216,0.85)}
 .mini-skin{width:7px;height:10px;border-radius:1.5px;border:1px solid rgba(255,255,255,0.5);background-size:cover;background-position:center;}
-.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5)}
+.mini-coin{width:10px;height:10px;border-radius:50%;background-image:url('Coins/Coins.webp');background-size:cover;background-position:center;box-shadow:0 1px 2px rgba(0,0,0,0.5);image-rendering:high-quality;}
+
+/* Every PC/SC coin icon <img src="Coins/..."> in the game — hub currency, shop icons,
+   reward popups, etc. — is displayed very small (10-24px) with no quality hint at all,
+   which is exactly what was making them look soft/noisy. One rule covers all of them. */
+img[src^="Coins/"] { image-rendering: high-quality; }
 
 /* ENLARGED CENTER CARDS */
 .ringcenter{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;align-items:center;gap:14px;z-index:2}
@@ -5489,13 +5494,29 @@ function updateFullscreenIcons() {
     });
 }
 
-document.addEventListener('fullscreenchange', updateFullscreenIcons);
-document.addEventListener('webkitfullscreenchange', updateFullscreenIcons);
-document.addEventListener('mozfullscreenchange', updateFullscreenIcons);
-document.addEventListener('MSFullscreenChange', updateFullscreenIcons);
+// Some mobile browsers/WebViews don't support 100dvh at all and silently fall back
+// to 100vh, which stays pinned to the tallest possible viewport instead of shrinking
+// when the address/status bar reappears (e.g. after accidentally exiting fullscreen).
+// That was clipping bottom content — like the guest sign-in button — off-screen with
+// no way to scroll to it. This measures the REAL visible height directly and keeps
+// it correct on every layout change, regardless of dvh support.
+function dodSetViewportHeight() {
+    const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
+    document.documentElement.style.setProperty('--vh', `${vh}px`);
+}
+dodSetViewportHeight();
+window.addEventListener('orientationchange', dodSetViewportHeight);
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', dodSetViewportHeight);
+}
+
+document.addEventListener('fullscreenchange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
+document.addEventListener('webkitfullscreenchange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
+document.addEventListener('mozfullscreenchange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
+document.addEventListener('MSFullscreenChange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
 window.addEventListener('resize', () => {
     updateFullscreenIcons();
-    window.scrollTo(0, 1); // Keep address bar pushed away on rotation/resize
+    dodSetViewportHeight();
 });
 
 
@@ -5754,66 +5775,117 @@ window.isInteractiveTutorial = false;
 let tutStep = 0;
 
 const tutScript = [
-    // 1 — Welcome
-    { target: null,          text: "Welcome to <b>Deck of Deception!</b> 2-min guide — you learn by doing. Let's go.", btn: "Let's go →" },
 
-    // 2 — Your seat
-    { target: 'seat-0',      text: "👤 <b>That's you.</b> Start with <b>20 coins (PC)</b>. Hit 0 coins with an empty hand → eliminated.", btn: "Got it" },
+    // ── PHASE 1: JUMP STRAIGHT IN — action before any explanation ─────────
 
-    // 3 — Market deck
-    { target: 'deckpile',    text: "🃏 <b>The Market.</b> No matching card? Pay <b>2 PC</b> to draw from here. Don't go broke!", btn: "OK" },
+    // Step 0 — play the 7 (one card in hand, zero confusion)
+    { target: 'hand-wrap',
+      text: "👆 The table demands a <b>7</b>. You have one. <b>Tap it to play!</b>",
+      wait: 'played_card', arrow: 'bottom' },
 
-    // 4 — Turn timer
-    { target: 'turnIndicator', text: "⏱️ <b>30-second timer</b> per turn. Run out → lose 2 coins, turn skips.", btn: "Noted" },
+    // Step 1 — call a number
+    { target: 'actionbar',
+      text: "🔥 <b>+1 coin!</b> You played the 7. Now tap any number below — the next player <b>must match it.</b>",
+      wait: 'called_number', arrow: 'top' },
 
-    // 5 — The chain
-    { target: 'ringCenter',  text: "🎯 <b>The Chain.</b> Last player demanded a <b>7</b>. You MUST play a 7 — I put one in your hand!", btn: "OK" },
+    // ── PHASE 2: EXPLAIN WHAT JUST HAPPENED ───────────────────────────────
 
-    // 6 — Interactive: play the 7
-    { target: 'hand-wrap',   text: "👆 <b>Tap the 7</b> in your hand to play it!", wait: 'played_card', arrow: 'bottom' },
+    // Step 2 — the chain
+    { target: 'ringCenter',
+      text: "🎯 <b>The Chain.</b> You just set the demand. Every player must match it — or pay 2 PC to draw from the Market.",
+      btn: "Got it" },
 
-    // 7 — Interactive: call a number
-    { target: 'actionbar',   text: "🔥 +1 coin! You control the chain now. <b>Tap any number</b> below to demand a match.", wait: 'called_number', arrow: 'top' },
+    // Step 3 — your seat & score
+    { target: 'seat-0',
+      text: "👤 <b>That's you.</b> Those numbers are your coins. <b>Score = Coins − (Cards × 3)</b> at the end. Never hold a full hand when time runs out!",
+      btn: "Got it" },
 
-    // 8 — Score
-    { target: 'chainBox',    text: "📊 <b>Score</b> = Coins − (Cards × 3). Don't hoard cards when the game ends!", btn: "Got it" },
+    // Step 4 — the market
+    { target: 'deckpile',
+      text: "🃏 <b>The Market.</b> No match? Pay <b>2 PC</b> to draw. Up to 3 tries per turn. Run out of coins = you're in serious trouble.",
+      btn: "OK" },
 
-    // 9 — Special cards intro
-    { target: null, text: "You're holding <b>Special Cards</b> — each one is a power move. Let me show you fast.", btn: "Show me", showcaseCard: 'none' },
+    // Step 5 — turn timer
+    { target: 'turnIndicator',
+      text: "⏱️ <b>30 seconds per turn.</b> Idle too long → lose 2 coins, turn skips. Always act fast!",
+      btn: "Noted" },
 
-    // 10–14 — Card showcase (short captions)
-    { target: null, text: "🔄 <b>Wild Swap</b> — Costs 2 PC. Plays as <b>any number</b>. Use when stuck.", btn: "Next →", showcaseCard: 'wild' },
-    { target: null, text: "⚡ <b>Power Card</b> — Free. Matches anything. Drains a <b>rival's coins</b> to the bank.", btn: "Next →", showcaseCard: 'power' },
-    { target: null, text: "💰 <b>Steal Card</b> — Free. Matches anything. Steals coins <b>into your pocket</b>.", btn: "Next →", showcaseCard: 'steal' },
-    { target: null, text: "↩️ <b>Reverse</b> — Flips turn direction. Bounce the pressure straight back.", btn: "Next →", showcaseCard: 'reverse' },
-    { target: null, text: "🛡️ <b>Insurance</b> — Discard a bad forced-draw for free. No turn skip.", btn: "Got it ✓", showcaseCard: 'insurance' },
+    // ── PHASE 3: SPECIAL CARDS — bots play live in the background ─────────
+    // unfreeze: true on this step means bots start executing the moment the player
+    // taps "Show me" — they play naturally while the player reads the showcase
 
-    // 15 — Deception intro
-    { target: null, text: "Last mechanic: <b>Deception Showdown.</b> Triggers when a player is broke with no match. Pure bluffing.", btn: "Show me" },
+    // Step 6 — showcase intro (UNFREEZE bots here)
+    { target: null,
+      text: "While the bots take their turns, meet your <b>Special Cards</b>. These can flip the entire table. 🃏",
+      btn: "Show me", showcaseCard: 'none',
+      unfreeze: true },
 
-    // 16 — Rich side: vote real number
-    { target: 'deceptionContent', text: "💎 <b>You have coins:</b> Secretly agree on a <b>Real Number</b> with other coin-holders.", btn: "Next →", action: 'mock_deception_rich_real' },
+    // Step 7 — Wild Swap
+    { target: null,
+      text: "🔄 <b>Wild Swap</b> — Costs 2 PC. Matches <b>any</b> demanded number. Your get-out-of-jail card when you have nothing.",
+      btn: "Next →", showcaseCard: 'wild' },
 
-    // 17 — Rich side: vote claim number
-    { target: 'deceptionContent', text: "🎭 Now pick a <b>Claim Number</b> to tell the broke player. Truth or bluff — your call.", btn: "Switch sides →", action: 'mock_deception_rich_claim' },
+    // Step 8 — Power Card
+    { target: null,
+      text: "⚡ <b>Power Card</b> — Free. Matches anything. <b>Drains a rival's coins</b> directly to the bank. Pure sabotage.",
+      btn: "Next →", showcaseCard: 'power' },
 
-    // 18 — Broke side (locked)
-    { target: 'deceptionContent', text: "💸 <b>You're broke.</b> You only see the claim. Believe them, or guess the real number yourself?", btn: "Let me try →", action: 'mock_deception_broke' },
+    // Step 9 — Steal Card
+    { target: null,
+      text: "💰 <b>Steal Card</b> — Free. Matches anything. <b>Takes coins straight out of a rival's pocket</b> into yours.",
+      btn: "Next →", showcaseCard: 'steal' },
 
-    // 19 — Interactive: click Believe it
-    { target: 'deceptionContent', text: "👆 <b>Tap 'Believe it'</b> to practice surviving!", wait: 'clicked_believe', action: 'unlock_deception_broke', arrow: 'top' },
+    // Step 10 — Reverse
+    { target: null,
+      text: "↩️ <b>Reverse</b> — Flips turn direction. Whoever just put pressure on you? Now it's their problem again.",
+      btn: "Next →", showcaseCard: 'reverse' },
 
-    // 20 — Show result
-    { target: 'deceptionContent', text: "✅ Survived! Right guess = <b>+15 coins.</b> Wrong guess = <b>instant elimination.</b>", btn: "Intense!", action: 'mock_deception_result' },
+    // Step 11 — Insurance
+    { target: null,
+      text: "🛡️ <b>Insurance</b> — Discard a bad forced-draw for free. No coin loss, no turn skip. A quiet lifesaver.",
+      btn: "Got it ✓", showcaseCard: 'insurance' },
 
-    // 21 — Unfreeze
-    { target: 'log', text: "👁️ Watch the <b>log</b> — shows who's broke and who's bluffing. Unfreezing bots now!", btn: "Unfreeze →", action: 'hide_deception', unfreeze: true },
+    // ── PHASE 4: FORCED BUY — happens naturally as bots finish their turns ─
 
-    // 22 — Interactive: forced buy
-    { target: 'actionbar', text: "When it's your turn with no match, tap <b>Forced Buy (2 PC).</b> Up to 3 tries, or use Insurance to dump a dud.", wait: 'forced_buy', arrow: 'top' },
+    // Step 12 — wait for forced buy
+    // By now bots are mid-game. Player's hand is empty, so they MUST buy when their turn comes.
+    { target: 'actionbar',
+      text: "Bots are taking their turns — your hand is empty. When it's yours, tap <b>Forced Buy (2 PC)</b> to draw.",
+      wait: 'forced_buy', arrow: 'top' },
 
-    // 23 — Done
-    { target: null, text: "🏆 That's it! Score = coins − cards×3. Highest score wins after 20 min. Now go dominate!", btn: "Play! ↗" }
+    // ── PHASE 5: DECEPTION SHOWDOWN ───────────────────────────────────────
+
+    // Step 13 — deception intro
+    { target: null,
+      text: "Last mechanic: <b>Deception Showdown.</b> Triggers when a player is totally broke AND has no match. Pure high-stakes bluffing.",
+      btn: "Show me" },
+
+    // Step 14 — rich side
+    { target: 'deceptionContent',
+      text: "💎 <b>You have coins:</b> Secretly vote on a Real Number with other coin-holders — then agree on a Claim to tell the broke player. Truth or bluff.",
+      btn: "Next →", action: 'mock_deception_rich_real' },
+
+    // Step 15 — broke side (locked first)
+    { target: 'deceptionContent',
+      text: "💸 <b>You're broke:</b> You only see the Claim. Believe it — or call the bluff and guess the real number. Wrong = <b>instant elimination.</b>",
+      btn: "Let me try →", action: 'mock_deception_broke' },
+
+    // Step 16 — interactive: click Believe it
+    { target: 'deceptionContent',
+      text: "👆 <b>Tap 'Believe it'</b> to practice surviving the Showdown!",
+      wait: 'clicked_believe', action: 'unlock_deception_broke', arrow: 'top' },
+
+    // Step 17 — show result
+    { target: 'deceptionContent',
+      text: "✅ You survived! Right guess = <b>+15 coins.</b> Wrong guess = <b>instant elimination.</b> The most dramatic moment in the game.",
+      btn: "Intense!", action: 'mock_deception_result' },
+
+    // ── PHASE 6: SEND OFF ─────────────────────────────────────────────────
+
+    // Step 18 — done
+    { target: 'timerDisplay',
+      text: "🏆 <b>20-minute match.</b> Highest score (coins − cards×3) when time's up wins. You've seen it all — now go dominate! 🎰",
+      btn: "Play! ↗", action: 'hide_deception' }
 ];
 
 function openTutorial(fromSettings) {
@@ -7127,16 +7199,12 @@ function startGame() {
                 state.lastEffectiveValue = 5;
                 state.lastPlayedCardLabel = '5';
                 
-                // Note: Removed numbers from all Special Cards so they render cleanly without confusion!
+                // FIX: Only the 7 in hand — special cards are taught via showcase so players can't misclick them
                 state.players[0].hand = [
-                    {type: 'number', value: 7},
-                    {type: 'wild', value: ''},
-                    {type: 'power', value: '', tier: 4},
-                    {type: 'steal', value: '', tier: 3},
-
-                    {type: 'reverse', value: ''},
-                    {type: 'insurance', value: ''}
+                    { type: 'number', value: 7 }
                 ];
+                // FIX: seed turnUid from the very first frame so the first bot check never fails
+                state.turnUid = state.players[state.turn].uid;
                 
                 // Disable timers and bot turns so the player has infinite time to read
                 if (timerInterval) clearInterval(timerInterval);
@@ -10884,6 +10952,7 @@ async function advanceTurn() {
     
     let next = nextPlayerOf(state.players[state.turn].id);
     state.turn = next.id;
+    state.turnUid = state.players[state.turn].uid; // FIX: keep turnUid in sync so offline bots pass the identity check in syncRemoteTurn
     
     const cur = state.players[state.turn];
     const hasMatch = computeHasMatch(cur);
