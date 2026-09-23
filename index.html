@@ -9753,24 +9753,7 @@ function renderDeceptionOverlay(){
     const iAmBroke = dec.brokeUids.includes(myUid);
     const myResponse = dec.responses[myUid];
 
-    if(iAmBroke && !myResponse && decClaimerUids(dec).length > 0){
-      const claimers = decClaimerUids(dec);
-      if(window.dodDecGuessMode){
-        html += `<div class="dec-sub" style="font-size:15px;">Pick the number you think is real.</div>`;
-        html += numGrid('submitDeceptionGuess');
-        html += `<div class="dec-row"><button class="btn ghost" onclick="decBackToBelieve()">Back</button></div>`;
-      } else {
-        html += `<div class="dec-sub" style="font-size:15px;">Whom do you believe?</div>`;
-        const groups = decClaimGroups(dec);
-        html += `<div class="dec-pickgrid" style="--cols:${Math.min(groups.length, 4)};">`;
-        groups.forEach((g, i) => {
-          html += `<button class="dec-pick" onclick="submitDeceptionTrust(${i})"><span class="dp-name">${escapeHtml(g.uids.map(nameOf).join(', '))}</span><span class="dp-num">${escapeHtml(g.num)}</span></button>`;
-        });
-        html += `</div>`;
-        html += `<div class="dec-row"><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't believe them</button></div>`;
-      }
-      html += `<div class="dec-sub" style="margin-top:8px">Right = <b>+15 coins</b>. Wrong = <b>eliminated</b>.</div>`;
-    } else if(iAmBroke && !myResponse){
+    if(iAmBroke && !myResponse){
       let dissentText = '';
       if (dec.claimStances) {
           let uniqueDissenting = [...new Set(Object.values(dec.claimStances).filter(v => v !== dec.claimNumber))];
@@ -9781,7 +9764,6 @@ function renderDeceptionOverlay(){
       html += `<div class="dec-sub" style="font-size:16px;">The table says the Deception card is <b style="font-size:24px; color:var(--danger-bright);">${dec.claimNumber}</b>. Do you believe that's true?</div>`;
       html += dissentText;
       html += `<div class="dec-row"><button class="btn" onclick="submitDeceptionBelieve(true)">Believe it</button><button class="btn ghost" onclick="submitDeceptionBelieve(false)">I don't buy it</button></div>`;
-      html += `<div id="decAnswerGrid"></div>`;
       html += `<div class="dec-sub" style="margin-top:10px">Right either way and you're back in with <b>+15 coins</b>. Wrong and you're <b>eliminated</b>.</div>`;
     } else if(iAmBroke){
       html += `<div class="dec-sub">Answer locked in. Waiting on the others…</div>`;
@@ -9835,15 +9817,9 @@ function decClaimGroups(dec){
   });
   return groups.sort((a, b) => a.num - b.num);
 }
-// Bots answer like players: believe a group of players (bigger groups are more likely) or guess a number alone
+// Bots just make the same binary bet a human would now.
 function decBotAnswer(dec){
-  if(Math.random() >= 0.5) return { believe: false, guess: 1 + Math.floor(Math.random()*9) };
-  const groups = decClaimGroups(dec);
-  if(groups.length === 0) return { believe: true, guess: null }; // everyone was broke, nobody to believe
-  let total = 0; groups.forEach(g => total += g.uids.length);
-  let roll = Math.random() * total, pick = groups[groups.length - 1];
-  for(const g of groups){ roll -= g.uids.length; if(roll < 0){ pick = g; break; } }
-  return { believe: false, guess: pick.num, trusted: pick.uids };
+  return { believe: Math.random() < 0.5, guess: null };
 }
 async function submitDeceptionTrust(i){
   const dec = state.deception; if(!dec) return;
@@ -9926,15 +9902,11 @@ async function submitDeceptionBelieve(believe){
       return; // Stop the real game logic from firing
   }
 
-  if(believe){
-    const dec = state.deception; if(!dec) return;
-    const myUid = myDeceptionUid();
-    await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe: true, guess: null });
-  } else {
-    showDeceptionAnswerGrid();
-  }
-}
-async function submitDeceptionGuess(n){
+  // Simple binary bet now: believe the claim is true, or bet that it's false.
+  const dec = state.deception; if(!dec) return;
+  const myUid = myDeceptionUid();
+  await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe, guess: null });
+}async function submitDeceptionGuess(n){
   const dec = state.deception; if(!dec) return;
   const myUid = myDeceptionUid();
   await writeDeceptionField(`gameState.deception.responses.${myUid}`, { believe: false, guess: n });
@@ -10083,16 +10055,16 @@ function resolveDeceptionAnswersOffline(){
     const p = state.players.find(pp=>pp.uid===uid);
     if(!p || p.out) return;
     const r = dec.responses[uid];
-    const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
-    const correct = effectiveGuess === dec.realNumber;
+    // Believing is right only if the claim was true; not believing is right only if it was false.
+    const correct = r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber);
 
     if(correct){
       p.shop += 15;
       correctCount++;
-      log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
+      log(`${p.name} ${r.believe ? `believed the claim` : `didn't buy it`} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
     } else {
-      log(`${p.name} ${r.believe ? `believed the claim` : `guessed ${r.guess}`} — wrong! The real number was ${dec.realNumber}.`, 'hi');
-      deadInfo.push({ player: p, name: p.name, guess: effectiveGuess });
+      log(`${p.name} ${r.believe ? `believed the claim` : `didn't buy it`} — wrong! The real number was ${dec.realNumber}.`, 'hi');
+      deadInfo.push({ player: p, name: p.name, guess: dec.claimNumber });
     }
     p.deceptionStrike = false;
   });
@@ -10271,10 +10243,9 @@ async function handleOnlineDeceptionHostLogic(serverState){
             const p = state.players.find(pp=>pp.uid===uid);
             if(!p || p.out) return;
             const r = responses[uid];
-            const effectiveGuess = r.believe ? dec.claimNumber : r.guess;
-            const correct = effectiveGuess === dec.realNumber;
+            const correct = r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber);
             if(correct){ p.shop += 15; correctCount++; } 
-            else { p.out = true; deadInfo.push({ uid: p.uid, name: p.name, guess: effectiveGuess }); }
+            else { p.out = true; deadInfo.push({ uid: p.uid, name: p.name, guess: dec.claimNumber }); }
             p.deceptionStrike = false;
           });
 
