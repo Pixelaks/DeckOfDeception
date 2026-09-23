@@ -7388,7 +7388,22 @@ function listenToGameState() {
             drawsThisTurn: (serverState.drawsKey === (serverState.turnUid + ':' + (serverState.turnExpiresAt || 0))) ? (serverState.drawsThisTurn || 0) : 0,
             _pendingActionIdx: (typeof state !== 'undefined' && state) ? state._pendingActionIdx : undefined,
             _pendingActionEl: (typeof state !== 'undefined' && state) ? state._pendingActionEl : undefined,
-            deception: serverState.deception || null,
+            deception: (() => {
+                // A routine presence-ping snapshot can arrive while our own vote/proposal is
+                // still in flight on a slow connection, showing the server's stale pre-vote
+                // copy and rubber-banding the number pad back open. Keep our own already-cast
+                // vote for the current phase until the server's copy actually catches up to it.
+                const raw = serverState.deception || null;
+                const prevDec = (typeof state !== 'undefined' && state) ? state.deception : null;
+                if (!raw || !prevDec || raw.phase !== prevDec.phase) return raw;
+                const myUid = myDeceptionUid();
+                const mapName = raw.phase === 'ANSWER' ? 'responses' : decStancesField(raw.phase);
+                const myLocalVote = prevDec[mapName] && prevDec[mapName][myUid];
+                if (myLocalVote !== undefined && (!raw[mapName] || raw[mapName][myUid] === undefined)) {
+                    return { ...raw, [mapName]: { ...(raw[mapName] || {}), [myUid]: myLocalVote } };
+                }
+                return raw;
+            })(),
             gameExpiresAt: serverState.gameExpiresAt || (serverState.startedAtMs + (GAME_DURATION_SEC * 1000)),
             turnExpiresAt: localExpiresAt,
             turnTimeLeft: computedTurnTimeLeft,
