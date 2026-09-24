@@ -1163,8 +1163,24 @@ img[src^="Coins/"] { image-rendering: high-quality; }
 }
 
 /* Elements scale fluidly based on screen height (vh) */
-.rank-item .r-icon { width: clamp(50px, 12vh, 80px); height: clamp(50px, 12vh, 80px); margin-bottom: 2vh; z-index: 1; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s; flex-shrink: 0; }
+.rank-item .r-icon { position: relative; width: clamp(50px, 12vh, 80px); height: clamp(50px, 12vh, 80px); margin-bottom: 2vh; z-index: 1; filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s; flex-shrink: 0; }
 .rank-item:hover .r-icon { transform: scale(1.1); }
+
+/* Rotating magic rune ring behind the CURRENT tier's icon — one element, one transform,
+   effectively free on the GPU, and much more premium than a scatter of floating dots. */
+@keyframes rankRuneSpin { from { transform: translate(-50%,-50%) rotate(0deg); } to { transform: translate(-50%,-50%) rotate(360deg); } }
+.rank-item.current .r-icon::after {
+  content: '';
+  position: absolute; top: 50%; left: 50%;
+  width: 150%; height: 150%;
+  transform: translate(-50%,-50%);
+  background: conic-gradient(from 0deg, transparent 0%, rgba(226,189,74,0.9) 8%, transparent 20%, transparent 55%, rgba(226,189,74,0.5) 65%, transparent 80%);
+  border-radius: 50%;
+  animation: rankRuneSpin 7s linear infinite;
+  z-index: -1;
+  pointer-events: none;
+}
+body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity: 0.5; }
 .rank-item .r-info { flex: 1; display: flex; flex-direction: column; align-items: center; z-index: 1; width: 100%; justify-content: center; }
 .rank-item .r-name { font-family: 'Cinzel Decorative', serif; font-size: clamp(14px, 3vh, 18px); color: var(--brass-bright); margin: 0 0 1vh 0; text-shadow: 0 2px 6px rgba(0,0,0,0.9); letter-spacing: 1px; }
 .rank-item .r-req { font-family: 'Inter', sans-serif; font-size: 10px; color: rgba(242,234,216,0.7); margin-bottom: auto; line-height: 1.4; }
@@ -1249,6 +1265,17 @@ img[src^="Coins/"] { image-rendering: high-quality; }
 .dd-card-wrapper { 
   transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1); 
   flex-shrink: 0;
+}
+
+/* Reward-claim card modal (#rcCard/#rcCloseBtn) was using a fixed 140x200px card and a
+   fixed 40px gap regardless of screen height, so on a short phone viewport the card and
+   the Awesome! button ended up overlapping. Scale everything to the actual viewport instead. */
+@media (max-height: 700px) {
+  #rcTitle { margin-bottom: 4px !important; font-size: clamp(20px, 5vh, 32px) !important; }
+  #rcSubtitle { margin-bottom: 12px !important; }
+  .dd-container { min-height: 0 !important; }
+  #rcCard { width: clamp(90px, 22vh, 140px) !important; height: clamp(128px, 32vh, 200px) !important; }
+  #rcCloseBtn { margin-top: 14px !important; }
 }
 .dd-card {
   width: clamp(72px, 14vw, 110px); 
@@ -2216,17 +2243,41 @@ img[src^="Coins/"] { image-rendering: high-quality; }
   .shop-item button { padding: 6px !important; font-size: 8.5px !important; }
 
   /* =========================================
-     RANKS SCREEN COMPRESSION (HORIZONTAL)
+     RANKS SCREEN — REDESIGNED FOR MOBILE LANDSCAPE
+     The current tier gets real visual weight (bigger, glowing, in focus);
+     other tiers recede into a dim filmstrip instead of 6 identical boxes.
      ========================================= */
   #screen-ranks p.blurb { display: none !important; } 
-  .ranks-list { padding: 10px 5px !important; margin-top: 10px !important; gap: 8px !important; align-items: stretch !important; overflow-y: hidden !important; justify-content: flex-start; }
-  .rank-item { flex: 0 0 115px !important; min-height: 0 !important; padding: 15px 6px !important; border-radius: 6px !important; display: flex; flex-direction: column; justify-content: center; }
-  .rank-item.current { transform: scale(1.05) !important; margin: 0 6px !important; z-index: 10; border-color: var(--brass-bright) !important; }
-  .rank-item .r-icon { width: clamp(35px, 12vh, 50px) !important; height: clamp(35px, 12vh, 50px) !important; margin-bottom: 1vh !important; flex-shrink: 0; }
-  .rank-item .r-name { font-size: clamp(12px, 3vh, 14px) !important; margin-bottom: 1vh !important; letter-spacing: 0 !important; }
-  .rank-item .r-req { font-size: 8px !important; margin-bottom: auto !important; line-height: 1.2 !important; }
-  .rank-item .r-reward { font-size: 8px !important; padding: 5px !important; width: 95% !important; margin-top: 1vh !important; }
+  .ranks-list { padding: 14px 10px !important; margin-top: 6px !important; gap: 10px !important; align-items: center !important; overflow-y: hidden !important; justify-content: flex-start; }
+
+  .rank-item { flex: 0 0 88px !important; min-height: 0 !important; height: 78% !important; padding: 10px 5px !important; border-radius: 8px !important; display: flex; flex-direction: column; justify-content: center; }
+  .rank-item.current { flex: 0 0 128px !important; height: 100% !important; transform: none !important; margin: 0 4px !important; z-index: 10; border-color: var(--brass-bright) !important; padding: 14px 8px !important; }
+
+  /* Soft glow orb behind the icon — one cheap gradient layer, no extra particles needed */
+  .rank-item .r-icon { position: relative; width: clamp(30px, 11vh, 42px) !important; height: clamp(30px, 11vh, 42px) !important; margin-bottom: 0.8vh !important; flex-shrink: 0; }
+  .rank-item.current .r-icon { width: clamp(46px, 14vh, 64px) !important; height: clamp(46px, 14vh, 64px) !important; }
+  .rank-item .r-icon::before { content:''; position:absolute; inset:-40%; background: radial-gradient(circle, rgba(226,189,74,0.35) 0%, transparent 70%); filter: blur(6px); z-index:-1; opacity:0; transition: opacity 0.3s; }
+  .rank-item.current .r-icon::before { opacity: 1; }
+
+  .rank-item .r-name { font-size: clamp(9px, 2.4vh, 12px) !important; margin-bottom: 0.5vh !important; letter-spacing: 0 !important; }
+  .rank-item.current .r-name { font-size: clamp(13px, 3.2vh, 16px) !important; }
+  .rank-item .r-req { display: none !important; } /* Too small to read at this size — the glow + size already communicate status */
+  .rank-item.current .r-req { display: block !important; font-size: 7.5px !important; margin-bottom: auto !important; line-height: 1.2 !important; }
+  .rank-item .r-reward { font-size: 7px !important; padding: 3px !important; width: 95% !important; margin-top: 0.5vh !important; }
+  .rank-item.current .r-reward { font-size: 8.5px !important; padding: 5px !important; margin-top: 1vh !important; }
   .rank-item.current::before { font-size: 7.5px !important; padding: 2px 8px !important; border-bottom-left-radius: 4px !important; border-bottom-right-radius: 4px !important;}
+
+  /* Reward icon row + coin badge now actually shrink to fit the compact card instead of overflowing */
+  .rank-item .reward-visuals { margin-top: 6px !important; gap: 5px !important; }
+  .rank-item .reward-icons-row { gap: 4px !important; }
+  .rank-item .reward-mini-icon { width: 18px !important; height: 24px !important; }
+  .rank-item .reward-mini-icon.reward-square-icon { width: 18px !important; height: 18px !important; }
+  .rank-item.current .reward-mini-icon { width: 28px !important; height: 36px !important; }
+  .rank-item.current .reward-mini-icon.reward-square-icon { width: 28px !important; height: 28px !important; }
+  .rank-item .reward-coin-badge { font-size: 7px !important; padding: 3px 6px !important; gap: 3px !important; }
+  .rank-item.current .reward-coin-badge { font-size: 9px !important; padding: 5px 10px !important; }
+  .rank-item .reward-coin-icon { width: 10px !important; height: 10px !important; }
+  .rank-item.current .reward-coin-icon { width: 13px !important; height: 13px !important; }
 
   /* =========================================
      TRAINING SCREEN COMPRESSION 
@@ -5309,6 +5360,17 @@ const inGameMusicElement = patchAudioVolume(document.getElementById('inGameMusic
 const tensionMusicElement = patchAudioVolume(document.getElementById('tensionMusic'));
 const syndicateMusicElement = patchAudioVolume(document.getElementById('syndicateMusic'));
 const seasonMusicElement = patchAudioVolume(document.getElementById('seasonMusic'));
+
+// Stop Android/Chrome from generating its own "Now Playing" system notification with
+// an independent pause button that has no idea about the game's own mute/volume state
+// (tapping it silently stopped the music behind the game's back).
+if ('mediaSession' in navigator) {
+    navigator.mediaSession.metadata = null;
+    ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack'].forEach(action => {
+        try { navigator.mediaSession.setActionHandler(action, null); } catch (e) {}
+    });
+}
+
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
 
@@ -5593,11 +5655,9 @@ function proceedWithBoot(overlayEl) {
     
     setTimeout(() => {
         window.minimumBootTimePassed = true;
-        // First-time visitors are still downloading/decoding every asset for
-        // the first time right after boot — that extra load was making the
-        // benchmark misfire and wrongly flag good phones as "weak".
-        const isFirstTimeVisit = !localStorage.getItem('dod_assets_cached');
-        setTimeout(runAdaptiveVfxBenchmark, isFirstTimeVisit ? 6000 : 1500);
+        // Auto-detection was still misfiring on slow connections even after two rounds
+        // of tuning, and it was quietly changing the game's look without the player
+        // asking for it. Battery Saver is now a purely manual choice in Settings.
         menu.classList.add('menu-visible'); // Always show menu first so login overlay can appear
 
         // Show the iOS Safari limitation warning once, only for iPhone/iPad Safari tab users
@@ -6522,14 +6582,17 @@ function buildRanksScreen() {
   const currentTier = profile ? (profile.tier || 'Apprentice') : 'Apprentice';
   const cIdx = TIERS.indexOf(currentTier) >= 0 ? TIERS.indexOf(currentTier) : 0;
 
-  // Define unique particle configs, scaling up intensity and size for higher ranks
+  // Define unique particle configs, scaling up intensity and size for higher ranks.
+  // Fewer particles on small/landscape phone screens — a tiny 88px card crammed with
+  // 40 embers just looks noisy, and it's kinder to weaker mobile GPUs too.
+  const isCompactRanks = window.innerHeight <= 720 || window.innerWidth <= 980;
   const tierConfig = {
-    'Apprentice': { core: '#c9a227', glow: 'rgba(201,162,39,0.5)', count: 6,  size: 3, anim: 'rankFloatBasic' },
-    'Trickster':  { core: '#3ca25e', glow: 'rgba(60,162,94,0.6)',  count: 10, size: 4, anim: 'rankFloatSway' },
-    'Phantom':    { core: '#8b3dff', glow: 'rgba(139,61,255,0.7)', count: 14, size: 5, anim: 'rankFloatSway' },
-    'Mastermind': { core: '#ff6b7a', glow: 'rgba(194,59,74,0.8)',  count: 22, size: 5, anim: 'rankFloatFast' },
-    'Oracle':     { core: '#3c7fb2', glow: 'rgba(60,127,178,0.9)', count: 28, size: 6, anim: 'rankFloatBasic' },
-    'Legend':     { core: '#ffffff', glow: 'rgba(245,221,138,1)',  count: 40, size: 7, anim: 'rankFloatShimmer' } // Blinding white core, intense gold glow
+    'Apprentice': { core: '#c9a227', glow: 'rgba(201,162,39,0.5)', count: isCompactRanks ? 4  : 6,  size: 3, anim: 'rankFloatBasic' },
+    'Trickster':  { core: '#3ca25e', glow: 'rgba(60,162,94,0.6)',  count: isCompactRanks ? 6  : 10, size: 4, anim: 'rankFloatSway' },
+    'Phantom':    { core: '#8b3dff', glow: 'rgba(139,61,255,0.7)', count: isCompactRanks ? 8  : 14, size: 5, anim: 'rankFloatSway' },
+    'Mastermind': { core: '#ff6b7a', glow: 'rgba(194,59,74,0.8)',  count: isCompactRanks ? 10 : 22, size: 5, anim: 'rankFloatFast' },
+    'Oracle':     { core: '#3c7fb2', glow: 'rgba(60,127,178,0.9)', count: isCompactRanks ? 12 : 28, size: 6, anim: 'rankFloatBasic' },
+    'Legend':     { core: '#ffffff', glow: 'rgba(245,221,138,1)',  count: isCompactRanks ? 16 : 40, size: 7, anim: 'rankFloatShimmer' } // Blinding white core, intense gold glow
   };
 
   container.innerHTML = TIER_REWARDS.map((t, idx) => {
@@ -6564,12 +6627,12 @@ function buildRanksScreen() {
     let shadowFilter = idx === cIdx ? 'drop-shadow(0 0 12px rgba(226,189,74,0.6))' : 'drop-shadow(0 8px 12px rgba(0,0,0,0.7))';
 
     // Build Dynamic Visual Reward Icons
-    let rewardVisuals = `<div style="display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; margin-top:14px; width:100%;">`;
+    let rewardVisuals = `<div class="reward-visuals" style="display:flex; flex-direction:column; gap:10px; align-items:center; justify-content:center; margin-top:14px; width:100%;">`;
     
-    let iconsHtml = `<div style="display:flex; gap:8px; align-items:center; justify-content:center;">`;
+    let iconsHtml = `<div class="reward-icons-row" style="display:flex; gap:8px; align-items:center; justify-content:center;">`;
     
     // Avatar & Frame (Native browser scaling)
-    iconsHtml += `<div title="Avatar & Frame" class="avatar-frame-wrap" style="width:36px; height:36px; border-radius:4px; background:rgba(0,0,0,0.6); box-shadow:0 4px 8px rgba(0,0,0,0.8);">
+    iconsHtml += `<div title="Avatar & Frame" class="avatar-frame-wrap reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:4px; background:rgba(0,0,0,0.6); box-shadow:0 4px 8px rgba(0,0,0,0.8);">
         <img src="Avatars/${t.name}.webp" class="af-avatar" alt="Avatar" style="border-radius:3px;">
         <img src="Frames/${t.name}.webp" class="af-frame" alt="Frame">
     </div>`;
@@ -6580,21 +6643,21 @@ function buildRanksScreen() {
             SHOP_DB.cardBacks.forEach(cb => {
                 if (cb.method === 'tier' && cb.unlockTier === t.name) {
                     // Use standard <img> with object-fit for optimal browser anti-aliasing
-                    iconsHtml += `<img title="${cb.name}" src="CardstoBuy/${cb.img}" style="width:26px; height:36px; border-radius:3px; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                    iconsHtml += `<img title="${cb.name}" src="CardstoBuy/${cb.img}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
                 }
             });
         }
         if (SHOP_DB.cardFaces) {
             SHOP_DB.cardFaces.forEach(cf => {
                 if (cf.method === 'tier' && cf.unlockTier === t.name) {
-                    iconsHtml += `<div title="${cf.name}" style="width:26px; height:36px; border-radius:3px; border:2px solid ${cf.color}; box-shadow:0 4px 8px rgba(0,0,0,0.8); background-image:url('Cards/CardPhase.webp'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; font-weight:bold; color:#000;">A</div>`;
+                    iconsHtml += `<div title="${cf.name}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:2px solid ${cf.color}; box-shadow:0 4px 8px rgba(0,0,0,0.8); background-image:url('Cards/CardPhase.webp'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; font-weight:bold; color:#000;">A</div>`;
                 }
             });
         }
         if (SHOP_DB.tables) {
             SHOP_DB.tables.forEach(tb => {
                 if (tb.method === 'tier' && tb.unlockTier === t.name) {
-                    iconsHtml += `<img title="${tb.name}" src="Tables/${tb.img}" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                    iconsHtml += `<img title="${tb.name}" src="Tables/${tb.img}" class="reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
                 }
             });
         }
@@ -6605,9 +6668,9 @@ function buildRanksScreen() {
     // Coins or default text
     if (t.reward.includes('Coins')) {
         let coinAmt = t.reward.replace(' Coins', '');
-        rewardVisuals += `<div title="${t.reward}" style="display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass-bright); font-weight:bold; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);"><img src="Coins/Coins.webp" style="width:16px; height:16px; filter:drop-shadow(0 2px 2px rgba(0,0,0,0.8));"> ${coinAmt} PC</div>`;
+        rewardVisuals += `<div title="${t.reward}" class="reward-coin-badge" style="display:flex; align-items:center; gap:6px; font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--brass-bright); font-weight:bold; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);"><img src="Coins/Coins.webp" class="reward-coin-icon" style="width:16px; height:16px; filter:drop-shadow(0 2px 2px rgba(0,0,0,0.8));"> ${coinAmt} PC</div>`;
     } else {
-        rewardVisuals += `<div style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#fff; font-weight:600; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);">${t.reward}</div>`;
+        rewardVisuals += `<div class="reward-coin-badge" style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:#fff; font-weight:600; background:rgba(47,110,82,0.4); padding:6px 12px; border-radius:20px; border:1px solid rgba(95,170,130,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.5);">${t.reward}</div>`;
     }
     rewardVisuals += `</div>`;
 
@@ -6753,7 +6816,21 @@ function enterGameWithLoading(){
     if(step<LOADING_LINES.length) text.textContent=LOADING_LINES[step];
   }, stepMs);
   requestAnimationFrame(()=>{ fill.style.transition=`width ${totalMs}ms linear`; fill.style.width='100%'; });
-  setTimeout(()=>{
+
+  // Start buffering the in-game track NOW, in parallel with the whole loading screen,
+  // instead of waiting until switchToGameMusic() calls .play() right as the curtain
+  // drops — that gap was the rare "music takes a moment to start" delay.
+  const musicReady = new Promise(resolve => {
+      if (typeof inGameMusicElement === 'undefined' || !inGameMusicElement) return resolve();
+      if (inGameMusicElement.readyState >= 3) return resolve(); // already buffered enough
+      const done = () => { inGameMusicElement.removeEventListener('canplaythrough', done); resolve(); };
+      inGameMusicElement.addEventListener('canplaythrough', done, { once: true });
+      inGameMusicElement.load();
+      setTimeout(done, 3000); // safety net — never let a slow connection hang the game
+  });
+  const minTime = new Promise(resolve => setTimeout(resolve, totalMs + 150));
+
+  Promise.all([minTime, musicReady]).then(() => {
     clearInterval(lineTimer);
     startGame();
     // Wait for the game scene to fully mount behind the scenes before dropping the curtain
@@ -6761,7 +6838,7 @@ function enterGameWithLoading(){
         overlay.classList.remove('show');
         switchToGameMusic(); // Trigger the battle track once the curtain drops!
     }, 850);
-  }, totalMs+150);
+  });
 }
 
 function makeDeck(){
