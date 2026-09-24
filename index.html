@@ -315,7 +315,7 @@ input, textarea {
   --my-deck: url('Cards/Decks.webp');
 }
 *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
-body{margin:0;font-family:'Inter',sans-serif;background:#000;color:var(--paper);height:100vh;height:100dvh;height:calc(var(--vh, 1vh) * 100);overflow:hidden;}
+body{margin:0;font-family:'Inter',sans-serif;background:#000;color:var(--paper);height:100vh;height:100dvh;height:calc(var(--vh, 1vh) * 100);overflow:hidden;touch-action:manipulation;}
 h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 .mono{font-family:'IBM Plex Mono',monospace}
 
@@ -2278,8 +2278,8 @@ img[src^="Coins/"] { image-rendering: high-quality; }
 
   /* PERFECT CIRCLE Note: Use hard viewport limits & flex-shrink to bypass Safari aspect-ratio bugs */
   .tablering { 
-    width: 76vh !important; 
-    height: 76vh !important; 
+    width: calc(var(--vh, 1vh) * 76) !important; 
+    height: calc(var(--vh, 1vh) * 76) !important; 
     max-width: 54vw !important; /* Slightly pulled back to prevent bottom clipping */
     max-height: 54vw !important; /* Keep it perfectly square based on width limit */
     flex-shrink: 0 !important; /* FORBIDS Safari from squishing it into an oval */
@@ -3064,7 +3064,6 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 </style>
 </head>
 <body>
-  touch-action: manipulation;
 
   <!-- Rating & Feedback Popup -->
 <div class="modal-bg" id="ratingPopupOverlay" style="z-index: 100000; background: rgba(0,0,0,0.85);">
@@ -3369,6 +3368,25 @@ window.dodImagesLoaded = false;
          <button class="btn small" id="achPopupEquipBtn" style="min-width:130px; font-size:12px; padding:10px;">Equip Now</button>
          <button class="btn ghost small" id="achPopupDismissBtn" style="min-width:130px; font-size:12px; padding:10px;">Dismiss</button>
      </div>
+  </div>
+</div>
+
+<!-- MYSTERIOUS LOGOUT MODAL -->
+<div class="modal-bg" id="logoutOverlay" style="z-index: 9500; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);">
+  <div class="modal" style="text-align:center; background:rgba(15,10,12,0.98); border:1px solid var(--brass); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 20px 60px rgba(0,0,0,0.95), inset 0 0 20px rgba(232,196,84,0.1);">
+    
+    <!-- Using your custom Deception Icon with a thematic red glow -->
+    <img src="DeceptionIcon.webp" style="height: 56px; width: auto; margin-bottom: 16px; filter: drop-shadow(0 4px 12px rgba(194,59,74,0.8));">
+    
+    <h3 style="font-family:'Cinzel Decorative',serif; color:var(--brass-bright); margin-bottom:10px; font-size:22px;">Leaving the Table?</h3>
+    <p class="mono" style="font-size:13px; color:rgba(242,234,216,0.75); margin-bottom:24px; line-height:1.5;">Are you sure you want to step back into the shadows? Your wealth and progress will be securely saved until you return.</p>
+    
+    <!-- Standard English Buttons -->
+    <div style="display:flex; gap:12px; justify-content:center;">
+      <button class="btn ghost" style="flex:1;" onclick="document.getElementById('logoutOverlay').classList.remove('show')">Cancel</button>
+      <button class="btn" style="flex:1; background:var(--danger); color:var(--paper); border-color:var(--danger-bright);" onclick="confirmMysteriousLogout()">Sign Out</button>
+    </div>
+    
   </div>
 </div>
 
@@ -5776,116 +5794,103 @@ let tutStep = 0;
 
 const tutScript = [
 
-    // ── PHASE 1: JUMP STRAIGHT IN — action before any explanation ─────────
+    // ── PHASE 1: LEARN BY DOING — zero preamble ───────────────────────────────
+    { target:'hand-wrap',
+      text:"👆 The table demands a <b>7</b>. You have one — <b>tap it to play!</b>",
+      wait:'played_card', arrow:'bottom' },
 
-    // Step 0 — play the 7 (one card in hand, zero confusion)
-    { target: 'hand-wrap',
-      text: "👆 The table demands a <b>7</b>. You have one. <b>Tap it to play!</b>",
-      wait: 'played_card', arrow: 'bottom' },
+    { target:'actionbar',
+      text:"🔥 <b>+1 coin!</b> You played the 7. Now tap any number below — the next player <b>must match it.</b>",
+      wait:'called_number', arrow:'top' },
 
-    // Step 1 — call a number
-    { target: 'actionbar',
-      text: "🔥 <b>+1 coin!</b> You played the 7. Now tap any number below — the next player <b>must match it.</b>",
-      wait: 'called_number', arrow: 'top' },
+    // ── PHASE 2: EXPLAIN WHAT JUST HAPPENED ──────────────────────────────────
+    { target:'ringCenter',
+      text:"🎯 <b>The Chain.</b> You just set the demand. Every player must match it — or pay 2 PC to draw from the Market.",
+      btn:"Got it" },
 
-    // ── PHASE 2: EXPLAIN WHAT JUST HAPPENED ───────────────────────────────
+    { target:'seat-0',
+      text:"👤 <b>That's you.</b> That number is your <b>coins (PC).</b> Your final score when 20 minutes are up is simply your <b>coin total.</b> More coins = higher rank!",
+      btn:"Got it" },
 
-    // Step 2 — the chain
-    { target: 'ringCenter',
-      text: "🎯 <b>The Chain.</b> You just set the demand. Every player must match it — or pay 2 PC to draw from the Market.",
-      btn: "Got it" },
+    { target:'deckpile',
+      text:"🃏 <b>The Market.</b> No match? Pay <b>2 PC</b> to draw from here. Up to 3 tries per turn. Run out of coins = serious trouble.",
+      btn:"OK" },
 
-    // Step 3 — your seat & score
-    { target: 'seat-0',
-      text: "👤 <b>That's you.</b> Those numbers are your coins. <b>Score = Coins − (Cards × 3)</b> at the end. Never hold a full hand when time runs out!",
-      btn: "Got it" },
+    { target:'turnIndicator',
+      text:"⏱️ <b>30-second timer</b> per turn. Idle too long → lose 2 coins, turn skips. Always act fast!",
+      btn:"Noted" },
 
-    // Step 4 — the market
-    { target: 'deckpile',
-      text: "🃏 <b>The Market.</b> No match? Pay <b>2 PC</b> to draw. Up to 3 tries per turn. Run out of coins = you're in serious trouble.",
-      btn: "OK" },
+    // ── PHASE 3: WILD SWAP — bots unfreeze here ───────────────────────────────
+    { target:'hand-wrap', unfreeze:true, action:'rig_wild',
+      text:"🔄 <b>Wild Swap</b> is in your hand! Costs 2 PC — matches <b>any</b> demanded number. <b>Tap it!</b>",
+      wait:'played_wild', arrow:'bottom' },
 
-    // Step 5 — turn timer
-    { target: 'turnIndicator',
-      text: "⏱️ <b>30 seconds per turn.</b> Idle too long → lose 2 coins, turn skips. Always act fast!",
-      btn: "Noted" },
+    { target:'actionbar',
+      text:"Wild played! Now pick your demand number.",
+      wait:'called_number', arrow:'top' },
 
-    // ── PHASE 3: SPECIAL CARDS — bots play live in the background ─────────
-    // unfreeze: true on this step means bots start executing the moment the player
-    // taps "Show me" — they play naturally while the player reads the showcase
+    // ── PHASE 4: POWER CARD ───────────────────────────────────────────────────
+    { target:'hand-wrap', action:'rig_power',
+      text:"⚡ <b>Power Card!</b> FREE to play — matches anything. Tap it, then <b>tap any player's icon</b> in the circle to drain their coins to the bank!",
+      wait:'played_power', arrow:'bottom' },
 
-    // Step 6 — showcase intro (UNFREEZE bots here)
-    { target: null,
-      text: "While the bots take their turns, meet your <b>Special Cards</b>. These can flip the entire table. 🃏",
-      btn: "Show me", showcaseCard: 'none',
-      unfreeze: true },
+    { target:'actionbar',
+      text:"Power used! Pick your demand.",
+      wait:'called_number', arrow:'top' },
 
-    // Step 7 — Wild Swap
-    { target: null,
-      text: "🔄 <b>Wild Swap</b> — Costs 2 PC. Matches <b>any</b> demanded number. Your get-out-of-jail card when you have nothing.",
-      btn: "Next →", showcaseCard: 'wild' },
+    // ── PHASE 5: STEAL CARD ───────────────────────────────────────────────────
+    { target:'hand-wrap', action:'rig_steal',
+      text:"💰 <b>Steal Card!</b> Also FREE. Like Power but coins go straight <b>into your pocket.</b> Tap it → tap a player!",
+      wait:'played_steal', arrow:'bottom' },
 
-    // Step 8 — Power Card
-    { target: null,
-      text: "⚡ <b>Power Card</b> — Free. Matches anything. <b>Drains a rival's coins</b> directly to the bank. Pure sabotage.",
-      btn: "Next →", showcaseCard: 'power' },
+    { target:'actionbar',
+      text:"Nice steal! Pick your demand.",
+      wait:'called_number', arrow:'top' },
 
-    // Step 9 — Steal Card
-    { target: null,
-      text: "💰 <b>Steal Card</b> — Free. Matches anything. <b>Takes coins straight out of a rival's pocket</b> into yours.",
-      btn: "Next →", showcaseCard: 'steal' },
+    // ── PHASE 6: REVERSE ─────────────────────────────────────────────────────
+    { target:'hand-wrap', action:'rig_reverse',
+      text:"↩️ <b>Reverse!</b> Flips the turn direction. Free, no target. Bounce pressure back to whoever just attacked you. <b>Tap it!</b>",
+      wait:'played_reverse', arrow:'bottom' },
 
-    // Step 10 — Reverse
-    { target: null,
-      text: "↩️ <b>Reverse</b> — Flips turn direction. Whoever just put pressure on you? Now it's their problem again.",
-      btn: "Next →", showcaseCard: 'reverse' },
+    { target:'actionbar',
+      text:"Direction flipped! Pick your demand.",
+      wait:'called_number', arrow:'top' },
 
-    // Step 11 — Insurance
-    { target: null,
-      text: "🛡️ <b>Insurance</b> — Discard a bad forced-draw for free. No coin loss, no turn skip. A quiet lifesaver.",
-      btn: "Got it ✓", showcaseCard: 'insurance' },
+    // ── PHASE 7: INSURANCE (explain, don't demo — needs forced buy context) ───
+    { target:null,
+      text:"🛡️ <b>Insurance:</b> If you're Forced to Buy and draw a useless card, play Insurance to cancel it for free. No coin loss, no penalty. You'll see it in a real match!",
+      btn:"Got it" },
 
-    // ── PHASE 4: FORCED BUY — happens naturally as bots finish their turns ─
+    // ── PHASE 8: DECEPTION — RICH SIDE (fully interactive) ───────────────────
+    { target:null, action:'rig_deception_rich',
+      text:"Now the most dramatic mechanic: <b>Deception Showdown!</b> I just made all bots broke. You're the only one with coins — <b>you set the trap. 😈</b>",
+      btn:"Start it →" },
 
-    // Step 12 — wait for forced buy
-    // By now bots are mid-game. Player's hand is empty, so they MUST buy when their turn comes.
-    { target: 'actionbar',
-      text: "Bots are taking their turns — your hand is empty. When it's yours, tap <b>Forced Buy (2 PC)</b> to draw.",
-      wait: 'forced_buy', arrow: 'top' },
+    { target:'deceptionContent',
+      text:"💎 <b>You're rich.</b> Pick a <b>secret real number</b> (1–9). Only you know it. Bots must guess this — wrong guess = eliminated!",
+      wait:'voted_real' },
 
-    // ── PHASE 5: DECEPTION SHOWDOWN ───────────────────────────────────────
+    { target:'deceptionContent', action:'advance_to_claim',
+      text:"🎭 Real number locked! Now pick a number to <b>tell the bots</b> — your claim. Be honest or bluff. Your choice!",
+      wait:'voted_claim' },
 
-    // Step 13 — deception intro
-    { target: null,
-      text: "Last mechanic: <b>Deception Showdown.</b> Triggers when a player is totally broke AND has no match. Pure high-stakes bluffing.",
-      btn: "Show me" },
+    { target:'deceptionContent', action:'release_deception_bots',
+      text:"👀 Bots are guessing... Watch who believes and who calls your bluff. One brave bot is going to challenge you!",
+      btn:"Watch →" },
 
-    // Step 14 — rich side
-    { target: 'deceptionContent',
-      text: "💎 <b>You have coins:</b> Secretly vote on a Real Number with other coin-holders — then agree on a Claim to tell the broke player. Truth or bluff.",
-      btn: "Next →", action: 'mock_deception_rich_real' },
+    // ── PHASE 9: DECEPTION — BROKE SIDE ──────────────────────────────────────
+    { target:null, action:'rig_player_broke',
+      text:"Now flip it — <b>YOU are broke.</b> Rich bots have picked a number and set a claim. Believe them or call their bluff?",
+      btn:"Experience it →" },
 
-    // Step 15 — broke side (locked first)
-    { target: 'deceptionContent',
-      text: "💸 <b>You're broke:</b> You only see the Claim. Believe it — or call the bluff and guess the real number. Wrong = <b>instant elimination.</b>",
-      btn: "Let me try →", action: 'mock_deception_broke' },
+    { target:'deceptionContent', action:'unlock_deception_broke',
+      text:"💸 <b>You're broke.</b> The table's claim is shown. <b>Tap 'Believe it'</b> to trust them — or call the bluff and guess the real number yourself. Wrong = eliminated!",
+      wait:'clicked_believe', arrow:'top' },
 
-    // Step 16 — interactive: click Believe it
-    { target: 'deceptionContent',
-      text: "👆 <b>Tap 'Believe it'</b> to practice surviving the Showdown!",
-      wait: 'clicked_believe', action: 'unlock_deception_broke', arrow: 'top' },
-
-    // Step 17 — show result
-    { target: 'deceptionContent',
-      text: "✅ You survived! Right guess = <b>+15 coins.</b> Wrong guess = <b>instant elimination.</b> The most dramatic moment in the game.",
-      btn: "Intense!", action: 'mock_deception_result' },
-
-    // ── PHASE 6: SEND OFF ─────────────────────────────────────────────────
-
-    // Step 18 — done
-    { target: 'timerDisplay',
-      text: "🏆 <b>20-minute match.</b> Highest score (coins − cards×3) when time's up wins. You've seen it all — now go dominate! 🎰",
-      btn: "Play! ↗", action: 'hide_deception' }
+    // ── PHASE 10: DONE ────────────────────────────────────────────────────────
+    { target:null, action:'end_deception',
+      text:"✅ <b>Right = +15 coins, back in the game. Wrong = instant elimination.</b> You've played both sides of every mechanic. Now go dominate! 🎰",
+      btn:"Play Full Match ↗" }
 ];
 
 function openTutorial(fromSettings) {
@@ -5928,30 +5933,102 @@ function applyTutStep() {
 
     // ── MOCK DECEPTION ACTIONS (logic identical to original) ──────────────────
     const myUid = window.DoDAuth && DoDAuth.getProfile() ? DoDAuth.getProfile().uid : 'player_1';
-    const isDecepStep = step.target === 'deceptionContent' || (step.action && step.action.startsWith('mock_deception')) || step.action === 'unlock_deception_broke';
+    const _decActions = ['rig_deception_rich','advance_to_claim','release_deception_bots','rig_player_broke','unlock_deception_broke','end_deception'];
+    const isDecepStep = step.target === 'deceptionContent' || _decActions.includes(step.action);
 
-    if (step.action === 'mock_deception_rich_real') {
-        state.deception = { phase:'VOTE_REAL', proposerUid:myUid, richUids:[myUid,'bot_1'], brokeUids:['bot_2'], realStances:{}, claimStances:{} };
+        // ── HAND RIGGING: force player's turn + give lesson card ─────────────────
+    const _rigHand = (card) => {
+        const you = state.players.find(p => p.uid === myUid) || state.players[0];
+        you.hand = [card];
+        state.turn = you.id || 0;
+        state.turnUid = you.uid; // stops bots from claiming this turn
+        state.uiState = 'IDLE';
         renderAll();
+    };
+    if (step.action === 'rig_wild')    _rigHand({ type:'wild',    value:'' });
+    if (step.action === 'rig_power')   _rigHand({ type:'power',   value:'', tier:4 });
+    if (step.action === 'rig_steal')   _rigHand({ type:'steal',   value:'', tier:3 });
+    if (step.action === 'rig_reverse') _rigHand({ type:'reverse', value:'' });
+
+    // ── DECEPTION: RICH SIDE — make all bots broke, player is proposer ────────
+    if (step.action === 'rig_deception_rich') {
+        const you = state.players.find(p => p.uid === myUid) || state.players[0];
+        const bots = state.players.filter(p => !p.isHuman && !p.out);
+        bots.forEach(b => { b.shop = 0; b.hand = []; b.deceptionStrike = false; });
+        if (you.shop < 5) you.shop = 15; // ensure player has coins
+        localWasInDeception = true; // skip cinematic for tutorial
+        state.deception = {
+            phase: 'VOTE_REAL', proposerUid: myUid,
+            richUids: [myUid], brokeUids: bots.map(b => b.uid),
+            realStances: {}, claimStances: {}
+        };
+        state.uiState = 'DECEPTION';
         decModal.style.zIndex = '10001'; decModal.style.alignItems = 'flex-start'; decModal.style.paddingTop = '10px';
-        document.getElementById('deceptionContent').style.pointerEvents = 'none';
-    } else if (step.action === 'mock_deception_rich_claim') {
-        state.deception.phase = 'VOTE_CLAIM'; state.deception.realNumber = 8;
         renderAll();
-    } else if (step.action === 'mock_deception_broke') {
-        state.deception = { phase:'ANSWER', claimNumber:8, realNumber:8, brokeUids:[myUid], richUids:['bot_1','bot_2'], responses:{} };
-        renderAll();
+    }
+
+    // ── DECEPTION: advance from VOTE_REAL to VOTE_CLAIM manually ─────────────
+    if (step.action === 'advance_to_claim') {
+        if (state.deception) {
+            state.deception.realNumber = window.tutDecRealVote || 5;
+            state.deception.phase = 'VOTE_CLAIM';
+            state.deception.claimStances = {};
+            renderAll();
+        }
+    }
+
+    // ── DECEPTION: release bots to guess (pre-script results, no eliminations) ─
+    if (step.action === 'release_deception_bots') {
+        if (state.deception) {
+            const claimNum = window.tutDecClaimVote || window.tutDecRealVote || 5;
+            state.deception.claimNumber = claimNum;
+            state.deception.realNumber  = claimNum; // truth = claim → believers survive
+            state.deception.phase = 'ANSWER';
+            state.deception.responses = {};
+            // Pre-fill: all bots but one believe (survive); one calls bluff wrong (drama!)
+            const botUids = state.deception.brokeUids.slice();
+            botUids.forEach((uid, i) => {
+                if (i < botUids.length - 1) {
+                    state.deception.responses[uid] = { believe: true, guess: null };
+                } else {
+                    state.deception.responses[uid] = { believe: false, guess: claimNum === 5 ? 7 : 5 };
+                }
+            });
+            renderAll();
+            offlineDeceptionStep(); // all responses pre-filled → goes straight to resolve
+        }
+    }
+
+    // ── DECEPTION: BROKE SIDE — player is broke, bots are rich ───────────────
+    if (step.action === 'rig_player_broke') {
+        const you = state.players.find(p => p.uid === myUid) || state.players[0];
+        const bots = state.players.filter(p => !p.isHuman && !p.out);
+        bots.forEach(b => { if (b.shop < 5) b.shop = 10; });
+        you.shop = 0; you.hand = [];
+        localWasInDeception = true; // skip cinematic
+        state.deception = {
+            phase: 'ANSWER', claimNumber: 6, realNumber: 6,
+            brokeUids: [myUid],
+            richUids: bots.map(b => b.uid),
+            responses: {}
+        };
+        state.uiState = 'DECEPTION';
         document.getElementById('deceptionContent').style.pointerEvents = 'none';
         decModal.style.zIndex = '10001'; decModal.style.alignItems = 'flex-start'; decModal.style.paddingTop = '10px';
-    } else if (step.action === 'unlock_deception_broke') {
+        renderAll();
+    }
+
+    // ── Unlock broke player's Believe/Guess buttons ───────────────────────────
+    if (step.action === 'unlock_deception_broke') {
         document.getElementById('deceptionContent').style.pointerEvents = 'auto';
-    } else if (step.action === 'mock_deception_result') {
-        state.deception.phase = 'REVEAL_RESULTS';
-        state.deception.responses = { [myUid]: { believe:true, guess:null } };
+    }
+
+    // ── Clean up deception ────────────────────────────────────────────────────
+    if (step.action === 'end_deception') {
+        state.deception = null;
+        state.uiState = 'IDLE';
+        localWasInDeception = false;
         renderAll();
-        document.getElementById('deceptionContent').style.pointerEvents = 'none';
-    } else if (step.action === 'hide_deception') {
-        state.deception = null; renderAll();
         decModal.style.zIndex = ''; decModal.style.alignItems = 'center'; decModal.style.paddingTop = '16px';
         document.getElementById('deceptionContent').style.pointerEvents = '';
     }
@@ -9234,13 +9311,14 @@ async function playWild(idx, el){
   flyCard(srcRect, centerRect(), 'W', PLAYER_COLORS[0], 22, card.value);
   triggerCalloutPhase();
 
+  // --- TUTORIAL TRIGGER ---
+  if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'played_wild') {
+      setTimeout(tutNext, 600);
+  }
+
   // --- SERVER SYNC ---
   if (currentMatchId) {
       window.dodJustPlayedLocally = true;
-      // --- TUTORIAL TRIGGER ---
-    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number') {
-        setTimeout(tutNext, 600);
-    }
       try {
           await secureServerCall('playWild', { cardIndex: idx });
       } catch (e) {
@@ -9278,6 +9356,11 @@ async function playReverse(idx, el){
   flyCard(srcRect, centerRect(), 'REV', '#d16b24', 25, card.value);
   flyCoin(bankRect(), getSeatOrPanelRect(0), 200);
   triggerCalloutPhase();
+
+  // --- TUTORIAL TRIGGER ---
+  if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'played_reverse') {
+      setTimeout(tutNext, 600);
+  }
 
   // --- SERVER SYNC ---
   if (currentMatchId) {
@@ -9352,6 +9435,12 @@ async function confirmActionTarget(target, actionType){
   
   flyCard(srcRect, centerRect(), label, (actionType==='STEAL' || actionType==='POWER') ? '#b23c3c' : PLAYER_COLORS[0], 24, card.value, null, getSeatOrPanelRect(target.id));
   triggerCalloutPhase();
+
+  // --- TUTORIAL TRIGGERS ---
+  if (window.isInteractiveTutorial && tutScript[tutStep]) {
+      if (actionType === 'POWER' && tutScript[tutStep].wait === 'played_power') setTimeout(tutNext, 800);
+      if (actionType === 'STEAL' && tutScript[tutStep].wait === 'played_steal') setTimeout(tutNext, 800);
+  }
 
   // --- SERVER SYNC ---
   if (currentMatchId) {
@@ -9979,6 +10068,16 @@ async function writeDeceptionField(path, value){
 async function submitDeceptionProposal(n){
   const dec = state.deception; if(!dec) return;
   const myUid = myDeceptionUid();
+
+  // TUTORIAL: intercept vote — tutorial controls phase transitions, so skip offlineDeceptionStep
+  if (window.isInteractiveTutorial && tutScript[tutStep]) {
+      const stField = decStancesField(dec.phase);
+      dec[stField][myUid] = n;
+      renderAll();
+      if (tutScript[tutStep].wait === 'voted_real')  { window.tutDecRealVote  = n; setTimeout(tutNext, 400); return; }
+      if (tutScript[tutStep].wait === 'voted_claim') { window.tutDecClaimVote = n; setTimeout(tutNext, 400); return; }
+  }
+
   await writeDeceptionField(`gameState.deception.${decStancesField(dec.phase)}.${myUid}`, n);
 }
 async function submitDeceptionAccept(){
@@ -10994,7 +11093,7 @@ function syncRemoteTurn(){
   // Ensure the server state still agrees it is this specific bot's turn
   if (state.turnUid !== bot.uid) return;
 
-  if (window.networkSyncPaused) {
+  if (window.networkSyncPaused || state.uiState === 'DECEPTION') {
       setTimeout(syncRemoteTurn, 1000); 
       return;
   }
@@ -12215,12 +12314,7 @@ async function initFriendsList() {
         const friendsData = await Promise.all(snapshot.docs.map(async doc => {
             const relData = doc.data();
             
-            // --- LAZY BOT AUTO-ACCEPT ENGINE ---
-            // If the realistic waiting time has passed, silently accept them!
-            if (doc.id.endsWith('Qx9') && relData.status === 'sent' && relData.botAcceptTime && Date.now() > relData.botAcceptTime) {
-                relData.status = 'accepted';
-                db.collection('users').doc(uid).collection('friends').doc(doc.id).update({ status: 'accepted' }).catch(()=>{});
-            }
+
 
             const userDoc = await db.collection('users').doc(doc.id).get();
             const liveData = userDoc.exists ? userDoc.data() : relData;
@@ -14974,15 +15068,7 @@ async function linkGuestToGoogleAccount() {
 
 async function handleSettingsSignOut() {
     sfx.uiBack();
-    if (confirm("Are you sure you want to sign out?")) {
-        try {
-            await firebase.auth().signOut();
-            localStorage.removeItem('dod_active_match');
-            window.location.reload();
-        } catch(e) {
-            console.error(e);
-        }
-    }
+    promptLogout();
 }
 
 // ============================================================
@@ -16847,6 +16933,29 @@ async function purchaseElitePass() {
 
 // Globally prevent the native browser right-click / long-press menu
 document.addEventListener('contextmenu', event => event.preventDefault());
+
+// Shows the custom modal instead of a browser alert
+function promptLogout() {
+    try { sfx.uiClick(); } catch(e){}
+    document.getElementById('logoutOverlay').classList.add('show');
+}
+
+// Executes the actual Firebase logout when they click "Depart"
+async function confirmMysteriousLogout() {
+    try { sfx.uiClick(); } catch(e){}
+    document.getElementById('logoutOverlay').classList.remove('show');
+    
+    try {
+        await firebase.auth().signOut();
+        // Clear any cached game states to prevent ghost reconnections
+        localStorage.removeItem('dod_active_match');
+        // Reload the page to securely bring them back to the login screen
+        window.location.reload(); 
+    } catch (e) {
+        console.error("Sign out failed", e);
+        if (typeof showSystemToast === 'function') showSystemToast("The shadows refuse to let you leave. Try again.");
+    }
+}
 
 </script>
 </body>
