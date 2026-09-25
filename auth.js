@@ -29,6 +29,7 @@ dodDb.enablePersistence({ synchronizeTabs: true })
 
 let _dodProfile = null;          
 let _dodProfileReadyCallbacks = [];
+let _dodInteractiveSignIn = false; // true only when THIS page load just triggered a sign-in click
 
 function dodOnProfileReady(cb){
   if(_dodProfile){ cb(_dodProfile); }
@@ -43,6 +44,22 @@ function _dodFireReady(){
   dodHideBootstrap(); // <-- Make sure this actually exists in auth.js or index.html
   _dodProfileReadyCallbacks.forEach(cb=>cb(_dodProfile));
   _dodProfileReadyCallbacks = [];
+}
+
+// Sign-in (Google popup OR Guest) can leave the browser out of fullscreen — the
+// popup force-exits it, and there's no way to re-request fullscreen without a
+// fresh tap. So instead of jumping straight into the hub/tutorial after a sign-in
+// the player just triggered, reload once: the page comes back to "Tap to Start",
+// the next tap re-enters fullscreen cleanly, and the login modal can never flash
+// back up with its buttons re-armed for a double click. A returning player who
+// was already signed in on cold boot (flag still false) skips the reload.
+function _dodCompleteInteractiveAuth(){
+  if(_dodInteractiveSignIn){
+    window.location.reload();
+  } else {
+    dodHideLoginModal();
+    _dodFireReady();
+  }
 }
 
 function _dodReadLocalLegacyProgress(){
@@ -82,12 +99,10 @@ dodAuth.onAuthStateChanged(function(user){
     if(doc.exists){
       _dodProfile = Object.assign({ uid: uid }, doc.data());
       if(_dodProfile.displayName){
-        dodHideLoginModal();
-        _dodFireReady();
+        _dodCompleteInteractiveAuth();
       } else {
         dodShowNamePrompt();
-      }
-    } else {
+      }    } else {
       const legacy = _dodReadLocalLegacyProgress();
       const safeLegacyOwnedSkins = Array.isArray(legacy.ownedSkins)
         ? legacy.ownedSkins.filter(id => typeof SHOP_LOCKED_CATALOG !== 'undefined' && SHOP_LOCKED_CATALOG.some(item => item.id === id))
@@ -111,8 +126,7 @@ dodAuth.onAuthStateChanged(function(user){
         if(!_dodProfile.displayName){
           dodShowNamePrompt();
         } else {
-          dodHideLoginModal();
-          _dodFireReady();
+          _dodCompleteInteractiveAuth();
         }
       });
     }
@@ -125,13 +139,17 @@ function dodSignInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   
-  // Use Popup to prevent the page from reloading and re-triggering the Tap to Start screen
+  // Popup still knocks the page out of fullscreen — _dodCompleteInteractiveAuth()
+  // now reloads once sign-in resolves, so Tap to Start comes back and the next
+  // tap re-enters fullscreen cleanly.
+  _dodInteractiveSignIn = true;
   dodAuth.signInWithPopup(provider).catch(function(error) {
       console.error("Google Sign-In Error:", error);
       if (error.code === 'auth/popup-blocked') {
           // Only fallback to redirect if the browser aggressively blocks the popup
           dodAuth.signInWithRedirect(provider);
       } else if (typeof resetAuthButtons === 'function') {
+          _dodInteractiveSignIn = false;
           resetAuthButtons();
       }
   });
@@ -141,13 +159,20 @@ function dodSignInWithGoogle() {
 dodAuth.getRedirectResult().catch(function(error) {
     console.error("Redirect Auth Error:", error);
     if (error.code === 'auth/credential-already-in-use') {
-        alert("This Google account is already registered! Please use a different one.");
+        // Fallback to alert ONLY if the toast function hasn't loaded yet
+        if (typeof showSystemToast === 'function') {
+            showSystemToast("This Google account is already registered! Please use a different one.");
+        } else {
+            alert("This Google account is already registered! Please use a different one.");
+        }
     }
 });
 
 function dodSignInAnonymously(){
+  _dodInteractiveSignIn = true;
   dodAuth.signInAnonymously().catch(function(err){
     console.error('Anonymous sign-in failed:', err);
+    _dodInteractiveSignIn = false;
   });
 }
 
@@ -191,11 +216,10 @@ function dodSubmitName(){
   }
   dodDb.collection('users').doc(_dodProfile.uid).update({ displayName: name })
     .then(function(){
-      _dodProfile.displayName = name;
+     _dodProfile.displayName = name;
       const overlay = document.getElementById('nameSetupOverlay');
       if(overlay) overlay.classList.remove('show');
-      dodHideLoginModal();
-      _dodFireReady();
+      _dodCompleteInteractiveAuth();
     })
     .catch(function(err){ console.error('Name save failed:', err); });
 }
