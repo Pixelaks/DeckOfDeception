@@ -1129,6 +1129,26 @@ img[src^="Coins/"] { image-rendering: high-quality; }
   flex: 1; min-height: 0; /* Absorbs exact available screen height */
 }
 @media (max-width: 1150px) { .ranks-list { justify-content: flex-start; } }
+
+/* Single CSS shimmer sweep per card — one element, pure transform, 0 GPU cost */
+.rank-particles::before {
+    content: ''; position: absolute; top: 0; left: 0;
+    width: 40%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.055), transparent);
+    transform: translateX(-200%);
+    animation: rankShimmerSweep 5s ease-in-out infinite;
+    pointer-events: none;
+}
+@keyframes rankShimmerSweep {
+    0% { transform: translateX(-200%); }
+    40%, 100% { transform: translateX(400%); }
+}
+
+/* Desktop: let cards grow to fill the row instead of staying 165px */
+@media (min-width: 980px) and (min-height: 721px) {
+    .rank-item { flex: 1 1 0 !important; max-width: 205px !important; }
+    .ranks-list { overflow-x: hidden !important; justify-content: center !important; }
+}
 /* Sleek minimal scrollbar */
 .ranks-list::-webkit-scrollbar { height: 4px; }
 .ranks-list::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.5); border-radius: 4px; }
@@ -1153,8 +1173,8 @@ img[src^="Coins/"] { image-rendering: high-quality; }
 .rank-particles { position: absolute; inset: 0; overflow: hidden; border-radius: 8px; pointer-events: none; z-index: 0; }
 .rank-ember {
   position: absolute; bottom: -20px; border-radius: 50%;
-  filter: blur(0.5px); opacity: 0;
-  /* Animation is now injected by JS so each tier can have a different style */
+  opacity: 0;
+  /* No blur or box-shadow — only transform+opacity so GPU compositor handles it free */
 }
 
 /* Style 1: Basic Slow Float (Apprentice, Oracle) */
@@ -3897,7 +3917,7 @@ if (document.readyState === 'loading') {
     </div>
     
     <!-- SHOP MAIN BOX WRAPPER -->
-    <div class="shop-main-box" style="width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px;">
+    <div class="shop-main-box" style="width: 100%; display: flex; flex-direction: column; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); overflow: hidden; margin-top: 5px;">
       
       <!-- FIXED Shop Tabs (Integrated into the box) -->
       <div id="shopTabsContainer" class="shop-tabs-container" style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); margin: 0; padding: 12px 10px;">
@@ -7240,17 +7260,14 @@ function buildRanksScreen() {
   const currentTier = profile ? (profile.tier || 'Apprentice') : 'Apprentice';
   const cIdx = TIERS.indexOf(currentTier) >= 0 ? TIERS.indexOf(currentTier) : 0;
 
-  // Define unique particle configs, scaling up intensity and size for higher ranks.
-  // Fewer particles on small/landscape phone screens — a tiny 88px card crammed with
-  // 40 embers just looks noisy, and it's kinder to weaker mobile GPUs too.
-  const isCompactRanks = window.innerHeight <= 720 || window.innerWidth <= 980;
+  // Lean particle configs — only transform+opacity in animations, no box-shadow, no blur
   const tierConfig = {
-    'Apprentice': { core: '#c9a227', glow: 'rgba(201,162,39,0.5)', count: isCompactRanks ? 4  : 6,  size: 3, anim: 'rankFloatBasic' },
-    'Trickster':  { core: '#3ca25e', glow: 'rgba(60,162,94,0.6)',  count: isCompactRanks ? 6  : 10, size: 4, anim: 'rankFloatSway' },
-    'Phantom':    { core: '#8b3dff', glow: 'rgba(139,61,255,0.7)', count: isCompactRanks ? 8  : 14, size: 5, anim: 'rankFloatSway' },
-    'Mastermind': { core: '#ff6b7a', glow: 'rgba(194,59,74,0.8)',  count: isCompactRanks ? 10 : 22, size: 5, anim: 'rankFloatFast' },
-    'Oracle':     { core: '#3c7fb2', glow: 'rgba(60,127,178,0.9)', count: isCompactRanks ? 12 : 28, size: 6, anim: 'rankFloatBasic' },
-    'Legend':     { core: '#ffffff', glow: 'rgba(245,221,138,1)',  count: isCompactRanks ? 16 : 40, size: 7, anim: 'rankFloatShimmer' } // Blinding white core, intense gold glow
+    'Apprentice': { core: '#c9a227', count: 3, size: 3, anim: 'rankFloatBasic' },
+    'Trickster':  { core: '#3ca25e', count: 3, size: 4, anim: 'rankFloatSway' },
+    'Phantom':    { core: '#8b3dff', count: 4, size: 4, anim: 'rankFloatSway' },
+    'Mastermind': { core: '#ff6b7a', count: 4, size: 5, anim: 'rankFloatFast' },
+    'Oracle':     { core: '#3c7fb2', count: 5, size: 5, anim: 'rankFloatBasic' },
+    'Legend':     { core: '#ffffff', count: 6, size: 6, anim: 'rankFloatShimmer' }
   };
 
   container.innerHTML = TIER_REWARDS.map((t, idx) => {
@@ -7268,13 +7285,7 @@ function buildRanksScreen() {
         let del = (Math.random() * 2) + 's';
         let pSize = (Math.random() * config.size + 2) + 'px'; // Dynamic scaling
         
-        particleHtml += `<div class="rank-ember" style="
-            left:${left}; 
-            width:${pSize}; height:${pSize};
-            animation: ${config.anim} ${dur} infinite ease-in ${del}; 
-            background:${config.core}; 
-            box-shadow:0 0 12px 3px ${config.glow};
-        "></div>`;
+        particleHtml += `<div class="rank-ember" style="left:${left}; width:${pSize}; height:${pSize}; animation:${config.anim} ${dur} infinite ease-in ${del}; background:${config.core};"></div>`;
     }
     particleHtml += `</div>`;
     
@@ -7290,9 +7301,9 @@ function buildRanksScreen() {
     let iconsHtml = `<div class="reward-icons-row" style="display:flex; gap:8px; align-items:center; justify-content:center;">`;
     
     // Avatar & Frame (Native browser scaling)
-    iconsHtml += `<div title="Avatar & Frame" class="avatar-frame-wrap reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:4px; background:rgba(0,0,0,0.6); box-shadow:0 4px 8px rgba(0,0,0,0.8);">
-        <img src="Avatars/${t.name}.webp" class="af-avatar" alt="Avatar" style="border-radius:3px;">
-        <img src="Frames/${t.name}.webp" class="af-frame" alt="Frame">
+    iconsHtml += `<div title="Frame — click to preview" class="avatar-frame-wrap reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:4px; background:rgba(0,0,0,0.6); box-shadow:0 4px 8px rgba(0,0,0,0.8); cursor:pointer; transition:transform 0.2s;" onclick="openShopPreview('${t.name}', 'frames')" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'">
+        <img src="Avatars/${t.name}.webp" class="af-avatar" alt="Avatar" style="border-radius:3px; pointer-events:none;">
+        <img src="Frames/${t.name}.webp" class="af-frame" alt="Frame" style="pointer-events:none;">
     </div>`;
 
     // Shop Item Unlocks
@@ -7301,21 +7312,21 @@ function buildRanksScreen() {
             SHOP_DB.cardBacks.forEach(cb => {
                 if (cb.method === 'tier' && cb.unlockTier === t.name) {
                     // Use standard <img> with object-fit for optimal browser anti-aliasing
-                    iconsHtml += `<img title="${cb.name}" src="CardstoBuy/${cb.img}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                    iconsHtml += `<img title="${cb.name}" src="CardstoBuy/${cb.img}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover; cursor:pointer; transition:transform 0.2s;" onclick="openShopPreview('${cb.id}', 'cardBacks')" onmouseover="this.style.transform='scale(1.25)'" onmouseout="this.style.transform='scale(1)'">`;
                 }
             });
         }
         if (SHOP_DB.cardFaces) {
             SHOP_DB.cardFaces.forEach(cf => {
                 if (cf.method === 'tier' && cf.unlockTier === t.name) {
-                    iconsHtml += `<div title="${cf.name}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:2px solid ${cf.color}; box-shadow:0 4px 8px rgba(0,0,0,0.8); background-image:url('Cards/CardPhase.webp'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; font-weight:bold; color:#000;">A</div>`;
+                    iconsHtml += `<div title="${cf.name}" class="reward-mini-icon" style="width:26px; height:36px; border-radius:3px; border:2px solid ${cf.color}; box-shadow:0 4px 8px rgba(0,0,0,0.8); background-image:url('Cards/CardPhase.webp'); background-size:cover; background-position:center; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:20px; font-weight:bold; color:#000; cursor:pointer; transition:transform 0.2s;" onclick="openShopPreview('${cf.id}', 'cardFaces')" onmouseover="this.style.transform='scale(1.25)'" onmouseout="this.style.transform='scale(1)'">A</div>`;
                 }
             });
         }
         if (SHOP_DB.tables) {
             SHOP_DB.tables.forEach(tb => {
                 if (tb.method === 'tier' && tb.unlockTier === t.name) {
-                    iconsHtml += `<img title="${tb.name}" src="Tables/${tb.img}" class="reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover;">`;
+                    iconsHtml += `<img title="${tb.name}" src="Tables/${tb.img}" class="reward-mini-icon reward-square-icon" style="width:36px; height:36px; border-radius:50%; border:1px solid rgba(201,162,39,0.4); box-shadow:0 4px 8px rgba(0,0,0,0.8); object-fit:cover; cursor:pointer; transition:transform 0.2s;" onclick="openShopPreview('${tb.id}', 'tables')" onmouseover="this.style.transform='scale(1.25)'" onmouseout="this.style.transform='scale(1)'">`;
                 }
             });
         }
@@ -11295,7 +11306,7 @@ function resolveDeceptionAnswersOffline(){
       log(`${p.name} ${actionText} — correct! The real number was ${dec.realNumber}. +15 coins.`, 'ok');
     } else {
       log(`${p.name} ${actionText} — wrong! The real number was ${dec.realNumber}.`, 'hi');
-      deadInfo.push({ player: p, name: p.name, guess: effectiveNumber });
+      deadInfo.push({ player: p, name: p.name, believe: !!r.believe, guess: hasExplicitGuess ? r.guess : null, trusted: r.trusted || null, claimNumber: dec.claimNumber });
     }    p.deceptionStrike = false;
   });
 
@@ -13092,7 +13103,11 @@ function openModal(id){ document.getElementById(id).classList.add('show'); }
 function finalizeGame(){
   const left=activePlayers();
   if(left.length===0){ endGame(null); return; }
-  const winner=left.sort((a,b)=>score(b)-score(a))[0];
+  const winner=left.sort((a,b)=>{
+      if(score(b) !== score(a)) return score(b) - score(a);
+      // Tie on coins: fewer cards in hand wins (rewards efficient play).
+      return (a.hand ? a.hand.length : 0) - (b.hand ? b.hand.length : 0);
+  })[0];
   localStorage.removeItem('dod_active_match'); // Clear memory so they don't reconnect to a finished game
   endGame(winner,true);
 }
@@ -13291,7 +13306,9 @@ async function endGame(winner, byScore) {
   // Sort players to determine absolute placements
   const sorted = [...state.players].sort((a,b) => {
       if(a.out !== b.out) return a.out ? 1 : -1;
-      return score(b) - score(a);
+      if(score(b) !== score(a)) return score(b) - score(a);
+      // Tie on coins: fewer cards in hand wins (rewards efficient play).
+      return (a.hand ? a.hand.length : 0) - (b.hand ? b.hand.length : 0);
   });
   
   const myRank = sorted.findIndex(p => p.id === you.id) + 1;
@@ -13662,9 +13679,16 @@ function showEliminationCinematic(deadPlayersData, realNumber, isBankrupt, onCom
     if (isBankrupt) {
         detailsHtml = deadPlayersData.map(p => `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>Bankrupt with no cards left.`).join('<div style="height:10px;"></div>');
     } else {
+        const nm = u => { const pp = (state && state.players || []).find(x => x.uid === u); return pp ? pp.name : '???'; };
+        const describeAnswer = d => {
+            if (d.trusted && d.trusted.length) return `Believed ${[].concat(d.trusted).map(nm).join(', ')}'s claim of ${d.guess}`;
+            if (d.believe) return `Believed the claim of ${d.claimNumber !== undefined ? d.claimNumber : ''}`;
+            if (d.believe === false) return `Didn't believe any of the claims`;
+            return `Didn't believe the claim`; // fallback for older match data saved before this fix
+        };
         detailsHtml = `<div style="color:var(--danger-bright); font-size:clamp(14px, 3vh, 16px); margin-bottom:clamp(10px, 3vh, 20px); font-weight:bold;">The Real Number was <span style="font-size:clamp(20px, 5vh, 24px); color:#fff;">${realNumber}</span></div>`;
         detailsHtml += deadPlayersData.map(p =>
-    `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>Didn't believe the claim`
+    `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>${describeAnswer(p)}`
 ).join('<div style="height:10px;"></div>');
     }
 
@@ -15747,15 +15771,9 @@ async function executeDailyDraw(selectedIndex) {
         // Wait a beat for suspense, then flip the card!
         setTimeout(() => {
             try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
-            if (rollData.rewardType !== 'none') {
-                triggerNotificationVfx('gold');
-                // INJECT INTENSE LIGHT BURST VFX
-                const flashWrapper = document.createElement('div');
-                flashWrapper.className = 'dd-reveal-flash';
-                flashWrapper.innerHTML = '<div class="dd-reveal-rays"></div><div class="dd-reveal-core"></div>';
-                document.getElementById('dailyDrawModalOverlay').appendChild(flashWrapper);
-                setTimeout(() => flashWrapper.remove(), 6000); // Clean up after fade
-            }
+                            if (rollData.rewardType !== 'none') {
+                    triggerNotificationVfx('gold');
+                }
             
             selectedCard.classList.add('flipped');
             // Wait for the 0.8s CSS transition to finish, then start the floating animation
@@ -15995,14 +16013,18 @@ async function executeRewardCardOpen() {
         // Flip the card and play the success effects!
         setTimeout(() => {
             try { sfx.win(); } catch(e){}
-            triggerNotificationVfx('gold'); 
-            
-            // INJECT INTENSE LIGHT BURST VFX
-            const flashWrapper = document.createElement('div');
-            flashWrapper.className = 'dd-reveal-flash';
-            flashWrapper.innerHTML = '<div class="dd-reveal-rays"></div><div class="dd-reveal-core"></div>';
-            document.getElementById('rewardCardModalOverlay').appendChild(flashWrapper);
-            setTimeout(() => flashWrapper.remove(), 6000); // Clean up after fade
+
+            // Tier-aware two-sided confetti pop (replaces the heavy circle flash)
+            if (typeof confetti !== 'undefined') {
+                const colors = currentRewardTier === 'mythic'
+                    ? ['#d094ff', '#8b5cf6', '#c084fc', '#ffffff']
+                    : currentRewardTier === 'legendary'
+                    ? ['#f5dd8a', '#e8c454', '#ff6b35', '#ffffff']
+                    : ['#e8c454', '#c9a227', '#ffffff', '#f5dd8a'];
+                confetti({ particleCount: 60, angle: 60, spread: 65, origin: { x: 0, y: 0.7 }, colors, zIndex: 1000000 });
+                confetti({ particleCount: 60, angle: 120, spread: 65, origin: { x: 1, y: 0.7 }, colors, zIndex: 1000000 });
+                setTimeout(() => confetti({ particleCount: 80, spread: 110, origin: { x: 0.5, y: 0.5 }, colors, ticks: 250, gravity: 0.8, scalar: 1.2, zIndex: 1000000 }), 150);
+            }
             
             card.classList.add('flipped');
             subtitle.textContent = "Reward Claimed!";
@@ -16816,9 +16838,7 @@ function showSystemToast(msg) {
     
     // Trigger VFX based on message content
     const lowerMsg = msg.toLowerCase();
-    if (lowerMsg.includes('success') || lowerMsg.includes('unlocked') || lowerMsg.includes('verified') || lowerMsg.includes('earned')) {
-        triggerNotificationVfx('gold');
-    } else if (lowerMsg.includes('error') || lowerMsg.includes('failed') || lowerMsg.includes('denied') || lowerMsg.includes('unreachable') || lowerMsg.includes('penalty')) {
+    if (lowerMsg.includes('error') || lowerMsg.includes('failed') || lowerMsg.includes('denied') || lowerMsg.includes('unreachable') || lowerMsg.includes('penalty')) {
         try { sfx.alert(); } catch(e){} // Play warning sound, but NO confetti!
     } 
 
@@ -17651,15 +17671,15 @@ async function buyShopItem(itemId, price, event) {
     if (!profile.inventory.includes(itemId)) profile.inventory.push(itemId);
 
     try { sfx.coin(); } catch(e){}
-    if (event) triggerNotificationVfx('equip', event);
-    try { sfx.win(); } catch(e){}
-    triggerNotificationVfx('gold'); 
+    requestAnimationFrame(() => {
+        if (event) triggerNotificationVfx('equip', event);
+    });
 
     const shopCur = document.getElementById('shopCurrency');
     const hubCur = document.getElementById('hubCurrency');
     if (shopCur) shopCur.textContent = profile.currency;
     if (hubCur) hubCur.textContent = profile.currency;
-    renderShopItems();
+    requestAnimationFrame(() => renderShopItems());
 
     // --- 2. BACKGROUND SERVER SYNC ---
     try {
@@ -17721,7 +17741,9 @@ async function buyShard(itemId, price, requiredAmount, event) {
     }
 
     try { sfx.coin(); } catch(e){}
-    if (event) triggerNotificationVfx('equip', event);
+    requestAnimationFrame(() => {
+        if (event) triggerNotificationVfx('equip', event);
+    });
 
     if (isUnlockedNow) {
         setTimeout(() => triggerUnlockPopupFromId(itemId), 500); 
@@ -17735,7 +17757,7 @@ async function buyShard(itemId, price, requiredAmount, event) {
     if (shopCur) shopCur.textContent = profile.currency;
     if (hubCur) hubCur.textContent = profile.currency;
     
-    if (typeof renderShopItems === 'function') renderShopItems();
+    if (typeof renderShopItems === 'function') requestAnimationFrame(() => renderShopItems());
     if (document.getElementById('profileModal').classList.contains('show')) {
         updateProfileWidget(profile);
         updatePreviewBox();
@@ -17973,9 +17995,9 @@ async function purchaseIAP(itemId, rewardAmount, currencyType = 'sc', event) {
                 }
                 
                 try { sfx.coin(); } catch(e){}
-                if (event) triggerNotificationVfx('equip', event);
-                try { sfx.win(); } catch(e){}
-                triggerNotificationVfx('gold'); 
+                requestAnimationFrame(() => {
+                    if (event) triggerNotificationVfx('equip', event);
+                }); 
 
                 const hubCur = document.getElementById('hubCurrency');
                 const shopCur = document.getElementById('shopCurrency');
@@ -17988,9 +18010,14 @@ async function purchaseIAP(itemId, rewardAmount, currencyType = 'sc', event) {
                 return; // Stop here, do not trigger Dodo Payments
             }
         } catch (err) {
-            console.warn("Google Play Billing failed or user cancelled:", err);
-            showSystemToast("Play Store checkout cancelled.");
-            return;
+            // A real user cancellation is an AbortError — stop here, don't charge them via Dodo
+            if (err && err.name === 'AbortError') {
+                showSystemToast("Checkout cancelled.");
+                return;
+            }
+            // Any other error means we're NOT inside a real TWA (e.g. regular PWA / browser)
+            // Fall through silently to Dodo Payments below — this is correct behaviour
+            console.warn("[DoD] Google Play Billing unavailable (not in TWA), falling back to Dodo:", err);
         }
     }
 
