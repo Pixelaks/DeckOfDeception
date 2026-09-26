@@ -88,6 +88,39 @@ function escapeForJsAttr(str) {
 window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'Asia/Kolkata') ? 'IN' : 'OTHER';
 </script>
 
+<!-- ============================================================
+     PLATFORM DETECTION  —  runs before anything else
+     window.DOD_PLATFORM = 'crazygames' | 'web'
+     ============================================================ -->
+<script>
+(function() {
+    var host = (window.location.hostname || '').toLowerCase();
+    var ref  = '';
+    try { ref = (document.referrer || '').toLowerCase(); } catch(e) {}
+
+    var onCG = host === 'crazygames.com'        ||
+               host.endsWith('.crazygames.com') ||
+               ref.indexOf('crazygames.com') !== -1;
+
+    window.DOD_PLATFORM        = onCG ? 'crazygames' : 'web';
+    window.DOD_CG_SDK_READY    = false;
+    window.DOD_CG_AD_CLAIMED   = false; // prevents player watching rewarded ad twice per match
+
+    if (onCG) {
+        var s = document.createElement('script');
+        s.src = 'https://sdk.crazygames.com/crazygames-sdk-v3.js';
+        s.onload = function() {
+            if (window.CrazyGames && window.CrazyGames.SDK) {
+                window.CrazyGames.SDK.init().then(function() {
+                    window.DOD_CG_SDK_READY = true;
+                }).catch(function(e) { console.warn('[DoD] CG SDK init error:', e); });
+            }
+        };
+        document.head.appendChild(s);
+    }
+})();
+</script>
+
 <!-- Preload Firebase so it starts downloading during HTML parse -->
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js">
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js">
@@ -3460,7 +3493,7 @@ window.dodImagesLoaded = false;
   <button class="btn ghost small" id="globalBackBtn" onclick="handleGlobalBack()" style="display:none; position:absolute; top:20px; left:20px; z-index:100; padding:8px 14px; border-radius:4px; font-size:12px; background:rgba(0,0,0,0.6); backdrop-filter:blur(4px); box-shadow:0 4px 10px rgba(0,0,0,0.5);">← BACK</button>
 
   <!-- FULLSCREEN TOGGLE BUTTON -->
-  <button class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
+  <button id="menuFsToggleBtn" class="btn ghost small fs-toggle-btn" onclick="toggleFullscreen(event)" style="position:absolute; top:20px; right:20px; z-index:100; padding:0; border-radius:5px; width:38px; height:38px; display:flex; align-items:center; justify-content:center; font-size:22px;" title="Toggle Fullscreen">⛶</button>
 
   <!-- TOP-RIGHT CURRENCY CHIPS -->
   <div id="hubCurrencyBadge" class="dod-hud-el" style="display:none; position:absolute; top:28px; right:68px; z-index:100; font-family:'IBM Plex Mono',monospace; font-size:14px; color:#fff; font-weight:700; text-shadow: 1px 1px 4px rgba(0,0,0,0.9); align-items:center; gap:16px; flex-direction:row;">
@@ -3512,7 +3545,7 @@ window.dodImagesLoaded = false;
       <div id="squadSearchResults" style="display:flex; flex-direction:column; gap:4px; max-height:120px; overflow-y:auto;"></div>
     </div>
     <!-- Left: Friends Panel -->
-    <div class="squad-friends-panel" style="pointer-events:all;">
+    <div class="squad-friends-panel" id="squadFriendsPanel" style="pointer-events:all;">
       <div class="squad-friends-header">
         <span>Friends</span>
         <button class="squad-add-friend-btn" onclick="openSquadSearchPanel()">+ Add</button>
@@ -3542,23 +3575,63 @@ window.dodImagesLoaded = false;
     <div class="squad-events-zone" id="squadEventsZone">
       
  <!-- ADVERTISEMENT CONTAINER -->
-<div class="dod-ad-wrapper">
-  <div class="dod-ad-badge">ADVERTISEMENT</div>
-  <div class="dod-ad-content">
-    
-    <!-- Note: Updated sandbox to block AUTO-redirects, but allow user-clicked redirects -->
-    <iframe sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" 
-      allow="encrypted-media"
-      srcdoc="<style>body{margin:0;padding:0;overflow:hidden;}</style><script>atOptions = {'key' : 'fe50079a51ead851d3c89c444ba630be', 'format' : 'iframe', 'height' : 300, 'width' : 160, 'params' : {}};</script><script src='https://www.highrevenueformat.com/fe50079a51ead851d3c89c444ba630be/invoke.js'></script>"
-      width="160"
-      height="300"
-      frameborder="0"
-      scrolling="no"
-      style="border: none; overflow: hidden; width: 160px; height: 300px;">
-    </iframe>
-
-  </div>
+<div class="dod-ad-wrapper" id="dodAdWrapper">
+  <div class="dod-ad-badge" id="dodAdBadge">ADVERTISEMENT</div>
+  <!-- Banner content is injected below by dodInitBanner() -->
+  <div class="dod-ad-content" id="dodAdContent"></div>
 </div>
+<script>
+function dodInitBanner() {
+    var wrapper = document.getElementById('dodAdWrapper');
+    var content = document.getElementById('dodAdContent');
+    if (!wrapper || !content) return;
+
+    if (window.DOD_PLATFORM === 'crazygames') {
+        // CrazyGames: use their banner SDK.
+        // Replace 'YOUR_CG_BANNER_SLOT_ID' with the ID CrazyGames gives you after approval.
+        // During review they run the SDK in sandbox mode so this is safe to ship as-is.
+        content.id = 'cg-banner-slot';
+        content.style.cssText = 'width:160px;height:300px;';
+        if (window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK.ad) {
+            try {
+                window.CrazyGames.SDK.ad.requestBannerAd({
+                    containerId: 'cg-banner-slot'
+                    // bannerId: 'YOUR_CG_BANNER_SLOT_ID'  // ← uncomment + fill after CG approves
+                });
+            } catch(e) { wrapper.style.display = 'none'; }
+        } else {
+            // SDK not ready yet — try again in 2s (async init race on slow connections)
+            setTimeout(dodInitBanner, 2000);
+        }
+    } else {
+        // Own domain: inject third-party banner at runtime (never baked into static HTML)
+        var iframe = document.createElement('iframe');
+        iframe.setAttribute('sandbox',
+          'allow-scripts allow-same-origin allow-popups ' +
+          'allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation');
+        iframe.setAttribute('allow', 'encrypted-media');
+        iframe.srcdoc =
+          '<style>body{margin:0;padding:0;overflow:hidden;}<\/style>' +
+          '<script>atOptions={\'key\':\'fe50079a51ead851d3c89c444ba630be\',' +
+          '\'format\':\'iframe\',\'height\':300,\'width\':160,\'params\':{}};<\/script>' +
+          '<script src=\'https://www.highrevenueformat.com/' +
+          'fe50079a51ead851d3c89c444ba630be/invoke.js\'><\/script>';
+        iframe.width        = '160';
+        iframe.height       = '300';
+        iframe.frameBorder  = '0';
+        iframe.scrolling    = 'no';
+        iframe.style.cssText = 'border:none;overflow:hidden;width:160px;height:300px;';
+        content.appendChild(iframe);
+    }
+}
+
+// Wait for DOD_PLATFORM to be set (it's sync, but SDK init is async — use a small guard)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', dodInitBanner);
+} else {
+    dodInitBanner();
+}
+</script>
 
       <div class="event-banner" onclick="openDailyDraw()">
         <div class="event-text" id="dailyDrawBannerText">DAILY DRAW</div>
@@ -3575,25 +3648,25 @@ window.dodImagesLoaded = false;
       <button id="navBtnInstall" class="squad-icon-btn" onclick="triggerPwaInstall()" title="Install App" style="display: none;">
         <div class="squad-nav-content"><div class="squad-nav-icon" style="color: var(--ok);">⤓</div><span class="ib-label" style="color: var(--ok);">Install</span></div>
       </button>
-      <button class="squad-syndicate-hot-btn" onclick="attemptEnterUnderworld()" title="The Syndicate">
+      <button id="navBtnSyndicate" class="squad-syndicate-hot-btn" onclick="attemptEnterUnderworld()" title="The Syndicate">
         <div class="hot-content"><span style="font-size: 22px; line-height: 0.8; filter: drop-shadow(0 0 5px rgba(201,162,39,0.5));">♠</span> SYNDICATE</div>
       </button>
-      <button class="squad-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">
+      <button id="navBtnLeaderboard" class="squad-icon-btn" onclick="showMenuScreen('leaderboard')" title="Leaderboard">
         <div class="squad-nav-content"><div class="squad-nav-icon">⟁</div><span class="ib-label">Top 100</span></div>
       </button>
-      <button class="squad-icon-btn" onclick="showMenuScreen('ranks')" title="Tiers">
+      <button id="navBtnTiers" class="squad-icon-btn" onclick="showMenuScreen('ranks')" title="Tiers">
         <div class="squad-nav-content"><div class="squad-nav-icon">⟡</div><span class="ib-label">Tiers</span></div>
       </button>
       <button id="navBtnTraining" class="squad-icon-btn" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot train while in a lobby.'); return; } showMenuScreen('training')" title="Training">
         <div class="squad-nav-content"><div class="squad-nav-icon">⌖</div><span class="ib-label">Train</span></div>
       </button>
-      <button class="squad-icon-btn" onclick="showMenuScreen('seasonpass')" title="Season Pass">
+      <button id="navBtnPass" class="squad-icon-btn" onclick="showMenuScreen('seasonpass')" title="Season Pass">
         <div class="squad-nav-content"><div class="squad-nav-icon" style="color: #e8c454;">🎫</div><span class="ib-label" style="color: #e8c454;">PASS</span></div>
       </button>
       <button class="squad-icon-btn" onclick="showMenuScreen('shop')" title="Shop">
         <div class="squad-nav-content"><div class="squad-nav-icon">⍟</div><span class="ib-label">Shop</span></div>
       </button>
-      <button class="squad-icon-btn" onclick="showMenuScreen('settings')" title="Settings">
+      <button id="navBtnSettings" class="squad-icon-btn" onclick="showMenuScreen('settings')" title="Settings">
         <div class="squad-nav-content"><div class="squad-nav-icon">⎔</div><span class="ib-label">Settings</span></div>
       </button>
     </div>
@@ -4136,6 +4209,10 @@ window.dodImagesLoaded = false;
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
             Sign in with Google
         </button>
+
+        <button id="btnCrazyGamesLogin" class="btn" style="display:none; width:100%; border-radius: 50px; background: linear-gradient(135deg, #f5dd8a 0%, #c9a227 100%); color:#150c12; font-family:'Inter', sans-serif; font-weight:800; font-size:13px; letter-spacing:1px; border: none; padding: 12px 0; box-shadow: 0 4px 15px rgba(201,162,39,0.3); text-transform: uppercase;" onclick="handleAuthClick('crazygames')">
+            Sign in with CrazyGames
+        </button>
         
         <button id="btnGuestLogin" class="btn ghost" style="width:100%; border-radius: 50px; font-family:'Inter', sans-serif; font-size:12px; font-weight: 600; letter-spacing:1px; padding: 10px 0; border: 2px solid rgba(242,234,216,0.25); color: var(--paper); transition: all 0.3s; background: rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="handleAuthClick('guest')" onmouseover="this.style.borderColor='var(--brass-bright)'; this.style.color='var(--brass-bright)';" onmouseout="this.style.borderColor='rgba(242,234,216,0.25)'; this.style.color='var(--paper)';">
             <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -4453,17 +4530,24 @@ function triggerTableShowcaseCinematic(globalTable, allPlayers, onComplete) {
 function handleAuthClick(type) {
     try { sfx.uiClick(); } catch(e){}
     const btnGoogle = document.getElementById('btnGoogleLogin');
+    const btnCG = document.getElementById('btnCrazyGamesLogin');
     const btnGuest = document.getElementById('btnGuestLogin');
     
     // 1. Instantly lock the UI so the user physically cannot double-click or mash both buttons
-    btnGoogle.disabled = true;
+    if (btnGoogle) btnGoogle.disabled = true;
+    if (btnCG) btnCG.disabled = true;
     btnGuest.disabled = true;
     
     if (type === 'google') {
         btnGoogle.textContent = "Connecting to Google...";
-        // Call your auth script and watch for failures (like the user closing the popup window)
         if (window.DoDAuth && DoDAuth.signInWithGoogle) {
             const p = DoDAuth.signInWithGoogle();
+            if (p && p.catch) p.catch(err => resetAuthButtons());
+        }
+    } else if (type === 'crazygames') {
+        btnCG.textContent = "Connecting to CrazyGames...";
+        if (window.DoDAuth && DoDAuth.signInWithCrazyGames) {
+            const p = DoDAuth.signInWithCrazyGames();
             if (p && p.catch) p.catch(err => resetAuthButtons());
         }
     } else {
@@ -4480,10 +4564,15 @@ function handleAuthClick(type) {
 
 function resetAuthButtons() {
     const btnGoogle = document.getElementById('btnGoogleLogin');
+    const btnCG = document.getElementById('btnCrazyGamesLogin');
     const btnGuest = document.getElementById('btnGuestLogin');
     if (btnGoogle) {
         btnGoogle.disabled = false;
         btnGoogle.textContent = "Sign in with Google";
+    }
+    if (btnCG) {
+        btnCG.disabled = false;
+        btnCG.textContent = "Sign in with CrazyGames";
     }
     if (btnGuest) {
         btnGuest.disabled = false;
@@ -5677,7 +5766,7 @@ function proceedWithBoot(overlayEl) {
 
         // Show the iOS Safari limitation warning once, only for iPhone/iPad Safari tab users
         const isIosSafariTab = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.navigator.standalone;
-        if (isIosSafariTab && !localStorage.getItem('dod_ios_warning_seen')) {
+        if (isIosSafariTab && !localStorage.getItem('dod_ios_warning_seen') && window.DOD_PLATFORM !== 'crazygames') {
             const banner = document.getElementById('iosWarningBanner');
             if (banner) banner.style.display = 'flex';
         }
@@ -5868,83 +5957,83 @@ window.isInteractiveTutorial = false;
 let tutStep = 0;
 
 const tutScript = [
-    { target: null, text: "Welcome to <b>Deck of Deception</b>! Match numbers, manage coins, and survive the bluffs.", btn: "Start →" },
-    { target: 'hand-wrap', action: 'rig_initial', text: "The table demands a number. You have a <b>7</b> — tap it to play!", wait: 'played_card', arrow: 'bottom' },
-    { target: 'actionbar', text: "🔥 <b>+1 Coin!</b> Now tap any number on the pad to demand what the next player <b>MUST match</b>.", wait: 'called_number', arrow: 'top' },
-    { target: 'ringCenter', text: "The card you played sits on the left, and the number you called sits on the right.", btn: "Got it" },
-    { target: 'seat-0', text: "This is you! Your <b>Coins (PC)</b> are shown here with your card count. Coins buy cards when you have no match (costs 2 coins). <b>No coins = big trouble!</b>", btn: "Next" },
+    { target: null, text: "Welcome to <b>Deck of Deception</b>! Match numbers, manage your coins, and survive the bluffing.", btn: "Start →" },
+    { target: 'hand-wrap', action: 'rig_initial', text: "The table needs a <b>7</b>. You have one in your hand. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
+    { target: 'actionbar', text: "🔥 <b>+1 Coin!</b> Now tap a number on the pad. That is the number the next player must match.", wait: 'called_number', arrow: 'top' },
+    { target: 'ringCenter', text: "The card you played is on the left. The number you called is on the right.", btn: "Got it" },
+    { target: 'seat-0', text: "This is you! Your <b>Coins (PC)</b> and your card count are shown here. If you have no matching card, you can buy one for 2 coins. <b>Running out of coins means big trouble!</b>", btn: "Next" },
     { target: 'deckpile', text: "This is the <b>Market Deck</b>. If you don't have a matching card, you must buy one from here.", btn: "Next" },
 
 // ─────────────────────────────────────────────
 // MATCH UI EXPLANATION
 // ─────────────────────────────────────────────
 
-{ target: 'log', text: "💬 This is the <b>match chat / activity box</b>. It shows what is happening at the table — players playing cards, calling numbers, buying from the market, Deception events, and other important match actions.", btn: "Next" },
+{ target: 'log', text: "💬 This is the <b>match activity box</b>. It shows everything happening at the table, like players playing cards, calling numbers, buying from the market, and Deception events.", btn: "Next" },
 
-{ target: 'turnIndicator', text: "⏱️ This is the <b>player turn timer</b>. Every player normally gets <b>30 seconds</b> to complete their turn. If the timer reaches 0, the player loses <b>2 coins</b> and their turn is skipped.<br><br><b>In Tutorial Mode, this timer is paused</b> so you can learn without any time pressure.", btn: "Next" },
+{ target: 'turnIndicator', text: "⏱️ This is the <b>turn timer</b>. Every player normally gets <b>30 seconds</b> to finish their turn. If the timer hits 0, that player loses <b>2 coins</b> and their turn is skipped.<br><br><b>This timer is paused during the tutorial</b>, so take your time.", btn: "Next" },
 
-{ target: 'timerDisplay', text: "🕐 This is the <b>match timer</b>. A normal match can last up to <b>20 minutes</b>. When the 20 minutes are over, the match ends and the final scores are used to determine the result.<br><br><b>In Tutorial Mode, this timer is also paused.</b>", btn: "Next" },
+{ target: 'timerDisplay', text: "🕐 This is the <b>match timer</b>. A normal match lasts up to <b>20 minutes</b>. When time runs out, the match ends and the winner is decided by final scores.<br><br><b>This timer is also paused during the tutorial.</b>", btn: "Next" },
 
-{ target: 'chainBox', text: "🏆 This is your <b>score</b>. Your current score is based on the <b>Pixel Coins (PC) you have remaining</b>. Playing cards can earn coins, while buying cards and using abilities can cost coins, so managing your coins throughout the match is important.", btn: "Next" },
+{ target: 'chainBox', text: "🏆 This is your <b>score</b>. Your score is simply the <b>Pixel Coins (PC) you have left</b>. Playing cards can earn you coins. Buying cards or using abilities can cost coins. Manage your coins carefully!", btn: "Next" },
 
 { hidden: true, action: 'rig_number_bots', wait: 'player_turn', unfreeze: true },
     
     // Action Cards
-    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, each with unique abilities! I've added a <b>Wild Swap</b> to your hand. It costs 2 coins but matches ANY number. <b>Tap it!</b>", wait: 'played_wild', arrow: 'bottom' },
-    { target: 'actionbar', text: "Wild Swap played! Tap a number to set the next demand.", wait: 'called_number', arrow: 'top' },
+    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, and each one has a special ability! I've added a <b>Wild Swap</b> card to your hand. It costs 2 coins but matches ANY number. <b>Tap it to play!</b>", wait: 'played_wild', arrow: 'bottom' },
+    { target: 'actionbar', text: "Wild Swap played! Now tap a number to set what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
-    { target: 'hand-wrap', action: 'rig_power', text: "⚡ <b>Power Card!</b> FREE and matches anything. Tap it!", wait: 'opened_targeting', arrow: 'bottom' },
-    { target: 'tableRing', text: "Now <b>tap any bot's profile</b> in the circle to drain their coins to the bank!", wait: 'played_power', highlightBots: true },
+    { target: 'hand-wrap', action: 'rig_power', text: "⚡ <b>Power Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
+    { target: 'tableRing', text: "Now <b>tap any bot</b> at the table to drain their coins into the bank!", wait: 'played_power', highlightBots: true },
     { target: 'actionbar', text: "Power used! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
-    { target: 'hand-wrap', action: 'rig_steal', text: "💰 <b>Steal Card!</b> FREE and matches anything. Tap it!", wait: 'opened_targeting', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_steal', text: "💰 <b>Steal Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
     { target: 'tableRing', text: "Now <b>tap any bot</b> to steal their coins straight into your own pocket!", wait: 'played_steal', highlightBots: true },
     { target: 'actionbar', text: "Coins stolen! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
 
     // Insurance Card
-    { target: 'hand-wrap', action: 'rig_insurance', text: "🛡️ <b>Insurance Card!</b> FREE and matches anything.<br><br>It lets you <b>safely pass your turn</b> without playing a number card. During a Forced Buy, it can also safely discard a dud card.<br><br><b>Tap it to use Insurance!</b>", wait: 'played_insurance', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_insurance', text: "🛡️ <b>Insurance Card!</b> It's free and matches any number.<br><br>It lets you <b>skip your turn safely</b> without playing a number card. If you're forced to buy cards, it can also let you safely discard one you don't need.<br><br><b>Tap it to use Insurance!</b>", wait: 'played_insurance', arrow: 'bottom' },
     { hidden: true, wait: 'player_turn' },
 
     // Reverse Card
-    { target: 'hand-wrap', action: 'rig_reverse', text: "↩️ <b>Reverse Card!</b> FREE and matches anything. It flips the turn direction back. Tap it!", wait: 'played_reverse', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_reverse', text: "↩️ <b>Reverse Card!</b> It's free and matches any number. It reverses the turn direction. Tap it to play!", wait: 'played_reverse', arrow: 'bottom' },
     { target: 'actionbar', text: "Direction flipped! Call your next number.", wait: 'called_number', arrow: 'top' },
 
 // Empty Hand / Forced Buy
     { hidden: true, action: 'rig_empty_hand_rich', wait: 'player_turn' },
-    { target: 'actionbar', text: "Your hand is empty! When you have no cards (or no matching cards), you must buy from the shop.<br><br>You can draw up to <b>3 cards per turn</b>. If no match is found, draw again or click <b>Stop here</b>. (Make sure you have enough coins, otherwise the buy button won't show!)", wait: 'forced_buy', arrow: 'top' },
+    { target: 'actionbar', text: "Your hand is empty! When you have no cards, or no matching card, you must buy from the market.<br><br>You can draw up to <b>3 cards per turn</b>. If you still don't get a match, draw again or tap <b>Stop here</b>. Make sure you have enough coins, or the buy button won't appear.", wait: 'forced_buy', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
 
     // Deception Pre-amble (Demonstrating Broke bots)
-    { target: null, text: "💀 <b>Deception Showdown!</b> When a player is broke (0 coins) and has no matching cards, their turn skips. If they are still stuck on their <i>next</i> turn, Deception triggers!", btn: "Next" },
-    { target: null, action: 'rig_bots_0_coins', text: "I'm going to set all bots' coins to 0 now. Watch their turns skip!<br><br>Then <b>play a card</b>! (If you don't have a match, buy one from the market deck.)", btn: "Let's Go!" },
+    { target: null, text: "💀 <b>Deception Showdown!</b> When a player has 0 coins and no matching card, their turn is skipped. If they are still stuck on their <i>next</i> turn too, Deception begins!", btn: "Next" },
+    { target: null, action: 'rig_bots_0_coins', text: "I'm going to set every bot's coins to 0. Watch their turns get skipped!<br><br>Then <b>play a card</b>. If you don't have a match, buy one from the market.", btn: "Let's Go!" },
     { hidden: true, wait: 'player_turn', unfreeze: true }, // Bots skip turn 1.
-    { target: 'hand-wrap', action: 'rig_dynamic_match', text: "The bots skipped their turns. I gave you a matching card — tap and play it!", wait: 'played_card', arrow: 'bottom' },
-    { target: 'actionbar', text: "Now tap any number to demand what the next player MUST match.", wait: 'called_number', arrow: 'top' },
+    { target: 'hand-wrap', action: 'rig_dynamic_match', text: "The bots skipped their turns. I gave you a matching card. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
+    { target: 'actionbar', text: "Now tap a number. That is what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'deception_rich_start', unfreeze: true }, // Bots try to play -> Deception naturally triggers!
     
     // Deception Showdown - Rich Side
     { target: null, text: "Deception triggered! <b>You have coins, so you set the trap.</b>", btn: "Start →" },
-    { target: 'deceptionContent', action: 'unlock_voting', text: "Welcome to the <b>Rich Player View</b>. 💎 <b>Pick a secret Real Number</b> (1–9). Only coin-holders know this. Broke players must guess it — wrong guess = <b>eliminated!</b>", wait: 'voted_real' },
-    { target: 'deceptionContent', action: 'advance_to_claim', text: "Real number locked! Now pick the <b>Claim</b> — what to tell the broke players. Honest or bluff, it's your call!", wait: 'voted_claim' },
-    { target: 'deceptionContent', action: 'setup_bots_mock', text: "👀 Bots are guessing... <b>2 believe your claim</b> (+15 coins each). <b>1 calls your bluff</b> and guesses wrong — <b>ELIMINATED!</b>", btn: "Watch →" },
+    { target: 'deceptionContent', action: 'unlock_voting', text: "Welcome to the <b>Rich Player View</b>. 💎 <b>Pick a secret Real Number</b> from 1 to 9. Only players with coins get to know this number. Broke players must guess it. A wrong guess means <b>elimination!</b>", wait: 'voted_real' },
+    { target: 'deceptionContent', action: 'advance_to_claim', text: "Real number locked in! Now pick the <b>Claim</b>, the number you tell the broke players. You can be honest or bluff, it's your choice!", wait: 'voted_claim' },
+    { target: 'deceptionContent', action: 'setup_bots_mock', text: "👀 Bots are guessing. <b>2 believe your claim</b> and gain +15 coins each. <b>1 calls your bluff</b>, guesses wrong, and gets <b>ELIMINATED!</b>", btn: "Watch →" },
     { hidden: true, action: 'release_bots_mock', wait: 'broke_demo_player_turn' },
 
     // After the rich-side Deception and elimination cinematic,
     // show the Broke Player explanation on the player's FIRST
     // actual turn. Do NOT give the player another normal card turn.
-    { target: null, action: 'prepare_broke_demo', text: "Now let's see the <b>Broke Player View</b>.<br><br>I'm going to make your coins <b>0</b> and give you <b>no matching card</b>. Your turn will skip once. If you're still stuck on your next turn, <b>Deception triggers</b>.", btn: "Show me →" },
+    { target: null, action: 'prepare_broke_demo', text: "Now let's see the <b>Broke Player View</b>.<br><br>I'm going to set your coins to <b>0</b> and give you <b>no matching card</b>. Your turn will be skipped once. If you're still stuck on your next turn, <b>Deception will begin</b>.", btn: "Show me →" },
 
     // The normal turn system now runs. The player skips once, then Deception
     // triggers on the following turn.
     { hidden: true, wait: 'broke_demo_deception' },
 
     // This is now the REAL broke-player Deception UI.
-    { target: 'deceptionContent', action: 'unlock_broke', text: "💸 <b>Whom do you believe?</b><br><br>The rich players can make different claims. Each button shows <b>who made the claim</b> and <b>the number they claimed</b>.<br><br>You can also choose <b>I don't believe any of them</b>.", wait: 'clicked_believe', arrow: 'top' },
+    { target: 'deceptionContent', action: 'unlock_broke', text: "💸 <b>Who do you believe?</b><br><br>Rich players may make different claims. Each button shows <b>who made the claim</b> and <b>what number they claimed</b>.<br><br>You can also pick <b>I don't believe any of them</b>.", wait: 'clicked_believe', arrow: 'top' },
 
-    { target: null, action: 'force_wrong_elimination', text: "💥 <b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk, high reward: guess right and gain +15 coins; guess wrong and you're eliminated on the spot.<br><br>⏳ If the match reaches the <b>20-minute limit</b>, the winner is decided by the final score — the player with <b>more coins and fewer cards</b> wins the game.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
+    { target: null, action: 'force_wrong_elimination', text: "💥 <b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk and high reward. Guess right and you gain +15 coins. Guess wrong and you're eliminated instantly.<br><br>⏳ If the match reaches the <b>20 minute limit</b>, the winner is the player with <b>more coins and fewer cards</b>.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
     { target: null, action: 'tutorial_end_leave_game', text: "", btn: "" }
 ];
 
@@ -6594,6 +6683,7 @@ if (
 }
 
 function tutNext() {
+    if (window.isMenuTutorialActive) { menuTutNext(); return; }
     try { sfx.uiClick(); } catch(e){}
     tutStep++;
     applyTutStep();
@@ -6628,6 +6718,123 @@ const decModal = document.getElementById('deceptionModal');
     
     // Safely exit the practice table and return exactly to the main menu without penalties
     returnToMenuFromEndgame();
+}
+
+// ============================================================
+// MAIN MENU TUTORIAL — a separate, one-time walkthrough of the
+// main menu buttons. Unrelated to the on-table game tutorial
+// above (and NOT linked to the "How To Play Guide" button).
+// Runs once ever, the first time the hub becomes visible.
+// ============================================================
+let menuTutStep = 0;
+window.isMenuTutorialActive = false;
+
+const menuTutScript = [
+    { target: 'navBtnSettings', text: "This is <b>Settings</b>. Adjust music, sound effects, voice chat volume, and other game options here.", btn: "Next", arrow: 'bottom' },
+    { target: 'navBtnPass', text: "This is the <b>Season Pass</b>. Complete challenges and climb the reward ladder to earn coins, cards, and other prizes during the season.", btn: "Next", arrow: 'bottom' },
+    { target: 'navBtnTraining', text: "This is <b>Training</b>. Practice against bots any time you like, with no coins or rank on the line.", btn: "Next", arrow: 'bottom' },
+    { target: 'navBtnTiers', text: "This is <b>Tiers</b>. See the full rank ladder and where you currently stand on it.", btn: "Next", arrow: 'bottom' },
+    { target: 'navBtnLeaderboard', text: "This is the <b>Top 100</b> leaderboard. See how the best players in the game rank against each other.", btn: "Next", arrow: 'bottom' },
+    { target: 'hubCurrencyBadge', text: "These are your <b>coins</b>. Pixel Coins (PC) are free and used for everyday purchases. Syndicate Chips (SC) are a premium currency for special items.", btn: "Next", arrow: 'top' },
+    { target: 'squadFriendsPanel', text: "This is your <b>Friends list</b>. Tap <b>+ Add</b> and search by a player's <b>name</b> or their <b>ID number</b> to send a friend request.", btn: "Next", arrow: 'top' },
+    { target: 'customSquadSelect', text: "Pick how many players you want in your match here.", btn: "Next", arrow: 'bottom' },
+    { target: 'squadProfileWidget', text: "This is your <b>profile</b>. Tap it any time to see your stats, and to customize your avatar, frame, and title.", btn: "Next", arrow: 'top' },
+    { target: 'navBtnSyndicate', text: "The <b>Syndicate</b> is invite-only. Reach the <b>Oracle</b> tier and meet a few special requirements, and you'll be invited to play in it. Season 1's Oracle players get invited into Season 2's Syndicate, and so on each season.", btn: "Next", arrow: 'bottom' },
+    { target: 'menuFsToggleBtn', text: "This toggles <b>Fullscreen</b>. Playing in fullscreen gives you the best, most immersive view of the table.", btn: "Next", arrow: 'top' },
+    { target: 'squadPlayBtn', text: "And finally, tap <b>PLAY</b> to start matchmaking. The game searches for other active players online and adds them to your match.", btn: "Got it!", arrow: 'bottom' }
+];
+
+function startMenuTutorial() {
+    if (window.isMenuTutorialActive) return;
+    window.isMenuTutorialActive = true;
+    menuTutStep = 0;
+
+    // Same stacking-context escape trick openTutorial() uses, so the
+    // spotlight/arrow always render above every menu screen.
+    document.body.appendChild(document.getElementById('tutOverlay'));
+    document.body.appendChild(document.getElementById('tutShowcase'));
+    document.body.appendChild(document.getElementById('tutSpotlight'));
+    document.body.appendChild(document.getElementById('tutArrow'));
+    document.body.appendChild(document.getElementById('tutDialogue'));
+
+    document.getElementById('tutOverlay').style.display = 'block';
+    document.getElementById('tutShowcase').style.display = 'none';
+    document.getElementById('tutDialogue').style.display = 'flex';
+    const fill = document.getElementById('tutProgressFill');
+    if (fill) fill.style.width = '0%';
+
+    applyMenuTutStep();
+}
+
+function applyMenuTutStep() {
+    if (menuTutStep >= menuTutScript.length) { endMenuTutorial(); return; }
+
+    const step      = menuTutScript[menuTutStep];
+    const tutBtn    = document.getElementById('tutBtn');
+    const tutText   = document.getElementById('tutText');
+    const overlay   = document.getElementById('tutOverlay');
+    const spotlight = document.getElementById('tutSpotlight');
+    const arrow     = document.getElementById('tutArrow');
+
+    document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
+    spotlight.className = '';
+    arrow.className = '';
+
+    const targetEl = step.target ? document.getElementById(step.target) : null;
+
+    if (targetEl) {
+        const r        = targetEl.getBoundingClientRect();
+        const menuRect = document.getElementById('menu').getBoundingClientRect();
+        const pad      = 9;
+
+        spotlight.style.top    = (r.top  - menuRect.top  - pad) + 'px';
+        spotlight.style.left   = (r.left - menuRect.left - pad) + 'px';
+        spotlight.style.width  = (r.width  + pad*2) + 'px';
+        spotlight.style.height = (r.height + pad*2) + 'px';
+        spotlight.classList.add('active');
+        overlay.classList.add('spotlight-active');
+        targetEl.classList.add('tut-focused');
+
+        const cx = r.left - menuRect.left + r.width / 2;
+        if (step.arrow === 'bottom') {
+            arrow.textContent = '⬇';
+            arrow.style.top   = (r.top - menuRect.top - 48) + 'px';
+            arrow.style.left  = (cx - 14) + 'px';
+            arrow.className   = 'active bounce-up';
+        } else {
+            arrow.textContent = '⬆';
+            arrow.style.top   = (r.bottom - menuRect.top + 8) + 'px';
+            arrow.style.left  = (cx - 14) + 'px';
+            arrow.className   = 'active bounce-down';
+        }
+    } else {
+        overlay.classList.remove('spotlight-active');
+    }
+
+    tutText.innerHTML = step.text || "";
+    tutBtn.style.display = 'block';
+    tutBtn.textContent = step.btn || 'Next';
+
+    const fill = document.getElementById('tutProgressFill');
+    if (fill) fill.style.width = (((menuTutStep + 1) / menuTutScript.length) * 100) + '%';
+}
+
+function menuTutNext() {
+    try { sfx.uiClick(); } catch(e){}
+    menuTutStep++;
+    applyMenuTutStep();
+}
+
+function endMenuTutorial() {
+    try { sfx.uiClick(); } catch(e){}
+    localStorage.setItem('dod_seen_menu_tutorial', '1');
+    window.isMenuTutorialActive = false;
+    document.getElementById('tutOverlay').style.display = 'none';
+    document.getElementById('tutOverlay').classList.remove('spotlight-active');
+    document.getElementById('tutDialogue').style.display = 'none';
+    document.getElementById('tutSpotlight').className = '';
+    document.getElementById('tutArrow').className = '';
+    document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
 }
 
 // Gate the hub behind real sign-in instead of showing it immediately
@@ -11891,6 +12098,13 @@ if (
         'alert'
     );
 
+    // FIX: this used to jump straight to renderAll() without ever drawing the
+    // turn arc, so the moment your coins hit 0 and the turn actually landed
+    // on you, nothing visually showed it was your turn.
+    const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
+    const toIdx = state.players.findIndex(p => p.id === state.players[state.turn].id);
+    animateTurnArc(fromIdx, toIdx, state.direction);
+
     renderAll();
 
     // IMPORTANT:
@@ -11963,6 +12177,13 @@ if (
                 tutScript[tutStep] &&
                 tutScript[tutStep].wait === 'broke_demo_player_turn'
             ) {
+                // FIX: this used to call tutNext() and return without ever drawing
+                // the turn arc, so right after the first bot's mock elimination,
+                // the turn landing back on you showed no highlight at all.
+                const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
+                const toIdx = state.players.findIndex(p => p.id === state.players[state.turn].id);
+                animateTurnArc(fromIdx, toIdx, state.direction);
+
                 tutNext();
             }
 
@@ -11988,6 +12209,13 @@ if (
         state.uiState = 'ANIMATING';
 
         sfx.turn();
+
+        // FIX: this branch used to skip straight to renderAll() without ever
+        // drawing the turn arc, so the moment Deception actually began on
+        // your second broke turn, nothing showed the turn landing on you.
+        const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
+        const toIdx = state.players.findIndex(p => p.id === state.players[state.turn].id);
+        animateTurnArc(fromIdx, toIdx, state.direction);
 
         renderAll();
 
@@ -12848,6 +13076,72 @@ async function computeMatchProgression() {
   };
 }
 
+// ============================================================
+// CRAZYGAMES REWARDED AD — fires only for match winners on CG
+// ============================================================
+window.dodClaimRewardedAd = function() {
+    if (window.DOD_CG_AD_CLAIMED) {
+        showSystemToast && showSystemToast("Bonus already claimed for this match!");
+        return;
+    }
+    if (!window.DOD_CG_SDK_READY || !window.CrazyGames) {
+        showSystemToast && showSystemToast("Ad system not ready — try again in a moment.");
+        return;
+    }
+
+    var btn = document.getElementById('dodWatchAdBtn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Loading ad…'; }
+
+    window.CrazyGames.SDK.ad.requestAd('rewarded', {
+        adStarted: function() {
+            // Pause BGM so it doesn't bleed under the ad
+            try { if (bgMusicElement) bgMusicElement.pause(); } catch(e) {}
+        },
+        adFinished: function() {
+            // Resume BGM
+            try { if (bgMusicElement) bgMusicElement.play().catch(function(){}); } catch(e) {}
+
+            window.DOD_CG_AD_CLAIMED = true;
+            var bonus = window._dodAdBonusCoins || 0;
+            var profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+
+            if (!profile) return;
+
+            // Award double coins by adding the same earned amount again
+            profile.currency = (profile.currency || 0) + bonus;
+
+            // Sync to Firestore
+            dodDb.collection('users').doc(profile.uid)
+                 .update({ currency: profile.currency })
+                 .catch(function(e) { console.warn('[DoD] Ad bonus sync failed:', e); });
+
+            // Update HUD coin displays
+            ['hubCurrency', 'shopCurrency'].forEach(function(id) {
+                var el = document.getElementById(id);
+                if (el) el.textContent = profile.currency;
+            });
+
+            // Swap the button for a success message
+            var row = document.getElementById('dodWatchAdRow');
+            if (row) {
+                row.innerHTML =
+                  '<div style="font-family:\'IBM Plex Mono\',monospace;font-size:12px;' +
+                  'color:var(--ok);text-align:center;padding:8px 0;">' +
+                  '✓ +' + bonus + ' PC bonus added!</div>';
+            }
+
+            try { sfx.coin && sfx.coin(); } catch(e) {}
+            showSystemToast && showSystemToast('Bonus coins added! +' + bonus + ' PC');
+        },
+        adError: function(err) {
+            console.warn('[DoD] Rewarded ad error:', err);
+            try { if (bgMusicElement) bgMusicElement.play().catch(function(){}); } catch(e) {}
+            if (btn) { btn.disabled = false; btn.innerHTML = '<span style="font-size:16px;">▶</span> Watch Ad · Double Your Coins'; }
+            showSystemToast && showSystemToast("Ad unavailable — try again.");
+        }
+    });
+};
+
 async function endGame(winner, byScore) {
   // Delay the finale if an elimination cinematic is currently dominating the screen
   if (window.isEliminationPlaying) {
@@ -12991,7 +13285,29 @@ async function endGame(winner, byScore) {
     ${extraRewardHtml}
   </div>`;
   
-  let html = headerHtml + listHtml + earnedTxt + `<div style="display:flex; justify-content:center; margin-top:30px;"><button class="btn" style="padding:14px 40px; font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button></div>`;
+  // CrazyGames rewarded ad — only shown to the winner, only on CG platform
+  let rewardedAdHtml = '';
+  if (isMyWin && state.over && window.DOD_PLATFORM === 'crazygames') {
+      window.DOD_CG_AD_CLAIMED   = false; // reset for this match
+      window._dodAdBonusCoins    = earnedCoins; // store so the handler can double it
+      rewardedAdHtml = `
+        <div id="dodWatchAdRow" style="display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:16px;">
+          <button id="dodWatchAdBtn" class="btn" onclick="dodClaimRewardedAd()"
+            style="padding:10px 28px;font-size:13px;background:linear-gradient(135deg,#7c3aed,#4c1d95);
+                   border:1px solid #a78bfa;box-shadow:0 4px 16px rgba(124,58,237,0.4);
+                   display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">▶</span> Watch Ad · Double Your Coins
+          </button>
+          <div style="font-size:10px;font-family:'IBM Plex Mono',monospace;color:rgba(242,234,216,0.4);">
+            +${earnedCoins} bonus PC — or a Basic Card if already doubled
+          </div>
+        </div>`;
+  }
+
+  let html = headerHtml + listHtml + earnedTxt + rewardedAdHtml +
+    `<div style="display:flex;justify-content:center;margin-top:24px;">
+       <button class="btn" style="padding:14px 40px;font-size:16px;" onclick="showProgressionScreen()">Continue ↗</button>
+     </div>`;
   
   document.getElementById('finaleContent').innerHTML=html;
   openModal('finaleModal');
@@ -13211,6 +13527,13 @@ function returnToMenuFromEndgame() {
             // Trigger feedback popup evaluation after a real match
             if (!window.isInteractiveTutorial) {
                 triggerRandomRatingPopup();
+            }
+
+            // First-time-ever main menu walkthrough. Runs exactly once,
+            // right after the game tutorial + Season intro cinematic
+            // finish and the hub is actually on screen.
+            if (!localStorage.getItem('dod_seen_menu_tutorial') && !currentPartyId) {
+                setTimeout(startMenuTutorial, 600);
             }
         };
 
@@ -15735,8 +16058,16 @@ async function equipFromPopupUniversal(itemId, category, event) {
         profile.equippedTable = itemId; updates.equippedTable = itemId;
     }
 
-    if (window.firebase && Object.keys(updates).length > 0) {
-        await firebase.firestore().collection('users').doc(profile.uid).update(updates).catch(()=>{});
+    if (updates.title !== undefined || updates.avatar !== undefined || updates.frame !== undefined ||
+        updates.equippedFace !== undefined || updates.equippedBack !== undefined || updates.equippedTable !== undefined) {
+        try {
+            await secureServerCall('economy/equip', { category: category, itemId: itemId });
+        } catch (e) {
+            showSystemToast && showSystemToast("Couldn't equip that item.");
+        }
+    }
+    if (updates.seenTitles !== undefined && window.firebase) {
+        firebase.firestore().collection('users').doc(profile.uid).update({ seenTitles: updates.seenTitles }).catch(()=>{});
     }
 
     applyEquippedSkins(profile); // Apply table/deck live
@@ -16130,11 +16461,25 @@ function renderSettingsAccountControls(profile) {
     if (!user) return;
     
     const isAnonymous = user.isAnonymous;
+    const isCG = window.DOD_PLATFORM === 'crazygames';
     
     if (isAnonymous) {
+        if (isCG) {
+            area.innerHTML = `
+                <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to CrazyGames to secure your progress permanently without losing data.</p>
+                <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToCrazyGamesAccount()">Link CrazyGames Account</button>
+            `;
+        } else {
+            area.innerHTML = `
+                <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to Google to secure your progress permanently without losing data.</p>
+                <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToGoogleAccount()">Link Google Account</button>
+            `;
+        }
+    } else if (isCG) {
+        // CrazyGames sessions re-auth silently on reload — a Sign Out button
+        // here would just log them straight back in, so it's omitted.
         area.innerHTML = `
-            <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to Google to secure your progress permanently without losing data.</p>
-            <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToGoogleAccount()">Link Google Account</button>
+            <p class="mono" style="font-size:11px; color:var(--ok); text-align:center; margin:0;">✓ Secured with CrazyGames Account</p>
         `;
     } else {
         area.innerHTML = `
@@ -16171,6 +16516,34 @@ async function linkGuestToGoogleAccount() {
         if (error.code === 'auth/credential-already-in-use') {
             showSystemToast("This Google account is already registered! Please use a different one.");
         } else if (error.code === 'auth/popup-closed-by-user') {
+            showSystemToast("Sign-in cancelled.");
+        } else {
+            showSystemToast("Failed to link account. Please try again.");
+        }
+    }
+}
+
+async function linkGuestToCrazyGamesAccount() {
+    sfx.uiClick();
+    if (!window.CrazyGames || !window.CrazyGames.SDK) return;
+    
+    try {
+        await window.CrazyGames.SDK.user.showAuthPrompt();
+        const cgToken = await window.CrazyGames.SDK.user.getUserToken();
+        
+        const data = await secureServerCall('auth/crazyGamesLink', { cgToken: cgToken });
+        await firebase.auth().signInWithCustomToken(data.firebaseToken);
+        
+        showSystemToast("Account successfully linked to CrazyGames!");
+        
+        if (window.DoDAuth && typeof DoDAuth.refreshProfile === 'function') {
+            await DoDAuth.refreshProfile();
+        } else {
+            window.location.reload();
+        }
+    } catch (error) {
+        console.error("CrazyGames linking failed: ", error);
+        if (error && error.code === 'userCancelled') {
             showSystemToast("Sign-in cancelled.");
         } else {
             showSystemToast("Failed to link account. Please try again.");
@@ -16889,7 +17262,11 @@ function renderShopItems() {
                     <img src="Coins/SyndicateChips.webp" style="position:absolute; right:-2px; top:50%; transform:translateY(-50%) rotate(25deg) scale(1.6); width:24px; height:24px; filter:drop-shadow(-2px 4px 6px rgba(0,0,0,0.8)); z-index:1; pointer-events:none;">
                 </button>`;
             } else {
-                btnHtml = `<button class="btn small" style="background: linear-gradient(180deg, #047857 0%, #064e3b 45%, #022018 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; border-radius: 4px;" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
+                if (window.DOD_PLATFORM === 'crazygames') {
+                    btnHtml = `<button class="btn small" style="width:100%;height:38px;font-size:10px;border-radius:4px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);color:rgba(242,234,216,0.3);cursor:not-allowed;" disabled>Not available</button>`;
+                } else {
+                    btnHtml = `<button class="btn small" style="background: linear-gradient(180deg, #047857 0%, #064e3b 45%, #022018 100%); border: 1px solid #94a3b8; border-top: 1px solid #cbd5e1; box-shadow: inset 0 1px 4px rgba(255,255,255,0.4), inset 0 -2px 4px rgba(0,0,0,0.6), 0 4px 12px rgba(0,0,0,0.8); color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,0.9); width:100%; height:38px; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; border-radius: 4px;" onclick="purchaseIAP('${item.id}', ${item.reward}, '${item.type || 'sc'}', event)">Buy ${item.price}</button>`;
+                }
             }
         } else if (isEquipped) {
             btnHtml = `<button class="btn small equipped" style="width:100%; border:none; background:rgba(47,110,82,0.3); color:#9fd9b8; box-shadow:none;" disabled>EQUIPPED ✓</button>`;
@@ -17319,9 +17696,11 @@ async function equipShopItem(itemId, category, event) {
     else if (category === 'titles') { updateField = 'title'; profile.title = itemId; }
 
     if (updateField) {
-        await firebase.firestore().collection('users').doc(profile.uid).update({
-            [updateField]: itemId
-        });
+        try {
+            await secureServerCall('economy/equip', { category: category, itemId: itemId });
+        } catch (e) {
+            showSystemToast && showSystemToast("Couldn't equip that item.");
+        }
     }
     
     applyEquippedSkins(profile); // Apply instantly!
@@ -17442,6 +17821,11 @@ async function buyChestWithSC(tier, scPrice, event) {
 }
 
 async function purchaseIAP(itemId, rewardAmount, currencyType = 'sc', event) {
+    if (window.DOD_PLATFORM === 'crazygames') {
+        showSystemToast("Purchases aren't available on this platform.");
+        return;
+    }
+
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
 
