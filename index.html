@@ -3420,12 +3420,42 @@ window.dodImagesLoaded = false;
     transition: top 0.3s cubic-bezier(0.25,1,0.5,1), bottom 0.3s, left 0.3s, transform 0.3s, width 0.3s, max-width 0.3s;
   }
   .tut-dealer-row { display:flex; align-items:center; gap:9px; }
-  .tut-avatar { width:34px; height:34px; border-radius:50%; background:linear-gradient(135deg,var(--brass-bright),var(--brass)); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; box-shadow:0 0 14px rgba(232,196,84,0.45); }
+  .tut-avatar {
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--brass-bright),var(--brass));
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  box-shadow:0 0 14px rgba(232,196,84,0.45);
+  overflow:hidden;
+}
+
+.tut-avatar img {
+  width:100%;
+  height:100%;
+  object-fit:contain;
+  display:block;
+}
   .tut-dname  { font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:12px; }
   .tut-prog   { width:100%; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:3px; }
   /* Legacy — keep .tut-focused for showcase cards; spotlight handles in-game elements */
   .tut-focused { z-index: 10001 !important; pointer-events: auto !important; border-radius: 8px; }
   .tut-focused * { pointer-events: auto !important; }
+
+/* MAIN MENU TUTORIAL LOCK
+   Prevent the player from clicking ANY menu control while
+   the walkthrough is active. Tutorial controls remain usable
+   because they are moved directly under <body>. */
+#menu.menu-tutorial-locked {
+    pointer-events: none !important;
+}
+
+#menu.menu-tutorial-locked * {
+    pointer-events: none !important;
+}
 </style>
 <div id="tutOverlay"></div>
 <div id="tutShowcase"></div>
@@ -3433,7 +3463,9 @@ window.dodImagesLoaded = false;
 <div id="tutArrow"></div>
 <div id="tutDialogue">
   <div class="tut-dealer-row">
-    <div class="tut-avatar">🎰</div>
+    <div class="tut-avatar">
+  <img src="DeceptionCharacter.webp" alt="The Dealer">
+</div>
     <div style="flex:1; min-width:0;">
       <div class="tut-dname">The Dealer</div>
       <div class="tut-prog"><div id="tutProgressFill" style="height:100%; width:0%; background:var(--brass-bright); transition:width 0.3s ease;"></div></div>
@@ -4778,37 +4810,70 @@ function renderUnderworldScreen() {
     const metMatches = pMatches >= reqMatches;
     
     const isUnlocked = metCoins && metTier && metMatches;
+
+    const charHtml = `
+        <style>
+            @keyframes synBreathing {
+                0% { transform: scale(1); filter: brightness(1); }
+                50% { transform: scale(1.03); filter: brightness(1.15); }
+                100% { transform: scale(1); filter: brightness(1); }
+            }
+            #screen-underworld { max-width: 800px !important; }
+            .syn-split-layout { display: flex; flex-direction: row; align-items: center; justify-content: space-between; gap: 20px; width: 100%; }
+            .syn-char-wrap { flex-shrink: 0; width: clamp(160px, 30vw, 240px); display: flex; justify-content: center; align-items: center; position: relative; }
+            .syn-char-bg { position: absolute; width: 120%; height: 120%; background: radial-gradient(circle at center, rgba(147, 51, 234, 0.4) 0%, transparent 65%); animation: synBreathing 4s ease-in-out infinite; z-index: 0; }
+            .syn-char-img { max-width: 100%; height: auto; position: relative; z-index: 2; animation: synBreathing 4s ease-in-out infinite; filter: drop-shadow(0 0 15px rgba(147, 51, 234, 0.6)); }
+            @media (max-width: 768px) {
+                .syn-split-layout { flex-direction: column-reverse !important; }
+                .syn-char-wrap { width: 180px; margin-top: 20px; }
+            }
+        </style>
+        <div class="syn-char-wrap">
+            <div class="syn-char-bg"></div>
+            <img src="DeceptionCharacter2.webp" class="syn-char-img" alt="Syndicate Character">
+        </div>
+    `;
     
     if (!isUnlocked) {
             content.innerHTML = `
-                <svg viewBox="0 0 24 24" style="width: clamp(36px, 8vh, 56px); height: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px rgba(201,162,39,0.8)); stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                <p class="blurb" style="text-align:center; color: rgba(242,234,216,0.8); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Access Denied. You are not ready for the high stakes of the Syndicate. Meet the requirements below to receive your invitation.</p>
-                <div class="uw-locked-list">
-                    <div class="uw-req-row ${metTier ? 'met' : 'failed'}">
-                        <span>Reach Mastermind Tier</span>
-                        <span>${metTier ? '✓' : '✗'}</span>
+                <div class="syn-split-layout">
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <svg viewBox="0 0 24 24" style="width: clamp(36px, 8vh, 56px); height: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px rgba(201,162,39,0.8)); stroke: currentColor; stroke-width: 2; fill: none; stroke-linecap: round; stroke-linejoin: round;"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                        <p class="blurb" style="color: rgba(242,234,216,0.8); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Access Denied. You are not ready for the high stakes of the Syndicate. Meet the requirements below to receive your invitation.</p>
+                        <div class="uw-locked-list" style="margin-top: clamp(10px, 3vh, 20px); width: 100%; max-width: 340px;">
+                            <div class="uw-req-row ${metTier ? 'met' : 'failed'}">
+                                <span>Reach Oracle Tier</span>
+                                <span>${metTier ? '✓' : '✗'}</span>
+                            </div>
+                            <div class="uw-req-row ${metMatches ? 'met' : 'failed'}">
+                                <span>Play 100 Matches</span>
+                                <span>${pMatches} / ${reqMatches}</span>
+                            </div>
+                            <div class="uw-req-row ${metCoins ? 'met' : 'failed'}">
+                                <span>Hold 15,000 PC</span>
+                                <span>${pCoins} / ${reqCoins}</span>
+                            </div>
+                        </div>
                     </div>
-                    <div class="uw-req-row ${metMatches ? 'met' : 'failed'}">
-                        <span>Play 100 Matches</span>
-                        <span>${pMatches} / ${reqMatches}</span>
-                    </div>
-                    <div class="uw-req-row ${metCoins ? 'met' : 'failed'}">
-                        <span>Hold 15,000 PC</span>
-                        <span>${pCoins} / ${reqCoins}</span>
-                    </div>
+                    ${charHtml}
                 </div>
             `;
         } else {
             content.innerHTML = `
-                <div style="font-size: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px #c9a227);">♠</div>
-                <p class="blurb" style="text-align:center; color: var(--brass-bright); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Welcome to the Syndicate. Here, you put your own PC on the line. Winner takes all.</p>
-                <div style="margin-top:clamp(12px, 3vh, 24px); width: 100%; max-width: 320px; display:flex; flex-direction:column; gap:clamp(8px, 2vh, 16px);">
-                    <button class="btn" style="background: linear-gradient(180deg, #e8c454, #c9a227); border-color: #f5dd8a; color: #150c12; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 500 PC</button>
-                    <button class="btn" style="background: linear-gradient(180deg, #c9a227, #8a6a1c); border-color: #e8c454; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 2,500 PC</button>
-                    <button class="btn" style="background: linear-gradient(180deg, #7a1f2e, #4a0f19); border-color: #c23b4a; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 20px rgba(194,59,74,0.6);" onclick="showSystemToast('High Stakes tables opening soon!')">ALL IN</button>
+                <div class="syn-split-layout">
+                    <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                        <div style="font-size: clamp(36px, 8vh, 56px); margin-bottom: clamp(4px, 1vh, 10px); filter: drop-shadow(0 0 20px #c9a227);">♠</div>
+                        <p class="blurb" style="color: var(--brass-bright); max-width: 400px; font-size: clamp(11px, 2.5vh, 14px); line-height: 1.4; margin-top: 0;">Welcome to the Syndicate. Here, you put your own PC on the line. Winner takes all.</p>
+                        <div style="margin-top:clamp(12px, 3vh, 24px); width: 100%; max-width: 320px; display:flex; flex-direction:column; gap:clamp(8px, 2vh, 16px);">
+                            <button class="btn" style="background: linear-gradient(180deg, #e8c454, #c9a227); border-color: #f5dd8a; color: #150c12; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 500 PC</button>
+                            <button class="btn" style="background: linear-gradient(180deg, #c9a227, #8a6a1c); border-color: #e8c454; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 1px;" onclick="showSystemToast('High Stakes tables opening soon!')">Bet 2,500 PC</button>
+                            <button class="btn" style="background: linear-gradient(180deg, #7a1f2e, #4a0f19); border-color: #c23b4a; color: #fff; padding: clamp(12px, 3vh, 18px); font-size:clamp(13px, 3vh, 16px); font-weight: 900; letter-spacing: 2px; box-shadow: 0 0 20px rgba(194,59,74,0.6);" onclick="showSystemToast('High Stakes tables opening soon!')">ALL IN</button>
+                        </div>
+                    </div>
+                    ${charHtml}
                 </div>
             `;
-        }
+    }
 }
 </script>
 
@@ -5957,9 +6022,13 @@ window.isInteractiveTutorial = false;
 let tutStep = 0;
 
 const tutScript = [
-    { target: null, text: "Welcome to <b>Deck of Deception</b>! Match numbers, manage your coins, and survive the bluffing.", btn: "Start →" },
+    {
+    target: null,
+    text: "<b>Welcome to Deck of Deception.</b><br><br>An <b>online multiplayer bluffing game</b> where you play live, talk with <b>voice chat</b>, and never know who you can trust.<br><br>Play your cards, manage your coins, question the claims, and survive the deception.",
+    btn: "Enter the Game →"
+},
     { target: 'hand-wrap', action: 'rig_initial', text: "The table needs a <b>7</b>. You have one in your hand. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
-    { target: 'actionbar', text: "🔥 <b>+1 Coin!</b> Now tap a number on the pad. That is the number the next player must match.", wait: 'called_number', arrow: 'top' },
+    { target: 'actionbar', text: "now you get <b>+1 Coin!</b> Now tap a number on the pad. That is the number the next player must match.", wait: 'called_number', arrow: 'top' },
     { target: 'ringCenter', text: "The card you played is on the left. The number you called is on the right.", btn: "Got it" },
     { target: 'seat-0', text: "This is you! Your <b>Coins (PC)</b> and your card count are shown here. If you have no matching card, you can buy one for 2 coins. <b>Running out of coins means big trouble!</b>", btn: "Next" },
     { target: 'deckpile', text: "This is the <b>Market Deck</b>. If you don't have a matching card, you must buy one from here.", btn: "Next" },
@@ -5968,13 +6037,13 @@ const tutScript = [
 // MATCH UI EXPLANATION
 // ─────────────────────────────────────────────
 
-{ target: 'log', text: "💬 This is the <b>match activity box</b>. It shows everything happening at the table, like players playing cards, calling numbers, buying from the market, and Deception events.", btn: "Next" },
+{ target: 'log', text: "This is the <b>match activity box</b>. It shows everything happening at the table, like players playing cards, calling numbers, buying from the market, and Deception events.", btn: "Next" },
 
-{ target: 'turnIndicator', text: "⏱️ This is the <b>turn timer</b>. Every player normally gets <b>30 seconds</b> to finish their turn. If the timer hits 0, that player loses <b>2 coins</b> and their turn is skipped.<br><br><b>This timer is paused during the tutorial</b>, so take your time.", btn: "Next" },
+{ target: 'turnIndicator', text: "This is the <b>turn timer</b>. Every player normally gets <b>30 seconds</b> to finish their turn. If the timer hits 0, that player loses <b>2 coins</b> and their turn is skipped.<br><br><b>This timer is paused during the tutorial</b>, so take your time.", btn: "Next" },
 
-{ target: 'timerDisplay', text: "🕐 This is the <b>match timer</b>. A normal match lasts up to <b>20 minutes</b>. When time runs out, the match ends and the winner is decided by final scores.<br><br><b>This timer is also paused during the tutorial.</b>", btn: "Next" },
+{ target: 'timerDisplay', text: "This is the <b>match timer</b>. A normal match lasts up to <b>20 minutes</b>. When time runs out, the match ends and the winner is decided by final scores.<br><br><b>This timer is also paused during the tutorial.</b>", btn: "Next" },
 
-{ target: 'chainBox', text: "🏆 This is your <b>score</b>. Your score is simply the <b>Pixel Coins (PC) you have left</b>. Playing cards can earn you coins. Buying cards or using abilities can cost coins. Manage your coins carefully!", btn: "Next" },
+{ target: 'chainBox', text: "This is your <b>score</b>. Your score is simply the <b>Pixel Coins (PC) you have left</b>. Playing cards can earn you coins. Buying cards or using abilities can cost coins. Manage your coins carefully!", btn: "Next" },
 
 { hidden: true, action: 'rig_number_bots', wait: 'player_turn', unfreeze: true },
     
@@ -5983,22 +6052,22 @@ const tutScript = [
     { target: 'actionbar', text: "Wild Swap played! Now tap a number to set what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
-    { target: 'hand-wrap', action: 'rig_power', text: "⚡ <b>Power Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_power', text: "<b>Power Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
     { target: 'tableRing', text: "Now <b>tap any bot</b> at the table to drain their coins into the bank!", wait: 'played_power', highlightBots: true },
     { target: 'actionbar', text: "Power used! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
-    { target: 'hand-wrap', action: 'rig_steal', text: "💰 <b>Steal Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_steal', text: "<b>Steal Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
     { target: 'tableRing', text: "Now <b>tap any bot</b> to steal their coins straight into your own pocket!", wait: 'played_steal', highlightBots: true },
     { target: 'actionbar', text: "Coins stolen! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
 
     // Insurance Card
-    { target: 'hand-wrap', action: 'rig_insurance', text: "🛡️ <b>Insurance Card!</b> It's free and matches any number.<br><br>It lets you <b>skip your turn safely</b> without playing a number card. If you're forced to buy cards, it can also let you safely discard one you don't need.<br><br><b>Tap it to use Insurance!</b>", wait: 'played_insurance', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_insurance', text: "<b>Insurance Card!</b> It's free and matches any number.<br><br>It lets you <b>skip your turn safely</b> without playing a number card. If you're forced to buy cards, it can also let you safely discard one you don't need.<br><br><b>Tap it to use Insurance!</b>", wait: 'played_insurance', arrow: 'bottom' },
     { hidden: true, wait: 'player_turn' },
 
     // Reverse Card
-    { target: 'hand-wrap', action: 'rig_reverse', text: "↩️ <b>Reverse Card!</b> It's free and matches any number. It reverses the turn direction. Tap it to play!", wait: 'played_reverse', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_reverse', text: "<b>Reverse Card!</b> It's free and matches any number. It reverses the turn direction. Tap it to play!", wait: 'played_reverse', arrow: 'bottom' },
     { target: 'actionbar', text: "Direction flipped! Call your next number.", wait: 'called_number', arrow: 'top' },
 
 // Empty Hand / Forced Buy
@@ -6007,7 +6076,7 @@ const tutScript = [
     { hidden: true, wait: 'player_turn' },
 
     // Deception Pre-amble (Demonstrating Broke bots)
-    { target: null, text: "💀 <b>Deception Showdown!</b> When a player has 0 coins and no matching card, their turn is skipped. If they are still stuck on their <i>next</i> turn too, Deception begins!", btn: "Next" },
+    { target: null, text: "<b>Deception Showdown!</b> When a player has 0 coins and no matching card, their turn is skipped. If they are still stuck on their <i>next</i> turn too, Deception begins!", btn: "Next" },
     { target: null, action: 'rig_bots_0_coins', text: "I'm going to set every bot's coins to 0. Watch their turns get skipped!<br><br>Then <b>play a card</b>. If you don't have a match, buy one from the market.", btn: "Let's Go!" },
     { hidden: true, wait: 'player_turn', unfreeze: true }, // Bots skip turn 1.
     { target: 'hand-wrap', action: 'rig_dynamic_match', text: "The bots skipped their turns. I gave you a matching card. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
@@ -6016,9 +6085,9 @@ const tutScript = [
     
     // Deception Showdown - Rich Side
     { target: null, text: "Deception triggered! <b>You have coins, so you set the trap.</b>", btn: "Start →" },
-    { target: 'deceptionContent', action: 'unlock_voting', text: "Welcome to the <b>Rich Player View</b>. 💎 <b>Pick a secret Real Number</b> from 1 to 9. Only players with coins get to know this number. Broke players must guess it. A wrong guess means <b>elimination!</b>", wait: 'voted_real' },
+    { target: 'deceptionContent', action: 'unlock_voting', text: "Welcome to the <b>Rich Player View</b>. <b>Pick a secret Real Number</b> from 1 to 9. Only players with coins get to know this number. Broke players must guess it. A wrong guess means <b>elimination!</b>", wait: 'voted_real' },
     { target: 'deceptionContent', action: 'advance_to_claim', text: "Real number locked in! Now pick the <b>Claim</b>, the number you tell the broke players. You can be honest or bluff, it's your choice!", wait: 'voted_claim' },
-    { target: 'deceptionContent', action: 'setup_bots_mock', text: "👀 Bots are guessing. <b>2 believe your claim</b> and gain +15 coins each. <b>1 calls your bluff</b>, guesses wrong, and gets <b>ELIMINATED!</b>", btn: "Watch →" },
+    { target: 'deceptionContent', action: 'setup_bots_mock', text: "Bots are guessing. <b>2 believe your claim</b> and gain +15 coins each. <b>1 calls your bluff</b>, guesses wrong, and gets <b>ELIMINATED!</b>", btn: "Watch →" },
     { hidden: true, action: 'release_bots_mock', wait: 'broke_demo_player_turn' },
 
     // After the rich-side Deception and elimination cinematic,
@@ -6031,9 +6100,9 @@ const tutScript = [
     { hidden: true, wait: 'broke_demo_deception' },
 
     // This is now the REAL broke-player Deception UI.
-    { target: 'deceptionContent', action: 'unlock_broke', text: "💸 <b>Who do you believe?</b><br><br>Rich players may make different claims. Each button shows <b>who made the claim</b> and <b>what number they claimed</b>.<br><br>You can also pick <b>I don't believe any of them</b>.", wait: 'clicked_believe', arrow: 'top' },
+    { target: 'deceptionContent', action: 'unlock_broke', text: "<b>Who do you believe?</b><br><br>Rich players may make different claims. Each button shows <b>who made the claim</b> and <b>what number they claimed</b>.<br><br>You can also pick <b>I don't believe any of them</b>.", wait: 'clicked_believe', arrow: 'top' },
 
-    { target: null, action: 'force_wrong_elimination', text: "💥 <b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk and high reward. Guess right and you gain +15 coins. Guess wrong and you're eliminated instantly.<br><br>⏳ If the match reaches the <b>20 minute limit</b>, the winner is the player with <b>more coins and fewer cards</b>.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
+    { target: null, action: 'force_wrong_elimination', text: "<b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk and high reward. Guess right and you gain +15 coins. Guess wrong and you're eliminated instantly.<br><br>If the match reaches the <b>20 minute limit</b>, the winner is the player with <b>more coins and fewer cards</b>.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
     { target: null, action: 'tutorial_end_leave_game', text: "", btn: "" }
 ];
 
@@ -6338,7 +6407,10 @@ if (step.wait === 'broke_demo_deception') {
                 if (i < bUids.length - 1) {
                     state.deception.responses[uid] = { believe:true, guess:null };
                 } else {
-                    state.deception.responses[uid] = { believe:false, guess: cNum === 5 ? 7 : 5 };
+                    state.deception.responses[uid] = {
+    believe: false,
+    guess: null
+};
                 }
             });
             document.getElementById('deceptionContent').style.pointerEvents = 'none';
@@ -6548,7 +6620,7 @@ you._tutorialBrokeDemoPending = true;
     tutText.style.fontSize   = '13.5px';
     if (tutBtn) { tutBtn.style.marginTop=''; tutBtn.style.flexShrink=''; tutBtn.style.padding=''; }
 
-    if (isCenterLarge) {
+    if (isCenterLarge && step.action !== 'rig_insurance') {
 
     // Normal large tutorial cards stay at the bottom.
     // BUT the final broke-player Deception explanation must
@@ -6599,20 +6671,31 @@ you._tutorialBrokeDemoPending = true;
         }
     }
     } else if (step.action === 'rig_insurance') {
-        // Insurance card is in the player's hand near the bottom.
-        // Keep the tutorial box fully inside the screen instead of
-        // positioning it above the hand where it can be clipped.
-        diag.style.width    = '90%';
-        diag.style.maxWidth = '500px';
-        diag.style.top      = '10px';
-        diag.style.bottom   = 'auto';
-        diag.style.left     = '50%';
-        diag.style.right    = 'auto';
-        diag.style.transform = 'translateX(-50%)';
+    // INSURANCE CARD:
+    // Move the tutorial dialogue to the LEFT side.
+    // The player's hand is on the right, so this keeps
+    // the tutorial completely away from the hand.
+    diag.style.width     = '340px';
+    diag.style.maxWidth  = '340px';
+    diag.style.top       = '12px';
+    diag.style.bottom    = 'auto';
+    diag.style.left      = '18px';
+    diag.style.right     = 'auto';
+    diag.style.transform = 'none';
 
-        if (isLandscape) {
-            diag.style.maxWidth = '560px';
-        }
+    // Compact text so the tutorial remains clean.
+    tutText.style.fontSize = '12px';
+    tutText.style.lineHeight = '1.4';
+
+    if (tutBtn) {
+        tutBtn.style.padding = '7px 0';
+    }
+
+    // Smaller landscape screens.
+    if (isLandscape && window.innerWidth < 1100) {
+        diag.style.width = '310px';
+        diag.style.maxWidth = '310px';
+    }
 
     } else if (step.target === 'tableRing') {
         // SPECIAL CASE: Move Dialogue Box to the right side of the screen so it doesn't get cut off!
@@ -6737,17 +6820,26 @@ const menuTutScript = [
     { target: 'navBtnLeaderboard', text: "This is the <b>Top 100</b> leaderboard. See how the best players in the game rank against each other.", btn: "Next", arrow: 'bottom' },
     { target: 'hubCurrencyBadge', text: "These are your <b>coins</b>. Pixel Coins (PC) are free and used for everyday purchases. Syndicate Chips (SC) are a premium currency for special items.", btn: "Next", arrow: 'top' },
     { target: 'squadFriendsPanel', text: "This is your <b>Friends list</b>. Tap <b>+ Add</b> and search by a player's <b>name</b> or their <b>ID number</b> to send a friend request.", btn: "Next", arrow: 'top' },
-    { target: 'customSquadSelect', text: "Pick how many players you want in your match here.", btn: "Next", arrow: 'bottom' },
+    // Player count is intentionally explained immediately before PLAY.
     { target: 'squadProfileWidget', text: "This is your <b>profile</b>. Tap it any time to see your stats, and to customize your avatar, frame, and title.", btn: "Next", arrow: 'top' },
     { target: 'navBtnSyndicate', text: "The <b>Syndicate</b> is invite-only. Reach the <b>Oracle</b> tier and meet a few special requirements, and you'll be invited to play in it. Season 1's Oracle players get invited into Season 2's Syndicate, and so on each season.", btn: "Next", arrow: 'bottom' },
     { target: 'menuFsToggleBtn', text: "This toggles <b>Fullscreen</b>. Playing in fullscreen gives you the best, most immersive view of the table.", btn: "Next", arrow: 'top' },
-    { target: 'squadPlayBtn', text: "And finally, tap <b>PLAY</b> to start matchmaking. The game searches for other active players online and adds them to your match.", btn: "Got it!", arrow: 'bottom' }
+{ target: 'customSquadSelect', text: "Choose how many players you want in your match. Pick the table size that suits you before you start matchmaking.", btn: "Next", arrow: 'bottom' },
+{ target: 'squadPlayBtn', text: "And finally, tap <b>PLAY</b> to start matchmaking. The game searches for other active players online and adds them to your match.", btn: "Got it!", arrow: 'bottom' }
 ];
 
 function startMenuTutorial() {
     if (window.isMenuTutorialActive) return;
     window.isMenuTutorialActive = true;
-    menuTutStep = 0;
+menuTutStep = 0;
+
+// Lock the entire main menu during the walkthrough.
+// The tutorial dialogue itself is outside #menu, so its
+// Next button remains clickable.
+const menuTutorialRoot = document.getElementById('menu');
+if (menuTutorialRoot) {
+    menuTutorialRoot.classList.add('menu-tutorial-locked');
+}
 
     // Same stacking-context escape trick openTutorial() uses, so the
     // spotlight/arrow always render above every menu screen.
@@ -6829,7 +6921,14 @@ function endMenuTutorial() {
     try { sfx.uiClick(); } catch(e){}
     localStorage.setItem('dod_seen_menu_tutorial', '1');
     window.isMenuTutorialActive = false;
-    document.getElementById('tutOverlay').style.display = 'none';
+
+// Restore normal menu interaction after the tutorial finishes.
+const menuTutorialRoot = document.getElementById('menu');
+if (menuTutorialRoot) {
+    menuTutorialRoot.classList.remove('menu-tutorial-locked');
+}
+
+document.getElementById('tutOverlay').style.display = 'none';
     document.getElementById('tutOverlay').classList.remove('spotlight-active');
     document.getElementById('tutDialogue').style.display = 'none';
     document.getElementById('tutSpotlight').className = '';
@@ -13564,7 +13663,9 @@ function showEliminationCinematic(deadPlayersData, realNumber, isBankrupt, onCom
         detailsHtml = deadPlayersData.map(p => `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>Bankrupt with no cards left.`).join('<div style="height:10px;"></div>');
     } else {
         detailsHtml = `<div style="color:var(--danger-bright); font-size:clamp(14px, 3vh, 16px); margin-bottom:clamp(10px, 3vh, 20px); font-weight:bold;">The Real Number was <span style="font-size:clamp(20px, 5vh, 24px); color:#fff;">${realNumber}</span></div>`;
-        detailsHtml += deadPlayersData.map(p => `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>Guessed: ${p.guess}`).join('<div style="height:10px;"></div>');
+        detailsHtml += deadPlayersData.map(p =>
+    `<b style="color:var(--brass-bright); font-size:clamp(16px, 4vh, 24px);">${p.name}</b><br>Didn't believe the claim`
+).join('<div style="height:10px;"></div>');
     }
 
     details.innerHTML = detailsHtml;
