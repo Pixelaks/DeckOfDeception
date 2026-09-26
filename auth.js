@@ -17,6 +17,17 @@ firebase.initializeApp(firebaseConfig);
 const dodAuth = firebase.auth();
 const dodDb = firebase.firestore();
 
+// CrazyGames forbids third-party OAuth popups (and their sandboxed iframe
+// blocks Google's popup anyway), so on CrazyGames show a CrazyGames button
+// instead of Google. Guest stays available on both, as required.
+(function _dodApplyPlatformAuthUI(){
+  const isCG = window.DOD_PLATFORM === 'crazygames';
+  const btnG  = document.getElementById('btnGoogleLogin');
+  const btnCG = document.getElementById('btnCrazyGamesLogin');
+  if(btnG)  btnG.style.display  = isCG ? 'none' : '';
+  if(btnCG) btnCG.style.display = isCG ? '' : 'none';
+})();
+
 // Enable PWA Offline Persistence
 dodDb.enablePersistence({ synchronizeTabs: true })
   .catch(function(err) {
@@ -75,8 +86,9 @@ function _dodReadLocalLegacyProgress(){
 
 dodAuth.onAuthStateChanged(function(user){
   if(!user){
-    // If no user, show login/signup choice modal instead of forcing anonymous instantly
-    dodShowLoginModal();
+    // On CrazyGames, check if the player is already logged into their
+    // CrazyGames account before ever showing a login modal.
+    dodAttemptCrazyGamesAutoSignIn();
     return;
   }
   const uid = user.uid;
@@ -134,6 +146,68 @@ dodAuth.onAuthStateChanged(function(user){
     console.error('Profile load failed:', err);
   });
 });
+
+// Silent CrazyGames sign-in at boot. Falls back to the modal if the SDK
+// isn't ready, isn't available on this domain, or the player isn't logged
+// into CrazyGames.
+function dodAttemptCrazyGamesAutoSignIn(){
+  if(window.DOD_PLATFORM !== 'crazygames' || !window.CrazyGames || !window.CrazyGames.SDK){
+    dodShowLoginModal();
+    return;
+  }
+  if(!window.DOD_CG_SDK_READY){
+    setTimeout(dodAttemptCrazyGamesAutoSignIn, 150);
+    return;
+  }
+  if(!window.CrazyGames.SDK.user.isUserAccountAvailable){
+    dodShowLoginModal(); // embedded on a partner domain — behave like normal web
+    return;
+  }
+  window.CrazyGames.SDK.user.getUser().then(function(cgUser){
+    if(cgUser){
+      dodSignInWithCrazyGamesToken(); // already logged in — no modal needed
+    } else {
+      dodShowLoginModal();
+    }
+  }).catch(function(err){
+    console.warn('[DoD] CrazyGames getUser failed:', err);
+    dodShowLoginModal();
+  });
+}
+
+// Exchanges the CrazyGames token for a Firebase custom token via your
+// backend (which verifies the signature and mints it), then signs in.
+// This is what ties progress to the CrazyGames account, not the device.
+function dodSignInWithCrazyGamesToken(){
+  return window.CrazyGames.SDK.user.getUserToken().then(function(cgToken){
+    return fetch('https://cold-night-0cc8.aksgames03.workers.dev/api/auth/crazyGames', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cgToken: cgToken })
+    });
+  }).then(function(resp){ return resp.json(); })
+  .then(function(data){
+    if(!data.firebaseToken) throw new Error(data.error || 'No firebase token returned');
+    return dodAuth.signInWithCustomToken(data.firebaseToken);
+  }).catch(function(err){
+    console.error('[DoD] CrazyGames sign-in failed:', err);
+    dodShowLoginModal();
+    if (typeof resetAuthButtons === 'function') resetAuthButtons();
+  });
+}
+
+// "Sign in with CrazyGames" button — opens CrazyGames' own auth popup
+// (safe inside their iframe) then runs the same token exchange as above.
+function dodSignInWithCrazyGames(){
+  _dodInteractiveSignIn = true;
+  return window.CrazyGames.SDK.user.showAuthPrompt().then(function(){
+    return dodSignInWithCrazyGamesToken();
+  }).catch(function(err){
+    console.error('CrazyGames Sign-In Error:', err);
+    _dodInteractiveSignIn = false;
+    if (typeof resetAuthButtons === 'function') resetAuthButtons();
+  });
+}
 
 function dodSignInWithGoogle() {
   const provider = new firebase.auth.GoogleAuthProvider();
@@ -264,11 +338,29 @@ function dodSyncCurrencyToProfile(newAmount){
   dodDb.collection('users').doc(_dodProfile.uid).update({ currency: newAmount }).catch(function(){});
 }
 
+// Catches a CrazyGames login that happens mid-session (e.g. logged in via
+// CrazyGames' own UI in another tab) and upgrades a Guest session. Logging
+// OUT of CrazyGames does NOT fire this — CG reloads the whole page instead.
+function _dodRegisterCrazyGamesAuthListener(){
+  if(window.DOD_PLATFORM !== 'crazygames') return;
+  if(!window.DOD_CG_SDK_READY || !window.CrazyGames || !window.CrazyGames.SDK){
+    setTimeout(_dodRegisterCrazyGamesAuthListener, 150);
+    return;
+  }
+  window.CrazyGames.SDK.user.addAuthListener(function(cgUser){
+    if(cgUser && (!dodAuth.currentUser || dodAuth.currentUser.isAnonymous)){
+      dodSignInWithCrazyGamesToken();
+    }
+  });
+}
+_dodRegisterCrazyGamesAuthListener();
+
 window.DoDAuth = {
   onProfileReady: dodOnProfileReady,
   getProfile: function(){ return _dodProfile; },
   submitName: dodSubmitName,
   signInWithGoogle: dodSignInWithGoogle,
+  signInWithCrazyGames: dodSignInWithCrazyGames,
   signInAnonymously: dodSignInAnonymously,
   addGamePoints: dodAddGamePoints,
   syncCurrency: dodSyncCurrencyToProfile
