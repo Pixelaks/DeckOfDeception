@@ -13580,6 +13580,16 @@ function returnToMenuFromEndgame() {
     if (gameListenerUnsub) { try { gameListenerUnsub(); } catch(e){} gameListenerUnsub = null; }
     if (window.dodPrivUnsub) { try { window.dodPrivUnsub(); } catch(e){} window.dodPrivUnsub = null; window.dodPriv = null; window.dodPendingRawDoc = null; }
 
+    // Force-close any Deception overlay that may have been opened by a
+    // late snapshot event (e.g. other players triggering Deception while
+    // we were on the finale screen after an early/eliminated leave).
+    const _decModal = document.getElementById('deceptionModal');
+    if (_decModal) { _decModal.classList.remove('show'); }
+    const _decIntro = document.getElementById('deceptionIntroOverlay');
+    if (_decIntro) { _decIntro.style.display = 'none'; _decIntro.classList.remove('match-intro-animate'); }
+    localWasInDeception = false;
+    window.dodDeceptionIntroActive = false;
+
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     localStorage.removeItem('dod_active_match');
     
