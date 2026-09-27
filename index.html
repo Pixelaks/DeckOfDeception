@@ -1082,6 +1082,7 @@ img[src^="Coins/"] { image-rendering: high-quality; }
   filter: drop-shadow(0 4px 16px rgba(224,189,74,0.4)); animation: shimmerSweep 3s linear infinite;
 }
 .finale-status.loss { background: linear-gradient(100deg, #7a1f2e 20%, #c23b4a 45%, #7a1f2e 60%); -webkit-background-clip: text; filter: drop-shadow(0 4px 16px rgba(194,59,74,0.4)); }
+.finale-status.draw { background: linear-gradient(100deg, #6b7280 20%, #d1d5db 45%, #6b7280 60%); -webkit-background-clip: text; filter: drop-shadow(0 4px 16px rgba(209,213,219,0.4)); }
 .finale-list { display: flex; flex-direction: column; gap: 10px; overflow-y: auto; flex: 1; min-height: 0; padding-right: 4px; padding-bottom: 10px; }
 .finale-list::-webkit-scrollbar { width: 4px; }
 .finale-list::-webkit-scrollbar-thumb { background: rgba(201,162,39,0.5); border-radius: 4px; }
@@ -3240,7 +3241,7 @@ window.dodImagesLoaded = false;
     'Frames/Mastermind.webp', 'Frames/Oracle.webp', 'Frames/Legend.webp'
   ];
 
-  // Note: Dynamically inject the user's equipped custom skins into the mandatory loading queue
+  //Dynamically inject the user's equipped custom skins into the mandatory loading queue
   var savedDeck = localStorage.getItem('dod_cached_deck');
   var savedTable = localStorage.getItem('dod_cached_table');
   
@@ -3304,7 +3305,7 @@ window.dodImagesLoaded = false;
           updateLoaderUI(); // ALWAYS update UI regardless of cache status
       }
 
-      // Note: Store images in a global array so mobile browsers do not Garbage Collect them before they finish loading!
+
       window._dodImageKeepAlive = [];
 
       for (var i = 0; i < srcs.length; i++) {
@@ -4349,8 +4350,11 @@ function triggerRandomRatingPopup() {
         const notInMatch = typeof currentMatchId === 'undefined' || !currentMatchId;
         const notInLobby = !lobbyView || !lobbyView.classList.contains('show');
 
-        // Only show the popup if ALL safe conditions are met
-        if (isMenuVisible && isGameHidden && isHubActive && notInMatch && notInLobby && overlay) {
+        // Only show the popup if ALL safe conditions are met,
+        // and only after the player has completed the menu tutorial
+        // (guarantees they've finished at least one real online match first).
+        const menuTutorialDone = !!localStorage.getItem('dod_seen_menu_tutorial');
+        if (isMenuVisible && isGameHidden && isHubActive && notInMatch && notInLobby && menuTutorialDone && overlay) {
             overlay.classList.add('show');
         }
     }, delay);
@@ -4494,7 +4498,7 @@ function playSeasonCinematic(onComplete) {
             setTimeout(() => {
                 overlay.style.display = 'none';
                 
-                // Note: If triggered manually from the menu, forcefully restore the hub music!
+                //If triggered manually from the menu, forcefully restore the hub music!
                 if (onComplete) {
                     onComplete();
                 } else {
@@ -4678,49 +4682,46 @@ async function submitUniqueNameWithId() {
     let myUid = null;
 
     try {
-        const snapshot = await db.collection('users').where('displayName', '==', rawName).limit(1).get();
-        if (!snapshot.empty) {
-            errorEl.textContent = "This name is already taken! Try another.";
-            errorEl.style.display = "block";
-            btn.disabled = false;
-            return;
-        }
-    } catch (e) {
-        console.error("FAILED ON UNIQUENESS QUERY:", e);
-        errorEl.textContent = "Error saving name. Try again.";
-        errorEl.style.display = "block";
-        btn.disabled = false;
-        return;
-    }
-
-    try {
         myUid = firebase.auth().currentUser.uid;
         const numericId = Math.floor(100000 + Math.random() * 900000).toString();
+        const nameRef = db.collection('usernames').doc(rawName);
+        const userRef = db.collection('users').doc(myUid);
 
-        // 1. Read the user document to see if they already exist
-        const userDoc = await db.collection('users').doc(myUid).get();
-        const isFirstTimeSetup = !userDoc.exists || !userDoc.data().displayName;
+        // Claim the name and write the profile atomically. If two players submit
+        // the same name at the same instant, Firestore forces one transaction to
+        // retry against the other's committed result, and the rules deny that
+        // retry's create once the name doc already exists.
+        await db.runTransaction(async (tx) => {
+            const nameSnap = await tx.get(nameRef);
+            if (nameSnap.exists) {
+                throw new Error('NAME_TAKEN');
+            }
 
-        // 2. Base payload: Only update the fields that are allowed to be changed
-        const payload = {
-            displayName: rawName,
-            gameId: numericId
-        };
+            // 1. Read the user document to see if they already exist
+            const userSnap = await tx.get(userRef);
+            const isFirstTimeSetup = !userSnap.exists || !userSnap.data().displayName;
 
-        // 3. Only inject the protected stats if this is their very first time
-        if (isFirstTimeSetup) {
-            payload.rankScore = 0;
-            payload.tier = 'Apprentice';
-            payload.level = 1;
-            payload.points = 0;
-            payload.avatar = 'Apprentice';
-            payload.frame = 'Apprentice';
-            payload.deckSkin = 'cf_default';
-            payload.equippedTable = 'tb_default';
-        }
+            // 2. Base payload: Only update the fields that are allowed to be changed
+            const payload = {
+                displayName: rawName,
+                gameId: numericId
+            };
 
-        // Send the payload. The rules will now allow it because we aren't touching protected keys!
-        await db.collection('users').doc(myUid).set(payload, { merge: true });
+            // 3. Only inject the protected stats if this is their very first time
+            if (isFirstTimeSetup) {
+                payload.rankScore = 0;
+                payload.tier = 'Apprentice';
+                payload.level = 1;
+                payload.points = 0;
+                payload.avatar = 'Apprentice';
+                payload.frame = 'Apprentice';
+                payload.deckSkin = 'cf_default';
+                payload.equippedTable = 'tb_default';
+            }
+
+            tx.set(nameRef, { uid: myUid });
+            tx.set(userRef, payload, { merge: true });
+        });
 
         document.getElementById('nameSetupOverlay').classList.remove('show');
 
@@ -4730,8 +4731,12 @@ async function submitUniqueNameWithId() {
             window.location.reload();
         }
     } catch (e) {
-        console.error("FAILED ON PROFILE SET (uid:", myUid, "):", e);
-        errorEl.textContent = "Error saving name. Try again.";
+        if (e && e.message === 'NAME_TAKEN') {
+            errorEl.textContent = "This name is already taken! Try another.";
+        } else {
+            console.error("FAILED ON PROFILE SET (uid:", myUid, "):", e);
+            errorEl.textContent = "Error saving name. Try again.";
+        }
         errorEl.style.display = "block";
         btn.disabled = false;
     }
@@ -5351,7 +5356,7 @@ function patchAudioVolume(el) {
 
 // Helper to play your custom audio files seamlessly
 function playExternalSfx(elementId) {
-    if (document.hidden) return; // Note: Prevent SFX from triggering while the app is minimized
+    if (document.hidden) return; 
     
     // WAKE UP AUDIO CONTEXT: Ensure the engine is running before trying to play a sound!
     if (audioCtx && audioCtx.state === 'suspended') {
@@ -5809,7 +5814,7 @@ function proceedWithBoot(overlayEl) {
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
-    // Note: Force mobile browsers to unlock all SFX elements instantly by playing and pausing them silently on the very first screen tap!
+    //Force mobile browsers to unlock all SFX elements instantly by playing and pausing them silently on the very first screen tap!
     ['sfxClick', 'sfxPlay', 'sfxNotification', 'sfxCoins'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
@@ -5830,7 +5835,7 @@ function proceedWithBoot(overlayEl) {
         bgMusicElement.src = chosenTrack;
         bgMusicElement.load();
 
-        bgMusicElement.volume = musicVolumeSetting; // Note: Give it full requested volume!
+        bgMusicElement.volume = musicVolumeSetting; //Give it full requested volume!
         if(bgMusicElement.error){ startAmbientPad(); } 
         else {
             bgMusicElement.play().catch(() => startAmbientPad());
@@ -5890,7 +5895,7 @@ function provisionGuestProfile(targetTier = null, isOffline = false) {
     let name = "";
     
     if (isOffline) {
-        // Note: Dedicated names for offline practice so players know they are training bots
+        //Dedicated names for offline practice so players know they are training bots
         const OFFLINE_NAMES = ["Trainer_Alpha", "Trainer_Bravo", "Trainer_Charlie", "Trainer_Delta", "Trainer_Echo", "Trainer_Ghost", "Trainer_Viper", "Trainer_Striker", "Trainer_Nova", "Trainer_Omega"];
         name = OFFLINE_NAMES[Math.floor(Math.random() * OFFLINE_NAMES.length)] + "_" + Math.floor(10 + Math.random() * 90);
     } else {
@@ -5922,11 +5927,11 @@ function provisionGuestProfile(targetTier = null, isOffline = false) {
     const botDecks = ['CardstoBuy/TheBase.webp', 'CardstoBuy/CrimsonBlood.webp', 'CardstoBuy/DeepSapphire.webp'];
 
     return {
-        // Generates a fake 28-character Firebase UID with our "Qx9" stealth marker
+
         uid: Array.from({length: 25}, () => 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'.charAt(Math.floor(Math.random() * 62))).join('') + 'Qx9',
         gameId: (Math.floor(100000 + Math.random() * 900000)).toString(),
         displayName: name,
-        // SECURITY Note: 'isBot' completely removed so it never enters the database payload!
+
         tier: tier,
         level: level,
         points: points,
@@ -6068,12 +6073,12 @@ const tutScript = [
 { hidden: true, action: 'rig_number_bots', wait: 'player_turn', unfreeze: true },
     
     // Action Cards
-    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, and each one has a special ability! I've added a <b>Wild Swap</b> card to your hand. It costs 2 coins but matches ANY number. <b>Tap it to play!</b>", wait: 'played_wild', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, and each one has a special ability! I've added a <b>Wild Swap</b> card to your hand. It costs 1 coins but matches ANY number. <b>Tap it to play!</b>", wait: 'played_wild', arrow: 'bottom' },
     { target: 'actionbar', text: "Wild Swap played! Now tap a number to set what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
     { target: 'hand-wrap', action: 'rig_power', text: "<b>Power Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
-    { target: 'tableRing', text: "Now <b>tap any bot</b> at the table to drain their coins into the bank!", wait: 'played_power', highlightBots: true },
+    { target: 'tableRing', text: "Now <b>tap any bot</b> at the table to drain their coins!", wait: 'played_power', highlightBots: true },
     { target: 'actionbar', text: "Power used! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
@@ -6092,7 +6097,7 @@ const tutScript = [
 
 // Empty Hand / Forced Buy
     { hidden: true, action: 'rig_empty_hand_rich', wait: 'player_turn' },
-    { target: 'actionbar', text: "Your hand is empty! When you have no cards, or no matching card, you must buy from the market.<br><br>You can draw up to <b>3 cards per turn</b>. If you still don't get a match, draw again or tap <b>Stop here</b>. Make sure you have enough coins, or the buy button won't appear.", wait: 'forced_buy', arrow: 'top' },
+    { target: 'actionbar', text: "Your hand is empty! When you have no cards, or no matching card, you must buy from the market.<br><br>You can draw up to <b>3 cards per turn</b>. If you still don't get a match, draw again or tap <b>Stop here</b>. Make sure you have enough coins, or the buy button won't appear and your turn will be skipped.", wait: 'forced_buy', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
 
     // Deception Pre-amble (Demonstrating Broke bots)
@@ -7123,7 +7128,7 @@ if(window.DoDAuth){
         }
     };
 
-    // Note: Show Season 1 Cinematic or Tutorial ONLY after successful sign-in!
+    //Show Season 1 Cinematic or Tutorial ONLY after successful sign-in!
             if (!localStorage.getItem('dod_seen_tutorial')) {
                 setTimeout(() => {
                     openTutorial(false);
@@ -7516,7 +7521,7 @@ function makeDeck(){
   
   const addAction = (type, count, tier) => {
     for(let i=0;i<count;i++) {
-        // Note: Special cards do not need numbers! Leaving value blank.
+        //Special cards do not need numbers! Leaving value blank.
         let card = { type: type, value: '' }; 
         if (tier !== undefined) {
             card.tier = tier;
@@ -7910,7 +7915,7 @@ function startGame() {
             const myUid = DoDAuth.getProfile().uid;
             const isHost = window.onlineMatchSeats[0].uid === myUid;
 
-            // Note: PRE-RENDER TABLE INSTANTLY!
+            //PRE-RENDER TABLE INSTANTLY!
             // This ensures Android players don't stare at an empty green screen while waiting for the network to fetch the Firestore game state.
             const myIndex = window.onlineMatchSeats.findIndex(p => p.uid === myUid);
             const orderedSeats = [
@@ -7953,7 +7958,7 @@ function startGame() {
             const fast = document.getElementById('fastTest') && document.getElementById('fastTest').checked;
             const count = menuState.count || 4;
             
-            // Note: Safely fallback if profile is not loaded yet on mobile
+            //Safely fallback if profile is not loaded yet on mobile
             const profile = (window.DoDAuth && typeof DoDAuth.getProfile === 'function') ? DoDAuth.getProfile() : null;
             const eqCardId = profile ? (profile.equippedFace || profile.equippedCard || 'cf_default') : 'cf_default';
             const eqCardDef = (typeof SHOP_DB !== 'undefined' && SHOP_DB.cardFaces) ? SHOP_DB.cardFaces.find(c => c.id === eqCardId) : null;
@@ -7973,7 +7978,7 @@ function startGame() {
             }];
             
             for (let i = 0; i < count - 1; i++) {
-                // Note: Pass 'true' to trigger the dedicated offline Trainer names!
+                //Pass 'true' to trigger the dedicated offline Trainer names!
                 // Uses the safe 'myTier' variable so the game doesn't crash for guests!
                 const guestData = provisionGuestProfile(myTier, true);
                 PLAYER_COLORS.push(GUEST_COLOR_POOL[i % GUEST_COLOR_POOL.length]);
@@ -7987,7 +7992,7 @@ function startGame() {
             let deck = makeDeck();
             players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
 
-            // Note: Added gameExpiresAt so the timer doesn't instantly end the game offline!
+            //Added gameExpiresAt so the timer doesn't instantly end the game offline!
             state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
                       buyLoop:null, uiState: 'IDLE', deception: null, turnTimeLeft: 30,
@@ -8015,7 +8020,7 @@ function startGame() {
             renderAll();
             dealAnimation();
 
-            // Note: If Interactive Tutorial is active, RIG the game state!
+            //If Interactive Tutorial is active, RIG the game state!
             if (window.isInteractiveTutorial) {
                 state.requiredValue = 7;
                 state.lastEffectiveValue = 5;
@@ -8151,7 +8156,7 @@ function listenToGameState() {
         window.dodRunMatchCb = dodMatchCb;
         const doc = dodMergePrivate(rawDoc, myUid);
         if (!doc) return; // waiting for our private data to catch up with this update
-        if (!doc.exists) return; // Note: Prevent the entire renderer from crashing if the match drops mid-load
+        if (!doc.exists) return; //Prevent the entire renderer from crashing if the match drops mid-load
         const data = doc.data();
         if (!data || !data.gameState) return; 
 
@@ -8178,7 +8183,7 @@ function listenToGameState() {
             ...serverState.players.slice(0, myIndex)
         ];
 
-        // Note: Preserve visual coin counts if a bot multi-draw animation is actively running
+        //Preserve visual coin counts if a bot multi-draw animation is actively running
         // so that incoming network snapshots don't instantly snap the coins to the final value!
         if (window.animatingRemoteCoins) {
             orderedPlayers.forEach(p => {
@@ -8240,7 +8245,7 @@ function listenToGameState() {
             if (state.turnUid === mappedTurnUid) {
                 preservedBuyLoop = state.buyLoop;
 
-                // Note: buyLoop.buyer was captured from the PREVIOUS state.players array.
+                //buyLoop.buyer was captured from the PREVIOUS state.players array.
                 // orderedPlayers below is a brand new set of objects rebuilt from this
                 // snapshot, so without re-pointing this reference, any further coin
                 // deductions or card draws during retry #2/#3 land on an orphaned object
@@ -8253,7 +8258,7 @@ function listenToGameState() {
             }
         }
 
-        // Note: derive the remaining time from a fixed start timestamp so refreshing/reconnecting
+        //derive the remaining time from a fixed start timestamp so refreshing/reconnecting
         // never resets the clock back to the full duration.
         const durationSec = serverState.durationSec || GAME_DURATION_SEC;
         const elapsedSec = serverState.startedAtMs ? Math.floor((Date.now() - serverState.startedAtMs) / 1000) : 0;
@@ -8376,7 +8381,7 @@ function listenToGameState() {
                 }
             }
             
-            // Note: If this is our own optimistic action, we already animated it locally! 
+            //If this is our own optimistic action, we already animated it locally! 
             // Do not lock the turn arrow or block the host bot trigger waiting for an animation.
             if (serverState.lastAction.uid === myUid && window.dodJustPlayedLocally) {
                 willAnimateAction = false;
@@ -8405,7 +8410,7 @@ function listenToGameState() {
             if (fromIdx !== -1 && toIdx !== -1 && localLastTurnUid !== null) {
                 if (!window.dodJustPassedTurnLocally) {
                     if (willAnimateAction) {
-                        // FIX: Store the turn arc to execute LATER once the card finishes flying
+                        //Store the turn arc to execute LATER once the card finishes flying
                         window.pendingTurnArc = { from: fromIdx, to: toIdx, dir: serverState.direction };
                         window.dodTurnLocked = true; 
                         
@@ -8594,7 +8599,7 @@ function tick() {
     // --- HOST MIGRATION & DISCONNECT MONITOR ---
     if (currentMatchId && state.presence) {
         const myUid = DoDAuth.getProfile().uid;
-        // Note: Evaluate the ping against Firebase's synced clock, bypassing local device clock skew
+        //Evaluate the ping against Firebase's synced clock, bypassing local device clock skew
         const nowMs = firebase.firestore.Timestamp.now().toMillis();
         const seats = window.onlineMatchSeats || [];
         const hostUid = seats.length > 0 ? seats[0].uid : null;
@@ -8733,9 +8738,9 @@ async function handleTurnTimeout() {
     
     const curPlayer = state.players[state.turn];
     const isOnline = !!currentMatchId;
-    const wasChoosingCall = state.uiState === 'CHOOSE_CALL'; // Note: Remember WHY they timed out before we overwrite uiState
+    const wasChoosingCall = state.uiState === 'CHOOSE_CALL'; //Remember WHY they timed out before we overwrite uiState
 
-    // Note: Instantly lock the UI for EVERYONE at 0 seconds. 
+    //Instantly lock the UI for EVERYONE at 0 seconds. 
     // This prevents panicked players from clicking a card right as the server skips their turn!
     state.uiState = 'ANIMATING';
     renderActionBar();
@@ -8890,8 +8895,8 @@ function eliminate(p, reason, skipCinematic = false){
 function sweepEliminations(){
   if(!state) return;
   if(state.over) return;
-  if(window.isInteractiveTutorial) return; // FIX: Prevent the game from auto-eliminating players/bots during rigged tutorial steps!
-  if(currentMatchId) return; // Note: In online mode, the Host and Server exclusively dictate eliminations to prevent desyncs!
+  if(window.isInteractiveTutorial) return; 
+  if(currentMatchId) return; //In online mode, the Host and Server exclusively dictate eliminations to prevent desyncs!
   state.players.forEach(p=>{ 
       if(!p.out && p.shop<=0 && p.hand.length===0) {
           eliminate(p, "Shop and hand empty.");
@@ -8965,7 +8970,7 @@ function bankRect(){ return document.getElementById('deckpile').getBoundingClien
 
 function getSeatOrPanelRect(id) {
     if (id === 0) {
-        // Note: If drawing a card, force the hand to render instantly so the new card slot exists in the DOM.
+        //If drawing a card, force the hand to render instantly so the new card slot exists in the DOM.
         // This ensures the flying ghost card has the exact pixel-perfect destination to land on!
         if (typeof state !== 'undefined' && state && state.uiState === 'RESOLVING_BUY') {
             if (typeof renderHand === 'function') renderHand();
@@ -9201,7 +9206,7 @@ function spawnSpecialGameVFX(type, x, y) {
 function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, actionTargetRect=null){
   sfx.card();
 
-  // Note: Safely convert old database strings during animations
+  
   if (label === 'POWER') label = 'PWR';
   if (label === 'WILD') label = 'W';
   if (label === 'STEAL') label = 'STL';
@@ -9242,7 +9247,7 @@ function flyCard(srcRect,dstRect,label,color,burstSize,val='', bgSkin=null, acti
       let cornerHtml = val !== '' ? `<div class="act-val">${val}</div><div class="act-val-right">${val}</div>` : '';
       let innerContent = "";
 
-      // Note: Ensure no corner HTML or inner content is applied to flying Special Cards!
+      //Ensure no corner HTML or inner content is applied to flying Special Cards!
       if (['W', 'REV', 'INS'].includes(label)) { innerContent = ''; }
       else if (label === 'STL') { 
           let tBadge = '';
@@ -9391,7 +9396,7 @@ function animateTurnArc(fromIdx, toIdx, dir) {
     let a1 = Math.PI/2 + (2*Math.PI*fromIdx/n);
     let a2 = Math.PI/2 + (2*Math.PI*toIdx/n);
     
-    // Note: With exactly 2 players, the seats sit exactly 180° apart — a degenerate
+    //With exactly 2 players, the seats sit exactly 180° apart — a degenerate
     // case for SVG arcs where both directions can render as the same curve due to
     // floating-point precision. Nudge the endpoint a hair so "dir" always produces
     // two visually distinct curves (bowing through opposite sides of the table).
@@ -9464,7 +9469,7 @@ function renderAll(){
   if(state.over) return;
   renderDeceptionOverlay();
   
-  // Note: Force the UI to report the previous turn's text until the multi-draw animation finishes
+  //Force the UI to report the previous turn's text until the multi-draw animation finishes
   const actualTurnIdx = (window.dodTurnLocked && window.pendingTurnArc) ? window.pendingTurnArc.from : state.turn;
   const cur = state.players[actualTurnIdx];
   
@@ -9490,7 +9495,7 @@ function renderAll(){
   }
   document.getElementById('deckCount').textContent = state.deck.length;
 
-  // Note: Dynamically update the main deck's skin to match the CURRENT active player's equipped skin!
+  //Dynamically update the main deck's skin to match the CURRENT active player's equipped skin!
   const deckpileEl = document.getElementById('deckpile');
   if (deckpileEl) {
       const currentSkin = cur.deckSkin ? `url('${cur.deckSkin}')` : 'url("CardstoBuy/TheBase.webp")';
@@ -9506,7 +9511,7 @@ function renderAll(){
     if(!seat) return;
     
     const isDense = state.players.length > 8;
-    // Note: Keep the seat highlight on the current player until their animation finishes
+    //Keep the seat highlight on the current player until their animation finishes
     let classes = 'ringseat' + (isDense ? ' dense' : '') + (p.id===actualTurnIdx?' active':'') + (p.out?' out':'');
     
     const validTarget = isTargeting && p.id !== 0 && !p.out;
@@ -9592,7 +9597,7 @@ function renderAll(){
     if(state.lastPlayedCardLabel) {
        let displayLabel = state.lastPlayedCardLabel;
        
-       // Note: Safely convert old database strings so the Action Card visuals don't break
+       //Safely convert old database strings so the Action Card visuals don't break
        if (displayLabel === 'POWER') displayLabel = 'PWR';
        if (displayLabel === 'WILD') displayLabel = 'W';
        if (displayLabel === 'STEAL') displayLabel = 'STL';
@@ -9694,7 +9699,7 @@ function renderHand(){
   const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked;
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
-  // Note: Map to a visual array so we don't alter the true index required by Cloudflare!
+  //Map to a visual array so we don't alter the true index required by Cloudflare!
   let displayHand = you.hand.map((c, i) => ({ card: c, originalIdx: i }));
   if (localStorage.getItem('dod_setting_sort') === 'true') {
       displayHand.sort((a, b) => {
@@ -9716,7 +9721,7 @@ function renderHand(){
     
     const playable = handActive && state.uiState !== 'CHOOSE_CALL' && isCardMatch && !window.dodHideCalledNumber;
 
-    // Note: Only render corner numbers for actual Number cards!
+    //Only render corner numbers for actual Number cards!
     
     let html = '';
           if (c.type === 'number') {
@@ -9772,7 +9777,7 @@ function renderHand(){
             if (playableIns) el.onclick = wrapClick(() => playInsuranceFromHand(idx, el));
           }
 
-          // Note: Perfect timing sync. Hide the real card while the ghost card is flying, then flip it when it lands.
+          //Perfect timing sync. Hide the real card while the ghost card is flying, then flip it when it lands.
           const isNewlyDrawn = (state.uiState === 'RESOLVING_BUY' && idx === you.hand.length - 1);
           if (isNewlyDrawn) {
               const drawSig = state.lastAction ? state.lastAction.id : 'draw';
@@ -10016,7 +10021,7 @@ async function secureServerCall(endpoint, payload) {
         return data;
     };
 
-    // Note: Enqueue network requests so they resolve in strict order.
+    //Enqueue network requests so they resolve in strict order.
     // Prevents database race conditions where a fast "Callout" overwrites a "Play Card".
     const resultPromise = window._serverCallQueue.then(() => executeCall());
     
@@ -10035,7 +10040,7 @@ async function playNumberFromHand(idx, el) {
     const myPlayerObj = state.players.find(p => p.uid === myUid);
     const card = myPlayerObj.hand[idx];
     
-    // Note: Verify the element is actually attached and has width before trusting getBoundingClientRect()
+    //Verify the element is actually attached and has width before trusting getBoundingClientRect()
     const rect = el ? el.getBoundingClientRect() : null;
     const srcRect = (rect && rect.width > 0) ? rect : getSeatOrPanelRect(0);
     
@@ -10282,7 +10287,7 @@ function startForcedBuySelf(mode){
         setTimeout(tutNext, 600);
     }
     const you = state.players[0];
-    // Note: Both 'BUY' (no match) and 'EMPTY' (0 cards) now allow up to 3 tries!
+    //Both 'BUY' (no match) and 'EMPTY' (0 cards) now allow up to 3 tries!
     if ((state.drawsThisTurn || 0) >= MAX_TRIES) return; // all draws for this turn are already used
     state.buyLoop = { buyer: you, tries: state.drawsThisTurn || 0 };
     doBuyDraw();
@@ -10290,8 +10295,8 @@ function startForcedBuySelf(mode){
 
 async function doBuyDraw() {
     const bl = state.buyLoop;
-    if (!bl) { console.warn('doBuyDraw called with no active buyLoop — ignoring.'); return; } // Note: defensive guard
-    // Note: Forced Buy is now self-funded — you pay BUY_COST out of your OWN coins to
+    if (!bl) { console.warn('doBuyDraw called with no active buyLoop — ignoring.'); return; } //defensive guard
+    //Forced Buy is now self-funded — you pay BUY_COST out of your OWN coins to
     // draw, instead of raiding a target's coins. This is what makes the mechanic work
     // even when nobody else in the game has any coins to be raided from.
     if (bl.buyer.shop < BUY_COST) {
@@ -10321,7 +10326,7 @@ async function doBuyDraw() {
     const taken = payFromOwn(bl.buyer, BUY_COST);
     flyCoin(getSeatOrPanelRect(bl.buyer.id), bankRect(), 0);
     sweepEliminations();
-    renderAll(); // Note: reflect the coin deduction on-screen immediately, not just after the draw resolves
+    renderAll(); //reflect the coin deduction on-screen immediately, not just after the draw resolves
 
     setTimeout(async () => {
         if (bl.buyer.out) { advanceTurn(); return; }
@@ -10373,7 +10378,7 @@ async function doBuyDraw() {
             }
         } else {
             bl.buyer.hand.push(card);
-            bl.lastDrawnLabel = 'a card'; // Note: no longer reveals the drawn card's identity
+            bl.lastDrawnLabel = 'a card'; //no longer reveals the drawn card's identity
             const actionMsg = `Try ${bl.tries}: drew a card — no match.`;
 
             if (currentMatchId) {
@@ -10501,7 +10506,7 @@ async function finishBuyLoopFailure() {
     }
 }
 
-// Note: a human player who is stuck (no match / empty hand, and no valid raid target)
+//a human player who is stuck (no match / empty hand, and no valid raid target)
 // has no other action available, so their turn has to end itself. advanceTurn()'s
 // online branch is host-only, so a non-host human calling it directly here was a
 // dead end — this pushes the turn forward themselves, same as a normal call-out does.
@@ -10515,7 +10520,7 @@ async function skipStuckHumanTurn(reasonMsg){
   }
   if (state && state.deception) return;
   if (state && state.uiState === 'DECEPTION') return;
-  if (state && state.uiState !== 'IDLE') return; // Note: Abort skip if the UI state progressed past IDLE!
+  if (state && state.uiState !== 'IDLE') return; //Abort skip if the UI state progressed past IDLE!
   const myUid = DoDAuth.getProfile().uid;
   if(currentMatchId){
     if(!isYourTurn()) return;
@@ -10657,10 +10662,6 @@ function renderDeceptionOverlay(){
     return; 
 }
 
-  // IMPORTANT:
-  // A previous Deception/elimination cleanup may have set
-  // style.display = 'none' directly on the modal.
-  //
   // During the Deception intro, the ANSWER BOX must remain
   // completely hidden. Only the cinematic/time window is visible.
   modal.style.display = '';
@@ -10788,7 +10789,7 @@ function renderDeceptionOverlay(){
       const waitingOn = dec.richUids.filter(u => !(u in stances));
       html += `<div class="dec-sub">Waiting on ${waitingOn.map(nameOf).join(', ') || 'the table'} to lock in ${isClaimRound ? 'what to tell the broke players' : 'the real number'}…</div>`;
       
-      // Note: Completely hide live vote numbers from broke players!
+      //Completely hide live vote numbers from broke players!
       if (!dec.brokeUids.includes(myUid)) {
           let voteDetails = dec.richUids.map(uid => {
               let v = stances[uid];
@@ -10811,7 +10812,7 @@ function renderDeceptionOverlay(){
     html += `<div class="dec-sub" style="font-size:18px; color:var(--brass-bright);">Voting Complete!</div>`;
     html += `<div class="tension-box">`;
     
-    // Note: Hide the final Real Number reveal from broke players (but let them see the Claim reveal!)
+    //Hide the final Real Number reveal from broke players (but let them see the Claim reveal!)
     if (!dec.brokeUids.includes(myUid) || isClaim) {
         Object.entries(stances).forEach(([uid, val]) => {
             html += `<div class="tension-vote" style="animation: none; opacity: 1;">${nameOf(uid)} chose <b style="font-size:18px; color:var(--brass-bright);">${val}</b></div>`;
@@ -11724,7 +11725,7 @@ function resolveEmptySingleDraw(buyer){
 
 async function confirmGuess(v) {
     if(!isYourTurn()) return;
-    if(state.uiState !== 'CHOOSE_CALL') return; // Note: Prevent double-click sending two server requests
+    if(state.uiState !== 'CHOOSE_CALL') return; //Prevent double-click sending two server requests
     state.uiState = 'ANIMATING'; 
     renderActionBar();
     
@@ -12208,7 +12209,7 @@ if (
         'alert'
     );
 
-    // FIX: this used to jump straight to renderAll() without ever drawing the
+    //this used to jump straight to renderAll() without ever drawing the
     // turn arc, so the moment your coins hit 0 and the turn actually landed
     // on you, nothing visually showed it was your turn.
     const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
@@ -12287,7 +12288,7 @@ if (
                 tutScript[tutStep] &&
                 tutScript[tutStep].wait === 'broke_demo_player_turn'
             ) {
-                // FIX: this used to call tutNext() and return without ever drawing
+                //this used to call tutNext() and return without ever drawing
                 // the turn arc, so right after the first bot's mock elimination,
                 // the turn landing back on you showed no highlight at all.
                 const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
@@ -12320,7 +12321,7 @@ if (
 
         sfx.turn();
 
-        // FIX: this branch used to skip straight to renderAll() without ever
+        //this branch used to skip straight to renderAll() without ever
         // drawing the turn arc, so the moment Deception actually began on
         // your second broke turn, nothing showed the turn landing on you.
         const fromIdx = state.players.findIndex(p => p.id === state.players[state.previousTurn].id);
@@ -12437,7 +12438,7 @@ function syncRemoteTurn(){
       return;
   }
 
-  // --- AAA AI: DYNAMIC THINKING SPEED ---
+
   // Standard human hesitation: 1s to 3.5s
   const baseDelay = Math.floor(Math.random() * 2500) + 1000;
   // 25% chance the bot "snap plays" instantly (300ms - 700ms) for high tension!
@@ -12448,7 +12449,7 @@ function syncRemoteTurn(){
     if (!state || !state.players || !state.players[state.turn]) return;
     if (state.turnUid !== bot.uid) return;
 
-    // FIX: Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
+    //Completely prevent the bot from acting if the UI is still resolving the previous turn's animations!
     if (window.dodTurnLocked || window.dodCenterIsLocked || state.uiState === 'ANIMATING') {
         setTimeout(syncRemoteTurn, 500); // Check again in 500ms
         return;
@@ -12473,7 +12474,7 @@ function syncRemoteTurn(){
     if(bot.hand.length===0){
       if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has nothing to draw — turn skips.`); advanceTurn(); return; }
       if(bot.shop < BUY_COST){ if(!currentMatchId) log(`${bot.name}'s hand is empty and they can't afford to draw. Turn skips.`); advanceTurn(); return; }
-      processRemoteMarketAction(bot); // Note: Bots also get up to 3 tries when their hand is empty
+      processRemoteMarketAction(bot); //Bots also get up to 3 tries when their hand is empty
       return;
     }
     
@@ -12762,7 +12763,7 @@ async function processRemoteMarketAction(buyer) {
 
   let tries = 0;
 
-  // Note: True Sequential Pulling! The bot waits and syncs every single card visually.
+  //True Sequential Pulling! The bot waits and syncs every single card visually.
   for (let i = 0; i < maxPulls; i++) {
     if (!state || state.over || buyer.out || state.deck.length === 0) break;
     if (buyer.shop < BUY_COST) { if (!currentMatchId) log(`${buyer.name} ran out of coins mid-loop.`); break; }
@@ -12830,7 +12831,7 @@ if (!card) break;
           label = card.type === 'wild' ? 'W' : card.type === 'reverse' ? 'REV' : card.type === 'steal' ? 'STL' : 'PWR';
           if(card.type === 'reverse') state.direction *= -1;
           
-          // Note: Select a victim locally so offline visual effects know where to strike!
+          //Select a victim locally so offline visual effects know where to strike!
           if (card.type === 'steal' || card.type === 'power') {
               const opts = state.players.filter(p => !p.out && p.id !== buyer.id);
               if (opts.length > 0) {
@@ -13137,7 +13138,7 @@ async function computeMatchProgression() {
               profile.matchesPlayed = (profile.matchesPlayed || 0) + 1;
               profile.totalScore = (profile.totalScore || 0) + res.progression.earnedCoins;
 
-              // Note: Optimistically add the Winner's Bonus Chest or Coins so it renders on the Hub instantly!
+              //Optimistically add the Winner's Bonus Chest or Coins so it renders on the Hub instantly!
               if (res.progression.bonusType === 'card') {
                   profile.chests = profile.chests || { base: 0, mythic: 0, legendary: 0 };
                   profile.chests.base = (profile.chests.base || 0) + 1;
@@ -13303,15 +13304,23 @@ async function endGame(winner, byScore) {
       window.DoDShop.addCurrency(earned);
   }
 
-  // Sort players to determine absolute placements
-  const sorted = [...state.players].sort((a,b) => {
+    // Sort players to determine absolute placements. Coin ties are broken by hand size
+  // (fewer cards wins); only an exact match on BOTH is a true draw.
+  const rankCompare = (a, b) => {
       if(a.out !== b.out) return a.out ? 1 : -1;
       if(score(b) !== score(a)) return score(b) - score(a);
-      // Tie on coins: fewer cards in hand wins (rewards efficient play).
       return (a.hand ? a.hand.length : 0) - (b.hand ? b.hand.length : 0);
-  });
-  
-  const myRank = sorted.findIndex(p => p.id === you.id) + 1;
+  };
+  const sorted = [...state.players].sort(rankCompare);
+
+  // Standard competition ranking: tied players share a rank, and the next distinct
+  // rank skips ahead (two players tied for 1st means the next player is 3rd, not 2nd).
+  const ranks = sorted.map((p, i) => (i > 0 && rankCompare(sorted[i - 1], p) === 0) ? null : i + 1);
+  for (let i = 1; i < ranks.length; i++) { if (ranks[i] === null) ranks[i] = ranks[i - 1]; }
+
+  const myIdx = sorted.findIndex(p => p.id === you.id);
+  const myRank = ranks[myIdx];
+  const isMyDraw = ranks.some((r, i) => i !== myIdx && r === myRank);
   const isMyWin = myRank === 1 && gameReallyOver;
 
   // Inject Rank and Score into matchStats so Cloudflare can calculate SQUAD Placement Math
@@ -13320,22 +13329,26 @@ async function endGame(winner, byScore) {
       window.matchStats.myScore = score(you);
   }
 
-  // Note: Check if game is actually over, or just an early exit
+  //Check if game is actually over, or just an early exit
   const matchStatusText = gameReallyOver ? (byScore ? 'Time Limit Reached' : 'Match Concluded') : 'Match Ongoing (Early Exit)';
 
+  const headerLabel = isMyDraw ? 'DRAW' : (isMyWin && state.over ? 'WINNER!' : (gameReallyOver ? `LOSS #${myRank}` : 'ELIMINATED'));
+  const headerClass = isMyDraw ? 'draw' : (isMyWin && state.over ? 'win' : 'loss');
+
   let headerHtml = `<div class="finale-header">
-      <h1 class="finale-status ${isMyWin && state.over ? 'win' : 'loss'}">${isMyWin && state.over ? 'WINNER!' : (gameReallyOver ? `LOSS #${myRank}` : 'ELIMINATED')}</h1>
+      <h1 class="finale-status ${headerClass}">${headerLabel}</h1>
       <div style="font-family:'IBM Plex Mono',monospace; color:rgba(255,255,255,0.5); margin-top:8px;">${matchStatusText}</div>
   </div>`;
 
   let listHtml = `<div class="finale-list">`;
   sorted.forEach((p, idx) => {
-      // Note: If the game is still ongoing, ONLY show players who have been eliminated!
+      //If the game is still ongoing, ONLY show players who have been eliminated!
       if (!gameReallyOver && !p.out) return;
 
-      const rank = idx + 1;
+      const rank = ranks[idx];
       const isMe = p.id === you.id;
       const isWinner = rank === 1;
+      const isTiedRank = ranks.some((r, i) => i !== idx && r === rank);
       
       // Score is purely based on coins remaining
       const sc = p.shop;
@@ -13346,7 +13359,8 @@ async function endGame(winner, byScore) {
       
       // Dynamic Performance Title
       let perfTag = "";
-      if (isWinner && state.over) perfTag = "👑 Table Dominator";
+      if (isTiedRank && state.over) perfTag = isWinner ? "🤝 Shared Victory" : "🤝 Draw";
+      else if (isWinner && state.over) perfTag = "👑 Table Dominator";
       else if (p.out && p.hand.length >= 6) perfTag = "🃏 Card Hoarder";
       else if (p.out) perfTag = "💀 Bankrupt";
       else if (p.shop >= 25) perfTag = "💰 High Roller";
@@ -13569,7 +13583,7 @@ function returnToMenuFromEndgame() {
     window._lastCancelledMatchId = currentMatchId; // Prevent party auto-rejoin
     localStorage.removeItem('dod_active_match');
     
-    VoiceChat.leaveRoom(); // Note: Disconnect from finished match voice chat
+    VoiceChat.leaveRoom(); //Disconnect from finished match voice chat
     
     currentMatchId = null;
     window.onlineMatchSeats = null; // Clear seats so friends list updates properly
@@ -13592,7 +13606,7 @@ function returnToMenuFromEndgame() {
         if (currentPartyId) {
             showMenuScreen('hub');
             showPartyLobbyCinematic();
-            VoiceChat.joinRoom(currentPartyId); // Note: Return to party voice chat!
+            VoiceChat.joinRoom(currentPartyId); //Return to party voice chat!
             if (window.firebase) {
                 // Tell server the match is over so we can queue again
                 firebase.firestore().collection('parties').doc(currentPartyId).update({ matchId: null }).catch(()=>{});
@@ -13873,7 +13887,7 @@ async function initFriendsList() {
                 let titleHtml = '';
                 if (f.title) {
                     const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
-                    // Note: Allowed title to flow freely since it now sits on its own row!
+                    //Allowed title to flow freely since it now sits on its own row!
                     if (tDef) titleHtml = `<div style="margin-top:4px;"><div class="player-title title-${tDef.rarity}" style="height:14px; font-size:7px; padding:0 12px 0 4px; line-height:14px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
                 }
 
@@ -13900,7 +13914,7 @@ async function initFriendsList() {
                     }
                 }
 
-                // Note: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
+                //Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
                 return `<div style="display:flex; align-items:flex-start; background:rgba(0,0,0,0.3); padding:8px 10px; border:1px solid rgba(255,255,255,0.1); border-radius:4px; margin-bottom:6px; gap:10px;">
                     <div class="avatar-frame-wrap" style="width:32px; height:32px; flex-shrink:0; border-radius:4px; background:rgba(0,0,0,0.5);">
                         <img src="Avatars/${f.avatar}.webp" class="af-avatar" alt="Avatar">
@@ -13923,7 +13937,7 @@ async function initFriendsList() {
                 let titleHtml = '';
                 if (f.title) {
                     const tDef = typeof TITLES_DB !== 'undefined' ? TITLES_DB.find(x => x.id === f.title) : null;
-                    // Note: Allowed title to flow freely since it now sits on its own row!
+                    //Allowed title to flow freely since it now sits on its own row!
                     if (tDef) titleHtml = `<div style="margin-top:3px;"><div class="player-title title-${tDef.rarity}" style="height:12px; font-size:6px; padding:0 10px 0 4px; line-height:12px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
                 }
 
@@ -13950,7 +13964,7 @@ async function initFriendsList() {
                     }
                 }
 
-                // Note: Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
+                //Restructured flex layout. Avatar on left. Name and Button share the top row. Title drops to the bottom row, spanning under the button!
                 return `<div class="squad-friend-row" style="align-items:flex-start; padding:6px; gap:8px;">
                     <div class="avatar-frame-wrap" style="width:26px; height:26px; flex-shrink:0; border-radius:3px; background:rgba(0,0,0,0.5);">
                         <img src="Avatars/${f.avatar}.webp" class="af-avatar" alt="Avatar">
@@ -14000,7 +14014,7 @@ async function sendFriendRequest() {
 }
 
 async function acceptFriend(friendUid, friendName) {
-    try { sfx.uiClick(); } catch(e){} // Note: Play SFX when accepting
+    try { sfx.uiClick(); } catch(e){} //Play SFX when accepting
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
     const myName = DoDAuth.getProfile().displayName;
@@ -14093,7 +14107,7 @@ async function leaveParty() {
 
     if (partyListenerUnsub) partyListenerUnsub();
     
-    VoiceChat.leaveRoom(); // Note: Disconnect microphone when leaving party
+    VoiceChat.leaveRoom(); //Disconnect microphone when leaving party
     
     currentPartyId = null;
     isPartyLeader = true; 
@@ -14275,7 +14289,7 @@ function listenToParty(partyId) {
         // AUTO-JOIN MATCH: If the leader found a match, pull the squad in!
         if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId && data.matchId !== window._lastCancelledMatchId) {
             currentMatchId = data.matchId;
-            squadCancelFlag = false; // Note: Force reset the flag so the client doesn't instantly delete the new match!
+            squadCancelFlag = false; //Force reset the flag so the client doesn't instantly delete the new match!
             listenToSquadMatchFilling(
                 currentMatchId,
                 document.getElementById('squadMmTimer'),
@@ -14539,7 +14553,7 @@ async function leaveMatchLobby() {
     if (matchLobbyUnsub) matchLobbyUnsub();
     if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
     
-    VoiceChat.leaveRoom(); // Note: Disconnect from the match room
+    VoiceChat.leaveRoom(); //Disconnect from the match room
     if (currentPartyId) VoiceChat.joinRoom(currentPartyId); // Return to party voice chat
     
     showMenuScreen('social');
@@ -14698,7 +14712,7 @@ function squadSearchFriend() {
                     displayId = Math.abs(hash).toString().substring(0, 6).padEnd(6, '0');
                 }
 
-                // Note: Use safe helper functions to prevent broken images if data is corrupted
+                //Use safe helper functions to prevent broken images if data is corrupted
                 const av = typeof getEquippedAvatar === 'function' ? getEquippedAvatar(data) : (data.avatar || 'Apprentice');
                 const fr = typeof getEquippedFrame === 'function' ? getEquippedFrame(data) : (data.frame || 'Apprentice');
                 
@@ -14708,7 +14722,7 @@ function squadSearchFriend() {
                     if (tDef) titleHtml = `<div style="margin-top:3px;"><div class="player-title title-${tDef.rarity}" style="height:12px; font-size:6px; padding:0 10px 0 4px; line-height:12px; clip-path:polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%); width:max-content;"><span>${tDef.name}</span></div></div>`;
                 }
 
-                // Note: Check friends list status to render the correct button!
+                //Check friends list status to render the correct button!
                 let actionBtnHtml = '';
                 if (isMe) {
                     actionBtnHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.5); background:rgba(255,255,255,0.05); padding:4px 8px; border-radius:4px; border:1px solid rgba(255,255,255,0.1); cursor:not-allowed;">You</span>`;
@@ -14751,7 +14765,7 @@ function squadSearchFriend() {
 }
 
 async function sendSquadFriendRequest(targetUid, targetName, btn, isBot) {
-    try { sfx.uiClick(); } catch(e){} // Note: Added SFX
+    try { sfx.uiClick(); } catch(e){} //Added SFX
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
     const myProfile = DoDAuth.getProfile();
     const db = firebase.firestore();
@@ -14787,7 +14801,7 @@ async function sendSquadFriendRequest(targetUid, targetName, btn, isBot) {
             status: 'pending'
         });
         
-        // Note: Save 'sent' status in our own list so the search UI remembers!
+        //Save 'sent' status in our own list so the search UI remembers!
         await db.collection('users').doc(myProfile.uid).collection('friends').doc(targetUid).set({
             displayName: targetName,
             status: 'sent',
@@ -14800,14 +14814,14 @@ async function sendSquadFriendRequest(targetUid, targetName, btn, isBot) {
 
 // --- Invite flow ---
 async function squadInviteFriend(friendUid, friendName) {
-    try { sfx.uiClick(); } catch(e){} // Note: Added SFX
+    try { sfx.uiClick(); } catch(e){} //Added SFX
     if (!currentPartyId) {
         await createParty();
         await new Promise(r => setTimeout(r, 600));
     }
     await inviteToParty(friendUid, friendName);
     
-    // Note: Unified floating cinematic toast
+    //Unified floating cinematic toast
     showSystemToast('Invite sent to ' + friendName);
 }
 
@@ -14937,6 +14951,11 @@ function updateLobbyView(seats, tableSize) {
         if (seat && (!window.DoDAuth || seat.uid !== DoDAuth.getProfile().uid)) {
             div.style.cursor = 'pointer';
             div.onclick = (e) => openVolumePopup(e, seat.uid, seat.displayName);
+        } else if (seat && window.DoDAuth && seat.uid === DoDAuth.getProfile().uid) {
+            // Own seat → open profile customization panel
+            div.style.cursor = 'pointer';
+            div.title = 'Edit your profile';
+            div.onclick = () => openProfileCustomization();
         }
 
         let avatarContent = '⋯';
@@ -15171,7 +15190,7 @@ function listenToSquadMatchFilling(matchId, timerEl, statusEl, overlay) {
             const data = checkDoc.data();
             if (data.seats.length >= data.tableSize) return;
             
-            // Note: Only the Host of the match should inject bots, to avoid duplicate injections by squad members
+            //Only the Host of the match should inject bots, to avoid duplicate injections by squad members
             if (!window.DoDAuth) return;
             const myUid = DoDAuth.getProfile().uid;
             if (data.seats.length > 0 && data.seats[0].uid !== myUid) return;
@@ -15229,7 +15248,7 @@ function cancelMatchmakingSquad() {
     clearInterval(squadMmIntervalId);
     if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
     
-    VoiceChat.leaveRoom(); // Note: Disconnect from match voice
+    VoiceChat.leaveRoom(); //Disconnect from match voice
 
     if (currentPartyId && partyLobbyCinematicActive) {
         VoiceChat.joinRoom(currentPartyId); // Return to party voice chat
@@ -15425,7 +15444,7 @@ function updateProfileWidget(profile) {
     
     const squadWidget = document.getElementById('squadProfileWidget');
     if (squadWidget) {
-        // Note: Only force the HUD to show if we are actually on the Main Hub screen!
+        //Only force the HUD to show if we are actually on the Main Hub screen!
         const hubScreen = document.getElementById('screen-hub');
         if (hubScreen && !hubScreen.classList.contains('hidden')) {
             squadWidget.style.display = (typeof partyLobbyCinematicActive !== 'undefined' && partyLobbyCinematicActive) ? 'none' : 'flex';
@@ -15756,7 +15775,7 @@ async function executeDailyDraw(selectedIndex) {
         if (res.newInventory !== undefined) profile.inventory = res.newInventory;
         if (res.totalCopies !== undefined) profile.totalCopies = res.totalCopies;
 
-        // Note: Force correct Coin image path in case the Cloudflare server sends a bad path
+        //Force correct Coin image path in case the Cloudflare server sends a bad path
         let safeIcon = rollData.icon;
         if (safeIcon) {
             safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.(webp|png)["']/gi, 'src="Coins/Coins.webp"');
@@ -15804,7 +15823,7 @@ async function executeDailyDraw(selectedIndex) {
             let totalCopies = profile.totalCopies || 0;
 
             const POOL_COMMON = [ { id: 'BasicGemCounter', name: 'Basic Gem', req: 10 }, { id: 'CopperBettingCoin', name: 'Copper Coin', req: 10 }, { id: 'WaxSeal', name: 'Wax Seal', req: 10 }, { id: 'BoneDice', name: 'Bone Dice', req: 12 }, { id: 'IronHeart', name: 'Iron Heart', req: 12 }, { id: 'TurnTimer', name: 'Turn Timer', req: 12 }, { id: 'DarkSteel', name: 'Dark Steel', req: 10 }, { id: 'StoneAge', name: 'Stone Age', req: 10 }, { id: 'Bone&Metal', name: 'Bone & Metal', req: 12 }, { id: 'VerdigrisBronze', name: 'Verdigris Bronze', req: 12 }, { id: 'cf_crimson', name: 'Crimson Blood Face', req: 10 }, { id: 'cb_crimson', name: 'Crimson Blood Back', req: 15 } ];
-            // Note: Tables and Premium Cards now require 10 to 20 shards to unlock!
+            //Tables and Premium Cards now require 10 to 20 shards to unlock!
             const POOL_RARE = [ { id: 'IronCrosshair', name: 'Iron Crosshair', req: 14 }, { id: 'BronzeFirst', name: 'Bronze First', req: 15 }, { id: 'IronShield', name: 'Iron Shield', req: 15 }, { id: 'TiedCardStack', name: 'Tied Cards', req: 15 }, { id: 'IronSword', name: 'Iron Sword', req: 18 }, { id: 'HammeredIron', name: 'Hammered Iron', req: 14 }, { id: 'DarkMarble', name: 'Dark Marble', req: 15 }, { id: 'TarnishedSilver', name: 'Tarnished Silver', req: 15 }, { id: 'OxidizedCopper', name: 'Oxidized Copper', req: 18 }, { id: 'cf_sapphire', name: 'Deep Sapphire Face', req: 15 }, { id: 'cf_emerald', name: 'Emerald Viper Face', req: 20 }, { id: 'cb_sapphire', name: 'Deep Sapphire Back', req: 20 }, { id: 'cb_bloodwood', name: 'Bloodwood Back', req: 25 }, { id: 'tb_bloodwood', name: 'Crimson Bloodwood Table', req: 10 }, { id: 'tb_midnight', name: 'Midnight Navy Table', req: 10 }, { id: 'tb_amethyst', name: 'Royal Amethyst Table', req: 15 } ];
             const POOL_LEGENDARY = [ { id: 'JesterBell', name: 'Jester Bell', req: 20 }, { id: 'WornPokerChip', name: 'Worn Chip', req: 25 }, { id: 'Dice&Filigree', name: 'Dice & Filigree', req: 20 }, { id: 'Wood&Brass', name: 'Wood & Brass', req: 25 }, { id: 'cf_diamond', name: 'Prismatic Diamond Face', req: 20 }, { id: 'cb_obsidian', name: 'Obsidian Void Back', req: 20 }, { id: 'tb_clockwork', name: 'Clockwork Brass Table', req: 20 }, { id: 'tb_cyber', name: 'Cyber Matrix Table', req: 20 }, { id: 'tb_mirage', name: 'Desert Mirage Table', req: 20 }, { id: 'tb_dragon', name: 'Dragon\'s Lair Table', req: 20 }, { id: 'tb_void', name: 'Void Magic Table', req: 20 } ];
 
@@ -15833,7 +15852,7 @@ async function executeDailyDraw(selectedIndex) {
                     rollData.msg = `Unlocked ${targetShard.name}!`;
                 } else {
                     rollData.icon = customIcon;
-                    // Note: Visually display how many copies out of the total required!
+                    //Visually display how many copies out of the total required!
                     rollData.msg = `+1 Copy: ${targetShard.name}<br><span style="color:var(--ink-soft); font-size:9px;">(${newShards[targetShard.id]} / ${targetShard.req} Copies)</span>`;
                 }
             } else if (r < 0.80) { 
@@ -15994,7 +16013,7 @@ async function executeRewardCardOpen() {
         const res = await secureServerCall('economy/openChest', { tier: currentRewardTier });
         const rollData = res.result;
 
-        // Note: Force correct Coin image path in case the Cloudflare server sends a bad path
+        //Force correct Coin image path in case the Cloudflare server sends a bad path
         let safeIcon = rollData.icon;
         if (safeIcon) {
             safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.(webp|png)["']/gi, 'src="Coins/Coins.webp"');
@@ -16635,7 +16654,7 @@ async function linkGuestToGoogleAccount() {
     } catch (error) {
         console.error("Linking failed: ", error);
         
-        // Note: Catch the specific 'already-in-use' error and tell the player!
+        //Catch the specific 'already-in-use' error and tell the player!
         if (error.code === 'auth/credential-already-in-use') {
             showSystemToast("This Google account is already registered! Please use a different one.");
         } else if (error.code === 'auth/popup-closed-by-user') {
@@ -16845,7 +16864,7 @@ function showSystemToast(msg) {
     const toast = document.createElement('div');
     toast.id = 'sysToast';
     
-    // Note: Cinematic floating text with heavy shadow, no background capsule, and CSS transition targets
+    //Cinematic floating text with heavy shadow, no background capsule, and CSS transition targets
     toast.style.cssText = 'position:fixed; bottom:15%; left:50%; transform:translate(-50%, 0); color:#fff; font-family:"Cinzel",serif; font-size:16px; font-weight:bold; letter-spacing:1px; z-index:999999; pointer-events:none; text-align:center; white-space:nowrap; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,1); transition: transform 2s ease-out, opacity 2s ease-in; opacity: 1;';
     
     // Color code positive/negative messages for the new cinematic style
@@ -17573,7 +17592,7 @@ function openShopPreview(itemId, tab) {
     } else if (tab === 'cardBacks') {
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:url('CardstoBuy/${encodeURIComponent(item.img)}'); background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); z-index:2; position:relative;"></div>`;
     } else if (tab === 'cardFaces') {
-        // Note: Dynamically fetch the correct Card Face texture (handles Crimson Royal and defaults perfectly!)
+        //Dynamically fetch the correct Card Face texture (handles Crimson Royal and defaults perfectly!)
         const bgImgUrl = getCardFaceUrl(item.id, '');
         innerHtml = `<div style="width:120px; height:170px; max-width:80%; max-height:80%; background-image:${bgImgUrl}; background-size:contain; background-repeat:no-repeat; background-position:center; filter:drop-shadow(0 10px 20px rgba(0,0,0,0.8)); border: 4px solid ${item.color}; border-radius:12px; display:flex; align-items:center; justify-content:center; font-family:'Cinzel Decorative',serif; font-size:clamp(32px, 10vh, 48px); color:#20190f; font-weight:bold; z-index:2; position:relative;">A</div>`;
     } else if (tab === 'avatars') {
@@ -17593,7 +17612,7 @@ function openShopPreview(itemId, tab) {
     const eqFace = profile ? (profile.equippedFace || profile.equippedCard || 'cf_default') : '';
     const eqBack = profile ? (profile.equippedBack || 'cb_default') : '';
     const eqTable = profile ? (profile.equippedTable || 'tb_default') : '';
-    // Note: Grab the current Avatar, Frame, and Title using your existing safe helper functions!
+    //Grab the current Avatar, Frame, and Title using your existing safe helper functions!
     const eqAvatar = profile ? getEquippedAvatar(profile) : '';
     const eqFrame = profile ? getEquippedFrame(profile) : '';
     const eqTitle = profile ? getEquippedTitle(profile) : '';
@@ -17612,7 +17631,7 @@ function openShopPreview(itemId, tab) {
     if (isEquipped) {
         btnHtml = `<button class="btn equipped" style="width:100%; font-size:14px; padding:12px;" disabled>EQUIPPED ✓</button>`;
     } else if (isOwned) {
-        // Note: Removed the code that instantly closes the modal so the button can successfully update to EQUIPPED!
+        //Removed the code that instantly closes the modal so the button can successfully update to EQUIPPED!
         btnHtml = `<button class="btn owned" style="background:var(--brass); color:var(--felt-dark); width:100%; font-weight:bold; font-size:14px; padding:12px;" onclick="equipShopItem('${item.id}', '${tab}', event);">EQUIP NOW</button>`;
     } else if (item.method === 'coins') {
         if (item.shardsNeeded) {
@@ -17813,7 +17832,7 @@ async function equipShopItem(itemId, category, event) {
     if (category === 'cardFaces') { updateField = 'equippedFace'; profile.equippedFace = itemId; }
     else if (category === 'cardBacks') { updateField = 'equippedBack'; profile.equippedBack = itemId; }
     else if (category === 'tables') { updateField = 'equippedTable'; profile.equippedTable = itemId; }
-    // Note: Allow Avatars, Frames, and Titles to be equipped directly from the Shop Preview Modal!
+    //Allow Avatars, Frames, and Titles to be equipped directly from the Shop Preview Modal!
     else if (category === 'avatars') { updateField = 'avatar'; profile.avatar = itemId; }
     else if (category === 'frames') { updateField = 'frame'; profile.frame = itemId; }
     else if (category === 'titles') { updateField = 'title'; profile.title = itemId; }
@@ -17827,7 +17846,7 @@ async function equipShopItem(itemId, category, event) {
     }
     
     applyEquippedSkins(profile); // Apply instantly!
-    updateProfileWidget(profile); // Note: Instantly updates the Top-Left Avatar HUD on the main menu!
+    updateProfileWidget(profile); //Instantly updates the Top-Left Avatar HUD on the main menu!
     renderShopItems();
 
     // If the customization modal is open in the background, refresh it too
@@ -17836,7 +17855,7 @@ async function equipShopItem(itemId, category, event) {
         renderUnlockSelectors(profile);
     }
     
-    // Note: If the 3D Preview Modal is open, refresh it so the button instantly changes to EQUIPPED ✓
+    //If the 3D Preview Modal is open, refresh it so the button instantly changes to EQUIPPED ✓
     if (document.getElementById('shopPreviewModal').classList.contains('show')) {
         openShopPreview(itemId, category);
     }
@@ -18100,7 +18119,7 @@ function generateLeaderboardRowHtml(p, rankNum, isMe) {
         }
     }
 
-    // Note: Show IDs for everyone. If a bot is missing an ID, deterministically generate a fake 
+    //Show IDs for everyone. If a bot is missing an ID, deterministically generate a fake 
     // 6-digit ID based on their uid string so it stays consistently the same every time!
     let displayId = p.gameId;
         if (!displayId || displayId === '----' || displayId === 'undefined') {
@@ -18111,7 +18130,7 @@ function generateLeaderboardRowHtml(p, rankNum, isMe) {
         
         let idHtml = `<span style="font-family:'IBM Plex Mono',monospace; font-size:10px; color:rgba(255,255,255,0.4); font-weight:normal; margin-left:8px;">ID ${displayId}</span>`;
 
-        // Note: Handle empty strings from new/guest accounts to prevent broken images
+        //Handle empty strings from new/guest accounts to prevent broken images
         const safeAvatar = (p.avatar && p.avatar.trim() !== '') ? p.avatar : 'Apprentice';
         const safeFrame = (p.frame && p.frame.trim() !== '') ? p.frame : 'Apprentice';
 
@@ -18184,7 +18203,7 @@ function triggerPwaInstall() {
     if (modal) modal.classList.remove('show');
     
     if (deferredPrompt) {
-        // Note: Gracefully exit fullscreen FIRST using the exact logic from the Audio Permission fix!
+        //Gracefully exit fullscreen FIRST using the exact logic from the Audio Permission fix!
         const isFs = document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement;
         
         if (isFs) {
@@ -18341,7 +18360,7 @@ function renderMissionsList() {
 
         // --- NEW UI STYLING FOR MISSIONS ---
         let titleStyle = "font-family:'Inter',sans-serif; font-size:14px; font-weight:700; color:#fff; margin-bottom:4px; transition: all 0.3s ease;";
-        // Note: Override old CSS by forcing a column layout so the bar sits correctly at the bottom!
+        //Override old CSS by forcing a column layout so the bar sits correctly at the bottom!
         let cardStyle = "display: flex; flex-direction: column; align-items: stretch; width: 100%; padding: 15px; border-radius: 8px; margin-bottom: 12px; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.05); transition: all 0.3s ease;";
         let barColor = "var(--brass-bright)";
         
@@ -18360,7 +18379,7 @@ function renderMissionsList() {
         } else if (isComplete) {
             btnHtml = `<button class="btn small" style="background:#2d8c5c; color:#fff; border:none; box-shadow: 0 0 10px rgba(45,140,92,0.4);" onclick="claimMission('${m.id}')">CLAIM</button>`;
         } else {
-            // Note: Chained functions so it closes the modal AND warps the player to the main hub!
+            //Chained functions so it closes the modal AND warps the player to the main hub!
             btnHtml = `<button class="btn ghost small" onclick="closeMissionsModal(); showMenuScreen('hub');">GO ↗</button>`;
         }
 
