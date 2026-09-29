@@ -113,12 +113,18 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
             if (window.CrazyGames && window.CrazyGames.SDK) {
                 window.CrazyGames.SDK.init().then(function() {
                     window.DOD_CG_SDK_READY = true;
+                    // Store flags early — read them after login in initHubUI
+                    window.DOD_CG_INSTANT_MULTIPLAYER = window.CrazyGames.SDK.game.isInstantMultiplayer || false;
+                    window.DOD_CG_INVITE_PARAMS = window.CrazyGames.SDK.game.inviteParams || null;
+                    // Signal that game is loading (CrazyGames starts measuring here)
+                    window.CrazyGames.SDK.game.loadingStart();
                 }).catch(function(e) { console.warn('[DoD] CG SDK init error:', e); });
             }
         };
         document.head.appendChild(s);
     }
 })();
+
 </script>
 
 <!-- Preload Firebase so it starts downloading during HTML parse -->
@@ -3348,27 +3354,41 @@ window.dodImagesLoaded = false;
 </div>
 
 <!-- AUDIO ENGINE -->
-<audio id="bgMusic" loop preload="auto">
+<audio id="bgMusic" loop preload="none">
   <source src="DeckofDeceptionTheme.mp3" type="audio/mpeg">
 </audio>
-<audio id="inGameMusic" loop preload="auto">
+<audio id="inGameMusic" loop preload="none">
   <source src="GameBegins.mp3" type="audio/mpeg">
 </audio>
-<audio id="tensionMusic" loop preload="auto">
+<audio id="tensionMusic" loop preload="none">
   <source src="ClockroomTension.mp3" type="audio/mpeg">
 </audio>
-<audio id="syndicateMusic" loop preload="auto">
+<audio id="syndicateMusic" loop preload="none">
   <source src="HouseofAsh.mp3" type="audio/mpeg">
 </audio>
-<audio id="seasonMusic" loop preload="auto">
+<audio id="seasonMusic" loop preload="none">
   <source src="HouseEdge.mp3" type="audio/mpeg">
 </audio>
 
 <!-- CUSTOM SFX ENGINE -->
-<audio id="sfxClick" src="ClickSfx.mp4" preload="auto"></audio>
-<audio id="sfxPlay" src="PlaySfx.mp4" preload="auto"></audio>
-<audio id="sfxNotification" src="NotificationSfx.mp4" preload="auto"></audio>
-<audio id="sfxCoins" src="CoinsSfx.mp4" preload="auto"></audio>
+<audio id="sfxClick" src="ClickSfx.mp4" preload="none"></audio>
+<audio id="sfxPlay" src="PlaySfx.mp4" preload="none"></audio>
+<audio id="sfxNotification" src="NotificationSfx.mp4" preload="none"></audio>
+<audio id="sfxCoins" src="CoinsSfx.mp4" preload="none"></audio>
+
+<!-- Pre-buffer menu music & SFX quietly during the intro so they're ready with zero delay -->
+<script>
+setTimeout(function() {
+    var bg = document.getElementById('bgMusic');
+    var season = document.getElementById('seasonMusic');
+    if (bg) bg.load(); // buffers DeckofDeceptionTheme.mp3 silently in background
+    if (season) season.load(); // ADDED: buffers Season 1 music silently!
+    ['sfxClick','sfxPlay','sfxNotification','sfxCoins'].forEach(function(id) {
+        var el = document.getElementById(id);
+        if (el) el.load(); // tiny files, loads in <1s
+    });
+}, 2500); // 2.5s delay — page has painted, Firebase is loading, user still on intro
+</script>
 
 <!-- INTRO OVERLAY -->
 <div id="introOverlay">
@@ -3953,7 +3973,7 @@ if (document.readyState === 'loading') {
       </div>
       <div class="section-label" style="margin-top:20px; text-align:center;">Table size (Bots)</div>
       <div id="countRow" style="width:100%; max-width:240px; margin-top:14px;"></div>
-      <div style="text-align:center; margin-top:12px;"><label class="opt-row"><input type="checkbox" id="fastTest"> Fast test mode (2 min timer)</label></div>
+
     </div>
     <div class="screen-footer">
       <button class="btn" style="width:100%; max-width:320px" onclick="enterGameWithLoading()">Practice vs Bots ↗</button>
@@ -4350,11 +4370,11 @@ function triggerRandomRatingPopup() {
         const notInMatch = typeof currentMatchId === 'undefined' || !currentMatchId;
         const notInLobby = !lobbyView || !lobbyView.classList.contains('show');
 
-        // Only show the popup if ALL safe conditions are met,
-        // and only after the player has completed the menu tutorial
-        // (guarantees they've finished at least one real online match first).
-        const menuTutorialDone = !!localStorage.getItem('dod_seen_menu_tutorial');
-        if (isMenuVisible && isGameHidden && isHubActive && notInMatch && notInLobby && menuTutorialDone && overlay) {
+        // Only show the popup if they have actually completed a real match
+        const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
+        const hasPlayedRealMatch = profile && (profile.matchesPlayed > 0);
+        
+        if (isMenuVisible && isGameHidden && isHubActive && notInMatch && notInLobby && hasPlayedRealMatch && overlay) {
             overlay.classList.add('show');
         }
     }, delay);
@@ -5814,8 +5834,8 @@ function proceedWithBoot(overlayEl) {
     if(!audioCtx) audioCtx = new AudioContext();
     if(audioCtx.state === 'suspended') audioCtx.resume();
     
-    //Force mobile browsers to unlock all SFX elements instantly by playing and pausing them silently on the very first screen tap!
-    ['sfxClick', 'sfxPlay', 'sfxNotification', 'sfxCoins'].forEach(id => {
+    //Force mobile browsers to unlock ALL audio elements instantly by playing and pausing them silently on the very first screen tap!
+    ['sfxClick', 'sfxPlay', 'sfxNotification', 'sfxCoins', 'inGameMusic', 'tensionMusic', 'syndicateMusic', 'seasonMusic'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
             el.volume = 0; // Mute it
@@ -5823,18 +5843,15 @@ function proceedWithBoot(overlayEl) {
             if(p !== undefined) p.then(() => { 
                 el.pause(); 
                 el.currentTime = 0; 
-                el.volume = sfxVolume; // Restore correct volume
+                // Restore correct volume (Music uses musicVolumeSetting, SFX uses sfxVolume)
+                el.volume = id.includes('Music') ? musicVolumeSetting : sfxVolume; 
             }).catch(()=>{});
         }
     });
     
     if(bgMusicElement) {
-        // Pick a random track for the initial boot
-        const menuTracks = ['DeckofDeceptionTheme.mp3', 'GreenFeltRules.mp3'];
-        const chosenTrack = menuTracks[Math.floor(Math.random() * menuTracks.length)];
-        bgMusicElement.src = chosenTrack;
-        bgMusicElement.load();
-
+        // Removed random track swapping on boot so we instantly use the pre-buffered track!
+        // (Random tracks will still play later when returning to the menu via switchToMenuMusic)
         bgMusicElement.volume = musicVolumeSetting; //Give it full requested volume!
         if(bgMusicElement.error){ startAmbientPad(); } 
         else {
@@ -6073,7 +6090,7 @@ const tutScript = [
 { hidden: true, action: 'rig_number_bots', wait: 'player_turn', unfreeze: true },
     
     // Action Cards
-    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, and each one has a special ability! I've added a <b>Wild Swap</b> card to your hand. It costs 1 coins but matches ANY number. <b>Tap it to play!</b>", wait: 'played_wild', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_wild', text: "There are <b>5 Action Cards</b>, and each one has a special ability! I've added a <b>Wild Swap</b> card to your hand. It costs 2 coins but matches ANY number. <b>Tap it to play!</b>", wait: 'played_wild', arrow: 'bottom' },
     { target: 'actionbar', text: "Wild Swap played! Now tap a number to set what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
@@ -6136,7 +6153,6 @@ function openTutorial(fromSettings) {
     window.isInteractiveTutorial = true;
     window.networkSyncPaused = true;
     menuState.count = 4;
-    document.getElementById('fastTest').checked = false;
     
     // Move ALL tutorial elements to the body so they exist safely above all game modals
     document.body.appendChild(document.getElementById('tutOverlay'));
@@ -6798,8 +6814,20 @@ function tutNext() {
 }
 
 function endInteractiveTutorial() {
+    // Route the Skip button to the correct menu unlocker!
+    if (window.isMenuTutorialActive) { endMenuTutorial(); return; }
+    
     try { sfx.uiClick(); } catch(e){}
     localStorage.setItem('dod_seen_tutorial','1');
+
+    if (window.DoDAuth && window.firebase) {
+        const p = DoDAuth.getProfile();
+        if (p) {
+            p.seenTutorial = true;
+            firebase.firestore().collection('users').doc(p.uid).update({ seenTutorial: true }).catch(()=>{});
+        }
+    }
+
     const _ov = document.getElementById('tutOverlay');   if (_ov) { _ov.style.display = 'none'; _ov.classList.remove('spotlight-active'); }
     document.getElementById('tutShowcase').style.display = 'none';
     document.getElementById('tutDialogue').style.display = 'none';
@@ -6947,6 +6975,14 @@ function endMenuTutorial() {
     localStorage.setItem('dod_seen_menu_tutorial', '1');
     window.isMenuTutorialActive = false;
 
+    if (window.DoDAuth && window.firebase) {
+        const p = DoDAuth.getProfile();
+        if (p) {
+            p.seenMenuTutorial = true;
+            firebase.firestore().collection('users').doc(p.uid).update({ seenMenuTutorial: true }).catch(()=>{});
+        }
+    }
+
 // Restore normal menu interaction after the tutorial finishes.
 const menuTutorialRoot = document.getElementById('menu');
 if (menuTutorialRoot) {
@@ -6992,6 +7028,11 @@ if(window.DoDAuth){
                     document.getElementById('introOverlay').style.display = 'none';
                     menu.style.display = 'none';
                     document.getElementById('game').style.display = 'flex';
+                    // CrazyGames: initial download measurement ends here, gameplay begins
+                    if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK) {
+                        window.CrazyGames.SDK.game.loadingStop();
+                        window.CrazyGames.SDK.game.gameplayStart();
+                    }
                     
                     // Mock the state so the endgame modal can render the leaderboard safely.
                     // data.gameState.players only carries handCount (not hand) under the
@@ -7073,6 +7114,11 @@ if(window.DoDAuth){
                                 document.getElementById('introOverlay').style.display = 'none';
                                 menu.style.display = 'none';
                                 document.getElementById('game').style.display = 'flex';
+                                // CrazyGames: initial download measurement ends here, gameplay begins
+                                if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK) {
+                                    window.CrazyGames.SDK.game.loadingStop();
+                                    window.CrazyGames.SDK.game.gameplayStart();
+                                }
                                 
                                 // BUG Note: Initialize match stats so actions don't crash after a mid-game refresh!
                                 window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
@@ -7126,10 +7172,46 @@ if(window.DoDAuth){
         if (typeof listenForPartyInvites === 'function') {
             listenForPartyInvites();
         }
+
+        // CrazyGames multiplayer integration (only runs on crazygames.com)
+        if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+            const cgGame = window.CrazyGames.SDK.game;
+
+            // 1. Room join listener: fires if the user is already in-game and clicks a CG invite
+            cgGame.addJoinRoomListener(function(inviteParams) {
+                if (inviteParams && inviteParams.partyId && window.DoDAuth && DoDAuth.getProfile()) {
+                    const db = firebase.firestore();
+                    const myUid = DoDAuth.getProfile().uid;
+                    db.collection('users').doc(myUid).set({ activePartyInvite: inviteParams.partyId }, { merge: true })
+                      .catch(function(e) { console.warn('[DoD] CG room join listener error:', e); });
+                }
+            });
+
+            // 2. isInstantMultiplayer: CG wants us to jump straight into a new lobby
+            if (window.DOD_CG_INSTANT_MULTIPLAYER) {
+                window.DOD_CG_INSTANT_MULTIPLAYER = false; // consume once
+                setTimeout(function() {
+                    if (!currentPartyId && typeof createParty === 'function') createParty();
+                }, 500);
+                return;
+            }
+
+            // 3. inviteParams: user loaded the game from a CG invite link — auto-join that party
+            const cgInviteParams = window.DOD_CG_INVITE_PARAMS;
+            if (cgInviteParams && cgInviteParams.partyId) {
+                window.DOD_CG_INVITE_PARAMS = null; // consume once
+                if (window.DoDAuth && DoDAuth.getProfile()) {
+                    const db = firebase.firestore();
+                    const myUid = DoDAuth.getProfile().uid;
+                    db.collection('users').doc(myUid).set({ activePartyInvite: cgInviteParams.partyId }, { merge: true })
+                      .catch(function(e) { console.warn('[DoD] CG invite params join error:', e); });
+                }
+            }
+        }
     };
 
     //Show Season 1 Cinematic or Tutorial ONLY after successful sign-in!
-            if (!localStorage.getItem('dod_seen_tutorial')) {
+            if (!localStorage.getItem('dod_seen_tutorial') && !(profile && profile.seenTutorial)) {
                 setTimeout(() => {
                     openTutorial(false);
                 }, 400); // Small delay to let auth modals fade out cleanly
@@ -7893,6 +7975,11 @@ function startGame() {
       setTimeout(async () => {
           menu.style.display = 'none';
           document.getElementById('game').style.display = 'flex';
+          // CrazyGames: initial download measurement ends here, gameplay begins
+          if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK) {
+              window.CrazyGames.SDK.game.loadingStop();
+              window.CrazyGames.SDK.game.gameplayStart();
+          }
           
           // Clear the chat log so messages from previous games don't bleed over!
           const logBox = document.getElementById('log');
@@ -7955,7 +8042,6 @@ function startGame() {
 
         } else {
             // --- OFFLINE BOT MODE FALLBACK (Keeps your practice mode working) ---
-            const fast = document.getElementById('fastTest') && document.getElementById('fastTest').checked;
             const count = menuState.count || 4;
             
             //Safely fallback if profile is not loaded yet on mobile
@@ -7993,10 +8079,10 @@ function startGame() {
             players.forEach(p => { for(let k=0; k<5; k++) p.hand.push(deck.pop()); });
 
             //Added gameExpiresAt so the timer doesn't instantly end the game offline!
-            state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:fast?120:1200, timeUp:false,
+            state = { players, deck, turn:0, previousTurn:0, direction:1, over:false, timeLeft:1200, timeUp:false,
                       requiredValue:null, lastEffectiveValue:null, lastPlayedCardLabel:null, lastPlayedBy:null,
                       buyLoop:null, uiState: 'IDLE', deception: null, turnTimeLeft: 30,
-                      gameExpiresAt: Date.now() + ((fast ? 120 : 1200) * 1000) };
+                      gameExpiresAt: Date.now() + (1200 * 1000) };
             
             // Offline Global Table Calculation
             const TIERS_ORDER = ['Apprentice', 'Trickster', 'Phantom', 'Mastermind', 'Oracle', 'Legend'];
@@ -8449,7 +8535,12 @@ function listenToGameState() {
                         try {
                             const res = await secureServerCall('turnCheck', { _quiet: true });
                             outcome = res.outcome || 'NONE';
-                        } catch (e) { console.warn('turnCheck failed', e); }
+                        } catch (e) {
+                            console.warn('turnCheck failed, will retry', e);
+                            // Don't let a single failed call leave a stuck player hanging
+                            // until the full 30s timeout penalty kicks in instead.
+                            outcome = 'WAIT';
+                        }
                         if (outcome === 'WAIT' && window.dodTurnCheckToken === myToken) {
                             setTimeout(function again() {
                                 if (!state || state.over || window.dodTurnCheckToken !== myToken) return;
@@ -8794,6 +8885,7 @@ function nextPlayerOf(id){
 
 function log(msg, cls, explicitUid = null, overwrite = false){
   const el = document.getElementById('log');
+  const wasNearBottom = (el.scrollHeight - el.scrollTop - el.clientHeight) < 60;
   
   let p = null;
   // 1. Try to use explicit UID (for online multiplayer)
@@ -8834,7 +8926,7 @@ function log(msg, cls, explicitUid = null, overwrite = false){
           lastEntry.style.animation = 'none';
           void lastEntry.offsetWidth; // Force Reflow
           lastEntry.style.animation = 'chatPop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
-          el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+          if (wasNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
           if(typeof sfx !== 'undefined' && cls === 'hi') sfx.alert();
           return; // Exit out, we successfully merged!
       }
@@ -8867,7 +8959,7 @@ function log(msg, cls, explicitUid = null, overwrite = false){
   }
 
   el.appendChild(div); 
-  el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+  if (wasNearBottom) el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
   if(typeof sfx !== 'undefined' && cls === 'hi') sfx.alert();
 }
 const PROTESTS=["That's a rough one to hit.","You'll pay for that.","Ice cold.","Fine, watch yourself next round.","Not fair, but okay."];
@@ -9696,7 +9788,7 @@ function renderHand(){
   wrap.innerHTML='';
   const you=state.players[0];
   
-  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked;
+  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked && !window.dodCenterIsLocked;
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
   //Map to a visual array so we don't alter the true index required by Cloudflare!
@@ -9771,7 +9863,7 @@ function renderHand(){
             el.innerHTML= html; // Empty center
             if(playable) el.onclick=wrapClick(()=>playReverse(idx, el));
           } else if(c.type==='insurance'){
-            const playableIns = isYourTurn() && (state.uiState === 'IDLE' || state.uiState === 'RESOLVING_BUY');
+            const playableIns = handActive && state.uiState !== 'CHOOSE_CALL';
             el.className='card insurance' + (playableIns ? '' : ' disabled');
             el.innerHTML= html; // Empty center
             if (playableIns) el.onclick = wrapClick(() => playInsuranceFromHand(idx, el));
@@ -10648,6 +10740,7 @@ function renderDeceptionOverlay(){
 
     // Deception has ended.
     window.dodDeceptionIntroActive = false;
+    window.dodRevealResultsKey = null; // reset so the next Deception's results screen can render
 
     if (localWasInDeception) {
     localWasInDeception = false;
@@ -10860,6 +10953,12 @@ function renderDeceptionOverlay(){
       html += `<div class="dec-status">${Object.keys(dec.responses).length}/${dec.brokeUids.length} answered</div>`;
     }
   } else if (dec.phase === 'REVEAL_RESULTS') {
+    // Build this screen once per result set — rebuilding it on every render restarted
+    // every fade-in below from opacity:0, which looked like the names blinking in and out.
+    const revealKey = dec.realNumber + '|' + JSON.stringify(dec.responses);
+    if (window.dodRevealResultsKey === revealKey) return;
+    window.dodRevealResultsKey = revealKey;
+
     html += `<div class="dec-sub" style="font-size:18px; color:var(--danger-bright); text-shadow:0 0 10px #000;">The Moment of Truth...</div>`;
     html += `<div class="tension-box">`;
     let delay = 0.5;
@@ -13672,7 +13771,7 @@ function returnToMenuFromEndgame() {
             // First-time-ever main menu walkthrough. Runs exactly once,
             // right after the game tutorial + Season intro cinematic
             // finish and the hub is actually on screen.
-            if (!localStorage.getItem('dod_seen_menu_tutorial') && !currentPartyId) {
+            if (!localStorage.getItem('dod_seen_menu_tutorial') && !(profile && profile.seenMenuTutorial) && !currentPartyId) {
                 setTimeout(startMenuTutorial, 600);
             }
         };
@@ -14062,7 +14161,12 @@ async function createParty() {
     document.getElementById('btnLeaveParty').style.display = 'inline-block';
     
     listenToParty(currentPartyId);
-    
+
+    // CrazyGames: notify platform this player is in an open, joinable room
+    if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+        window.CrazyGames.SDK.game.updateRoom({ roomId: currentPartyId, isJoinable: true, inviteParams: { partyId: currentPartyId } });
+    }
+
     // FULL Note: Instantly refresh the friends list so the "Invite" buttons appear immediately
     initFriendsList(); 
 }
@@ -14118,7 +14222,12 @@ async function leaveParty() {
     if (partyListenerUnsub) partyListenerUnsub();
     
     VoiceChat.leaveRoom(); //Disconnect microphone when leaving party
-    
+
+    // CrazyGames: notify platform this player left their room
+    if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+        window.CrazyGames.SDK.game.leftRoom();
+    }
+
     currentPartyId = null;
     isPartyLeader = true; 
     window.currentPartyMembers = []; // Clear members on leave 
@@ -15019,9 +15128,18 @@ const DOD_CAMERA_MOVE_MS = 2400;
 // --- Main SQUAD matchmaking flow ---
 async function startMatchmakingSquad() {
     const btn = document.getElementById('squadPlayBtn');
-    if (!btn || btn.classList.contains('searching') || btn.disabled) return;
-    if (!window.DoDAuth || !DoDAuth.getProfile()) return;
-    if (currentPartyId && !isPartyLeader) return; 
+    if (!btn || btn.classList.contains('searching') || btn.disabled) { console.warn('[DoD] PLAY blocked: btn/searching/disabled', {btn, searching: btn && btn.classList.contains('searching'), disabled: btn && btn.disabled}); return; }
+    if (!window.DoDAuth || !DoDAuth.getProfile()) { console.warn('[DoD] PLAY blocked: no auth/profile', {DoDAuth: window.DoDAuth, profile: window.DoDAuth && DoDAuth.getProfile()}); return; }
+    if (currentPartyId && !isPartyLeader) { console.warn('[DoD] PLAY blocked: in party but not leader', {currentPartyId, isPartyLeader}); return; }
+
+    // CrazyGames: room is no longer joinable once we start searching for a match
+    if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
+        try {
+            window.CrazyGames.SDK.game.updateRoom({ roomId: currentPartyId || 'matchmaking', isJoinable: false });
+        } catch(err) {
+            console.warn("CrazyGames SDK updateRoom prevented crash:", err);
+        }
+    }
 
     try { sfx.playBtn(); } catch(e){} 
 
@@ -15785,7 +15903,19 @@ async function executeDailyDraw(selectedIndex) {
         if (res.newInventory !== undefined) profile.inventory = res.newInventory;
         if (res.totalCopies !== undefined) profile.totalCopies = res.totalCopies;
 
-        //Force correct Coin image path in case the Cloudflare server sends a bad path
+        // Save directly to Firebase to guarantee cross-device sync instantly!
+        if (window.firebase) {
+            firebase.firestore().collection('users').doc(profile.uid).update({
+                lastSpinDate: profile.lastSpinDate,
+                currency: profile.currency || 0,
+                chests: profile.chests || {},
+                shards: profile.shards || {},
+                inventory: profile.inventory || [],
+                totalCopies: profile.totalCopies || 0
+            }).catch(()=>{});
+        }
+
+        // Force correct Coin image path in case the Cloudflare server sends a bad path
         let safeIcon = rollData.icon;
         if (safeIcon) {
             safeIcon = safeIcon.replace(/src=["'](?:Coins\/)?Coins\.(webp|png)["']/gi, 'src="Coins/Coins.webp"');
@@ -16620,11 +16750,13 @@ function renderSettingsAccountControls(profile) {
             area.innerHTML = `
                 <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to CrazyGames to secure your progress permanently without losing data.</p>
                 <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToCrazyGamesAccount()">Link CrazyGames Account</button>
+                <button class="btn ghost small" style="width:100%; color:var(--danger-bright); border-color:rgba(194,59,74,0.4); margin-top:8px;" onclick="handleSettingsSignOut()">Sign Out</button>
             `;
         } else {
             area.innerHTML = `
                 <p class="mono" style="font-size:11px; color:rgba(242,234,216,0.6); text-align:center; margin:0 0 4px;">You are currently playing on a Guest Profile. Link your profile to Google to secure your progress permanently without losing data.</p>
                 <button class="btn" style="background:#e8c454; color:#150c12; width:100%; padding:10px 0; font-size:13px;" onclick="linkGuestToGoogleAccount()">Link Google Account</button>
+                <button class="btn ghost small" style="width:100%; color:var(--danger-bright); border-color:rgba(194,59,74,0.4); margin-top:8px;" onclick="handleSettingsSignOut()">Sign Out</button>
             `;
         }
     } else if (isCG) {
@@ -18181,9 +18313,18 @@ showMenuScreen = function(name) {
 // ============================================================
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch((err) => {
-      console.warn('PWA Service Worker registration failed:', err);
-    });
+    if (window.DOD_PLATFORM === 'crazygames') {
+      // Force-kill any ghost Service Workers lingering in the browser cache!
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        for(let registration of registrations) {
+          registration.unregister();
+        }
+      });
+    } else {
+      navigator.serviceWorker.register('./sw.js').catch((err) => {
+        console.warn('PWA Service Worker registration failed:', err);
+      });
+    }
   });
 }
 
@@ -18279,6 +18420,33 @@ function switchMissionTab(tab, btnElement) {
     renderMissionsList();
 }
 
+// Deterministic per-day/week shuffle: same seed always produces the same order,
+// so client (display) and server (validation) independently agree on which
+// missions are "active" without needing to store anything extra.
+function seededShuffle(arr, seed) {
+    const a = arr.slice();
+    let s = seed >>> 0;
+    const rnd = () => {
+        s |= 0; s = (s + 0x6D2B79F5) | 0;
+        let t = Math.imul(s ^ (s >>> 15), 1 | s);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+    for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(rnd() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+}
+const DAILY_POOL_IDS = ['d1','d2','d3','d5','d6','d7','d8','d9'];
+const WEEKLY_POOL_IDS = ['w1','w2','w3','w4','w5','w6'];
+function getTodaysActiveMissionIds(dayId, weekId) {
+    return {
+        daily: seededShuffle(DAILY_POOL_IDS, dayId).slice(0, 3),
+        weekly: seededShuffle(WEEKLY_POOL_IDS, weekId).slice(0, 3)
+    };
+}
+
 // Master pool of all possible missions
 const ALL_MISSIONS = {
     daily: [
@@ -18302,26 +18470,20 @@ const ALL_MISSIONS = {
     ]
 };
 
-// Mathematically selects missions so everyone gets the same ones each day
+// Mathematically selects missions so everyone gets the same ones each day —
+// uses the same seeded shuffle as the server, so the ids always match what
+// the server will actually let you claim.
 function getActiveMissions() {
     const nowMs = Date.now();
     const dayId = Math.floor(nowMs / 86400000);
-    const weekId = Math.floor((nowMs + 345600000) / 604800000);
+    const weekId = Math.floor((nowMs + 259200000) / 604800000);
+    const activeIds = getTodaysActiveMissionIds(dayId, weekId);
 
-    const dPool = ALL_MISSIONS.daily;
-    const wPool = ALL_MISSIONS.weekly;
+    const byId = id => ALL_MISSIONS.daily.find(m => m.id === id) || ALL_MISSIONS.weekly.find(m => m.id === id);
 
     return {
-        daily: [
-            dPool[dayId % dPool.length],
-            dPool[(dayId + 1) % dPool.length],
-            dPool[(dayId + 2) % dPool.length]
-        ],
-        weekly: [
-            wPool[weekId % wPool.length],
-            wPool[(weekId + 1) % wPool.length],
-            wPool[(weekId + 2) % wPool.length]
-        ]
+        daily: activeIds.daily.map(byId),
+        weekly: activeIds.weekly.map(byId)
     };
 }
 
