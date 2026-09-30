@@ -11017,6 +11017,22 @@ function decClaimGroups(dec){
   });
   return groups.sort((a, b) => a.num - b.num);
 }
+// --- BLUFF ENGINE (offline): bots decide TOGETHER whether the table tells the truth or bluffs ---
+function decLieNumber(real){ const n = 1 + Math.floor(Math.random()*8); return n >= real ? n + 1 : n; }
+function decBotTruthChance(){
+  const s = (state && state.doubtStats) || { doubt:0, believe:0 };
+  const total = s.doubt + s.believe;
+  if(total < 3) return 0.5;
+  const doubtRate = s.doubt / total;
+  return Math.min(0.7, Math.max(0.3, 0.5 + (doubtRate - 0.5) * 0.6));
+}
+function decBotClaimVote(dec){
+  if(dec.botTruth === undefined || dec.botTruth === null){
+    dec.botTruth = Math.random() < decBotTruthChance();
+    dec.botLie = decLieNumber(dec.realNumber);
+  }
+  return dec.botTruth ? dec.realNumber : dec.botLie;
+}
 // Bots just make the same binary bet a human would now.
 function decBotAnswer(dec){
   return { believe: Math.random() < 0.5, guess: null };
@@ -11259,7 +11275,7 @@ return;
     // Nobody has coins to negotiate — the table draws a real number at random and
     // there's no one to lie about it, so the claim is just the truth.
     const realNumber = 1 + Math.floor(Math.random()*9);
-    state.deception = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: realNumber, phase:'ANSWER', responses:{} };
+    state.deception = { brokeUids: broke.map(p=>p.uid), richUids: [], proposerUid: null, realStances:{}, realNumber, claimStances:{}, claimNumber: (Math.random() < decBotTruthChance() ? realNumber : decLieNumber(realNumber)), phase:'ANSWER', responses:{} };
     state.uiState = 'DECEPTION';
     renderAll();
     offlineDeceptionStep();
@@ -11302,10 +11318,10 @@ function offlineDeceptionStep(){
         delete window.activeSyncTimers[nextUid];
         if(!state.deception) return;
         if (nextUid === dec.proposerUid) {
-            stances[nextUid] = 1 + Math.floor(Math.random()*9);
+            stances[nextUid] = (dec.phase === 'VOTE_CLAIM') ? decBotClaimVote(dec) : (1 + Math.floor(Math.random()*9));
         } else {
             const accept = Math.random() < 0.55;
-            stances[nextUid] = accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9));
+            stances[nextUid] = (dec.phase === 'VOTE_CLAIM') ? decBotClaimVote(dec) : (accept ? stances[dec.proposerUid] : (1 + Math.floor(Math.random()*9)));
         }
         renderAll();
         offlineDeceptionStep();
@@ -11398,6 +11414,7 @@ function resolveDeceptionAnswersOffline(){
     const hasExplicitGuess = !r.believe && r.guess !== null && r.guess !== undefined;
     const effectiveNumber = hasExplicitGuess ? r.guess : dec.claimNumber;
     const correct = hasExplicitGuess ? (r.guess === dec.realNumber) : (r.believe ? (dec.claimNumber === dec.realNumber) : (dec.claimNumber !== dec.realNumber));
+    if(p.isHuman){ state.doubtStats = state.doubtStats || { doubt:0, believe:0 }; if(r.believe) state.doubtStats.believe++; else if(r.guess === null || r.guess === undefined) state.doubtStats.doubt++; }
     const actionText = r.believe ? `believed the claim` : (hasExplicitGuess ? `trusted a different claim (${r.guess})` : `didn't buy it`);
 
     if(correct){
