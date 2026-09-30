@@ -5336,6 +5336,7 @@ function renderUnderworldScreen() {
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.17.1/firebase-analytics-compat.js"></script>
 <script src="auth.js"></script>
 
 <script>
@@ -8155,6 +8156,8 @@ function startGame() {
     if (ambientMasterGain && audioCtx) {
         ambientMasterGain.gain.setValueAtTime(0, audioCtx.currentTime);
     }
+
+    if (window.DoDAuth) DoDAuth.logEvent('match_start', { platform: window.DOD_PLATFORM || 'web' });
 
     // Initialize temporary match stat tracker for unlocking action-based titles
     window.matchStats = { wilds:0, reverses:0, powers:0, steals:0, insurances:0, forcedBuys:0, deceptionsSurvived:0 };
