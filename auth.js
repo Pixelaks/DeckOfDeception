@@ -17,6 +17,13 @@ firebase.initializeApp(firebaseConfig);
 const dodAuth = firebase.auth();
 const dodDb = firebase.firestore();
 
+// Analytics (GA4): active users + engagement time. Wrapped in try/catch because
+// ad blockers or restricted iframes can block it, and that must never break the game.
+let dodAnalytics = null;
+try {
+  if (firebase.analytics) dodAnalytics = firebase.analytics();
+} catch (e) { console.warn('Analytics unavailable:', e); }
+
 // CrazyGames forbids third-party OAuth popups (and their sandboxed iframe
 // blocks Google's popup anyway), so on CrazyGames show a CrazyGames button
 // instead of Google. Guest stays available on both, as required.
@@ -101,6 +108,15 @@ dodAuth.onAuthStateChanged(function(user){
     return;
   }
   const uid = user.uid;
+  if (dodAnalytics) {
+    try {
+      dodAnalytics.setUserId(uid);
+      dodAnalytics.setUserProperties({
+        login_type: user.isAnonymous ? 'guest' : 'account',
+        platform: window.DOD_PLATFORM || 'web'
+      });
+    } catch (e) {}
+  }
   const ref = dodDb.collection('users').doc(uid);
   if (typeof showSigningInState === 'function') showSigningInState();
 
@@ -384,5 +400,8 @@ window.DoDAuth = {
   signInWithCrazyGames: dodSignInWithCrazyGames,
   signInAnonymously: dodSignInAnonymously,
   addGamePoints: dodAddGamePoints,
-  syncCurrency: dodSyncCurrencyToProfile
+  syncCurrency: dodSyncCurrencyToProfile,
+  logEvent: function(name, params){
+    try { if (dodAnalytics) dodAnalytics.logEvent(name, params || {}); } catch (e) {}
+  }
 };
