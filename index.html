@@ -2754,6 +2754,19 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
 .friend-item:hover { border-color: rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); }
 .friend-item .name { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--paper); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 110px; }
 
+/* ===== SAFE-AREA: keep hub UI clear of the iPhone camera cutout / rounded corners (landscape) ===== */
+/* Left side */
+#squadHud .squad-friends-panel { left: calc(15px + env(safe-area-inset-left, 0px)) !important; }
+#squadHud .squad-play-zone     { left: calc(15px + env(safe-area-inset-left, 0px)) !important; }
+#squadHud .squad-search-panel  { left: calc(165px + env(safe-area-inset-left, 0px)) !important; }
+#squadProfileWidget            { left: calc(20px + env(safe-area-inset-left, 0px)) !important; }
+#globalBackBtn                 { left: calc(20px + env(safe-area-inset-left, 0px)) !important; }
+/* Right side (the cutout is on the right when the phone is rotated the other way) */
+#squadHud .squad-events-zone   { right: calc(15px + env(safe-area-inset-right, 0px)) !important; }
+#squadHud .squad-icon-bar      { right: calc(10px + env(safe-area-inset-right, 0px)) !important; }
+#menuFsToggleBtn               { right: calc(20px + env(safe-area-inset-right, 0px)) !important; }
+#hubCurrencyBadge              { right: calc(68px + env(safe-area-inset-right, 0px)) !important; }
+
 /* CINEMATIC MATCH START OVERLAY */
 #matchIntroOverlay {
   position: fixed; inset: 0; z-index: 4000;
@@ -2843,6 +2856,16 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
  transition:transform .22s cubic-bezier(0.34,1.4,0.64,1), box-shadow .22s ease, border-color .22s ease;
  contain: content;
 }
+/* SHOP PERF */
+#shopRoot .shop-item{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 110px;
+  transition:none !important;
+  box-shadow:0 2px 6px rgba(0,0,0,0.6) !important;
+}
+#shopRoot .shop-item *{ filter:none !important; }
+#shopRoot .shop-item button{ transition:none !important; box-shadow:none !important; }
+#shopRoot .btn::after{ display:none !important; }
 .shop-item::before{
   content:''; position:absolute; inset:0;
   background:linear-gradient(160deg,rgba(232,196,84,0.08),transparent 60%);
@@ -17092,7 +17115,7 @@ function triggerNotificationVfx(type = 'gold', event = null) {
         // AAA SHARP "MAGIC/GLINT" CANVAS VFX (No blurry balls)
         // =========================================================
         const canvas = document.createElement('canvas');
-        canvas.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999999; mix-blend-mode: screen;';
+        canvas.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999999;';
         document.body.appendChild(canvas);
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
@@ -17235,7 +17258,7 @@ function showSystemToast(msg) {
     toast.id = 'sysToast';
     
     //Cinematic floating text with heavy shadow, no background capsule, and CSS transition targets
-    toast.style.cssText = 'position:fixed; bottom:15%; left:50%; transform:translate(-50%, 0); color:#fff; font-family:"Cinzel",serif; font-size:16px; font-weight:bold; letter-spacing:1px; z-index:999999; pointer-events:none; text-align:center; white-space:nowrap; text-shadow: 0 4px 20px rgba(0,0,0,1), 0 0 12px rgba(0,0,0,1), 0 2px 4px rgba(0,0,0,1); transition: transform 2s ease-out, opacity 2s ease-in; opacity: 1;';
+    toast.style.cssText = 'position:fixed; bottom:15%; left:50%; transform:translate(-50%, 0); color:#fff; font-family:"Cinzel",serif; font-size:16px; font-weight:bold; letter-spacing:1px; z-index:999999; pointer-events:none; text-align:center; white-space:nowrap; text-shadow: 0 2px 6px rgba(0,0,0,1); will-change: transform, opacity; transition: transform 2s ease-out, opacity 2s ease-in; opacity: 1;';
     
     // Color code positive/negative messages for the new cinematic style
     if (lowerMsg.includes('invite') || lowerMsg.includes('friend') || lowerMsg.includes('joined') || lowerMsg.includes('copied')) {
@@ -17248,7 +17271,7 @@ function showSystemToast(msg) {
     document.body.appendChild(toast);
     
     // Force reflow to ensure the starting position is registered by the browser before we apply the movement targets
-    void toast.offsetWidth;
+    return requestAnimationFrame(() => requestAnimationFrame(() => { toast.style.transform = 'translate(-50%, -60px)'; toast.style.opacity = '0'; setTimeout(() => toast.remove(), 2000); }));
     
     // Animate upwards and fade out
     toast.style.transform = 'translate(-50%, -60px)';
@@ -17860,7 +17883,7 @@ function renderShopItems() {
         }
 
         const cardHtml = `
-            <div class="shop-item" style="flex: 1 1 200px; max-width: 280px; ${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : rarityInfo.color + '55'}; border-radius:8px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 18px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04); transform: skewX(-6deg);">
+            <div class="shop-item" data-shop-key="${item.id}" style="flex: 1 1 200px; max-width: 280px; ${customHeight} display:flex; flex-direction:row; align-items:center; background: ${baseBgColor}; border:1px solid ${isEquipped ? '#d094ff' : rarityInfo.color + '55'}; border-radius:8px; padding:0; text-align:left; overflow:hidden; position:relative; box-shadow: 0 4px 18px rgba(0,0,0,0.75), inset 0 1px 0 rgba(255,255,255,0.04); transform: skewX(-6deg);">
                 ${rarityTagHtml}
                 <div style="position:absolute; inset:0; transform: skewX(6deg) scale(1.05); overflow:hidden; pointer-events:none; z-index:1;">
                     ${bgLayer}
@@ -17916,7 +17939,20 @@ function renderShopItems() {
         }
     });
 
-    root.innerHTML = finalHtml;
+    // Keyed patch: swap only cards whose HTML changed so images never reload
+    const tpl = document.createElement('template');
+    tpl.innerHTML = finalHtml;
+    const newCards = tpl.content.querySelectorAll('[data-shop-key]');
+    const oldCards = {};
+    root.querySelectorAll('[data-shop-key]').forEach(n => { oldCards[n.dataset.shopKey] = n; });
+    let canPatch = root.dataset.shopTab === currentShopTab && newCards.length > 0 && newCards.length === Object.keys(oldCards).length;
+    if (canPatch) { for (const n of newCards) { if (!oldCards[n.dataset.shopKey]) { canPatch = false; break; } } }
+    if (canPatch) {
+        newCards.forEach(n => { const o = oldCards[n.dataset.shopKey]; if (o.outerHTML !== n.outerHTML) o.replaceWith(n); });
+    } else {
+        root.innerHTML = finalHtml;
+        root.dataset.shopTab = currentShopTab;
+    }
 }
 
 function openShopPreview(itemId, tab) {
