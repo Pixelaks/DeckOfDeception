@@ -2320,11 +2320,13 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
      other tiers recede into a dim filmstrip instead of 6 identical boxes.
      ========================================= */
   #screen-ranks p.blurb { display: none !important; } 
-  .ranks-list { padding: 14px 10px !important; margin-top: 6px !important; gap: 10px !important; align-items: center !important; overflow-y: hidden !important; justify-content: flex-start; flex: 0 0 auto !important; min-height: 275px !important; }
-  #screen-ranks .screen-content { overflow-y: auto !important; }
+    #screen-ranks .ranks-list { padding: 6px 10px !important; margin-top: 0 !important; gap: 10px !important; align-items: center !important; overflow-y: hidden !important; justify-content: center !important; justify-content: safe center !important; flex: 1 1 0 !important; min-height: 0 !important; }
+  #screen-ranks .screen-content { overflow: hidden !important; padding: 0 !important; justify-content: center !important; }
+  #screen-ranks .ranks-blurb-wrap { display: none !important; }
+  #screen-ranks .screen-header { margin-bottom: 0 !important; padding-bottom: 0 !important; }
 
-  .rank-item { flex: 0 0 88px !important; min-height: 205px !important; height: auto !important; padding: 10px 5px !important; border-radius: 8px !important; display: flex; flex-direction: column; justify-content: center; }
-  .rank-item.current { flex: 0 0 128px !important; min-height: 245px !important; height: auto !important; transform: none !important; margin: 0 4px !important; z-index: 10; border-color: var(--brass-bright) !important; padding: 14px 8px !important; }
+  .rank-item { flex: 0 0 88px !important; min-height: 0 !important; height: 86% !important; padding: 8px 5px !important; border-radius: 8px !important; display: flex; flex-direction: column; justify-content: center; }
+  .rank-item.current { flex: 0 0 128px !important; min-height: 0 !important; height: 100% !important; transform: none !important; margin: 0 4px !important; z-index: 10; border-color: var(--brass-bright) !important; padding: 14px 8px !important; }
 
   /* Soft glow orb behind the icon — one cheap gradient layer, no extra particles needed */
   .rank-item .r-icon { position: relative; width: clamp(30px, 11vh, 42px) !important; height: clamp(30px, 11vh, 42px) !important; margin-bottom: 0.8vh !important; flex-shrink: 0; }
@@ -3182,6 +3184,22 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
 /* ============================================================
    PWA / STANDALONE MODE TWEAKS
    ============================================================ */
+/* Blinking highlight shown right after the player leaves fullscreen */
+@keyframes fsBlinkPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232,196,84,0.0); border-color: rgba(232,196,84,0.5); background: rgba(232,196,84,0.08); transform: scale(1); }
+  50%      { box-shadow: 0 0 0 7px rgba(232,196,84,0.35), 0 0 22px rgba(232,196,84,0.9); border-color: #f5dd8a; background: rgba(232,196,84,0.35); transform: scale(1.14); }
+}
+.fs-toggle-btn.fs-blink {
+  animation: fsBlinkPulse 0.9s ease-in-out 11;
+  color: #fff;
+  border-color: #f5dd8a;
+}
+
+body.low-power-mode .fs-toggle-btn.fs-blink { animation: none; box-shadow: 0 0 0 3px #f5dd8a; }
+@media (prefers-reduced-motion: reduce) {
+  .fs-toggle-btn.fs-blink { animation: none; box-shadow: 0 0 0 3px #f5dd8a; }
+}
+
 /* Note: Only hide the fullscreen button on Mobile PWAs. Desktop PWAs still need it! */
 @media (display-mode: standalone) and (max-width: 840px) {
   .fs-toggle-btn {
@@ -3872,7 +3890,7 @@ if (document.readyState === 'loading') {
     <div style="width: 100%; display: flex; flex-direction: column; align-items: center; flex: 1; min-height: 0; background: radial-gradient(circle at top, rgba(20, 25, 30, 0.95) 0%, rgba(8, 9, 11, 0.98) 100%); border: 1px solid rgba(201, 162, 39, 0.25); border-radius: 12px; box-shadow: 0 15px 50px rgba(0,0,0,0.9), inset 0 0 20px rgba(0,0,0,0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); overflow: hidden; margin-top: 5px;">
       
       <!-- Top Blurb Header -->
-      <div style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); padding: 12px 16px; width: 100%;">
+      <div class="ranks-blurb-wrap" style="background: rgba(0,0,0,0.4); border-bottom: 1px solid rgba(201,162,39,0.15); padding: 12px 16px; width: 100%;">
         <p class="blurb" style="text-align:center; margin:0; color:rgba(242,234,216,0.7); font-size:12px;">Climb the ranks by winning matches. Reach Level 5 with 100 points to unlock the next tier and claim its rewards.</p>
       </div>
       
@@ -5860,6 +5878,43 @@ document.addEventListener('fullscreenchange', () => { updateFullscreenIcons(); d
 document.addEventListener('webkitfullscreenchange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
 document.addEventListener('mozfullscreenchange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
 document.addEventListener('MSFullscreenChange', () => { updateFullscreenIcons(); dodSetViewportHeight(); });
+
+// ── Blink the fullscreen button the moment the player leaves fullscreen ──
+(function () {
+    const _isFsNow = () => !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+    let _wasFs = _isFsNow();
+    let _blinkTimer = null;
+
+    function stopFsBlink() {
+        clearTimeout(_blinkTimer);
+        document.querySelectorAll('.fs-toggle-btn.fs-blink').forEach(b => b.classList.remove('fs-blink'));
+    }
+
+    function startFsBlink() {
+        stopFsBlink();
+        document.querySelectorAll('.fs-toggle-btn').forEach(b => b.classList.add('fs-blink'));
+        // Only nag with a toast if a fullscreen button is actually on screen right now
+        const anyVisible = Array.from(document.querySelectorAll('.fs-toggle-btn')).some(b => b.getBoundingClientRect().width > 0);
+        if (anyVisible && typeof showSystemToast === 'function') showSystemToast('Tap the fullscreen button to go back to fullscreen.');
+        _blinkTimer = setTimeout(stopFsBlink, 30000); // stop after 30s so it never nags forever
+    }
+
+    function onFsChange() {
+        const isFs = _isFsNow();
+        if (window.DOD_PLATFORM === 'crazygames') { _wasFs = isFs; return; } // CrazyGames manages its own fullscreen
+        if (_wasFs && !isFs) startFsBlink();   // just LEFT fullscreen
+        if (isFs) stopFsBlink();               // back in fullscreen
+        _wasFs = isFs;
+    }
+
+    ['fullscreenchange', 'webkitfullscreenchange', 'mozfullscreenchange', 'MSFullscreenChange']
+        .forEach(ev => document.addEventListener(ev, onFsChange));
+
+    // Tapping the button itself also stops the blink
+    document.addEventListener('click', function (e) {
+        if (e.target.closest && e.target.closest('.fs-toggle-btn')) stopFsBlink();
+    }, true);
+})();
 window.addEventListener('resize', () => {
     updateFullscreenIcons();
     dodSetViewportHeight();
