@@ -3384,8 +3384,12 @@ window.dodImagesLoaded = false;
 setTimeout(function() {
     var bg = document.getElementById('bgMusic');
     var season = document.getElementById('seasonMusic');
-    if (bg) bg.load(); // buffers DeckofDeceptionTheme.mp3 silently in background
-    if (season) season.load(); // ADDED: buffers Season 1 music silently!
+    // Never call load() on a track that is already playing or was already started by the intro tap.
+    // load() resets the element and silently stops the music.
+    var _introEl = document.getElementById('introOverlay');
+    var _alreadyBooted = _introEl && _introEl.dataset.booted === 'true';
+    if (bg && bg.paused && !_alreadyBooted) bg.load(); // buffers DeckofDeceptionTheme.mp3 silently in background
+    if (season && season.paused && !_alreadyBooted) season.load(); // buffers Season 1 music silently!
     ['sfxClick','sfxPlay','sfxNotification','sfxCoins'].forEach(function(id) {
         var el = document.getElementById(id);
         if (el) el.load(); // tiny files, loads in <1s
@@ -7062,6 +7066,29 @@ function applyMenuTutStep() {
     } else {
         overlay.classList.remove('spotlight-active');
     }
+
+    // Always position the menu tutorial box explicitly (center). Without this it inherits leftover
+    // inline styles from the game tutorial, or falls back to the top-left corner if that never ran.
+    const _mDiag = document.getElementById('tutDialogue');
+    if (_mDiag) {
+        _mDiag.classList.remove('tut-row');
+        _mDiag.style.translate     = '';
+        _mDiag.style.flexDirection = 'column';
+        _mDiag.style.alignItems    = 'stretch';
+        _mDiag.style.width         = '90%';
+        _mDiag.style.maxWidth      = '340px';
+        _mDiag.style.top           = '50%';
+        _mDiag.style.bottom        = 'auto';
+        _mDiag.style.left          = '50%';
+        _mDiag.style.right         = 'auto';
+        _mDiag.style.transform     = 'translate(-50%, -50%)';
+        _mDiag.style.removeProperty('z-index');
+    }
+    tutText.style.fontSize   = '13.5px';
+    tutText.style.lineHeight = '1.55';
+    tutBtn.style.marginTop   = '';
+    tutBtn.style.flexShrink  = '';
+    tutBtn.style.padding     = '';
 
     tutText.innerHTML = step.text || "";
     tutBtn.style.display = 'block';
