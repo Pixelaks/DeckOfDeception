@@ -3183,7 +3183,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
    PWA / STANDALONE MODE TWEAKS
    ============================================================ */
 /* Note: Only hide the fullscreen button on Mobile PWAs. Desktop PWAs still need it! */
-@media (display-mode: standalone) and (max-width: 840px), (display-mode: fullscreen) and (max-width: 840px) {
+@media (display-mode: standalone) and (max-width: 840px) {
   .fs-toggle-btn {
     display: none !important;
   }
@@ -4284,7 +4284,8 @@ if (document.readyState === 'loading') {
     
     <p class="mono" style="font-size:11.5px; color:rgba(242,234,216,0.85); margin-bottom:24px; line-height: 1.5;">Sign in to save your progression, rank up, and unlock exclusive rewards.</p>
     
-    <div style="display: flex; flex-direction: column; gap: 10px;">
+    <div id="loginSigningIn" class="mono" style="display:none; padding:22px 0; font-size:14px; color:var(--brass-bright); letter-spacing:1px;">Signing you in...</div>
+    <div id="loginBtnsWrap" style="display: flex; flex-direction: column; gap: 10px;">
         <button id="btnGoogleLogin" class="btn" style="width:100%; border-radius: 50px; background: linear-gradient(135deg, #f5dd8a 0%, #c9a227 100%); color:#150c12; font-family:'Inter', sans-serif; font-weight:800; font-size:13px; letter-spacing:1px; border: none; padding: 12px 0; box-shadow: 0 4px 15px rgba(201,162,39,0.3); text-transform: uppercase; display: flex; align-items: center; justify-content: center; gap: 8px;" onclick="handleAuthClick('google')">
             <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M12.24 10.285V14.4h6.806c-.275 1.765-2.056 5.174-6.806 5.174-4.095 0-7.439-3.389-7.439-7.574s3.345-7.574 7.439-7.574c2.33 0 3.891.989 4.785 1.849l3.254-3.138C18.189 1.186 15.479 0 12.24 0c-6.635 0-12 5.365-12 12s5.365 12 12 12c6.926 0 11.52-4.869 11.52-11.726 0-.788-.085-1.39-.189-1.989H12.24z"/></svg>
             Sign in with Google
@@ -4641,11 +4642,30 @@ function handleAuthClick(type) {
         }
     }
     
-    // 2. Failsafe: If the network hangs or Firebase fails silently, unlock the buttons after 6 seconds
-    setTimeout(resetAuthButtons, 6000);
+    // 2. Failsafe: only unlock if the user is NOT signed in by then (never while sign-in is succeeding)
+    clearTimeout(window._authFailsafeTimer);
+    window._authFailsafeTimer = setTimeout(function () {
+        const signedIn = !!(window.firebase && firebase.auth().currentUser);
+        if (!signedIn) resetAuthButtons();
+    }, type === 'google' ? 60000 : 15000);
+}
+
+// Swap the buttons for a "Signing you in..." message once Firebase confirms the user
+function showSigningInState() {
+    const overlay = document.getElementById('loginChoiceOverlay');
+    if (!overlay || !overlay.classList.contains('show')) return;
+    clearTimeout(window._authFailsafeTimer);
+    const w = document.getElementById('loginBtnsWrap');
+    const m = document.getElementById('loginSigningIn');
+    if (w) w.style.display = 'none';
+    if (m) m.style.display = 'block';
 }
 
 function resetAuthButtons() {
+    const _w = document.getElementById('loginBtnsWrap');
+    const _m = document.getElementById('loginSigningIn');
+    if (_w) _w.style.display = 'flex';
+    if (_m) _m.style.display = 'none';
     const btnGoogle = document.getElementById('btnGoogleLogin');
     const btnCG = document.getElementById('btnCrazyGamesLogin');
     const btnGuest = document.getElementById('btnGuestLogin');
@@ -5586,11 +5606,32 @@ const seasonMusicElement = patchAudioVolume(document.getElementById('seasonMusic
 // an independent pause button that has no idea about the game's own mute/volume state
 // (tapping it silently stopped the music behind the game's back).
 if ('mediaSession' in navigator) {
-    navigator.mediaSession.metadata = null;
-    ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'previoustrack', 'nexttrack'].forEach(action => {
-        try { navigator.mediaSession.setActionHandler(action, null); } catch (e) {}
+    try {
+        navigator.mediaSession.metadata = new MediaMetadata({ title: 'Deck of Deception', artist: 'Pixelaks Technologies' });
+    } catch (e) {}
+    // A no-op handler makes the notification buttons inert. A null handler would let the browser
+    // control the raw audio elements directly and bypass the game's own audio logic.
+    const _msNoop = () => {};
+    ['play', 'pause', 'stop', 'seekbackward', 'seekforward', 'seekto', 'previoustrack', 'nexttrack'].forEach(action => {
+        try { navigator.mediaSession.setActionHandler(action, _msNoop); } catch (e) {}
     });
 }
+
+// If a music track is paused from OUTSIDE the game (OS audio focus, notification, headset),
+// put it back. Pauses the game does itself (stopAllMusic, tab hidden) are ignored.
+[bgMusicElement, inGameMusicElement, tensionMusicElement, syndicateMusicElement, seasonMusicElement].forEach(el => {
+    if (!el || el._extPauseGuard) return;
+    el._extPauseGuard = true;
+    const realPause = el.pause.bind(el);
+    el.pause = function () { el._gamePaused = true; return realPause(); };
+    el.addEventListener('play', () => { el._gamePaused = false; });
+    el.addEventListener('pause', () => {
+        if (el._gamePaused || document.hidden || el.ended) return;
+        setTimeout(() => {
+            if (el.paused && !el._gamePaused && !document.hidden) el.play().catch(() => {});
+        }, 150);
+    });
+});
 
 const introOverlay = document.getElementById('introOverlay');
 const menu = document.getElementById('menu');
@@ -5920,8 +5961,13 @@ function provisionGuestProfile(targetTier = null, isOffline = false) {
     
     if (isOffline) {
         //Dedicated names for offline practice so players know they are training bots
-        const OFFLINE_NAMES = ["Trainer_Alpha", "Trainer_Bravo", "Trainer_Charlie", "Trainer_Delta", "Trainer_Echo", "Trainer_Ghost", "Trainer_Viper", "Trainer_Striker", "Trainer_Nova", "Trainer_Omega"];
-        name = OFFLINE_NAMES[Math.floor(Math.random() * OFFLINE_NAMES.length)] + "_" + Math.floor(10 + Math.random() * 90);
+        // Short unique names like "Trainer 43" (never repeats within the last 12 bots)
+        window._usedTrainerNums = window._usedTrainerNums || [];
+        let _tn;
+        do { _tn = Math.floor(10 + Math.random() * 90); } while (window._usedTrainerNums.includes(_tn));
+        window._usedTrainerNums.push(_tn);
+        if (window._usedTrainerNums.length > 12) window._usedTrainerNums.shift();
+        name = "Trainer " + _tn;
     } else {
         // 60% chance for a real human name, 40% chance for a gamer tag for Online Matchmaking
         if (Math.random() < 0.6) {
@@ -6980,6 +7026,13 @@ function applyMenuTutStep() {
     arrow.className = '';
 
     const targetEl = step.target ? document.getElementById(step.target) : null;
+
+    // Skip steps whose button is hidden on this device (e.g. fullscreen button in installed mobile app)
+    if (step.target && (!targetEl || targetEl.getBoundingClientRect().width === 0)) {
+        menuTutStep++;
+        applyMenuTutStep();
+        return;
+    }
 
     if (targetEl) {
         const r        = targetEl.getBoundingClientRect();
