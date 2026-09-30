@@ -2309,10 +2309,10 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
   
   /* Compress Grid Items */
   .shop-content { padding-top: 4px !important; }
-  .shop-grid { margin-top: 4px; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) !important; justify-content: center !important; }
-  .shop-item { border-radius: 6px !important; padding: 0 !important; }
-  .shop-item .shop-name { font-size: 9.5px !important; margin-bottom: 4px !important; white-space: normal !important; }
-  .shop-item button { padding: 6px !important; font-size: 8.5px !important; }
+  .shop-grid { margin-top: 4px; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; justify-content: center !important; }
+
+
+
 
   /* =========================================
      RANKS SCREEN — REDESIGNED FOR MOBILE LANDSCAPE
@@ -2856,16 +2856,19 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
  transition:transform .22s cubic-bezier(0.34,1.4,0.64,1), box-shadow .22s ease, border-color .22s ease;
  contain: content;
 }
-/* SHOP PERF */
+/* SHOP PERF (disabled, kept for reference):
 #shopRoot .shop-item{
-  content-visibility:auto;
+  content-visibility:visible;
   contain-intrinsic-size:auto 110px;
   transition:none !important;
   box-shadow:0 2px 6px rgba(0,0,0,0.6) !important;
 }
 #shopRoot .shop-item *{ filter:none !important; }
+#shopRoot .shop-item{ transform:none !important; }
+#shopRoot .shop-item > div{ transform:none !important; }
 #shopRoot .shop-item button{ transition:none !important; box-shadow:none !important; }
 #shopRoot .btn::after{ display:none !important; }
+*/
 .shop-item::before{
   content:''; position:absolute; inset:0;
   background:linear-gradient(160deg,rgba(232,196,84,0.08),transparent 60%);
@@ -17952,6 +17955,19 @@ function renderShopItems() {
     } else {
         root.innerHTML = finalHtml;
         root.dataset.shopTab = currentShopTab;
+        // Keep shop images loaded and decoded so scrolling back never re-fetches them
+        window._shopImgKeep = window._shopImgKeep || {};
+        root.querySelectorAll('[style*="background-image"]').forEach(function(el){
+            const bg = el.style.backgroundImage || '';
+            const re = /url\(["']?([^"')]+)["']?\)/g; let m;
+            while ((m = re.exec(bg))) {
+                const u = m[1];
+                if (window._shopImgKeep[u]) continue;
+                const im = new Image(); im.decoding = 'async'; im.src = u;
+                window._shopImgKeep[u] = im;
+                if (im.decode) im.decode().catch(function(){});
+            }
+        });
     }
 }
 
