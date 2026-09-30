@@ -102,6 +102,7 @@ dodAuth.onAuthStateChanged(function(user){
   }
   const uid = user.uid;
   const ref = dodDb.collection('users').doc(uid);
+  if (typeof showSigningInState === 'function') showSigningInState();
 
   // A slow/flaky connection can leave a plain ref.get() hanging for a very long
   // time with no error at all — that's exactly what was freezing "Signing you
@@ -149,10 +150,16 @@ dodAuth.onAuthStateChanged(function(user){
         } else {
           _dodCompleteInteractiveAuth();
         }
+      }).catch(function(err){
+        console.error('Profile create failed:', err);
+        _dodInteractiveSignIn = false;
+        if (typeof resetAuthButtons === 'function') resetAuthButtons();
       });
     }
   }).catch(function(err){
     console.error('Profile load failed:', err);
+    _dodInteractiveSignIn = false;
+    if (typeof resetAuthButtons === 'function') resetAuthButtons();
   });
 });
 
