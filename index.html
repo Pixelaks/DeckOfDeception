@@ -2320,10 +2320,11 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
      other tiers recede into a dim filmstrip instead of 6 identical boxes.
      ========================================= */
   #screen-ranks p.blurb { display: none !important; } 
-  .ranks-list { padding: 14px 10px !important; margin-top: 6px !important; gap: 10px !important; align-items: center !important; overflow-y: hidden !important; justify-content: flex-start; }
+  .ranks-list { padding: 14px 10px !important; margin-top: 6px !important; gap: 10px !important; align-items: center !important; overflow-y: hidden !important; justify-content: flex-start; flex: 0 0 auto !important; min-height: 275px !important; }
+  #screen-ranks .screen-content { overflow-y: auto !important; }
 
-  .rank-item { flex: 0 0 88px !important; min-height: 0 !important; height: 78% !important; padding: 10px 5px !important; border-radius: 8px !important; display: flex; flex-direction: column; justify-content: center; }
-  .rank-item.current { flex: 0 0 128px !important; height: 100% !important; transform: none !important; margin: 0 4px !important; z-index: 10; border-color: var(--brass-bright) !important; padding: 14px 8px !important; }
+  .rank-item { flex: 0 0 88px !important; min-height: 205px !important; height: auto !important; padding: 10px 5px !important; border-radius: 8px !important; display: flex; flex-direction: column; justify-content: center; }
+  .rank-item.current { flex: 0 0 128px !important; min-height: 245px !important; height: auto !important; transform: none !important; margin: 0 4px !important; z-index: 10; border-color: var(--brass-bright) !important; padding: 14px 8px !important; }
 
   /* Soft glow orb behind the icon — one cheap gradient layer, no extra particles needed */
   .rank-item .r-icon { position: relative; width: clamp(30px, 11vh, 42px) !important; height: clamp(30px, 11vh, 42px) !important; margin-bottom: 0.8vh !important; flex-shrink: 0; }
@@ -3483,7 +3484,10 @@ setTimeout(function() {
   object-fit:contain;
   display:block;
 }
-  .tut-dname  { font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:12px; }
+  .tut-dname  { font-family:'Cinzel Decorative',serif; color:var(--brass-bright); font-size:12px; white-space:nowrap; }
+  #tutDialogue .tut-dealer-row button { white-space:nowrap; margin-left:6px; }
+  #tutDialogue.tut-row .tut-dealer-row { flex:0 0 auto; width:210px; }
+  #tutDialogue.tut-row #tutText { flex:1; min-width:0; }
   .tut-prog   { width:100%; height:2px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; margin-top:3px; }
   /* Legacy — keep .tut-focused for showcase cards; spotlight handles in-game elements */
   .tut-focused { z-index: 10001 !important; pointer-events: auto !important; border-radius: 8px; }
@@ -6156,6 +6160,8 @@ function openTutorial(fromSettings) {
     window.isInteractiveTutorial = true;
     window.networkSyncPaused = true;
     menuState.count = 4;
+    const _pwaBox = document.getElementById('pwaInstallModal');
+    if (_pwaBox) _pwaBox.classList.remove('show');
     
     // Move ALL tutorial elements to the body so they exist safely above all game modals
     document.body.appendChild(document.getElementById('tutOverlay'));
@@ -6741,6 +6747,30 @@ you._tutorialBrokeDemoPending = true;
         diag.style.maxWidth = '310px';
     }
 
+    } else if (step.target === 'chainBox' && targetEl) {
+        // SCORE BOX: park the dialogue to the LEFT of the score highlight so they never overlap
+        const r        = targetEl.getBoundingClientRect();
+        const gameRect = document.getElementById('game').getBoundingClientRect();
+        const dW       = Math.min(340, gameRect.width * 0.9);
+        const roomLeft = (r.left - gameRect.left) - 14;
+        diag.style.width    = dW + 'px';
+        diag.style.maxWidth = dW + 'px';
+        diag.style.right    = 'auto';
+        if (roomLeft >= dW + 8) {
+            diag.style.left      = (roomLeft - dW) + 'px';
+            diag.style.top       = '50%';
+            diag.style.bottom    = 'auto';
+            diag.style.transform = 'translateY(-50%)';
+        } else {
+            // Not enough room on the left: sit fully left and drop below/above the score box
+            diag.style.left      = '8px';
+            diag.style.transform = 'none';
+            if ((gameRect.bottom - r.bottom) >= (r.top - gameRect.top)) {
+                diag.style.top = (r.bottom - gameRect.top + 14) + 'px'; diag.style.bottom = 'auto';
+            } else {
+                diag.style.bottom = (gameRect.bottom - r.top + 14) + 'px'; diag.style.top = 'auto';
+            }
+        }
     } else if (step.target === 'tableRing') {
         // SPECIAL CASE: Move Dialogue Box to the right side of the screen so it doesn't get cut off!
         diag.style.width    = '90%'; diag.style.maxWidth = '340px';
@@ -6796,6 +6826,26 @@ if (
     diag.style.setProperty('z-index', '10002', 'important');
 }
 
+    // Row layout (landscape): fixed-width Dealer header so SKIP never overlaps the name
+    diag.classList.toggle('tut-row', diag.style.flexDirection === 'row');
+
+    // Final Deception step: shrink the Deception box just enough that its buttons stay above the tutorial box
+    const _dcEl = document.getElementById('deceptionContent');
+    if (_dcEl) _dcEl.style.zoom = '';
+    if (isDecepStep && step.wait === 'clicked_believe' && _dcEl) {
+        setTimeout(() => {
+            const btn = _dcEl.querySelector('.dec-row .btn');
+            if (!btn || diag.style.display === 'none') return;
+            _dcEl.style.zoom = '';
+            const limit  = window.innerHeight - 10 - diag.offsetHeight - 10; // top edge of tutorial box minus gap
+            const bottom = btn.getBoundingClientRect().bottom;
+            const top    = _dcEl.getBoundingClientRect().top;
+            if (bottom > limit && (limit - top) > 80) {
+                _dcEl.style.zoom = Math.max(0.5, (limit - top) / (bottom - top));
+            }
+        }, 400);
+    }
+
     // ── SET THE TEXT AND BUTTON ──────────────────────────────────
     tutText.innerHTML = step.text || "";
     const fill = document.getElementById('tutProgressFill');
@@ -6848,6 +6898,7 @@ const decModal = document.getElementById('deceptionModal');
         decModal.style.alignItems = 'center';
         decModal.style.paddingTop = '16px';
         document.getElementById('deceptionContent').style.pointerEvents = '';
+        document.getElementById('deceptionContent').style.zoom = '';
     }
 
     log("Tutorial complete. Returning to Main Menu.", "system");
@@ -13809,7 +13860,8 @@ function returnToMenuFromEndgame() {
             // First-time-ever main menu walkthrough. Runs exactly once,
             // right after the game tutorial + Season intro cinematic
             // finish and the hub is actually on screen.
-            if (!localStorage.getItem('dod_seen_menu_tutorial') && !(profile && profile.seenMenuTutorial) && !currentPartyId) {
+            const _mtProfile = window.DoDAuth ? DoDAuth.getProfile() : null;
+            if (!localStorage.getItem('dod_seen_menu_tutorial') && !(_mtProfile && _mtProfile.seenMenuTutorial) && !currentPartyId) {
                 setTimeout(startMenuTutorial, 600);
             }
         };
@@ -18376,11 +18428,15 @@ window.addEventListener('beforeinstallprompt', (e) => {
   const installBtn = document.getElementById('navBtnInstall');
   if (installBtn) installBtn.style.display = 'flex';
 
-  // If they haven't explicitly dismissed the popup before, show it automatically after 2 seconds
-  if (localStorage.getItem('dod_pwa_dismissed') !== 'true') {
+  // Show the popup ONLY ONCE EVER: brand-new players, before sign-in, never during the tutorial.
+  const _pwaAlreadyAsked = localStorage.getItem('dod_pwa_prompt_seen') === '1' || localStorage.getItem('dod_pwa_dismissed') === 'true';
+  const _pwaBrandNew = !localStorage.getItem('dod_seen_tutorial');
+  if (!_pwaAlreadyAsked && _pwaBrandNew) {
+      localStorage.setItem('dod_pwa_prompt_seen', '1'); // burn the one-time chance right now
       setTimeout(() => {
           const modal = document.getElementById('pwaInstallModal');
-          if (modal && !window.currentMatchId) { // Don't interrupt them if they are in a match!
+          const signedIn = !!(window.DoDAuth && DoDAuth.getProfile());
+          if (modal && !signedIn && !window.isInteractiveTutorial && !window.currentMatchId) {
               modal.classList.add('show');
           }
       }, 2000);
