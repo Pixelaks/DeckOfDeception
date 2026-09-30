@@ -29,22 +29,31 @@ const dodDb = firebase.firestore();
 })();
 
 // Enable PWA Offline Persistence
-dodDb.enablePersistence({ synchronizeTabs: true })
-  .catch(function(err) {
-      if (err.code === 'failed-precondition') {
-          console.warn('Multiple tabs open, offline mode disabled.');
-      } else if (err.code === 'unimplemented') {
-          console.warn('Browser does not support offline persistence.');
-      }
-  });
+if (window.DOD_PLATFORM !== 'crazygames') {
+  dodDb.enablePersistence({ synchronizeTabs: true })
+    .catch(function(err) {
+        if (err.code === 'failed-precondition') {
+            console.warn('Multiple tabs open, offline mode disabled.');
+        } else if (err.code === 'unimplemented') {
+            console.warn('Browser does not support offline persistence.');
+        }
+    });
+}
 
 let _dodProfile = null;          
 let _dodProfileReadyCallbacks = [];
 let _dodInteractiveSignIn = false; // true only when THIS page load just triggered a sign-in click
 
 function dodOnProfileReady(cb){
-  if(_dodProfile){ cb(_dodProfile); }
+  if(_dodProfile){ _dodCallWhenBootReady(cb); }
   else { _dodProfileReadyCallbacks.push(cb); }
+}
+function _dodCallWhenBootReady(cb){
+  if (typeof window !== 'undefined' && window.minimumBootTimePassed === false) {
+     setTimeout(function(){ _dodCallWhenBootReady(cb); }, 100);
+     return;
+  }
+  cb(_dodProfile);
 }
 function _dodFireReady(){
   if (typeof window !== 'undefined' && window.minimumBootTimePassed === false) {
@@ -256,6 +265,11 @@ function dodHideBootstrap(){
   if(boot) {
     boot.style.opacity = '0';
     setTimeout(() => { boot.style.display = 'none'; }, 800);
+  }
+  
+  // Tell CrazyGames the loading screen is gone!
+  if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK) {
+      window.CrazyGames.SDK.game.loadingStop();
   }
 }
 
