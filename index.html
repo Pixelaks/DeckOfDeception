@@ -447,7 +447,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 /* CINEMATIC LOADING SCREEN */
 #loadingScreen {
-  display: none; position: fixed; inset: 0; z-index: 5000;
+  display: none; position: fixed; inset: 0; z-index: 20000;
   background: radial-gradient(circle at center, #150c12 0%, #060709 100%);
   align-items: center; justify-content: center; overflow: hidden;
 }
@@ -797,6 +797,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   box-shadow:0 2px 6px rgba(0,0,0,0.5); border:none; background:transparent !important; transition:all 0.2s; width:44px; height:44px; font-size:18px;}
 .ringseat.active .avatar{box-shadow:0 0 0 2px var(--brass-bright), 0 4px 16px rgba(201,162,39,0.6); transform: scale(1.15);}
 .ringseat.out{opacity:0.32; pointer-events:none;}
+/* FIX: the max-width:840px 'flatten' rule replaces the seat's translate(-50%,-50%) with translateZ(0). This ID rule always wins and keeps both. */
+#tableRing .ringseat{transform:translate(-50%,-50%) translateZ(0);}
 .ringseat .rname{font-family:'Cinzel',serif;font-weight:600;color:var(--paper);white-space:nowrap;margin-top:1px;font-size:12px; letter-spacing:0.5px}
 
 .ringseat.dense { gap: 0px; }
@@ -3458,6 +3460,7 @@ setTimeout(function() {
     border: 2px solid var(--brass-bright); border-radius: 10px; padding: 13px 15px;
     width: 90%; max-width: 340px;
     box-shadow: 0 12px 40px rgba(0,0,0,0.95), 0 0 22px rgba(232,196,84,0.18);
+    max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); overflow-y: auto;
     transition: top 0.3s cubic-bezier(0.25,1,0.5,1), bottom 0.3s, left 0.3s, transform 0.3s, width 0.3s, max-width 0.3s;
   }
   .tut-dealer-row { display:flex; align-items:center; gap:9px; }
@@ -4258,7 +4261,7 @@ if (document.readyState === 'loading') {
 </div>
 
 <!-- LEAVE GAME CONFIRMATION MODAL -->
-<div class="modal-bg" id="leaveGameOverlay" style="z-index: 7000;">
+<div class="modal-bg" id="leaveGameOverlay" style="z-index: 20001;">
   <div class="modal" style="text-align:center; background:rgba(21,12,18,0.98); border:1px solid var(--danger); padding:30px; border-radius:12px; max-width:400px; width:90%; box-shadow:0 10px 40px rgba(0,0,0,0.8);">
     <h3 style="font-family:'Cinzel Decorative',serif; color:var(--danger-bright); margin-bottom:10px; font-size:22px;">Forfeit Match?</h3>
     <p class="mono" style="font-size:13px; color:rgba(242,234,216,0.75); margin-bottom:24px; line-height:1.5;">Are you sure you want to leave this game? Your seat will be forfeited and you will return to the main menu.</p>
@@ -13677,7 +13680,25 @@ function showProgressionScreen() {
 
 // Bypasses the "Forfeit" check and properly clears the game state when the match is officially over
 // Bypasses the "Forfeit" check and properly clears the game state when the match is officially over
+// Clears every leftover tutorial highlight when a match/tutorial is exited
+function tutForceCleanupVisuals() {
+    try {
+        if (window.isMenuTutorialActive) return;
+        document.querySelectorAll('.tut-focused').forEach(el => el.classList.remove('tut-focused'));
+        document.querySelectorAll('.tut-bot-arrow').forEach(el => el.remove());
+        if (window.isInteractiveTutorial) {
+            const ov = document.getElementById('tutOverlay'); if (ov) { ov.style.display = 'none'; ov.classList.remove('spotlight-active'); }
+            const sc = document.getElementById('tutShowcase'); if (sc) sc.style.display = 'none';
+            const dg = document.getElementById('tutDialogue'); if (dg) dg.style.display = 'none';
+            const sp = document.getElementById('tutSpotlight'); if (sp) sp.className = '';
+            const ar = document.getElementById('tutArrow'); if (ar) ar.className = '';
+            window.isInteractiveTutorial = false;
+        }
+    } catch(e) {}
+}
+
 function returnToMenuFromEndgame() {
+    tutForceCleanupVisuals();
     window.isEndGameRunning = false; // Reset the lock for the next game!
     document.getElementById('progressionModal').classList.remove('show');
     
@@ -18789,6 +18810,52 @@ async function confirmMysteriousLogout() {
     }
 }
 
+</script>
+<script>
+/* ===== Keep the screen awake while the game is open ===== */
+(function(){
+  let lock = null;
+  async function keepAwake(){
+    try {
+      if (!('wakeLock' in navigator) || document.visibilityState !== 'visible') return;
+      if (lock && !lock.released) return;
+      lock = await navigator.wakeLock.request('screen');
+      lock.addEventListener('release', function(){ lock = null; });
+    } catch(e) {}
+  }
+  keepAwake();
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'visible') keepAwake(); });
+  window.addEventListener('focus', keepAwake);
+  ['pointerdown','touchstart','keydown'].forEach(function(ev){ document.addEventListener(ev, keepAwake, { passive: true }); });
+})();
+
+/* ===== Keep the tutorial box fully on screen (moves it up/left if it would overflow) ===== */
+(function(){
+  const diag = document.getElementById('tutDialogue');
+  if (!diag) return;
+  let timer = null;
+  function fit(){
+    if (diag.style.display === 'none') { obs.takeRecords(); return; }
+    diag.style.translate = '';
+    const r = diag.getBoundingClientRect();
+    const vw = window.innerWidth, vh = window.innerHeight, m = 8;
+    let dx = 0, dy = 0;
+    if (r.bottom > vh - m) dy = (vh - m) - r.bottom;
+    if (r.top + dy < m) dy = m - r.top;
+    if (r.right > vw - m) dx = (vw - m) - r.right;
+    if (r.left + dx < m) dx = m - r.left;
+    if (dx || dy) diag.style.translate = dx + 'px ' + dy + 'px';
+    obs.takeRecords();
+  }
+  const obs = new MutationObserver(function(){
+    diag.style.translate = '';
+    obs.takeRecords();
+    clearTimeout(timer);
+    timer = setTimeout(fit, 380);
+  });
+  obs.observe(diag, { attributes: true, attributeFilter: ['style', 'class'], childList: true, subtree: true, characterData: true });
+  window.addEventListener('resize', function(){ clearTimeout(timer); timer = setTimeout(fit, 150); });
+})();
 </script>
 </body>
 </html>
