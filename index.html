@@ -789,6 +789,8 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   min-width: 140px;
 }
 #playerVolumePopup .pv-name { font-size: 12px; color: var(--brass-bright); font-weight: bold; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; width:100%;}
+#playerVolumePopup .pv-msg { width: 100%; padding: 6px 10px; background: transparent; border: 1px solid var(--brass); color: var(--brass-bright); font: 700 10px 'IBM Plex Mono', monospace; letter-spacing: 1.5px; border-radius: 6px; cursor: pointer; }
+#playerVolumePopup .pv-msg:active { background: var(--brass); color: #150c12; }
 #playerVolumePopup input[type=range] { width: 100%; -webkit-appearance: none; background: rgba(255,255,255,0.1); height: 4px; border-radius: 2px; outline: none; }
 #playerVolumePopup input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--ok); border-radius: 50%; cursor: pointer; }
 
@@ -1888,8 +1890,13 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
 .squad-play-btn:hover::before { animation: none; opacity: 0; }
 .squad-play-btn.searching {
   background: var(--ok) !important; color: #fff !important;
-  border-color: #5faa82 !important; animation: none !important; cursor: default;
+  border-color: #5faa82 !important; animation: none !important; cursor: pointer;
 }
+.squad-play-btn.is-ready {
+  background: var(--ok) !important; color: #fff !important;
+  border-color: #5faa82 !important; animation: none !important;
+}
+.lobby-seat .ls-ready { font: 700 8px 'IBM Plex Mono', monospace; letter-spacing: 1px; color: #7fd6a4; margin-top: 2px; text-shadow: 0 1px 4px #000; }
 .squad-mode-row { display: flex; gap: 5px; }
 
 /* CUSTOM DROPDOWN SELECTOR */
@@ -3684,7 +3691,7 @@ setTimeout(function() {
     </div>
     <!-- Bottom-left: Play button + mode selector -->
     <div class="squad-play-zone show" style="pointer-events:all; width: 180px; z-index: 20;">
-      <button class="squad-play-btn" id="squadPlayBtn" onclick="startMatchmakingSquad()" style="width: 100%; padding: 14px 0;">PLAY ↗</button>
+      <button class="squad-play-btn" id="squadPlayBtn" onclick="dodSquadPlayBtnClick()" style="width: 100%; padding: 14px 0;">PLAY ↗</button>
       <div class="custom-select squad-mode-select" id="customSquadSelect" data-value="4" onclick="toggleCustomSelect(this)" style="width: 100%;">
           <div class="custom-select-trigger" style="padding:8px 12px; font-size:12px;"><span>4 Players</span> <span class="arrow">▼</span></div>
           <div class="custom-select-options">
@@ -8148,6 +8155,7 @@ function openVolumePopup(e, uid, name) {
         <div class="pv-name">${name}</div>
         <div style="font-size:18px; margin-bottom:-4px;">${currentVol === 0 ? '🔇' : '🔊'}</div>
         <input type="range" min="0" max="100" value="${currentVol * 100}" oninput="setPlayerVolume('${uid}', this.value)">
+        ${(window.dodChatCan && window.dodChatCan(uid)) ? `<button type="button" class="pv-msg" onclick="dodMessagePlayer('${uid}')">MESSAGE</button>` : ''}
     `;
     
     popup.style.display = 'flex';
@@ -8155,10 +8163,17 @@ function openVolumePopup(e, uid, name) {
     let x = e.clientX;
     let y = e.clientY + 20;
     if(x + 150 > window.innerWidth) x = window.innerWidth - 160;
-    if(y + 100 > window.innerHeight) y = e.clientY - 100;
+    if(y + 150 > window.innerHeight) y = e.clientY - 150;
     
     popup.style.left = x + 'px';
     popup.style.top = y + 'px';
+}
+
+function dodMessagePlayer(uid) {
+    const popup = document.getElementById('playerVolumePopup');
+    if (popup) popup.style.display = 'none';
+    try { sfx.uiClick(); } catch (e) {}
+    if (window.dodChatOpenTo) window.dodChatOpenTo(uid);
 }
 
 function setPlayerVolume(uid, val) {
@@ -10133,7 +10148,7 @@ function onSeatClick(id, event) {
         confirmActionTarget(target, 'STEAL');
     } else {
         // If not targeting an attack, open the volume UI!
-        if (event && !target.isBot) openVolumePopup(event, target.uid, target.name);
+        if (event) openVolumePopup(event, target.uid, target.name);
     }
 }
 
@@ -14466,7 +14481,7 @@ async function leaveParty() {
                     await partyDoc.ref.delete();
                 } else {
                     await partyDoc.ref.update({
-                        members: firebase.firestore.FieldValue.arrayRemove({ uid: myUid, displayName: DoDAuth.getProfile().displayName })
+                        members: remaining
                     });
                 }
             }
@@ -14499,6 +14514,7 @@ async function leaveParty() {
     const modeSelect = document.getElementById('customSquadSelect');
     const privateSelect = document.getElementById('customPrivateSelect');
     if (playBtn) { playBtn.disabled = false; playBtn.style.opacity = '1'; playBtn.style.pointerEvents = 'all'; }
+    dodRefreshSquadBtn();
     if (modeSelect) { 
         modeSelect.style.opacity = '1'; modeSelect.style.pointerEvents = 'all'; 
         modeSelect.querySelectorAll('.custom-option').forEach(opt => opt.classList.remove('disabled-opt'));
@@ -14568,7 +14584,7 @@ function listenToParty(partyId) {
                             <img src="Frames/${fr}.webp" class="af-frame" alt="Frame">
                         </div>
                         <div style="display:flex; flex-direction:column; justify-content:center;">
-                            <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}${data.matchId ? ' <span style="color:var(--danger-bright); font-size:9px;">[In Match]</span>' : ''}</span>
+                            <span class="mono" style="line-height:1; font-size:12px; color:var(--paper);">${m.uid === data.leader ? '👑 ' : ''}${m.displayName}${data.matchId ? ' <span style="color:var(--danger-bright); font-size:9px;">[In Match]</span>' : (m.uid !== data.leader ? (m.ready ? ' <span style="color:#7fd6a4; font-size:9px;">[READY]</span>' : ' <span style="opacity:.55; font-size:9px;">[NOT READY]</span>') : '')}</span>
                             ${titleHtml}
                         </div>
                     </div>`;
@@ -14663,6 +14679,7 @@ function listenToParty(partyId) {
         if (!isPartyLeader && data.matchId && data.matchId !== currentMatchId && data.matchId !== window._lastCancelledMatchId) {
             currentMatchId = data.matchId;
             squadCancelFlag = false; //Force reset the flag so the client doesn't instantly delete the new match!
+            dodShowFriendSearchingBtn();
             listenToSquadMatchFilling(
                 currentMatchId,
                 document.getElementById('squadMmTimer'),
@@ -15352,13 +15369,122 @@ function updateLobbyView(seats, tableSize) {
         }
         
         // ADD ID TO AVATAR TO SUPPORT SPEAKER HIGHLIGHT
-        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" id="lobby-avatar-${seat ? seat.uid : ''}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>${seatTitleHtml}`;
+        div.innerHTML = `<div class="ls-avatar ${seat ? 'filled' : 'empty'}" id="lobby-avatar-${seat ? seat.uid : ''}" style="overflow:hidden; padding:0;">${avatarContent}</div><div class="ls-name">${name}</div>${(seat && seat.ready) ? '<div class="ls-ready">READY</div>' : ''}${seatTitleHtml}`;
         ring.appendChild(div);
     }
 }
 function hideLobbyView() {
     const v = document.getElementById('squadLobbyView');
     if (v) v.classList.remove('show');
+}
+
+// ===== READY SYSTEM (party lobby) =====
+function dodMyPartyMember() {
+    const myUid = DoDAuth.getProfile().uid;
+    return (window.currentPartyMembers || []).find(m => m.uid === myUid) || null;
+}
+
+// Writes my ready flag into my entry of the party's members list
+async function dodSetMyReady(val) {
+    if (!currentPartyId || !window.firebase || !window.DoDAuth || !DoDAuth.getProfile()) return;
+    const db = firebase.firestore();
+    const myUid = DoDAuth.getProfile().uid;
+    const ref = db.collection('parties').doc(currentPartyId);
+    try {
+        await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            if (!snap.exists) return;
+            const members = (snap.data().members || []).map(m => m.uid === myUid ? Object.assign({}, m, { ready: !!val }) : m);
+            tx.update(ref, { members: members });
+        });
+    } catch (e) {
+        console.warn('[DoD] ready update failed', e);
+        showSystemToast('Could not update ready status. Try again.');
+    }
+}
+
+let _readyBusy = false;
+async function dodToggleReady() {
+    if (_readyBusy) return;
+    try { sfx.uiClick(); } catch (e) {}
+    const me = dodMyPartyMember();
+    _readyBusy = true;
+    try { await dodSetMyReady(!(me && me.ready)); } finally { _readyBusy = false; }
+}
+
+// Host check: every other party member must be ready, otherwise toast + sound
+function dodAllPartyReady() {
+    const myUid = DoDAuth.getProfile().uid;
+    const waiting = (window.currentPartyMembers || []).filter(m => m.uid !== myUid && !m.ready);
+    if (!waiting.length) return true;
+    const names = waiting.map(m => m.displayName || 'Player');
+    const msg = names.length === 1
+        ? names[0] + ' is not ready!'
+        : names.slice(0, 2).join(', ') + (names.length > 2 ? ' +' + (names.length - 2) : '') + ' are not ready!';
+    try { sfx.alert(); } catch (e) {}
+    showSystemToast(msg);
+    return false;
+}
+
+// Decides what the big button shows
+function dodRefreshSquadBtn() {
+    const btn = document.getElementById('squadPlayBtn');
+    if (!btn) return;
+    btn.disabled = false; btn.style.opacity = '1'; btn.style.pointerEvents = 'all';
+    if (btn.classList.contains('searching')) return; // keep SEARCHING label, but stay tappable (tap = cancel)
+    if (!window.DoDAuth || !DoDAuth.getProfile()) return;
+    const asMember = !!(currentPartyId && !isPartyLeader);
+    if (!asMember) {
+        btn.classList.remove('is-ready');
+        btn.innerHTML = 'PLAY ↗';
+        return;
+    }
+    const me = dodMyPartyMember();
+    const ready = !!(me && me.ready);
+    btn.classList.toggle('is-ready', ready);
+    btn.innerHTML = ready
+        ? '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">✓ READY</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">tap to cancel</span>'
+        : 'READY';
+}
+
+// One button, three jobs: cancel while searching, ready/unready for members, start for host/solo
+function dodSquadPlayBtnClick() {
+    const btn = document.getElementById('squadPlayBtn');
+    if (!btn) return;
+    if (btn.classList.contains('searching')) {
+        if (Date.now() - (window._squadBtnLastTap || 0) < 1200) return; // ignore a double-tap right after PLAY
+        cancelMatchmakingSquad();
+        return;
+    }
+    if (currentPartyId && !isPartyLeader) { dodToggleReady(); return; }
+    window._squadBtnLastTap = Date.now();
+    startMatchmakingSquad();
+}
+
+// Friend (non-host) view: SEARCHING button with live timer + player count (tap = leave)
+function dodShowFriendSearchingBtn() {
+    const btn = document.getElementById('squadPlayBtn');
+    if (!btn) return;
+    const render = () => {
+        const m = Math.floor(squadMmSeconds / 60);
+        const s = (squadMmSeconds % 60).toString().padStart(2, '0');
+        const cnt = window._squadLobbyCount || 1;
+        btn.innerHTML = '<span style="font-size:clamp(11px, 2vh, 14px);font-weight:900;letter-spacing:1.5px;display:block;">SEARCHING</span><span style="font-family:\'IBM Plex Mono\',monospace;font-size:clamp(9px, 1.8vh, 12px);display:block;margin-top:2px;opacity:0.9;">' + m + ':' + s + ' &nbsp;·&nbsp; ' + cnt + '/' + squadTableSize + '</span>';
+        const t = document.getElementById('squadMmTimer');
+        if (t) t.textContent = m + ':' + s;
+    };
+    btn.classList.add('searching');
+    btn.disabled = false;
+    btn.style.pointerEvents = 'all';
+    btn.style.opacity = '1';
+    squadMmSeconds = 0;
+    render();
+    clearInterval(squadMmIntervalId);
+    squadMmIntervalId = setInterval(() => {
+        if (squadCancelFlag) { clearInterval(squadMmIntervalId); return; }
+        squadMmSeconds++;
+        render();
+    }, 1000);
 }
 
 function resetSquadPlayBtn() {
@@ -15369,6 +15495,7 @@ function resetSquadPlayBtn() {
     if (cancelBtn) cancelBtn.style.display = 'none';
     if (modeSelectEl) modeSelectEl.style.display = 'block';
     window._squadLobbyCount = 0;
+    dodRefreshSquadBtn();
     
     const trainBtn = document.getElementById('navBtnTraining');
     if (trainBtn) { trainBtn.style.display = 'flex'; trainBtn.style.opacity = '1'; trainBtn.style.pointerEvents = 'all'; }
@@ -15385,6 +15512,7 @@ async function startMatchmakingSquad() {
     if (!btn || btn.classList.contains('searching') || btn.disabled) { console.warn('[DoD] PLAY blocked: btn/searching/disabled', {btn, searching: btn && btn.classList.contains('searching'), disabled: btn && btn.disabled}); return; }
     if (!window.DoDAuth || !DoDAuth.getProfile()) { console.warn('[DoD] PLAY blocked: no auth/profile', {DoDAuth: window.DoDAuth, profile: window.DoDAuth && DoDAuth.getProfile()}); return; }
     if (currentPartyId && !isPartyLeader) { console.warn('[DoD] PLAY blocked: in party but not leader', {currentPartyId, isPartyLeader}); return; }
+    if (currentPartyId && isPartyLeader && !dodAllPartyReady()) return; // someone is not ready
 
     // CrazyGames: room is no longer joinable once we start searching for a match
     if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
@@ -15476,7 +15604,10 @@ async function startMatchmakingSquad() {
 
     } catch(e) {
         console.error(e);
-        if (statusEl) statusEl.textContent = 'Error: ' + e.message;
+        const _netErr = !navigator.onLine || /failed to fetch|networkerror|network request failed|load failed/i.test((e && e.message) || '');
+        const _errMsg = _netErr ? 'No internet connection. Please check your network and try again.' : 'Error: ' + e.message;
+        if (statusEl) statusEl.textContent = _errMsg;
+        try { showSystemToast(_errMsg); } catch (_) {}
         setTimeout(cancelMatchmakingSquad, 2000);
     }
 }
@@ -15492,7 +15623,12 @@ function listenToSquadMatchFilling(matchId, timerEl, statusEl, overlay) {
     }
 
     matchLobbyUnsub = db.collection('matches').doc(matchId).onSnapshot(doc => {
-        if (squadCancelFlag || !doc.exists || doc.data().status === 'cancelled') { cancelMatchmakingSquad(); return; }
+        if (!doc.exists && doc.metadata && doc.metadata.fromCache) return; // offline cache miss, not a real cancel
+        if (squadCancelFlag || !doc.exists || doc.data().status === 'cancelled') {
+            if (!squadCancelFlag && !navigator.onLine) { try { showSystemToast('Connection lost. Matchmaking was cancelled.'); } catch (_) {} }
+            cancelMatchmakingSquad();
+            return;
+        }
         const data = doc.data();
 
         // FORCE HOST'S TABLE SKIN IN LOBBY
@@ -15544,6 +15680,7 @@ function listenToSquadMatchFilling(matchId, timerEl, statusEl, overlay) {
 
         const startGame = () => {
             clearInterval(squadMmIntervalId);
+            try { if (currentPartyId && !isPartyLeader) dodSetMyReady(false); } catch (e) {}
             if (matchLobbyUnsub) { matchLobbyUnsub(); matchLobbyUnsub = null; }
             window.onlineMatchSeats = data.seats;
             localStorage.setItem('dod_active_match', matchId);
@@ -15668,6 +15805,7 @@ function cancelMatchmakingSquad() {
         secureServerCall('leaveMatch', { matchId: matchToCancel }).catch(e => console.error("Error leaving match:", e));
     }
     localStorage.removeItem('dod_active_match'); // Ensure the game completely forgets this cancelled match!
+    try { if (currentPartyId && !isPartyLeader) dodSetMyReady(false); } catch (e) {}
 }
 
 // --- SQUAD PROFILE & PROGRESSION UI LOGIC ---
@@ -17246,6 +17384,30 @@ function triggerNotificationVfx(type = 'gold', event = null) {
         }
     }
 }
+
+// ===== NETWORK STATUS BANNER =====
+(function () {
+    function setBanner(show) {
+        var el = document.getElementById('dodNetBanner');
+        if (!el) {
+            el = document.createElement('div');
+            el.id = 'dodNetBanner';
+            el.style.cssText = 'position:fixed; top:10px; left:50%; transform:translateX(-50%); z-index:1000000; pointer-events:none; background:rgba(122,31,46,0.95); color:#fff; font-family:"IBM Plex Mono",monospace; font-size:12px; letter-spacing:1px; padding:8px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.25); box-shadow:0 4px 14px rgba(0,0,0,0.6); display:none; text-align:center;';
+            el.textContent = '⚠ No internet connection. Reconnecting...';
+            document.body.appendChild(el);
+        }
+        el.style.display = show ? 'block' : 'none';
+    }
+    window.addEventListener('offline', function () { setBanner(true); });
+    window.addEventListener('online', function () {
+        setBanner(false);
+        try { showSystemToast('Back online'); } catch (e) {}
+    });
+    if (!navigator.onLine) {
+        if (document.body) setBanner(true);
+        else window.addEventListener('DOMContentLoaded', function () { setBanner(true); });
+    }
+})();
 
 function showSystemToast(msg) {
     const existing = document.getElementById('sysToast');
@@ -19101,6 +19263,582 @@ async function confirmMysteriousLogout() {
   });
   obs.observe(diag, { attributes: true, attributeFilter: ['style', 'class'], childList: true, subtree: true, characterData: true });
   window.addEventListener('resize', function(){ clearTimeout(timer); timer = setTimeout(fit, 150); });
+})();
+</script>
+<!-- ===================== DECK OF DECEPTION: MATCH CHAT ===================== -->
+<style>
+.dc-btn{position:relative;padding:4px 8px;min-width:unset;font-size:16px;line-height:1;flex-shrink:0}
+.dc-btn .dc-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#d94b4b;color:#fff;font:700 10px/16px 'IBM Plex Mono',monospace;text-align:center;display:none}
+.dc-btn.has-unread .dc-badge{display:block;animation:dcPulse 1.2s ease-in-out infinite}
+.dc-btn.has-priv .dc-badge{background:#8a5cf6}
+@keyframes dcPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+/* Floating, draggable chat window (position is set by JS and remembered) */
+#dodChat{position:fixed;left:0;top:0;z-index:9500;display:none;flex-direction:column;
+  width:min(340px,calc(100vw - 8px));
+  height:min(clamp(240px,calc(var(--vh,1vh)*72),430px),calc(var(--vh,1vh)*100 - 8px));
+  background:rgba(15,10,12,0.95);border:1px solid var(--brass,#c9a227);border-radius:12px;box-shadow:0 10px 34px rgba(0,0,0,0.75);
+  font-family:'IBM Plex Mono',monospace;color:var(--paper,#f2ead8);overflow:hidden}
+#dodChat.open{display:flex}
+#dodChat *{box-sizing:border-box}
+#dodChat .dc-head{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 8px 6px 12px;border-bottom:1px solid rgba(255,255,255,0.12);font-size:12px;font-weight:600;color:var(--brass-bright,#e0bd4a);letter-spacing:1px;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+#dodChat .dc-head.drag{cursor:grabbing}
+#dodChat .dc-title{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#dodChat .dc-hb{background:none;border:1px solid rgba(255,255,255,0.25);color:inherit;border-radius:6px;width:28px;height:28px;font-size:13px;cursor:pointer;padding:0;flex:0 0 auto}
+#dodChat .dc-to{flex:0 0 auto;display:flex;align-items:center;gap:6px;padding:6px 10px;border-bottom:1px solid rgba(255,255,255,0.08);min-width:0}
+#dodChat .dc-tolabel{font-size:10px;opacity:.7;flex:0 0 auto}
+#dodChat .dc-chips{display:flex;gap:6px;overflow-x:auto;overflow-y:hidden;min-width:0;flex:1 1 auto;padding-bottom:2px;scrollbar-width:thin}
+#dodChat .dc-chip{flex:0 0 auto;max-width:120px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:4px 10px;border-radius:12px;font:600 11px 'IBM Plex Mono',monospace;color:var(--paper,#f2ead8);background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.18);cursor:pointer}
+#dodChat .dc-chip.on{background:var(--brass,#c9a227);color:#150c12;border-color:var(--brass-bright,#e0bd4a)}
+#dodChat .dc-chip.priv.on{background:#8a5cf6;color:#fff;border-color:#b79bff}
+#dodChat .dc-list{flex:1 1 auto;min-height:0;overflow-y:auto;overflow-x:hidden;padding:8px 10px;display:flex;flex-direction:column;gap:6px;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+#dodChat .dc-empty{margin:auto;text-align:center;font-size:11px;opacity:.55;line-height:1.5;padding:10px}
+#dodChat .dc-msg{max-width:88%;padding:6px 9px;border-radius:10px;font-size:12px;line-height:1.35;background:rgba(255,255,255,0.09);border:1px solid rgba(255,255,255,0.12);align-self:flex-start;min-width:0}
+#dodChat .dc-msg.mine{align-self:flex-end;background:rgba(201,162,39,0.22);border-color:rgba(224,189,74,0.5)}
+#dodChat .dc-msg.priv{background:rgba(138,92,246,0.22);border:1px dashed #b79bff}
+#dodChat .dc-meta{font-size:10px;opacity:.85;margin-bottom:2px;display:flex;gap:6px;flex-wrap:wrap;align-items:baseline;color:var(--brass-bright,#e0bd4a)}
+#dodChat .dc-msg.priv .dc-meta{color:#cdb8ff;font-weight:600}
+#dodChat .dc-time{opacity:.55;font-weight:400;color:inherit}
+#dodChat .dc-text{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
+#dodChat .dc-form{flex:0 0 auto;display:flex;gap:6px;padding:8px 10px;border-top:1px solid rgba(255,255,255,0.12);align-items:center}
+#dodChat .dc-form.priv{background:rgba(138,92,246,0.15)}
+#dodChat .dc-in{flex:1 1 auto;min-width:0;height:36px;padding:0 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.25);background:rgba(0,0,0,0.5);color:var(--paper,#f2ead8);font:16px 'IBM Plex Mono',monospace;outline:none}
+#dodChat .dc-form.priv .dc-in{border-color:#b79bff}
+#dodChat .dc-send{flex:0 0 auto;height:36px;padding:0 12px;border-radius:8px;border:none;background:var(--brass-bright,#e0bd4a);color:#150c12;font:700 12px 'IBM Plex Mono',monospace;cursor:pointer}
+#dodChat .dc-form.priv .dc-send{background:#8a5cf6;color:#fff}
+#dodChat .dc-note{flex:0 0 auto;padding:0 10px 6px;font-size:10px;color:#ff9a9a;display:none}
+@media (max-height:420px){
+  #dodChat .dc-head{padding:3px 6px 3px 10px}#dodChat .dc-to{padding:3px 8px}#dodChat .dc-form{padding:4px 8px}
+  #dodChat .dc-in,#dodChat .dc-send{height:30px}#dodChat .dc-msg{font-size:11px;padding:4px 7px}
+}
+
+/* Long-press seats: stop the browser from scrolling / opening menus while holding */
+.ringseat,.lobby-seat{touch-action:none;-webkit-touch-callout:none}
+
+/* Quick-chat wheel */
+#dodQW{position:fixed;inset:0;z-index:9600;display:none;background:rgba(0,0,0,0.38);touch-action:none;user-select:none;-webkit-user-select:none}
+#dodQW.open{display:block}
+#dodQW .qw-c{position:absolute;border-radius:50%;background:rgba(15,10,12,0.92);border:2px solid var(--brass-bright,#e0bd4a);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:4px;font:600 10px/1.25 'IBM Plex Mono',monospace;color:var(--paper,#f2ead8);overflow:hidden}
+#dodQW .qw-c b{display:block;color:var(--brass-bright,#e0bd4a);font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#dodQW .qw-i{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(15,10,12,0.92);border:2px solid rgba(201,162,39,0.55);color:var(--brass-bright,#e0bd4a);transition:transform .08s,background .08s,border-color .08s,color .08s}
+#dodQW .qw-i.on{transform:scale(1.28);background:var(--brass,#c9a227);border-color:var(--brass-bright,#e0bd4a);color:#150c12}
+
+/* Short toast for quick messages */
+#dodQToast{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 44px);transform:translateX(-50%);z-index:9400;max-width:min(92vw,420px);padding:6px 14px;border-radius:16px;background:rgba(15,10,12,0.94);border:1px solid var(--brass,#c9a227);color:var(--paper,#f2ead8);font:600 12px 'IBM Plex Mono',monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;pointer-events:none;opacity:0;transition:opacity .2s}
+#dodQToast.show{opacity:1}
+</style>
+
+<script>
+(function () {
+  'use strict';
+  var MAX_LEN = 200, COOLDOWN_MS = 800, KEEP = 150, HOLD_MS = 420, M = 4;
+  var QUICK = [
+    { id: 'nice',   e: '👍', l: 'Nice move',  say: 'Nice move!' },
+    { id: 'gg',     e: '🎉', l: 'Good game',  say: 'Good game!' },
+    { id: 'thanks', e: '🙏', l: 'Thanks',     say: 'Thank you!' },
+    { id: 'team',   e: '🤝', l: 'Team up?',   say: "Let's team up!" },
+    { id: 'watch',  e: '⚠️', l: 'Watch out',  say: 'Watch out!' },
+    { id: 'liar',   e: '🤨', l: 'Liar!',      say: "I don't believe you!" },
+    { id: 'hurry',  e: '⏰', l: 'Hurry up',   say: 'Hurry up!' },
+    { id: 'oops',   e: '😅', l: 'My bad',     say: 'Oops, my bad!' }
+  ];
+  // Monochrome line icons for the quick-message wheel (brass, matches the game theme)
+  var ICONS = {
+    nice:   '<path d="M5 12.5l4.5 4.5L19 7"/>',
+    gg:     '<path d="M4 17.5L3 8l5 4 4-7 4 7 5-4-1 9.5z"/><path d="M5 20.5h14"/>',
+    thanks: '<path d="M12 20.5S4.5 16 3.3 10.5C2.6 7 4.8 4.5 7.6 4.5c1.8 0 3.3 .9 4.4 2.8 1.1-1.9 2.6-2.8 4.4-2.8 2.8 0 5 2.5 4.3 6C19.5 16 12 20.5 12 20.5z"/>',
+    team:   '<circle cx="8.5" cy="12" r="5"/><circle cx="15.5" cy="12" r="5"/>',
+    watch:  '<path d="M12 3.5l9.5 16.5h-19z"/><path d="M12 10v5M12 17.6v.1"/>',
+    liar:   '<path d="M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12z"/><circle cx="12" cy="12" r="2.8"/>',
+    hurry:  '<circle cx="12" cy="12" r="9"/><path d="M12 7v5.5l3.5 2"/>',
+    oops:   '<circle cx="12" cy="12" r="9"/><path d="M9 10v.1M15 10v.1M8.5 15.5c2-1.7 5-1.7 7 0"/>'
+  };
+  function svgIcon(id, px) {
+    return '<svg viewBox="0 0 24 24" width="' + px + '" height="' + px + '" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[id] || '') + '</svg>';
+  }
+  var S = { room: null, key: null, uid: null, unsub: null, byId: {}, open: false, to: 'all', unread: 0, unreadPriv: false,
+            lastSend: 0, first: true, noClickUntil: 0, voice: true, humans: 0 };
+  var El = { btns: [] };
+  var P = { fx: 1, fy: 0.5 };
+  try { var sp = JSON.parse(localStorage.getItem('dod_chat_pos')); if (sp && isFinite(sp.fx) && isFinite(sp.fy)) P = sp; } catch (e) {}
+  try { S.voice = localStorage.getItem('dod_chat_voice') !== '0'; } catch (e) {}
+
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+  function isBot(p) { return !!(p && (p.isBot || String(p.uid || '').slice(-3) === 'Qx9')); }
+  function seatUid(seat) {
+    var a = seat.querySelector('[id^="game-avatar-"],[id^="lobby-avatar-"]');
+    return a ? a.id.replace(/^(game|lobby)-avatar-/, '') : null;
+  }
+
+  // Everyone (humans only, including you) currently seated in the game or in the lobby ring
+  function members() {
+    var out = [], seen = {};
+    function add(uid, name) {
+      if (!uid || seen[uid] || String(uid).slice(-3) === 'Qx9') return;
+      seen[uid] = 1; out.push({ uid: uid, name: name || 'Player' });
+    }
+    try {
+      if (S.room && S.room.where === 'game') {
+        if (typeof state !== 'undefined' && state && state.players) {
+          state.players.forEach(function (p) { if (p && !isBot(p)) add(p.uid, p.name || p.displayName); });
+        }
+      } else {
+        document.querySelectorAll('#squadLobbyRing .ls-avatar.filled').forEach(function (a) {
+          var nm = a.parentNode.querySelector('.ls-name');
+          add((a.id || '').replace('lobby-avatar-', ''), nm ? nm.textContent : '');
+        });
+      }
+    } catch (e) {}
+    return out;
+  }
+  function others() { return allSeated().filter(function (m) { return m.uid !== S.uid; }); }
+  function nameOf(uid) {
+    var o = others().filter(function (x) { return x.uid === uid; })[0];
+    return o ? o.name : 'Player';
+  }
+  function fmtTime(ms) {
+    var d = new Date(ms), h = d.getHours(), m = d.getMinutes();
+    return (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m;
+  }
+
+  // ---------- UI ----------
+  function mkBtn(parent, before, id) {
+    if (!parent || document.getElementById(id)) return;
+    var b = document.createElement('button');
+    b.id = id; b.type = 'button'; b.className = 'btn ghost small dc-btn'; b.title = 'Chat';
+    b.style.display = 'none';
+    b.innerHTML = '💬<span class="dc-badge">0</span>';
+    b.addEventListener('click', function () { S.open ? closeChat() : openChat(); });
+    parent.insertBefore(b, before || null);
+    El.btns.push(b);
+  }
+  function build() {
+    if (!El.panel) {
+      var panel = document.createElement('div');
+      panel.id = 'dodChat';
+      panel.setAttribute('role', 'dialog');
+      panel.innerHTML =
+        '<div class="dc-head"><span class="dc-title">💬 CHAT</span>' +
+        '<button class="dc-hb dc-vo" type="button" title="Voice-over for quick messages">🔊</button>' +
+        '<button class="dc-hb dc-x" type="button" aria-label="Close chat">✕</button></div>' +
+        '<div class="dc-to"><span class="dc-tolabel">TO:</span><div class="dc-chips"></div></div>' +
+        '<div class="dc-list"></div><div class="dc-note"></div>' +
+        '<div class="dc-form"><input class="dc-in" type="text" maxlength="' + MAX_LEN + '" autocomplete="off" enterkeyhint="send" placeholder="Message everyone…">' +
+        '<button class="dc-send" type="button">SEND</button></div>';
+      document.body.appendChild(panel);
+      El.panel = panel;
+      El.head = panel.querySelector('.dc-head');
+      El.title = panel.querySelector('.dc-title');
+      El.vo = panel.querySelector('.dc-vo');
+      El.chips = panel.querySelector('.dc-chips');
+      El.list = panel.querySelector('.dc-list');
+      El.note = panel.querySelector('.dc-note');
+      El.form = panel.querySelector('.dc-form');
+      El.input = panel.querySelector('.dc-in');
+      panel.querySelector('.dc-x').addEventListener('click', closeChat);
+      panel.querySelector('.dc-send').addEventListener('click', sendText);
+      El.vo.textContent = S.voice ? '🔊' : '🔇';
+      El.vo.addEventListener('click', function () {
+        S.voice = !S.voice; El.vo.textContent = S.voice ? '🔊' : '🔇';
+        try { localStorage.setItem('dod_chat_voice', S.voice ? '1' : '0'); } catch (e) {}
+        if (!S.voice && window.speechSynthesis) try { speechSynthesis.cancel(); } catch (e) {}
+      });
+      El.input.addEventListener('keydown', function (e) {
+        e.stopPropagation();
+        if (e.key === 'Enter') { e.preventDefault(); sendText(); }
+      });
+      ['keyup', 'keypress'].forEach(function (ev) { El.input.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+
+      // drag by the header
+      var drag = null;
+      El.head.addEventListener('pointerdown', function (e) {
+        if (e.target.closest('button')) return;
+        drag = { ox: e.clientX - El.panel.offsetLeft, oy: e.clientY - El.panel.offsetTop };
+        El.head.classList.add('drag');
+        try { El.head.setPointerCapture(e.pointerId); } catch (x) {}
+        e.preventDefault();
+      });
+      El.head.addEventListener('pointermove', function (e) {
+        if (!drag) return;
+        var w = El.panel.offsetWidth, h = El.panel.offsetHeight;
+        var x = clamp(e.clientX - drag.ox, M, Math.max(M, window.innerWidth - w - M));
+        var y = clamp(e.clientY - drag.oy, M, Math.max(M, window.innerHeight - h - M));
+        El.panel.style.left = x + 'px'; El.panel.style.top = y + 'px';
+        var mx = window.innerWidth - w - 2 * M, my = window.innerHeight - h - 2 * M;
+        P.fx = mx > 0 ? clamp((x - M) / mx, 0, 1) : 0;
+        P.fy = my > 0 ? clamp((y - M) / my, 0, 1) : 0;
+      });
+      function endDrag() {
+        if (!drag) return; drag = null; El.head.classList.remove('drag');
+        try { localStorage.setItem('dod_chat_pos', JSON.stringify(P)); } catch (e) {}
+      }
+      El.head.addEventListener('pointerup', endDrag);
+      El.head.addEventListener('pointercancel', endDrag);
+      window.addEventListener('resize', place);
+    }
+    // button inside the match top bar, and one inside the lobby action bar
+    var right = document.querySelector('#game .topbar .right');
+    if (right) mkBtn(right, right.lastElementChild, 'dodChatBtn');
+    var leave = document.getElementById('squadLeaveLobbyBtn');
+    if (leave) mkBtn(leave.parentNode, leave, 'dodChatBtnLobby');
+    if (!El.toast) {
+      El.toast = document.createElement('div'); El.toast.id = 'dodQToast'; document.body.appendChild(El.toast);
+    }
+    if (!El.qw) {
+      El.qw = document.createElement('div'); El.qw.id = 'dodQW'; document.body.appendChild(El.qw);
+    }
+  }
+  // Puts the window where the player left it (kept fully on screen at any screen size)
+  function place() {
+    if (!El.panel || !S.open) return;
+    var w = El.panel.offsetWidth, h = El.panel.offsetHeight;
+    var mx = Math.max(0, window.innerWidth - w - 2 * M), my = Math.max(0, window.innerHeight - h - 2 * M);
+    El.panel.style.left = (M + mx * clamp(P.fx, 0, 1)) + 'px';
+    El.panel.style.top = (M + my * clamp(P.fy, 0, 1)) + 'px';
+  }
+
+  function openChat() {
+    if (!S.room) return;
+    build();
+    S.open = true; S.unread = 0; S.unreadPriv = false;
+    El.panel.classList.add('open');
+    El.title.textContent = S.room.where === 'lobby' ? '💬 LOBBY CHAT' : '💬 MATCH CHAT';
+    place(); renderChips(); renderList(true); updateBadge();
+  }
+  function closeChat() {
+    S.open = false;
+    if (El.panel) El.panel.classList.remove('open');
+    if (El.input) El.input.blur();
+  }
+  function updateBadge() {
+    El.btns.forEach(function (b) {
+      b.classList.toggle('has-unread', S.unread > 0);
+      b.classList.toggle('has-priv', S.unread > 0 && S.unreadPriv);
+      b.querySelector('.dc-badge').textContent = S.unread > 9 ? '9+' : String(S.unread);
+    });
+  }
+  function showBtns() {
+    var ok = S.room && S.humans > 1;
+    El.btns.forEach(function (b) {
+      var want = ok && ((b.id === 'dodChatBtn' && S.room.where === 'game') || (b.id === 'dodChatBtnLobby' && S.room.where === 'lobby'));
+      b.style.display = want ? 'inline-block' : 'none';
+    });
+  }
+
+  function renderChips() {
+    if (!El.chips) return;
+    var list = others();
+    if (S.to !== 'all' && !list.some(function (o) { return o.uid === S.to; })) S.to = 'all';
+    El.chips.innerHTML = '';
+    function chip(label, uid, priv) {
+      var c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'dc-chip' + (priv ? ' priv' : '') + (S.to === uid ? ' on' : '');
+      c.textContent = priv ? '🔒 ' + label : label;
+      c.addEventListener('click', function () { S.to = uid; renderChips(); El.input.focus(); });
+      El.chips.appendChild(c);
+    }
+    chip('Everyone', 'all', false);
+    list.forEach(function (o) { chip(o.name, o.uid, true); });
+    var isPriv = S.to !== 'all';
+    El.form.classList.toggle('priv', isPriv);
+    El.input.placeholder = isPriv ? ('Private to ' + nameOf(S.to) + '…') : 'Message everyone…';
+  }
+
+  // ----- quick-message helpers -----
+  function myName() { try { return DoDAuth.getProfile().displayName || ''; } catch (e) { return ''; } }
+  // "Anagh → aks" / "You → aks" / "Anagh → You" (private ones keep the lock)
+  function quickLabel(d, mine) {
+    var from = mine ? 'You' : (d.fromName || 'Player');
+    var priv = d.to && d.to !== 'all';
+    var to = priv ? (mine ? (d.toName || 'Player') : 'You')
+                  : (d.toName ? (d.toName === myName() ? 'You' : d.toName) : '');
+    return (priv ? '🔒 ' : '') + from + (to ? ' → ' + to : '');
+  }
+  // Everyone seated, bots included (bots can be aimed at with quick messages, but not whispered to)
+  function allSeated() {
+    var out = members().slice(), seen = {};
+    out.forEach(function (m) { seen[m.uid] = 1; });
+    function add(uid, name) { if (!uid || seen[uid]) return; seen[uid] = 1; out.push({ uid: uid, name: name || 'Player', bot: true }); }
+    try {
+      if (S.room && S.room.where === 'game') {
+        if (typeof state !== 'undefined' && state && state.players) {
+          state.players.forEach(function (p) { if (p && isBot(p)) add(p.uid, p.name || p.displayName); });
+        }
+      } else {
+        document.querySelectorAll('#squadLobbyRing .ls-avatar.filled').forEach(function (a) {
+          var uid = (a.id || '').replace('lobby-avatar-', '');
+          if (String(uid).slice(-3) !== 'Qx9') return;
+          var nm = a.parentNode.querySelector('.ls-name');
+          add(uid, nm ? nm.textContent : '');
+        });
+      }
+    } catch (e) {}
+    return out;
+  }
+  // Voice tone for text-to-speech: [pitch, rate]
+  var TONES = {
+    nice: [1.25, 1.05], gg: [1.2, 1.0], thanks: [1.1, 0.95], team: [1.1, 1.0],
+    watch: [0.8, 1.2], liar: [0.65, 0.9], hurry: [1.3, 1.45], oops: [1.4, 0.9]
+  };
+  function toneFor(text, id) {
+    if (TONES[id]) return TONES[id];
+    var t = String(text || ''), pitch = 1, rate = 1;
+    if (/!/.test(t)) { pitch += 0.2; rate += 0.1; }
+    if (/\?/.test(t)) { pitch += 0.15; }
+    if (/\.\.\./.test(t)) { rate -= 0.15; pitch -= 0.1; }
+    if (t.length > 3 && t === t.toUpperCase() && /[A-Z]/.test(t)) { pitch += 0.15; rate += 0.1; }
+    return [pitch, rate];
+  }
+
+  function msgTime(m) { return (m.ts && m.ts.toMillis) ? m.ts.toMillis() : (m.cts || 0); }
+  function renderList(forceBottom) {
+    if (!El.list) return;
+    var msgs = Object.keys(S.byId).map(function (k) { return S.byId[k]; });
+    msgs.sort(function (a, b) { return msgTime(a) - msgTime(b); });
+    if (msgs.length > KEEP) msgs = msgs.slice(msgs.length - KEEP);
+    var atBottom = forceBottom || (El.list.scrollHeight - El.list.scrollTop - El.list.clientHeight < 60);
+    El.list.innerHTML = '';
+    if (!msgs.length) {
+      var e = document.createElement('div');
+      e.className = 'dc-empty';
+      e.textContent = 'No messages yet. Pick a name above to whisper, hold a player for quick messages, or pick “Everyone”.';
+      El.list.appendChild(e);
+      return;
+    }
+    msgs.forEach(function (m) {
+      var mine = m.from === S.uid, priv = m.to && m.to !== 'all';
+      var row = document.createElement('div');
+      row.className = 'dc-msg' + (mine ? ' mine' : '') + (priv ? ' priv' : '');
+      var meta = document.createElement('div'); meta.className = 'dc-meta';
+      var who = document.createElement('span');
+      if (priv) who.textContent = mine ? ('🔒 Private · You → ' + (m.toName || 'Player')) : ('🔒 Private · ' + (m.fromName || 'Player') + ' → You');
+      else if (m.quick && m.toName) who.textContent = quickLabel(m, mine);
+      else who.textContent = mine ? 'You' : (m.fromName || 'Player');
+      var tm = document.createElement('span'); tm.className = 'dc-time'; tm.textContent = fmtTime(msgTime(m));
+      meta.appendChild(who); meta.appendChild(tm);
+      var tx = document.createElement('div'); tx.className = 'dc-text';
+      tx.textContent = (m.text || '');
+      row.appendChild(meta); row.appendChild(tx);
+      El.list.appendChild(row);
+    });
+    if (atBottom) El.list.scrollTop = El.list.scrollHeight;
+  }
+  function showNote(t) {
+    if (!El.note) return;
+    El.note.textContent = t; El.note.style.display = t ? 'block' : 'none';
+    if (t) setTimeout(function () { if (El.note.textContent === t) El.note.style.display = 'none'; }, 2500);
+  }
+  function toast(t) {
+    if (!El.toast) return;
+    El.toast.textContent = t; El.toast.classList.add('show');
+    clearTimeout(El.toastT);
+    El.toastT = setTimeout(function () { El.toast.classList.remove('show'); }, 2600);
+  }
+  function speak(t, quickId) {
+    if (!S.voice) return;
+    try {
+      var ss = window.speechSynthesis; if (!ss) return;
+      ss.cancel();
+      var tone = toneFor(t, quickId);
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = 'en-US'; u.volume = 1;
+      u.pitch = clamp(tone[0], 0.1, 2); u.rate = clamp(tone[1], 0.5, 2);
+      ss.speak(u);
+    } catch (e) {}
+  }
+
+  // ---------- sending ----------
+  function send(text, toUid, quickId, aimName) {
+    if (!S.room || !S.uid) return false;
+    var now = Date.now();
+    if (now - S.lastSend < COOLDOWN_MS) { showNote('Slow down a little…'); return false; }
+    var priv = toUid && toUid !== 'all';
+    var prof = null; try { prof = DoDAuth.getProfile(); } catch (e) {}
+    var data = {
+      from: S.uid, fromName: (prof && prof.displayName) || 'Player',
+      to: priv ? toUid : 'all', toName: priv ? nameOf(toUid) : (aimName || ''),
+      text: text,
+      participants: priv ? [S.uid, toUid] : members().map(function (m) { return m.uid; }),
+      ts: firebase.firestore.FieldValue.serverTimestamp(), cts: now
+    };
+    if (data.participants.indexOf(S.uid) < 0) data.participants.push(S.uid);
+    if (quickId) data.quick = quickId;
+    S.lastSend = now;
+    firebase.firestore().collection(S.room.col).doc(S.room.id).collection('chat').add(data)
+      .catch(function (err) { console.warn('[DoD chat] send failed', err); showNote('Message could not be sent.'); });
+    return true;
+  }
+  function sendText() {
+    var text = (El.input.value || '').replace(/\s+/g, ' ').trim().slice(0, MAX_LEN);
+    if (!text) return;
+    if (send(text, S.to, null)) El.input.value = '';
+  }
+
+  // ---------- room lifecycle ----------
+  function start(room) {
+    stop();
+    build();
+    S.room = room; S.key = room.col + '/' + room.id; S.uid = room.uid;
+    S.byId = {}; S.first = true; S.unread = 0; S.to = 'all';
+    S.unsub = firebase.firestore().collection(room.col).doc(room.id).collection('chat')
+      .where('participants', 'array-contains', room.uid)
+      .onSnapshot(function (snap) {
+        var now = Date.now();
+        snap.docChanges().forEach(function (ch) {
+          if (ch.type === 'removed') { delete S.byId[ch.doc.id]; return; }
+          var d = ch.doc.data(); d._id = ch.doc.id;
+          S.byId[ch.doc.id] = d;
+          if (ch.type !== 'added') return;
+          var mine = d.from === room.uid, priv = d.to && d.to !== 'all';
+          if (!mine && !S.open) { S.unread++; if (priv) S.unreadPriv = true; }
+          if (d.quick && !S.first && (now - (d.cts || 0)) < 20000) {
+            toast(quickLabel(d, mine) + ': ' + (d.text || ''));
+            speak(d.text || '', d.quick);
+          }
+        });
+        S.first = false;
+        if (S.open) renderList(false);
+        updateBadge();
+      }, function (err) { console.warn('[DoD chat] listener error', err); });
+  }
+  function stop() {
+    if (S.unsub) { try { S.unsub(); } catch (e) {} }
+    S.unsub = null; S.room = null; S.key = null; S.byId = {}; S.unread = 0; S.unreadPriv = false; S.humans = 0;
+    closeChat(); closeWheel();
+    if (El.list) El.list.innerHTML = '';
+    showBtns(); updateBadge();
+  }
+  function curRoom() {
+    var user = (window.firebase && firebase.auth && firebase.auth().currentUser) || null;
+    if (!user) return null;
+    var mid = (typeof currentMatchId !== 'undefined') ? currentMatchId : null;
+    var pid = (typeof currentPartyId !== 'undefined') ? currentPartyId : null;
+    var g = document.getElementById('game');
+    var gameVis = !!(g && getComputedStyle(g).display !== 'none');
+    var lv = document.getElementById('squadLobbyView');
+    var lobVis = !!(lv && lv.classList.contains('show'));
+    if (gameVis && mid) return { col: 'matches', id: mid, where: 'game', uid: user.uid };
+    if (lobVis && mid) return { col: 'matches', id: mid, where: 'lobby', uid: user.uid };
+    if (lobVis && pid) return { col: 'parties', id: pid, where: 'lobby', uid: user.uid };
+    return null;
+  }
+  function tick() {
+    try {
+      build();
+      var r = curRoom();
+      if (!r) { if (S.room) stop(); return; }
+      var key = r.col + '/' + r.id;
+      if (S.key !== key) start(r);
+      S.room.where = r.where;
+      S.humans = allSeated().length;
+      showBtns();
+      if (S.open) renderChips();
+    } catch (e) {}
+  }
+  setInterval(tick, 1000);
+  document.addEventListener('DOMContentLoaded', build);
+  if (document.readyState !== 'loading') build();
+
+  window.dodChatOpenTo = function (uid) {
+    if (!S.room || !uid || uid === S.uid) return;
+    if (!others().some(function (o) { return o.uid === uid; })) return; // bots can't be messaged
+    S.to = uid; openChat();
+    setTimeout(function () { if (El.input) El.input.focus(); }, 50);
+  };
+  window.dodChatOpen = openChat;
+  // true when a chat room exists and this player can be messaged (used by the tap-a-player popup)
+  window.dodChatCan = function (uid) {
+    return !!(S.room && uid && uid !== S.uid && others().some(function (o) { return o.uid === uid; }));
+  };
+  window.dodChatClose = closeChat;
+
+  // ---------- quick-chat wheel (hold a player, drag toward a message, release) ----------
+  var H = null;   // pending long press
+  var Wl = null;  // open wheel
+  function closeWheel() {
+    if (H) { clearTimeout(H.timer); H = null; }
+    if (Wl) { Wl = null; if (El.qw) { El.qw.classList.remove('open'); El.qw.innerHTML = ''; } }
+  }
+  function openWheel(x, y, uid, name) {
+    build();
+    var vw = window.innerWidth, vh = window.innerHeight, s = Math.min(vw, vh);
+    var R = clamp(s / 2 - 46, 58, 105), I = clamp(R * 0.55, 38, 54);
+    var m = Math.min(R + I / 2 + 6, s / 2 - 2);
+    var cx = clamp(x, m, Math.max(m, vw - m)), cy = clamp(y, m, Math.max(m, vh - m));
+    var C = Math.round(R * 0.9);
+    var html = '<div class="qw-c" style="width:' + C + 'px;height:' + C + 'px;left:' + (cx - C / 2) + 'px;top:' + (cy - C / 2) + 'px"><b></b><span>Drag to a message</span></div>';
+    QUICK.forEach(function (q, i) {
+      var a = (-90 + i * 45) * Math.PI / 180;
+      html += '<div class="qw-i" data-i="' + i + '" style="width:' + I + 'px;height:' + I + 'px;font-size:' + Math.round(I * 0.46) +
+        'px;left:' + (cx + R * Math.cos(a) - I / 2) + 'px;top:' + (cy + R * Math.sin(a) - I / 2) + 'px">' + svgIcon(q.id, Math.round(I * 0.52)) + '</div>';
+    });
+    El.qw.innerHTML = html;
+    El.qw.classList.add('open');
+    Wl = { cx: cx, cy: cy, sel: -1, uid: uid, name: name,
+           head: El.qw.querySelector('.qw-c b'), sub: El.qw.querySelector('.qw-c span') };
+    Wl.head.textContent = 'To ' + name;
+    S.noClickUntil = Date.now() + 700;
+  }
+  function wheelMove(x, y) {
+    if (!Wl) return;
+    var dx = x - Wl.cx, dy = y - Wl.cy, sel = -1;
+    if (Math.sqrt(dx * dx + dy * dy) > 24) {
+      var deg = Math.atan2(dy, dx) * 180 / Math.PI + 90;
+      deg = ((deg % 360) + 360) % 360;
+      sel = Math.round(deg / 45) % 8;
+    }
+    if (sel === Wl.sel) return;
+    Wl.sel = sel;
+    El.qw.querySelectorAll('.qw-i').forEach(function (n) { n.classList.toggle('on', +n.getAttribute('data-i') === sel); });
+    Wl.sub.textContent = sel >= 0 ? QUICK[sel].l : 'Drag to a message';
+  }
+  function holdTarget(e) {
+    var seat = e.target && e.target.closest && e.target.closest('.ringseat, .lobby-seat');
+    if (!seat || !S.room) return null;
+    if (S.room.where === 'game' && typeof state !== 'undefined' && state && /CHOOSE_TARGET/.test(String(state.uiState))) return null;
+    var uid = seatUid(seat);
+    if (!uid || uid === S.uid) return null;
+    var tgt = allSeated().filter(function (o) { return o.uid === uid; })[0];
+    if (!tgt) return null;
+    return { uid: uid, name: tgt.name };
+  }
+  window.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    if (Wl) return;
+    var t = holdTarget(e);
+    if (!t) return;
+    H = { x: e.clientX, y: e.clientY, uid: t.uid, name: t.name, timer: null };
+    H.timer = setTimeout(function () {
+      if (!H) return;
+      var hh = H; H = null;
+      openWheel(hh.x, hh.y, hh.uid, hh.name);
+      try { El.qw.setPointerCapture(e.pointerId); } catch (x) {}
+    }, HOLD_MS);
+  }, true);
+  window.addEventListener('pointermove', function (e) {
+    if (H && (Math.abs(e.clientX - H.x) > 12 || Math.abs(e.clientY - H.y) > 12)) { clearTimeout(H.timer); H = null; }
+    if (Wl) { e.preventDefault(); wheelMove(e.clientX, e.clientY); }
+  }, true);
+  function release() {
+    if (H) { clearTimeout(H.timer); H = null; }
+    if (!Wl) return;
+    var w = Wl, q = w.sel >= 0 ? QUICK[w.sel] : null;
+    closeWheel();
+    S.noClickUntil = Date.now() + 500;
+    if (q) send(q.say, 'all', q.id, w.name);
+  }
+  window.addEventListener('pointerup', release, true);
+  window.addEventListener('pointercancel', function () { if (H) { clearTimeout(H.timer); H = null; } if (Wl) closeWheel(); }, true);
+  window.addEventListener('contextmenu', function (e) {
+    if (H || Wl || (e.target.closest && e.target.closest('.ringseat, .lobby-seat'))) e.preventDefault();
+  }, true);
+
+  // After a quick-message wheel, swallow the click so the volume popup doesn't open too.
+  // (A normal tap on a seat still opens your volume popup. Private chat is opened from the chat button.)
+  window.addEventListener('click', function (e) {
+    if (Date.now() < S.noClickUntil) { e.stopPropagation(); e.preventDefault(); }
+  }, true);
 })();
 </script>
 </body>
