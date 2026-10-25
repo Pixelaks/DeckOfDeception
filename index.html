@@ -2260,11 +2260,12 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
 .rotate-icon { font-size: 48px; animation: rotatePhone 2s infinite ease-in-out; }
 @keyframes rotatePhone { 0% { transform: rotate(0deg); } 50% { transform: rotate(-90deg); } 100% { transform: rotate(0deg); } }
 
-@media screen and (max-width: 800px) and (orientation: portrait) {
-  #rotate-device-overlay { display: flex; }
-  /* Removed #introOverlay from the hide list so they can tap it to auto-rotate! */
-  #menu, #game, #loginChoiceOverlay, #nameSetupOverlay { display: none !important; }
-}
+/* The portrait fallback is switched by JS (dod-phone-portrait) so a keyboard / screenshot /
+   split-screen resize can't flash it over the game. */
+html.dod-phone-portrait #rotate-device-overlay { display: flex; }
+/* Removed #introOverlay from the hide list so they can tap it to auto-rotate! */
+html.dod-phone-portrait #menu, html.dod-phone-portrait #game,
+html.dod-phone-portrait #loginChoiceOverlay, html.dod-phone-portrait #nameSetupOverlay { display: none !important; }
 
 /* Ensure the Intro screen sits at the very top, ABOVE the Bootstrap loader! */
 #introOverlay { z-index: 300000 !important; }
@@ -5904,6 +5905,33 @@ function dodSetViewportHeight() {
 }
 dodSetViewportHeight();
 window.addEventListener('orientationchange', dodSetViewportHeight);
+
+// Real device orientation, NOT the window shape. A keyboard, screenshot panel or split-screen
+// briefly changes the window size, which used to flash the "Rotate Device" screen over the game.
+function dodIsDevicePortrait() {
+    try {
+        if (screen.orientation && screen.orientation.type) return screen.orientation.type.indexOf('portrait') === 0;
+        if (typeof window.orientation === 'number') return window.orientation === 0 || window.orientation === 180; // older iOS
+    } catch (e) {}
+    return window.matchMedia('(orientation: portrait)').matches;
+}
+let _portraitTimer = null;
+function dodApplyPhonePortrait() {
+    try {
+        var small = Math.min(window.screen.width, window.screen.height) <= 900;
+        var touch = (navigator.maxTouchPoints || 0) > 0;
+        document.documentElement.classList.toggle('dod-phone-portrait', small && touch && dodIsDevicePortrait());
+    } catch (e) {}
+}
+function dodCheckPhonePortrait() {
+    // Only react once the orientation has stayed the same for a moment
+    clearTimeout(_portraitTimer);
+    _portraitTimer = setTimeout(dodApplyPhonePortrait, 350);
+}
+dodApplyPhonePortrait();
+window.addEventListener('resize', dodCheckPhonePortrait);
+window.addEventListener('orientationchange', dodCheckPhonePortrait);
+if (window.screen && screen.orientation && screen.orientation.addEventListener) screen.orientation.addEventListener('change', dodCheckPhonePortrait);
 if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', dodSetViewportHeight);
 }
@@ -7395,6 +7423,7 @@ if(window.DoDAuth){
         if (typeof listenForPartyInvites === 'function') {
             listenForPartyInvites();
         }
+        if (typeof dodRestoreParty === 'function') dodRestoreParty(); // rejoin our party lobby after a refresh
 
         // CrazyGames multiplayer integration (only runs on crazygames.com)
         if (window.DOD_PLATFORM === 'crazygames' && window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK && window.CrazyGames.SDK.game) {
@@ -14143,6 +14172,45 @@ let inviteListenerUnsub = null;
 
 // FULL Note: Global Invite Listener
 // FULL Note: Global Invite Listener
+// Rejoin the party lobby after a refresh. Party membership lives in Firestore, not in the page,
+// so without this a refreshed player lands on the main menu while everyone else still sees them in the lobby.
+async function dodRestoreParty() {
+    if (currentPartyId || currentMatchId) return;
+    let savedId = null;
+    try { savedId = localStorage.getItem('dod_party_id'); } catch (e) {}
+    if (!savedId || !window.DoDAuth || !DoDAuth.getProfile()) return;
+    try {
+        const db = firebase.firestore();
+        const myUid = DoDAuth.getProfile().uid;
+        const snap = await db.collection('parties').doc(savedId).get();
+        if (!snap.exists || !(snap.data().members || []).some(m => m.uid === myUid)) {
+            localStorage.removeItem('dod_party_id'); // party is gone, or we were removed
+            return;
+        }
+        const data = snap.data();
+        // A leftover matchId from a match that is already over must not pull us into it
+        if (data.matchId) {
+            let live = false;
+            try {
+                const md = await db.collection('matches').doc(data.matchId).get();
+                live = md.exists && ['waiting', 'starting'].indexOf(md.data().status) !== -1;
+            } catch (e) {}
+            if (!live) window._lastCancelledMatchId = data.matchId;
+        }
+        if (currentPartyId || currentMatchId) return; // something else took over while we were checking
+        currentPartyId = savedId;
+        isPartyLeader = (data.leader === myUid);
+        const btnCreate = document.getElementById('btnCreateParty');
+        const btnLeave = document.getElementById('btnLeaveParty');
+        if (btnCreate) btnCreate.style.display = 'none';
+        if (btnLeave) btnLeave.style.display = 'inline-block';
+        listenToParty(savedId);
+        if (typeof initFriendsList === 'function') initFriendsList();
+    } catch (e) {
+        console.warn('[DoD] Party restore failed', e);
+    }
+}
+
 function listenForPartyInvites() {
     if (!window.DoDAuth || !DoDAuth.getProfile()) return;
     
@@ -14499,7 +14567,8 @@ async function leaveParty() {
 
     currentPartyId = null;
     isPartyLeader = true; 
-    window.currentPartyMembers = []; // Clear members on leave 
+    window.currentPartyMembers = []; // Clear members on leave
+    try { localStorage.removeItem('dod_party_id'); } catch (e) {} 
     
     document.getElementById('btnCreateParty').style.display = 'inline-block';
     document.getElementById('btnLeaveParty').style.display = 'none';
@@ -14546,6 +14615,7 @@ async function leavePartyLobby() {
 }
 
 function listenToParty(partyId) {
+    try { localStorage.setItem('dod_party_id', partyId); } catch (e) {} // remember the lobby so a refresh can rejoin it
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
@@ -14561,6 +14631,7 @@ function listenToParty(partyId) {
         const data = doc.data();
         
         window.currentPartyMembers = data.members || []; // Store globally to check invites
+        dodSquadSyncFromParty(data); // keep the whole squad in step while searching
         
         // FORCE HOST'S TABLE SKIN IN LOBBY
         const leaderObj = data.members.find(m => m.uid === data.leader);
@@ -15379,6 +15450,38 @@ function hideLobbyView() {
 }
 
 // ===== READY SYSTEM (party lobby) =====
+// Keeps the whole squad in step while searching: if one member backs out, nobody keeps searching without them.
+let _squadSyncBusy = false;
+function dodSquadSyncFromParty(data) {
+    if (!window.DoDAuth || !DoDAuth.getProfile() || !currentPartyId || !currentMatchId) return;
+    const btn = document.getElementById('squadPlayBtn');
+    if (!btn || !btn.classList.contains('searching') || _squadSyncBusy) return;
+    const myUid = DoDAuth.getProfile().uid;
+
+    if (data.leader !== myUid) {
+        // Friend: the host cancelled the search -> follow them back to the lobby
+        if (!data.matchId) {
+            showSystemToast('The host cancelled the search.');
+            cancelMatchmakingSquad();
+        }
+        return;
+    }
+
+    // Host: a member un-readied / left the search -> stop for everyone
+    if (data.matchId !== currentMatchId) return;
+    const backedOut = (data.members || []).filter(m => m.uid !== myUid && !m.ready);
+    if (!backedOut.length) return;
+    _squadSyncBusy = true;
+    const mid = currentMatchId;
+    firebase.firestore().collection('matches').doc(mid).get().then(doc => {
+        if (currentMatchId !== mid) return;
+        // Once the table is full and the game is starting, members reset their ready flag. That is not a cancel.
+        if (doc.exists && doc.data().status !== 'waiting') return;
+        showSystemToast((backedOut[0].displayName || 'A player') + ' cancelled the search.');
+        cancelMatchmakingSquad();
+    }).catch(() => {}).finally(() => { _squadSyncBusy = false; });
+}
+
 function dodMyPartyMember() {
     const myUid = DoDAuth.getProfile().uid;
     return (window.currentPartyMembers || []).find(m => m.uid === myUid) || null;
@@ -19618,7 +19721,7 @@ async function confirmMysteriousLogout() {
       var tm = document.createElement('span'); tm.className = 'dc-time'; tm.textContent = fmtTime(msgTime(m));
       meta.appendChild(who); meta.appendChild(tm);
       var tx = document.createElement('div'); tx.className = 'dc-text';
-      tx.textContent = (m.text || '');
+      tx.textContent = cleanText(m.text || '');
       row.appendChild(meta); row.appendChild(tx);
       El.list.appendChild(row);
     });
@@ -19669,8 +19772,63 @@ async function confirmMysteriousLogout() {
       .catch(function (err) { console.warn('[DoD chat] send failed', err); showNote('Message could not be sent.'); });
     return true;
   }
+  // ---------- bad-word filter ----------
+  // Add or remove words here. STRONG words are masked even inside longer words (motherf***er -> ***);
+  // WORDS are only masked as whole words so innocent words (class, assume, Scunthorpe) are left alone.
+  var BAD_STRONG = ['fuck', 'shit', 'bitch', 'asshole', 'bastard', 'dickhead', 'motherfucker', 'madarchod', 'behenchod', 'bhenchod', 'chutiya', 'chutiye', 'bhosdike', 'thayoli'];
+  var BAD_WORDS = ['ass', 'arse', 'dick', 'cock', 'pussy', 'cunt', 'slut', 'whore', 'twat', 'wanker', 'piss', 'nigger', 'nigga', 'faggot', 'retard', 'chink', 'kike', 'gandu', 'bhosdi', 'harami', 'kunna', 'thendi', 'oombi', 'punda', 'myre', 'myru'];
+  var LEET = { a: '[a@4*]', b: '[b8]', e: '[e3*]', g: '[g9]', i: '[i1!|*]', l: '[l1|]', o: '[o0*]', s: '[s$5]', t: '[t7+]', u: '[u*v]' };
+  var BAD_ALLOW = ['shiitake', 'shiitakes', 'shitake', 'shitakes']; // innocent words that look like a bad word
+  var BAD_RE = null;
+  function badPattern(w) {
+    return w.split('').map(function (ch) { return (LEET[ch] || ch) + '+'; }).join('[^\\sa-z0-9]{0,2}');
+  }
+  function cleanText(text) {
+    text = String(text == null ? '' : text);
+    if (!text) return text;
+    try {
+      if (!BAD_RE) {
+        BAD_RE = new RegExp(
+          '(^|[^a-z0-9])(' +
+          '[a-z0-9]*?(?:' + BAD_STRONG.map(badPattern).join('|') + ')[a-z0-9]*' +
+          '|(?:' + BAD_WORDS.map(badPattern).join('|') + ')(?:s|es|ed|ing|er|ers|y|in)?' +
+          ')(?=$|[^a-z0-9])', 'gi');
+      }
+      return text.replace(BAD_RE, function (m, pre, word) { return BAD_ALLOW.indexOf(String(word).toLowerCase()) >= 0 ? m : pre + '***'; });
+    } catch (e) { return text; }
+  }
+
+  // ---------- message sound (soft pop when the chat is open, two-note ding when it is closed) ----------
+  var _msgCtx = null;
+  function playMsgSound(chatOpen) {
+    if (!S.voice) return; // the speaker button in the chat header mutes this too
+    try {
+      var vol = (typeof sfxVolume === 'number') ? sfxVolume : 0.6;
+      if (vol <= 0) return;
+      var AC = window.AudioContext || window.webkitAudioContext;
+      var ctx = (typeof audioCtx !== 'undefined' && audioCtx) ? audioCtx : (_msgCtx || (AC ? (_msgCtx = new AC()) : null));
+      if (!ctx) return;
+      if (ctx.state === 'suspended') ctx.resume();
+      var t0 = ctx.currentTime;
+      var notes = chatOpen
+        ? [{ f0: 520, f1: 880, at: 0, len: 0.12, g: 0.16 }]
+        : [{ f0: 784, f1: 784, at: 0, len: 0.12, g: 0.22 }, { f0: 1175, f1: 1175, at: 0.12, len: 0.2, g: 0.22 }];
+      notes.forEach(function (n) {
+        var o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = 'sine';
+        o.frequency.setValueAtTime(n.f0, t0 + n.at);
+        if (n.f1 !== n.f0) o.frequency.exponentialRampToValueAtTime(n.f1, t0 + n.at + 0.07);
+        g.gain.setValueAtTime(0.0001, t0 + n.at);
+        g.gain.exponentialRampToValueAtTime(n.g * vol, t0 + n.at + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t0 + n.at + n.len);
+        o.connect(g); g.connect(ctx.destination);
+        o.start(t0 + n.at); o.stop(t0 + n.at + n.len + 0.03);
+      });
+    } catch (e) {}
+  }
+
   function sendText() {
-    var text = (El.input.value || '').replace(/\s+/g, ' ').trim().slice(0, MAX_LEN);
+    var text = cleanText((El.input.value || '').replace(/\s+/g, ' ').trim().slice(0, MAX_LEN));
     if (!text) return;
     if (send(text, S.to, null)) El.input.value = '';
   }
@@ -19692,6 +19850,7 @@ async function confirmMysteriousLogout() {
           if (ch.type !== 'added') return;
           var mine = d.from === room.uid, priv = d.to && d.to !== 'all';
           if (!mine && !S.open) { S.unread++; if (priv) S.unreadPriv = true; }
+          if (!mine && !S.first && !d.quick && (now - (d.cts || 0)) < 20000) playMsgSound(S.open); // message sound
           if (d.quick && !S.first && (now - (d.cts || 0)) < 20000) {
             toast(quickLabel(d, mine) + ': ' + (d.text || ''));
             speak(d.text || '', d.quick);
