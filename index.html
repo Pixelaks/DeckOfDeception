@@ -2957,6 +2957,9 @@ body.low-power-mode .particle, body.low-power-mode .ls-particles, body.low-power
 
 /* Panels that relied on blur for opacity instead of a solid color underneath.
    Without blur they turned see-through, so give them a solid fallback here. */
+/* In-app browsers (Instagram, Facebook, TikTok...): no rubber-band bounce, page stays pinned while their toolbar moves */
+html.dod-iab, html.dod-iab body { overscroll-behavior: none; }
+html.dod-iab body { position: fixed; inset: 0; width: 100%; }
 body.low-power-mode #profileModal { background: rgba(6,5,5,0.97) !important; }
 body.low-power-mode .squad-modal-container { background: rgba(10,8,8,0.97) !important; }
 body.low-power-mode #achievementPopup,
@@ -5899,9 +5902,18 @@ function updateFullscreenIcons() {
 // That was clipping bottom content — like the guest sign-in button — off-screen with
 // no way to scroll to it. This measures the REAL visible height directly and keeps
 // it correct on every layout change, regardless of dvh support.
+let _vhTimer = null, _vhLast = 0;
 function dodSetViewportHeight() {
-    const vh = (window.visualViewport ? window.visualViewport.height : window.innerHeight) * 0.01;
-    document.documentElement.style.setProperty('--vh', `${vh}px`);
+    const apply = () => {
+        _vhTimer = null;
+        const cur = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
+        if (Math.abs(cur - _vhLast) < 2) return; // ignore tiny jitter
+        _vhLast = cur;
+        document.documentElement.style.setProperty('--vh', `${cur * 0.01}px`);
+    };
+    if (!_vhLast) { apply(); return; }  // first call: apply instantly
+    clearTimeout(_vhTimer);
+    _vhTimer = setTimeout(apply, 90);   // otherwise wait until the resizing settles (in-app browsers fire dozens of resizes)
 }
 dodSetViewportHeight();
 window.addEventListener('orientationchange', dodSetViewportHeight);
@@ -9017,6 +9029,14 @@ function tick() {
             // Keep the Worker's Deception timeline moving even when no new update arrives (the host pings it once a second)
             const myUidTick = DoDAuth.getProfile().uid;
             if (window.onlineMatchSeats && window.onlineMatchSeats[0].uid === myUidTick) handleOnlineDeceptionHostLogic(state);
+            else {
+                const decNow = state.deception;
+                const overdueMs = (/^REVEAL_/.test(decNow.phase || '') ? (decNow.phaseUntil ? Date.now() - decNow.phaseUntil : -1) : Date.now() - decNow.expiresAt);
+                if (overdueMs > 4000 && (!window.dodLastOverdueNudge || Date.now() - window.dodLastOverdueNudge > 3000)) {
+                    window.dodLastOverdueNudge = Date.now();
+                    handleOnlineDeceptionHostLogic(state);
+                }
+            }
         }
         if (false && currentMatchId && dLeft <= 0) {
             const myUid = DoDAuth.getProfile().uid;
@@ -9876,7 +9896,7 @@ function renderAll(){
     const meta=document.getElementById('rmeta-'+p.id);
     if(meta){
       if(p.out) {
-        meta.innerHTML = `<div class="stat-pill" style="color:var(--danger-bright)">Out</div>`;
+        meta.innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;gap:1px;"><div class="stat-pill" style="color:var(--danger-bright)">Out</div>` + (p.left ? '' : `<div style="font:600 8px 'IBM Plex Mono',monospace;letter-spacing:.5px;text-transform:uppercase;color:#f5c542;text-shadow:0 1px 2px #000;">Watching</div>`) + `</div>`;
       } else {
         const brokeClass = p.shop<=0 ? 'style="border-color:var(--danger-bright); color:var(--danger-bright);"' : '';
         meta.innerHTML = `
@@ -11232,12 +11252,13 @@ function renderDeceptionOverlay(){
         if (r.trusted) {
             resultText =
                 'believed ' +
-                [].concat(r.trusted).map(nameOf).join(', ') +
+                [].concat(r.trusted).map(function(u){ return nameOf(u) + (dec.claimStances && dec.claimStances[u] !== undefined ? ' (' + dec.claimStances[u] + ')' : ''); }).join(', ') +
                 ' and followed their claim';
         } else if (r.believe) {
-            resultText = 'believed the proposed claim';
+            const _cl = (dec.richUids || []).filter(function(u){ return dec.claimStances && Number(dec.claimStances[u]) === Number(dec.claimNumber); });
+            resultText = _cl.length ? 'believed ' + _cl.map(nameOf).join(', ') + ' (' + dec.claimNumber + ')' : 'believed the claim of ' + dec.claimNumber;
         } else {
-            resultText = "didn't believe the proposed numbers";
+            resultText = (r.guess !== null && r.guess !== undefined) ? "didn't believe anyone and guessed " + r.guess : "didn't believe any of the proposed numbers";
         }
 
         html += `<div class="tension-vote" style="animation-delay:${delay}s">${nameOf(uid)} ${resultText}</div>`;
@@ -12190,6 +12211,12 @@ function backfillMissedLog(actionLog) {
 }
 
 function playNetworkedAnimation(action) {
+    try {   // eliminated for being away (4th missed turn in a row): ask Spectate / Leave, like after a Deception loss
+        if (action && action.type === 'TIMEOUT_PENALTY' && /eliminated for being away/.test(String(action.msg || '')) && window.DoDAuth && action.uid === DoDAuth.getProfile().uid && window.afkPromptId !== action.id) {
+            window.afkPromptId = action.id;
+            setTimeout(function () { var o = document.getElementById('spectatorChoiceOverlay'); if (o && typeof state !== 'undefined' && state && !state.over) o.classList.add('show'); }, 1500);
+        }
+    } catch (e) {}
     if (localLastActionId === action.id) return;
     localLastActionId = action.id;
 
@@ -19371,6 +19398,8 @@ async function confirmMysteriousLogout() {
 <!-- ===================== DECK OF DECEPTION: MATCH CHAT ===================== -->
 <style>
 .dc-btn{position:relative;padding:4px 8px;min-width:unset;font-size:16px;line-height:1;flex-shrink:0}
+.dc-btn svg{display:block;margin:0 auto;stroke:var(--brass-bright,#e0bd4a)}
+#dodChat .dc-title svg{vertical-align:-2px;margin-right:2px}
 .dc-btn .dc-badge{position:absolute;top:-5px;right:-5px;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#d94b4b;color:#fff;font:700 10px/16px 'IBM Plex Mono',monospace;text-align:center;display:none}
 .dc-btn.has-unread .dc-badge{display:block;animation:dcPulse 1.2s ease-in-out infinite}
 .dc-btn.has-priv .dc-badge{background:#8a5cf6}
@@ -19418,6 +19447,8 @@ async function confirmMysteriousLogout() {
 /* Long-press seats: stop the browser from scrolling / opening menus while holding */
 .ringseat,.lobby-seat{touch-action:none;-webkit-touch-callout:none}
 
+/* Chat button inside the Deception screen (placed by JS in a free spot next to the box) */
+#dodChatBtnDec.dec-chat-btn{position:fixed;left:0;top:0;z-index:2100;width:38px;height:38px;padding:0;border-radius:50%;align-items:center;justify-content:center;font-size:17px;background:rgba(15,10,12,0.94);border:1px solid var(--brass,#c9a227);box-shadow:0 2px 10px rgba(0,0,0,0.6)}
 /* Quick-chat wheel */
 #dodQW{position:fixed;inset:0;z-index:9600;display:none;background:rgba(0,0,0,0.38);touch-action:none;user-select:none;-webkit-user-select:none}
 #dodQW.open{display:block}
@@ -19447,6 +19478,7 @@ async function confirmMysteriousLogout() {
   ];
   // Monochrome line icons for the quick-message wheel (brass, matches the game theme)
   var ICONS = {
+    chat:   '<path d="M5 4.5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-6.5L8 20.5v-4H5a2 2 0 0 1-2-2v-8a2 2 0 0 1 2-2z"/><path d="M8 9.5h8M8 12.5h5"/>',
     nice:   '<path d="M5 12.5l4.5 4.5L19 7"/>',
     gg:     '<path d="M4 17.5L3 8l5 4 4-7 4 7 5-4-1 9.5z"/><path d="M5 20.5h14"/>',
     thanks: '<path d="M12 20.5S4.5 16 3.3 10.5C2.6 7 4.8 4.5 7.6 4.5c1.8 0 3.3 .9 4.4 2.8 1.1-1.9 2.6-2.8 4.4-2.8 2.8 0 5 2.5 4.3 6C19.5 16 12 20.5 12 20.5z"/>',
@@ -19483,7 +19515,7 @@ async function confirmMysteriousLogout() {
     try {
       if (S.room && S.room.where === 'game') {
         if (typeof state !== 'undefined' && state && state.players) {
-          state.players.forEach(function (p) { if (p && !isBot(p)) add(p.uid, p.name || p.displayName); });
+          state.players.forEach(function (p) { if (p && !isBot(p) && !p.left) add(p.uid, p.name || p.displayName); });
         }
       } else {
         document.querySelectorAll('#squadLobbyRing .ls-avatar.filled').forEach(function (a) {
@@ -19508,10 +19540,10 @@ async function confirmMysteriousLogout() {
   function mkBtn(parent, before, id) {
     if (!parent || document.getElementById(id)) return;
     var b = document.createElement('button');
-    b.id = id; b.type = 'button'; b.className = 'btn ghost small dc-btn'; b.title = 'Chat';
+    b.id = id; b.type = 'button'; b.className = 'btn ghost small dc-btn' + (id === 'dodChatBtnDec' ? ' dec-chat-btn' : ''); b.title = 'Chat';
     b.style.display = 'none';
-    b.innerHTML = '💬<span class="dc-badge">0</span>';
-    b.addEventListener('click', function () { S.open ? closeChat() : openChat(); });
+    b.innerHTML = svgIcon('chat', 18) + '<span class="dc-badge">0</span>';
+    b.addEventListener('click', function (e) { e.stopPropagation(); S.open ? closeChat() : openChat(); });
     parent.insertBefore(b, before || null);
     El.btns.push(b);
   }
@@ -19521,7 +19553,7 @@ async function confirmMysteriousLogout() {
       panel.id = 'dodChat';
       panel.setAttribute('role', 'dialog');
       panel.innerHTML =
-        '<div class="dc-head"><span class="dc-title">💬 CHAT</span>' +
+        '<div class="dc-head"><span class="dc-title">' + svgIcon('chat', 14) + ' CHAT</span>' +
         '<button class="dc-hb dc-vo" type="button" title="Voice-over for quick messages">🔊</button>' +
         '<button class="dc-hb dc-x" type="button" aria-label="Close chat">✕</button></div>' +
         '<div class="dc-to"><span class="dc-tolabel">TO:</span><div class="dc-chips"></div></div>' +
@@ -19584,6 +19616,20 @@ async function confirmMysteriousLogout() {
     if (right) mkBtn(right, right.lastElementChild, 'dodChatBtn');
     var leave = document.getElementById('squadLeaveLobbyBtn');
     if (leave) mkBtn(leave.parentNode, leave, 'dodChatBtnLobby');
+    var decModal = document.getElementById('deceptionModal');
+    if (decModal) {
+      mkBtn(decModal, null, 'dodChatBtnDec');
+      if (!window._dodDecChatObs && window.MutationObserver) {
+        window._dodDecChatObs = true;
+        var upd = function () { requestAnimationFrame(function () { showBtns(); placeDecBtn(); }); };
+        new MutationObserver(upd).observe(decModal, { attributes: true, attributeFilter: ['class'] });
+        var dc = document.getElementById('deceptionContent');
+        if (dc) new MutationObserver(upd).observe(dc, { childList: true });
+        if (window.ResizeObserver && dc) new ResizeObserver(upd).observe(dc);
+        window.addEventListener('resize', upd);
+        window.addEventListener('orientationchange', upd);
+      }
+    }
     if (!El.toast) {
       El.toast = document.createElement('div'); El.toast.id = 'dodQToast'; document.body.appendChild(El.toast);
     }
@@ -19605,7 +19651,7 @@ async function confirmMysteriousLogout() {
     build();
     S.open = true; S.unread = 0; S.unreadPriv = false;
     El.panel.classList.add('open');
-    El.title.textContent = S.room.where === 'lobby' ? '💬 LOBBY CHAT' : '💬 MATCH CHAT';
+    El.title.innerHTML = svgIcon('chat', 14) + (S.room.where === 'lobby' ? ' LOBBY CHAT' : ' MATCH CHAT');
     place(); renderChips(); renderList(true); updateBadge();
   }
   function closeChat() {
@@ -19620,11 +19666,39 @@ async function confirmMysteriousLogout() {
       b.querySelector('.dc-badge').textContent = S.unread > 9 ? '9+' : String(S.unread);
     });
   }
+  // ----- chat button on the Deception screen: sits in a free spot beside the box, never on top of it -----
+  var _insProbe = null;
+  function safeInsets() {
+    if (!_insProbe) {
+      _insProbe = document.createElement('div');
+      _insProbe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:0;visibility:hidden;pointer-events:none;padding:env(safe-area-inset-top,0px) env(safe-area-inset-right,0px) env(safe-area-inset-bottom,0px) env(safe-area-inset-left,0px)';
+      document.body.appendChild(_insProbe);
+    }
+    var cs = getComputedStyle(_insProbe);
+    return { t: parseFloat(cs.paddingTop) || 0, r: parseFloat(cs.paddingRight) || 0, b: parseFloat(cs.paddingBottom) || 0, l: parseFloat(cs.paddingLeft) || 0 };
+  }
+  function decModalShown() { var m = document.getElementById('deceptionModal'); return !!(m && m.classList.contains('show')); }
+  function placeDecBtn() {
+    var b = document.getElementById('dodChatBtnDec');
+    var box = document.getElementById('deceptionContent');
+    if (!b || !box || b.style.display === 'none') return;
+    var r = box.getBoundingClientRect(), vw = window.innerWidth, vh = window.innerHeight, ins = safeInsets();
+    var SZ = 38, G = 8, E = 4, x, y;
+    function cy(v) { return clamp(v, ins.t + E, Math.max(ins.t + E, vh - ins.b - SZ - E)); }
+    function cx(v) { return clamp(v, ins.l + E, Math.max(ins.l + E, vw - ins.r - SZ - E)); }
+    if (r.right + G + SZ <= vw - ins.r - E) { x = r.right + G; y = cy(r.top); }                      // free strip to the right of the box
+    else if (r.left - G - SZ >= ins.l + E) { x = r.left - G - SZ; y = cy(r.top); }                    // ... or to the left
+    else if (r.bottom + G + SZ <= vh - ins.b - E) { x = cx(r.right - SZ); y = r.bottom + G; }        // ... or below
+    else if (r.top - G - SZ >= ins.t + E) { x = cx(r.right - SZ); y = r.top - G - SZ; }               // ... or above
+    else { x = cx(r.right - SZ + 14); y = cy(r.top - 14); }                                            // box fills the screen: sit like a badge on its top-right corner (only padding is underneath)
+    b.style.left = Math.round(x) + 'px'; b.style.top = Math.round(y) + 'px';
+  }
   function showBtns() {
     var ok = S.room && S.humans > 1;
     El.btns.forEach(function (b) {
-      var want = ok && ((b.id === 'dodChatBtn' && S.room.where === 'game') || (b.id === 'dodChatBtnLobby' && S.room.where === 'lobby'));
-      b.style.display = want ? 'inline-block' : 'none';
+            var want = ok && ((b.id === 'dodChatBtn' && S.room.where === 'game') || (b.id === 'dodChatBtnLobby' && S.room.where === 'lobby') ||
+                        (b.id === 'dodChatBtnDec' && S.room.where === 'game' && decModalShown()));
+      b.style.display = want ? (b.id === 'dodChatBtnDec' ? 'flex' : 'inline-block') : 'none';
     });
   }
 
@@ -19666,7 +19740,7 @@ async function confirmMysteriousLogout() {
     try {
       if (S.room && S.room.where === 'game') {
         if (typeof state !== 'undefined' && state && state.players) {
-          state.players.forEach(function (p) { if (p && isBot(p)) add(p.uid, p.name || p.displayName); });
+          state.players.forEach(function (p) { if (p && isBot(p) && !p.left) add(p.uid, p.name || p.displayName); });
         }
       } else {
         document.querySelectorAll('#squadLobbyRing .ls-avatar.filled').forEach(function (a) {
@@ -19752,8 +19826,10 @@ async function confirmMysteriousLogout() {
   }
 
   // ---------- sending ----------
-  function send(text, toUid, quickId, aimName) {
+  function send(text, toUid, quickId, aimName, aimUid) {
     if (!S.room || !S.uid) return false;
+    var _sc = document.getElementById('spectatorChoiceOverlay');
+    if (window.isEliminationPlaying || (_sc && _sc.classList.contains('show'))) { showNote('Chat opens after the elimination screen.'); return false; }
     var now = Date.now();
     if (now - S.lastSend < COOLDOWN_MS) { showNote('Slow down a little…'); return false; }
     var priv = toUid && toUid !== 'all';
@@ -19770,7 +19846,23 @@ async function confirmMysteriousLogout() {
     S.lastSend = now;
     firebase.firestore().collection(S.room.col).doc(S.room.id).collection('chat').add(data)
       .catch(function (err) { console.warn('[DoD chat] send failed', err); showNote('Message could not be sent.'); });
+    notifyBots(text, data.to, quickId, aimUid);
     return true;
+  }
+  // ---------- bots answer like real players: the Worker decides IF and WHEN a bot replies (often it won't) ----------
+  function notifyBots(text, toUid, quickId, aimUid) {
+    try {
+      if (!S.room || S.room.col !== 'matches') return;
+      if (!allSeated().some(function (m) { return m.bot; })) return;
+      var user = firebase.auth().currentUser, matchId = S.room.id;
+      if (!user) return;
+      user.getIdToken().then(function (tok) {
+        return fetch('https://cold-night-0cc8.aksgames03.workers.dev/api/botChat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userToken: tok, matchId: matchId, text: text, to: (toUid && toUid !== 'all') ? toUid : 'all', quick: quickId || null, aim: aimUid || 'all', dec: decModalShown() })
+        });
+      }).catch(function () {});
+    } catch (e) {}
   }
   // ---------- bad-word filter ----------
   // Add or remove words here. STRONG words are masked even inside longer words (motherf***er -> ***);
@@ -19892,6 +19984,7 @@ async function confirmMysteriousLogout() {
       S.room.where = r.where;
       S.humans = allSeated().length;
       showBtns();
+      placeDecBtn();
       if (S.open) renderChips();
     } catch (e) {}
   }
@@ -19985,7 +20078,7 @@ async function confirmMysteriousLogout() {
     var w = Wl, q = w.sel >= 0 ? QUICK[w.sel] : null;
     closeWheel();
     S.noClickUntil = Date.now() + 500;
-    if (q) send(q.say, 'all', q.id, w.name);
+    if (q) send(q.say, 'all', q.id, w.name, w.uid);
   }
   window.addEventListener('pointerup', release, true);
   window.addEventListener('pointercancel', function () { if (H) { clearTimeout(H.timer); H = null; } if (Wl) closeWheel(); }, true);
