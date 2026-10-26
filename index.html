@@ -407,7 +407,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 }
 .menu-vignette {
   position: fixed; inset: 0;
-  background: radial-gradient(circle at center, rgba(0,0,0,0) 10%, rgba(0,0,0,0.55) 90%);
+  background: radial-gradient(circle at center, rgba(0,0,0,0) 10%, rgba(0,0,0,0.3) 90%);
   z-index: 1; pointer-events: none;
 }
 .menu-box {
@@ -1903,8 +1903,11 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
 .custom-select { position: relative; width: 100%; user-select: none; font-family: 'IBM Plex Mono', monospace; font-size: 13px; z-index: 50; }
 .custom-select-trigger { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.6); color: var(--paper); border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; padding: 8px 12px; cursor: pointer; transition: all 0.2s; height: 38px; }
 .custom-select.open .custom-select-trigger { border-color: var(--brass-bright); box-shadow: 0 0 8px rgba(201,162,39,0.3); }
-.custom-select-options { position: absolute; bottom: calc(100% + 4px); top: auto; left: 0; right: 0; background: rgba(12,14,16,0.98); border: 1px solid var(--brass); border-radius: 4px; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; max-height: 220px; overflow-y: auto; z-index: 100; }
+.custom-select-options { position: absolute; bottom: calc(100% + 4px); top: auto; left: 0; right: 0; background: rgba(12,14,16,0.98); border: 1px solid var(--brass); border-radius: 4px; box-shadow: 0 -10px 30px rgba(0,0,0,0.8); display: none; flex-direction: column; max-height: min(220px, 40vh); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; z-index: 100; }
 .custom-select.open .custom-select-options { display: flex; animation: fadeUp 0.2s ease; }
+
+
+#squadHud:has(.custom-select.open) .squad-friends-panel { pointer-events: none !important; }
 
 /* Note: Dropdowns in the middle of the screen (Training, Play, Party) open downwards and scroll */
 .menu-screen .custom-select-options {
@@ -1918,7 +1921,7 @@ body.low-power-mode .rank-item.current .r-icon::after { animation: none; opacity
 .custom-option:hover, .custom-option.selected { background: rgba(201,162,39,0.15); color: var(--brass-bright); font-weight: bold; }
 .custom-select .arrow { font-size: 10px; transition: transform 0.2s; color: rgba(255,255,255,0.5); transform: rotate(180deg); }
 .custom-select.open .arrow { transform: rotate(0deg); color: var(--brass-bright); }
-.custom-option.disabled-opt { display: none !important; }
+.custom-option.disabled-opt { opacity: 0.3; pointer-events: none; }
 .squad-mode-btn {
   font-family: 'IBM Plex Mono', monospace; font-size: 11px;
   background: rgba(0,0,0,0.55); color: var(--paper);
@@ -3169,7 +3172,7 @@ body.low-power-mode .uw-locked-list { background: rgba(6,5,5,0.95) !important; }
   --table-tint-opacity: 0.55;
   --table-dark-boost: 0.1;
 }
-.menu-table { background: radial-gradient(circle at center, rgba(var(--table-glow), var(--table-tint-opacity, 0.6)) 0%, rgba(0,0,0, calc(0.45 + var(--table-dark-boost, 0))) 45%, rgba(0,0,0, 0.95) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
+.menu-table { background: radial-gradient(circle at center, rgba(var(--table-glow), var(--table-tint-opacity, 0.6)) 0%, rgba(0,0,0, calc(0.25 + var(--table-dark-boost, 0))) 45%, rgba(0,0,0, 0.55) 90%), var(--my-table) !important; background-size: cover !important; background-position: center !important; }
 /* SYNDICATE MODE: keeps the tint neutral, but a bright table still needs real darkening
    for text contrast — --table-dark-boost adds that in on top of the base 0.1 instead of
    leaving every table, bright or dark, with the same barely-there wash. */
@@ -5462,7 +5465,36 @@ function patchAudioVolume(el) {
 }
 
 // Helper to play your custom audio files seamlessly
+const _sfxBuffers = {}, _sfxLoading = {};
+function dodLoadSfxBuffer(id) {
+    if (_sfxBuffers[id] || _sfxLoading[id]) return;
+    const el = document.getElementById(id);
+    if (!el || !el.getAttribute('src')) return;
+    if (!audioCtx) audioCtx = new AudioContext();
+    _sfxLoading[id] = true;
+    fetch(el.getAttribute('src'))
+        .then(r => r.arrayBuffer())
+        .then(buf => new Promise((res, rej) => audioCtx.decodeAudioData(buf, res, rej)))
+        .then(decoded => { _sfxBuffers[id] = decoded; })
+        .catch(() => { _sfxLoading[id] = false; });
+}
 function playExternalSfx(elementId) {
+    if (document.hidden) return;
+    const buf = _sfxBuffers[elementId];
+    if (buf && audioCtx) {
+        if (audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+        const src = audioCtx.createBufferSource();
+        const g = audioCtx.createGain();
+        g.gain.value = sfxVolume;
+        src.buffer = buf;
+        src.connect(g).connect(audioCtx.destination);
+        src.start(0);
+        return;
+    }
+    dodLoadSfxBuffer(elementId);          // not decoded yet: load it, use the old path this once
+    _playExternalSfxLegacy(elementId);
+}
+function _playExternalSfxLegacy(elementId) {
     if (document.hidden) return; 
     
     // WAKE UP AUDIO CONTEXT: Ensure the engine is running before trying to play a sound!
@@ -13700,6 +13732,7 @@ async function endGame(winner, byScore) {
 
   // --- WAIT FOR SECURE CLOUDFLARE REWARDS ---
   window._latestProgression = await computeMatchProgression();
+  state.over = true; // a server snapshot during the await can reset this
 
   const you = state.players[0]; // Local player is always seat 0 locally
   
@@ -14715,6 +14748,8 @@ function listenToParty(partyId) {
             modeSelect.style.pointerEvents = isPartyLeader ? 'all' : 'none';
         }
 
+        dodRefreshSquadBtn(); // READY / PLAY state for this member
+
         // Lock dropdown options so host can't set table size smaller than current squad
         const currentCount = data.members.length;
         [document.getElementById('customSquadSelect'), document.getElementById('customPrivateSelect')].forEach(select => {
@@ -15551,7 +15586,7 @@ function dodAllPartyReady() {
     const msg = names.length === 1
         ? names[0] + ' is not ready!'
         : names.slice(0, 2).join(', ') + (names.length > 2 ? ' +' + (names.length - 2) : '') + ' are not ready!';
-    try { sfx.alert(); } catch (e) {}
+    try { sfx.uiClick(); } catch (e) {}
     showSystemToast(msg);
     return false;
 }
@@ -15583,6 +15618,7 @@ function dodSquadPlayBtnClick() {
     if (!btn) return;
     if (btn.classList.contains('searching')) {
         if (Date.now() - (window._squadBtnLastTap || 0) < 1200) return; // ignore a double-tap right after PLAY
+        try { sfx.uiClick(); } catch (e) {}
         cancelMatchmakingSquad();
         return;
     }
@@ -19812,11 +19848,24 @@ async function confirmMysteriousLogout() {
     clearTimeout(El.toastT);
     El.toastT = setTimeout(function () { El.toast.classList.remove('show'); }, 2600);
   }
+  var _ttsWarm = false;
+  function warmSpeech() {
+    if (_ttsWarm) return;
+    try {
+      var ss = window.speechSynthesis; if (!ss) return;
+      _ttsWarm = true;
+      ss.getVoices(); // start loading the voice list
+      var w = new SpeechSynthesisUtterance('a');
+      w.volume = 0; w.lang = 'en-US';
+      ss.speak(w); // silent, just wakes the engine up
+    } catch (e) {}
+  }
+  document.addEventListener('pointerdown', warmSpeech, { once: true, passive: true });
   function speak(t, quickId) {
     if (!S.voice) return;
     try {
       var ss = window.speechSynthesis; if (!ss) return;
-      ss.cancel();
+      if (ss.speaking || ss.pending) ss.cancel();
       var tone = toneFor(t, quickId);
       var u = new SpeechSynthesisUtterance(t);
       u.lang = 'en-US'; u.volume = 1;
@@ -20091,6 +20140,26 @@ async function confirmMysteriousLogout() {
   window.addEventListener('click', function (e) {
     if (Date.now() < S.noClickUntil) { e.stopPropagation(); e.preventDefault(); }
   }, true);
+})();
+</script>
+<script>
+(function () {
+    var CLICK_SEL = 'button, .btn, [role="button"], a[href], .custom-option, .custom-select-trigger, .settings-row, .chest-item, .dd-card, .event-banner, .squad-icon-btn, .countbtn, [onclick]';
+    var SKIP_SEL  = '#squadPlayBtn, .card, .minicard, .ringseat, .lobby-seat, [data-no-click-sfx]';
+    var armedAt = 0;
+    var rawClick = sfx.uiClick, rawBack = sfx.uiBack;
+    function consume() { if (armedAt && Date.now() - armedAt < 800) { armedAt = 0; return true; } return false; }
+    sfx.uiClick = function () { if (consume()) return; rawClick(); };
+    sfx.uiBack  = function () { if (consume()) return; rawBack(); };
+    function warm() { ['sfxClick', 'sfxPlay', 'sfxNotification', 'sfxCoins'].forEach(dodLoadSfxBuffer); }
+    window.addEventListener('pointerdown', function (e) {
+        warm();
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        var t = e.target && e.target.closest ? e.target.closest(CLICK_SEL) : null;
+        if (!t || t.disabled || t.closest(SKIP_SEL)) return;
+        armedAt = Date.now();
+        rawClick();
+    }, true);
 })();
 </script>
 </body>
