@@ -4094,7 +4094,7 @@ if (document.readyState === 'loading') {
           <div class="settings-row" style="cursor:pointer;" onclick="window.location.href='mailto:pixelaks.technologies@gmail.com'"><span>Contact Us</span><span style="color:var(--brass-bright); font-size:16px;">✉</span></div>
         </div>
         <div class="screen-footer" style="padding-top: 15px; padding-bottom: 0;">
-          <button class="btn ghost" style="width:100%; max-width:320px" onclick="openTutorial(true)">How To Play Guide</button>
+          <button class="btn ghost" style="width:100%; max-width:320px" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot open the guide while in a lobby.'); return; } openTutorial(true)">How To Play Guide</button>
         </div>
     </div>
   </div>
@@ -4238,7 +4238,7 @@ if (document.readyState === 'loading') {
         <input type="range" id="gameMusicVol" min="0" max="100" value="60" style="width:45px; height:4px; accent-color:var(--brass-bright); cursor:pointer;" oninput="setMusicVolume(this.value)">
       </div>
       <button class="btn ghost small" id="micToggleBtn" style="padding:4px 8px; min-width:unset; font-size:16px; color:var(--brass-bright);" onclick="VoiceChat.toggleMute()" title="Toggle Microphone">🎙️</button>
-      <button class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button>
+      <button id="gameFsBtn" class="btn ghost small fs-toggle-btn" style="padding:4px 8px; min-width:unset; font-size:16px;" onclick="toggleFullscreen(event)" title="Toggle Fullscreen">⛶</button>
       <button class="btn ghost small" style="padding:4px 10px; min-width:unset;" onclick="leaveGame()">Leave</button>
     </div>
   </div>
@@ -6281,7 +6281,38 @@ buildMenu();
 window.isInteractiveTutorial = false;
 let tutStep = 0;
 
+// ---- Fullscreen guidance helpers ----
+function dodIsFullscreen() {
+    return !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+}
+function dodCanFullscreen() {
+    if (document.fullscreenEnabled === false || document.webkitFullscreenEnabled === false) return false;
+    const d = document.documentElement;
+    return !!(d.requestFullscreen || d.webkitRequestFullscreen || d.mozRequestFullScreen || d.msRequestFullscreen);
+}
+function dodTutFsStepActive() {
+    return window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'fullscreen_on';
+}
+// Fullscreen entered while the tutorial is waiting for it: continue
+['fullscreenchange', 'webkitfullscreenchange'].forEach(ev => document.addEventListener(ev, () => {
+    if (dodTutFsStepActive() && dodIsFullscreen()) {
+        setTimeout(() => { if (dodTutFsStepActive()) tutNext(); }, 600);
+    }
+}));
+// Fallback: if the browser blocks fullscreen, don't leave the player stuck
+document.addEventListener('click', (e) => {
+    if (dodTutFsStepActive() && e.target.closest && e.target.closest('#gameFsBtn')) {
+        setTimeout(() => { if (dodTutFsStepActive()) tutNext(); }, 1500);
+    }
+}, true);
+
 const tutScript = [
+    { target: 'gameFsBtn', arrow: 'top', wait: 'fullscreen_on',
+      text: "For the best view, play in <b>fullscreen</b>. Tap the highlighted button at the top right to enter it, then we will begin.",
+      skipIf: function () {
+          const b = document.getElementById('gameFsBtn');
+          return dodIsFullscreen() || !dodCanFullscreen() || window.DOD_PLATFORM === 'crazygames' || !b || getComputedStyle(b).display === 'none';
+      } },
     {
     target: null,
     text: "<b>Welcome to Deck of Deception.</b><br><br>An <b>online multiplayer bluffing game</b> where you play live, talk with <b>voice chat</b>, and never know who you can trust.<br><br>Play your cards, manage your coins, question the claims, and survive the deception.",
@@ -6389,6 +6420,7 @@ function openTutorial(fromSettings) {
 
 function applyTutStep() {
     if (tutStep >= tutScript.length) { endInteractiveTutorial(); return; }
+    if (tutScript[tutStep].skipIf && tutScript[tutStep].skipIf()) { tutStep++; applyTutStep(); return; }
 
     const step     = tutScript[tutStep];
     const tutBtn   = document.getElementById('tutBtn');
