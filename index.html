@@ -14696,7 +14696,9 @@ function listenToParty(partyId) {
         // FORCE HOST'S TABLE SKIN IN LOBBY
         const leaderObj = data.members.find(m => m.uid === data.leader);
         if (leaderObj && leaderObj.equippedTable) {
-            applyGlobalTable(leaderObj.equippedTable);
+            const myProf = DoDAuth.getProfile();
+            // If I'm the host, my live profile is the truth, not the stored copy of it
+            applyGlobalTable((leaderObj.uid === myUid && myProf && myProf.equippedTable) ? myProf.equippedTable : leaderObj.equippedTable);
         }
         
         // Update UI Squad List
@@ -18291,9 +18293,10 @@ function renderShopItems() {
             while ((m = re.exec(bg))) {
                 const u = m[1];
                 if (window._shopImgKeep[u]) continue;
-                const im = new Image(); im.decoding = 'async'; im.src = u;
-                window._shopImgKeep[u] = im;
-                if (im.decode) im.decode().catch(function(){});
+                window._shopImgKeep[u] = true; // loading
+                dodLoadImage(u)
+                    .then(function (im) { window._shopImgKeep[u] = im; dodRepaintBg(root, u); })
+                    .catch(function () { delete window._shopImgKeep[u]; }); // allow a retry next time the shop renders
             }
         });
     }
@@ -20160,6 +20163,101 @@ async function confirmMysteriousLogout() {
         armedAt = Date.now();
         rawClick();
     }, true);
+})();
+</script>
+<script>
+async function dodSyncMyPartyEntry() {
+    if (!currentPartyId || !window.firebase || !window.DoDAuth) return;
+    const p = DoDAuth.getProfile();
+    if (!p) return;
+    const fresh = {
+        title: p.title || null,
+        avatar: getEquippedAvatar(p),
+        frame: getEquippedFrame(p),
+        deckSkin: getEquippedBackImg(p),
+        equippedTable: p.equippedTable || 'tb_default'
+    };
+    const mine = (window.currentPartyMembers || []).find(m => m.uid === p.uid);
+    if (mine && Object.keys(fresh).every(k => (mine[k] == null ? null : mine[k]) === fresh[k])) return;
+    const db = firebase.firestore();
+    const ref = db.collection('parties').doc(currentPartyId);
+    try {
+        await db.runTransaction(async (tx) => {
+            const snap = await tx.get(ref);
+            if (!snap.exists) return;
+            const members = (snap.data().members || []).map(m => m.uid === p.uid ? Object.assign({}, m, fresh) : m);
+            tx.update(ref, { members: members });
+        });
+    } catch (e) { console.warn('[DoD] party skin sync failed', e); }
+}
+(function () {
+    var orig = window.updateProfileWidget;
+    if (typeof orig !== 'function') return;
+    window.updateProfileWidget = function () {
+        var r = orig.apply(this, arguments);
+        try { dodSyncMyPartyEntry(); } catch (e) {}
+        return r;
+    };
+})();
+</script>
+<script>
+(function () {
+    var queue = [], active = 0, MAX = 4, done = {};
+    function pump() { while (active < MAX && queue.length) { active++; queue.shift()(); } }
+    window.dodLoadImage = function (url) {
+        if (done[url]) return Promise.resolve(done[url]);
+        return new Promise(function (resolve, reject) {
+            var attempt = 0;
+            function run() {
+                var im = new Image();
+                im.decoding = 'async';
+                im.onload = function () { done[url] = im; active--; pump(); resolve(im); };
+                im.onerror = function () {
+                    active--;
+                    attempt++;
+                    if (attempt >= 4) { pump(); reject(new Error('image failed: ' + url)); return; }
+                    setTimeout(function () {
+                        // force a fresh network fetch so a bad/stale response gets replaced
+                        fetch(url, { cache: 'reload' }).catch(function () {}).then(function () {
+                            im._dodRetried = true;
+                            queue.push(run); pump();
+                        });
+                    }, 500 * attempt);
+                };
+                im.src = url;
+            }
+            queue.push(run); pump();
+        });
+    };
+    // After a retry succeeds, elements that already failed won't repaint by themselves
+    window.dodRepaintBg = function (root, url) {
+        root.querySelectorAll('[style*="background-image"]').forEach(function (el) {
+            var bg = el.style.backgroundImage || '';
+            if (bg.indexOf(url) === -1) return;
+            el.style.backgroundImage = 'none';
+            requestAnimationFrame(function () { el.style.backgroundImage = bg; });
+        });
+    };
+    // Make every table change verify its image actually loads (host's table on clients)
+    var origApply = window.applyGlobalTable;
+    if (typeof origApply === 'function') {
+        window.applyGlobalTable = function (tableId) {
+            origApply.apply(this, arguments);
+            try {
+                var def = SHOP_DB.tables.find(function (t) { return t.id === tableId; }) || SHOP_DB.tables[0];
+                var url = 'Tables/' + encodeURIComponent(def.img);
+                dodLoadImage(url).then(function (im) {
+                    if (!im._dodRetried) return;
+                    var cur = document.documentElement.style.getPropertyValue('--my-table') || '';
+                    if (cur.indexOf(encodeURIComponent(def.img)) === -1) return; // a different table was applied meanwhile
+                    document.documentElement.style.setProperty('--my-table', 'none');
+                    requestAnimationFrame(function () {
+                        document.documentElement.style.setProperty('--my-table', "url('" + url + "')");
+                    });
+                }).catch(function () {});
+            } catch (e) {}
+        };
+    }
 })();
 </script>
 </body>
