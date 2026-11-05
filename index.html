@@ -67,7 +67,7 @@ function escapeForJsAttr(str) {
 
 <title>Deck Of Deception</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=IM+Fell+English:ital@0;1&family=Caveat:wght@600&family=Cinzel:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
 <!-- Bootstrap-critical images: load these FIRST with high priority -->
 <link rel="preload" as="image" href="CardstoBuy/TheBase.webp" fetchpriority="high">
 <link rel="preload" as="image" href="Cards/SwapCard.webp" fetchpriority="high">
@@ -133,53 +133,7 @@ window.dodUserCountry = (Intl.DateTimeFormat().resolvedOptions().timeZone === 'A
 <link rel="preload" as="script" href="https://www.gstatic.com/firebasejs/12.17.1/firebase-firestore-compat.js">
 <style>
 
-/* Vertical Sidebar Ad (160x300) */
-.dod-ad-wrapper {
-    position: relative;
-    width: 160px;
-    height: 300px;
-    margin-top: 10px;
-    margin-bottom: 5px;
-    flex-shrink: 0;
-    /* Forces the element to shrink toward the bottom-right corner, aligning with your UI */
-    transform-origin: bottom right; 
-}
 
-.dod-ad-badge {
-    position: absolute;
-    top: -14px;
-    right: 0;
-    color: rgba(255,255,255,0.5);
-    font-family: 'IBM Plex Mono', monospace;
-    font-size: 8px;
-    letter-spacing: 1px;
-}
-
-.dod-ad-content {
-    width: 160px;
-    height: 300px;
-    background: rgba(0,0,0,0.4);
-    border: 1px dashed rgba(255,255,255,0.2);
-    border-radius: 4px;
-    overflow: hidden;
-}
-
-/* Mobile Adjustments - Fluid Scaling & Ghost Box Removal */
-@media (max-width: 840px), (max-height: 500px) {
-    .dod-ad-wrapper {
-        /* Shrinks visually to ~77x144 to fit perfectly between the coins and daily draw */
-        transform: scale(0.48);
-        /* Collapses the empty ghost layout box so it stops pushing into the top coins */
-        margin-top: -145px; 
-        margin-bottom: 0px;
-    }
-    .dod-ad-badge {
-        /* Bumps the text size back up slightly so it remains readable at 48% scale */
-        transform: scale(1.6);
-        transform-origin: bottom right;
-        top: -24px;
-    }
-}
 
   * {
     /* Disable long-press popup menu (iOS Safari) */
@@ -1021,6 +975,221 @@ img[src^="Coins/"] { image-rendering: high-quality; }
   transform: translate(-50%, -100%);
   line-height: 1.4;
 }
+
+/* CARD RULES PARCHMENT PAGE */
+#screen-cardrules{max-width:760px;width:100%}
+.cr-scroll{flex:1;width:100%;min-height:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:6px 8px 20px;overscroll-behavior-y:contain;scrollbar-width:none}
+.cr-scroll::-webkit-scrollbar{display:none}
+.cr-wrap{width:100%;filter:drop-shadow(0 12px 22px rgba(0,0,0,.65))}
+.cr-paper{position:relative;padding:clamp(30px,6vw,54px) clamp(22px,6vw,56px);color:#3a2a14;font-family:Georgia,'Times New Roman',serif;font-size:clamp(13px,3.4vw,15.5px);line-height:1.6;
+  background:
+    radial-gradient(ellipse at 15% 8%,rgba(255,250,230,.75),transparent 55%),
+    radial-gradient(ellipse at 92% 96%,rgba(120,80,30,.35),transparent 50%),
+    radial-gradient(ellipse at 0% 100%,rgba(90,55,20,.30),transparent 40%),
+    radial-gradient(ellipse at 100% 0%,rgba(90,55,20,.25),transparent 40%),
+    linear-gradient(180deg,#ecdcb2,#e0cb98 55%,#d6bd86);
+  clip-path:polygon(0.0% 0.4%,2.9% 0.2%,5.9% 0.7%,8.8% 0.1%,11.8% 0.6%,14.7% 0.4%,17.6% 0.1%,20.6% 0.6%,23.5% 0.0%,26.5% 0.5%,29.4% 0.1%,32.4% 0.1%,35.3% 0.5%,38.2% 0.9%,41.2% 0.1%,44.1% 0.2%,47.1% 0.7%,50.0% 1.0%,52.9% 0.6%,55.9% 0.4%,58.8% 1.1%,61.8% 0.1%,64.7% 0.9%,67.6% 0.3%,70.6% 0.2%,73.5% 0.1%,76.5% 0.3%,79.4% 0.9%,82.4% 0.2%,85.3% 0.6%,88.2% 0.7%,91.2% 0.4%,94.1% 0.6%,97.1% 0.1%,100.0% 0.1%,99.8% 1.7%,99.4% 3.3%,99.6% 5.0%,99.7% 6.7%,99.5% 8.3%,99.6% 10.0%,99.7% 11.7%,99.3% 13.3%,99.4% 15.0%,99.8% 16.7%,99.5% 18.3%,99.5% 20.0%,99.2% 21.7%,99.3% 23.3%,99.7% 25.0%,99.1% 26.7%,99.9% 28.3%,99.6% 30.0%,99.3% 31.7%,99.9% 33.3%,99.6% 35.0%,100.0% 36.7%,99.4% 38.3%,99.3% 40.0%,99.5% 41.7%,99.2% 43.3%,99.7% 45.0%,99.4% 46.7%,99.5% 48.3%,99.5% 50.0%,99.6% 51.7%,99.2% 53.3%,99.1% 55.0%,99.6% 56.7%,99.4% 58.3%,99.9% 60.0%,99.4% 61.7%,99.4% 63.3%,99.1% 65.0%,99.3% 66.7%,99.7% 68.3%,99.7% 70.0%,99.4% 71.7%,100.0% 73.3%,99.6% 75.0%,99.8% 76.7%,99.9% 78.3%,99.9% 80.0%,99.3% 81.7%,99.9% 83.3%,99.8% 85.0%,99.6% 86.7%,99.2% 88.3%,99.9% 90.0%,99.6% 91.7%,99.5% 93.3%,99.2% 95.0%,99.3% 96.7%,99.2% 98.3%,100.0% 99.7%,97.1% 99.5%,94.1% 99.6%,91.2% 99.0%,88.2% 98.9%,85.3% 99.8%,82.4% 99.8%,79.4% 99.7%,76.5% 99.7%,73.5% 99.5%,70.6% 99.4%,67.6% 99.7%,64.7% 100.0%,61.8% 99.5%,58.8% 99.6%,55.9% 99.4%,52.9% 99.0%,50.0% 99.2%,47.1% 99.4%,44.1% 99.3%,41.2% 99.3%,38.2% 99.9%,35.3% 99.0%,32.4% 99.1%,29.4% 99.0%,26.5% 99.1%,23.5% 99.6%,20.6% 99.6%,17.6% 99.9%,14.7% 99.3%,11.8% 99.9%,8.8% 99.9%,5.9% 99.8%,2.9% 99.8%,0.0% 99.6%,0.0% 98.3%,0.0% 96.7%,0.1% 95.0%,0.1% 93.3%,0.3% 91.7%,0.0% 90.0%,0.8% 88.3%,0.6% 86.7%,0.1% 85.0%,0.2% 83.3%,0.3% 81.7%,0.3% 80.0%,0.1% 78.3%,0.8% 76.7%,0.9% 75.0%,0.4% 73.3%,0.4% 71.7%,0.1% 70.0%,0.1% 68.3%,0.3% 66.7%,0.2% 65.0%,0.7% 63.3%,0.1% 61.7%,0.0% 60.0%,0.9% 58.3%,0.5% 56.7%,0.1% 55.0%,0.5% 53.3%,0.0% 51.7%,0.5% 50.0%,0.9% 48.3%,0.8% 46.7%,0.6% 45.0%,0.2% 43.3%,0.3% 41.7%,0.2% 40.0%,0.7% 38.3%,0.5% 36.7%,0.7% 35.0%,0.3% 33.3%,0.2% 31.7%,0.7% 30.0%,0.9% 28.3%,0.8% 26.7%,0.7% 25.0%,0.7% 23.3%,0.7% 21.7%,0.2% 20.0%,0.5% 18.3%,0.3% 16.7%,0.0% 15.0%,0.0% 13.3%,0.3% 11.7%,0.2% 10.0%,0.6% 8.3%,0.9% 6.7%,0.4% 5.0%,0.8% 3.3%,0.9% 1.7%);}
+/* paper grain */
+.cr-paper::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;mix-blend-mode:multiply;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/><feColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .1 0 0 0 .5 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+.cr-paper>*{position:relative}
+.cr-title{font-family:'Cinzel Decorative',serif;font-weight:700;text-align:center;color:#2a1a08;font-size:clamp(24px,6.5vw,40px);letter-spacing:2px;margin:0;line-height:1.15}
+.cr-sub{text-align:center;font-style:italic;color:#6b5330;margin:4px 0 0;font-size:.95em}
+.cr-rule{height:2px;border:0;margin:14px auto 18px;width:70%;background:linear-gradient(90deg,transparent,#7a5a26,transparent)}
+.cr-h{font-family:'Cinzel Decorative',serif;font-weight:700;color:#3b1f0a;font-size:clamp(15px,4vw,21px);margin:26px 0 8px;padding-bottom:4px;border-bottom:1px solid rgba(90,55,20,.45);letter-spacing:1px}
+.cr-h2{font-family:'Cinzel Decorative',serif;font-weight:700;color:#4a2a0e;font-size:clamp(12px,3.2vw,15px);margin:18px 0 6px;letter-spacing:.5px}
+.cr-paper p{margin:6px 0}
+.cr-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.cr-stat{text-align:center;border:1px solid rgba(90,55,20,.5);padding:8px 2px;background:rgba(255,248,225,.35)}
+.cr-stat b{display:block;font-family:'Cinzel Decorative',serif;font-size:clamp(18px,5vw,26px);color:#5a1f0a}
+.cr-stat span{font-size:.62em;letter-spacing:1px;text-transform:uppercase;color:#6b5330}
+.cr-table{width:100%;border-collapse:collapse;margin:10px 0;font-size:.92em}
+.cr-table th{font-family:'Cinzel',serif;text-align:left;padding:6px 8px;border-bottom:2px solid #5a3a14;color:#3b1f0a;font-size:.9em}
+.cr-table td{padding:6px 8px;border-bottom:1px dashed rgba(90,55,20,.4);vertical-align:top}
+.cr-table tr:last-child td{font-weight:700}
+.cr-scrollx{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.cr-steps{list-style:none;padding:0;margin:8px 0;counter-reset:s}
+.cr-steps li{counter-increment:s;position:relative;padding:0 0 8px 38px}
+.cr-steps li::before{content:counter(s);position:absolute;left:0;top:0;width:26px;height:26px;border:1.5px solid #5a3a14;border-radius:50%;text-align:center;line-height:24px;font-family:'Cinzel Decorative',serif;font-weight:700;font-size:13px;color:#5a1f0a}
+.cr-paper ul{margin:6px 0;padding-left:20px}
+.cr-note{margin:16px 0 6px;padding:10px 14px;border-left:4px solid #7a2a10;background:rgba(122,42,16,.08);font-style:italic}
+.cr-sign{text-align:center;margin-top:22px;font-family:'Cinzel',serif;font-size:.8em;letter-spacing:2px;color:#6b5330}
+@media (max-width:480px){.cr-stats{grid-template-columns:repeat(2,1fr)}}
+
+/* CARD RULES v2: realistic paper + inked text */
+.cr-wrap{filter:drop-shadow(0 0 1px rgba(250,242,220,.95)) drop-shadow(0 14px 24px rgba(0,0,0,.7))}
+.cr-paper{
+  font-family:'IM Fell English',Georgia,serif; color:#2b1b0b; text-shadow:0 0 .6px rgba(40,22,6,.55);
+  background-color:#e3d0a2;
+  background-image:
+    radial-gradient(circle at 80% 18%,transparent 0 26px,rgba(120,75,25,.20) 29px,rgba(120,75,25,.07) 40px,transparent 46px),
+    radial-gradient(circle at 14% 62%,transparent 0 18px,rgba(110,70,22,.16) 21px,rgba(110,70,22,.05) 30px,transparent 34px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='400' height='400'><filter id='f' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.012 .7' numOctaves='3' seed='8' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .38 0 0 0 0 .26 0 0 0 0 .10 0 0 0 1.3 -.5'/></filter><rect width='100%' height='100%' filter='url(%23f)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='600' height='600'><filter id='m' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.008' numOctaves='4' seed='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .45 0 0 0 0 .30 0 0 0 0 .10 0 0 0 1.6 -.55'/></filter><rect width='100%' height='100%' filter='url(%23m)'/></svg>"),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='g' x='0' y='0' width='100%' height='100%'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' seed='11' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .30 0 0 0 0 .20 0 0 0 0 .08 0 0 0 .9 -.2'/></filter><rect width='100%' height='100%' filter='url(%23g)'/></svg>"),
+    radial-gradient(ellipse at 20% 8%,rgba(255,248,222,.55),transparent 60%),
+    radial-gradient(ellipse at 85% 92%,rgba(150,100,40,.30),transparent 55%);
+  background-size:auto,auto,400px 400px,600px 600px,200px 200px,auto,auto;
+  box-shadow:inset 0 0 60px 14px rgba(110,70,25,.55), inset 0 0 14px 2px rgba(70,40,12,.6);
+}
+.cr-paper::before{display:none}
+.cr-title,.cr-h,.cr-h2{filter:url(#crInk); animation:none !important; color:#2a1608; text-shadow:0 0 1px rgba(42,22,8,.55), 1px 1px 0 rgba(255,240,200,.35)}
+.cr-title{font-family:'Cinzel Decorative',serif; text-align:center; font-size:clamp(26px,7vw,42px); letter-spacing:2px; margin:0; line-height:1.15}
+.cr-stat b{color:#6a1d0a; filter:url(#crInk)}
+.cr-sub,.cr-stat span,.cr-table th{font-family:'IM Fell English',Georgia,serif}
+.cr-table th{font-size:1em; letter-spacing:.5px}
+.cr-note{font-style:italic; background:rgba(122,42,16,.10); border-left-color:#7a2a10}
+
+/* CARD RULES: mini card icons */
+.cr-card .tier-badge{position:absolute;top:14px;left:4px;font-family:'Cinzel',serif;font-size:9px;font-weight:700;line-height:1.2;color:var(--danger);background:rgba(242,234,216,.8);border-radius:2px;padding:0 2px;border:1px solid var(--danger);text-shadow:none}
+.cr-card .act-val,.cr-card .act-val-right{position:absolute;font-family:'Cinzel',serif;font-size:10px;font-weight:700;line-height:1;color:var(--ink);text-shadow:none}
+.cr-card .act-val{top:3px;left:4px}
+.cr-card .act-val-right{bottom:3px;right:4px;transform:rotate(180deg)}
+.cr-card .val{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:22px;font-weight:700;color:var(--ink);text-shadow:none}
+.cr-cardcell{display:flex;align-items:center;gap:10px;min-width:118px}
+.cr-card{position:relative;flex:0 0 auto;width:46px;height:66px;background-size:100% 100%;background-repeat:no-repeat;filter:drop-shadow(0 2px 3px rgba(40,22,6,.55))}
+.cr-card i{position:absolute;font-style:normal;font-family:'Cinzel',serif;font-weight:700;font-size:10px;line-height:1;color:var(--ink);text-shadow:none}
+.cr-card i.l{top:3px;left:4px}
+.cr-card i.r{bottom:3px;right:4px}
+.cr-card b{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'Cinzel Decorative',serif;font-size:22px;color:var(--ink);text-shadow:none}
+.cr-cardname{font-weight:700}
+.cr-table.cr-cards tr:last-child td{font-weight:400}
+.cr-table.cr-cards td{vertical-align:middle}
+
+/* ===== DAILY DRAW + REWARD CARDS: ledger paper on a dark desk ===== */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay){
+  background:radial-gradient(ellipse at 50% 40%,transparent 25%,rgba(0,0,0,.7) 100%),url('Textures/desk-wood.jpg') 0 0/1024px 512px !important}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .ts-spotlight-beam{display:none}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-ember{background:#e8d9b0;box-shadow:none;width:3px;height:3px;filter:none}
+
+/* the paper sheet (centre content block) */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type{
+  box-sizing:border-box; position:relative;
+  padding:clamp(16px,3.5vh,32px) clamp(14px,4vw,40px) clamp(18px,4vh,36px) !important;
+  background-color:#f1ebd9;
+  background-image:
+    linear-gradient(90deg,transparent 49.6%,rgba(60,40,15,.08) 50%,rgba(255,255,255,.4) 50.4%,transparent 51%),
+    linear-gradient(180deg,transparent 33%,rgba(60,40,15,.11) 33.3%,rgba(255,255,255,.45) 33.7%,transparent 34.3%),
+    repeating-linear-gradient(180deg,transparent 0 25px,rgba(80,120,165,.20) 25px 26px),
+    url('Textures/ledger-paper.jpg');
+  background-size:auto,auto,auto,512px 512px;
+  box-shadow:0 30px 60px rgba(0,0,0,.65),0 0 0 1px rgba(90,70,40,.35),inset 0 0 40px rgba(130,100,50,.22);
+  transform:rotate(-.5deg); will-change:transform; border-radius:2px;
+}
+/* masking tape on the sheet corners */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type::before,
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type::after{
+  content:""; position:absolute; top:-10px; width:78px; height:24px; z-index:5; pointer-events:none;
+  background:linear-gradient(180deg,rgba(236,222,170,.88),rgba(214,196,140,.82));
+  clip-path:polygon(0 0,100% 0,97% 25%,100% 50%,97% 75%,100% 100%,0 100%,3% 75%,0 50%,3% 25%);
+}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type::before{left:-20px; transform:rotate(-38deg)}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type::after{right:-20px; transform:rotate(38deg)}
+
+/* inked title + handwritten subtitle */
+#dailyDrawModalOverlay h3{color:#2a1608 !important}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) h3{text-shadow:none !important; filter:url(#crInk); animation:none !important}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) h3::after{content:"";display:block;width:70%;height:4px;margin:6px auto 0;border-top:1px solid #2a1608;border-bottom:1px solid #2a1608}
+:is(#ddSubtitle,#rcSubtitle){font-family:'Caveat','IM Fell English',cursive !important; font-size:clamp(17px,3.6vh,26px) !important; font-weight:600; color:#2f2f7a !important; text-shadow:none !important}
+
+/* cards taped onto the paper */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card-wrapper{position:relative}
+#dailyDrawModalOverlay .dd-card-wrapper:nth-child(1){--tilt:-4deg; --drift:-60px; --spin:-24deg}
+#dailyDrawModalOverlay .dd-card-wrapper:nth-child(2){--tilt:2.5deg; --drift:50px; --spin:22deg}
+#dailyDrawModalOverlay .dd-card-wrapper:nth-child(3){--tilt:-2deg; --drift:-45px; --spin:-20deg}
+#dailyDrawModalOverlay .dd-card-wrapper:nth-child(4){--tilt:3.5deg; --drift:65px; --spin:26deg}
+#rcWrap{--tilt:-2deg}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card{rotate:var(--tilt,0deg); transition:transform .8s cubic-bezier(.2,.8,.2,1), rotate .5s ease}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card-wrapper:hover:not(.locked) .dd-card{transform:translateY(-12px) translateZ(0); box-shadow:none}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-face{border:1px solid rgba(40,22,6,.7); box-shadow:0 6px 14px rgba(40,25,8,.55),0 1px 2px rgba(0,0,0,.4)}
+#rcFront{box-shadow:0 6px 14px rgba(40,25,8,.55) !important}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card-wrapper::before{
+  content:""; position:absolute; top:-9px; left:28%; width:44%; height:16px; z-index:6; pointer-events:none;
+  background:rgba(232,216,160,.8); transform:rotate(-3deg);
+  clip-path:polygon(0 0,100% 0,96% 30%,100% 55%,96% 80%,100% 100%,0 100%,4% 75%,0 50%,4% 25%);
+  transition:opacity .4s ease, transform .5s ease;
+}
+/* tape peels off when the card is chosen */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card-wrapper:has(.dd-card.flipped)::before{opacity:0; transform:rotate(-12deg) translateY(-16px)}
+
+/* cards you did NOT pick: inked out, then tossed off the desk */
+#dailyDrawModalOverlay .dd-card-wrapper.fade-out{opacity:1; filter:none; transform:none; transition:none; animation:ddToss .95s ease-in forwards}
+#dailyDrawModalOverlay .dd-card-wrapper.fade-out::after{
+  content:""; position:absolute; inset:-4px; z-index:7; pointer-events:none;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 144' preserveAspectRatio='none'><path d='M8 10 L92 134 M92 12 L10 132' stroke='%232c2a6e' stroke-width='5' stroke-linecap='round' fill='none'/></svg>") center/100% 100% no-repeat;
+  animation:ddStrike .3s ease-out both;
+}
+@keyframes ddStrike{from{clip-path:inset(0 100% 0 0)} to{clip-path:inset(0 0 0 0)}}
+@keyframes ddToss{
+  0%{transform:translate(0,0) rotate(0); opacity:1}
+  30%{transform:translate(0,-4px) rotate(-1.5deg); opacity:1}
+  100%{transform:translate(var(--drift,40px),75vh) rotate(var(--spin,24deg)); opacity:0}
+}
+
+/* RED PIN: drops onto the top-left corner of the revealed card */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-back::after{
+  content:"D"; position:absolute; left:12%; top:7%; width:26px; height:26px; z-index:8; pointer-events:none;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'Cinzel Decorative',serif; font-weight:700; font-size:14px; line-height:1; color:#f3d98a;
+  text-shadow:0 1px 0 rgba(0,0,0,.65),0 0 3px rgba(255,220,140,.35);
+  border-radius:50%; opacity:0; transform:translate(-50%,-50%);
+  background:radial-gradient(circle at 32% 28%,#ff9a8a 0 8%,#d23a2c 28%,#8f140e 70%,#560906 100%);
+  box-shadow:0 3px 4px rgba(0,0,0,.55),inset -1px -2px 3px rgba(0,0,0,.35),inset 0 0 0 1.5px rgba(243,217,138,.35);
+}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card.flipped .dd-back::after{animation:ddPinDrop .4s cubic-bezier(.2,.9,.3,1.35) .8s both}
+@keyframes ddPinDrop{
+  from{opacity:0; transform:translate(-50%,-50%) scale(2.6)}
+  to{opacity:1; transform:translate(-50%,-50%) scale(1)}
+}
+/* card hangs from the pin: swings once, then rests with a slight tilt (no endless floating) */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card.flipped{rotate:0deg; box-shadow:none; animation:ddPinSwing 1.9s ease-out 1.1s forwards}
+@keyframes ddPinSwing{
+  0%  {transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(0deg)  rotateY(180deg) scale(1.55)}
+  18% {transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(-9deg) rotateY(180deg) scale(1.55)}
+  40% {transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(7deg)  rotateY(180deg) scale(1.55)}
+  60% {transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(-1deg) rotateY(180deg) scale(1.55)}
+  80% {transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(3.8deg) rotateY(180deg) scale(1.55)}
+  100%{transform-origin:88% 7%; transform:translateX(calc(var(--target-x,0px) - 96.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(3deg)  rotateY(180deg) scale(1.55)}
+}
+
+/* paper scraps that rain down on reveal */
+.dd-scrap-layer{position:absolute; inset:0; overflow:hidden; pointer-events:none; z-index:50}
+.dd-scrap{position:absolute; top:-24px; display:block; animation:ddScrapFall linear forwards}
+@keyframes ddScrapFall{
+  0%{transform:translate(0,0) rotate(0); opacity:1}
+  85%{opacity:1}
+  100%{transform:translate(var(--sway,0px),110vh) rotate(var(--rot,360deg)); opacity:0}
+}
+
+/* ===== SMOOTH REVEAL: 2D flip, no 3D transforms, un-transformed paper ===== */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-container{perspective:none}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) > div > div:last-of-type{transform:none; will-change:auto}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card{transform-style:flat; will-change:auto}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-face{backface-visibility:visible; -webkit-backface-visibility:visible}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-back{transform:none; opacity:0}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card-wrapper:hover:not(.locked) .dd-card{transform:translateY(-12px)}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card.flipped{
+  transform:translateX(var(--target-x,0px)) translateY(var(--target-y,40px)) scale(1.55); z-index:15;
+  rotate:0deg; box-shadow:none; animation:ddPinSwing 1.9s ease-out 1.1s forwards;
+}
+/* the flip itself: front squeezes to an edge, back opens */
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card.flipped .dd-front{animation:ddFaceOut .35s ease-in forwards}
+:is(#dailyDrawModalOverlay,#rewardCardModalOverlay) .dd-card.flipped .dd-back{animation:ddFaceIn .35s ease-out .35s both}
+@keyframes ddFaceOut{from{transform:scaleX(1); opacity:1} to{transform:scaleX(0); opacity:0}}
+@keyframes ddFaceIn{from{transform:scaleX(0); opacity:1} to{transform:scaleX(1); opacity:1}}
+
+/* pin swing, recalculated for the 2D card (pin at 12% / 7%, no mirroring any more) */
+@keyframes ddPinSwing{
+  0%  {transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(0deg)   scale(1.55)}
+  18% {transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(-9deg)  scale(1.55)}
+  40% {transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(7deg)   scale(1.55)}
+  60% {transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(-1deg)  scale(1.55)}
+  80% {transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(3.8deg) scale(1.55)}
+  100%{transform-origin:12% 7%; transform:translateX(calc(var(--target-x,0px) - 20.9%)) translateY(calc(var(--target-y,40px) - 23.65%)) rotate(3deg)   scale(1.55)}
+}
+
+/* cheaper paper scraps (no clip-path masks) */
+.dd-scrap{clip-path:none !important; border-radius:2px 5px 3px 6px}
 
 /* HOW TO PLAY TUTORIAL */
 #tutorialOverlay{display:none;position:fixed;inset:0;background:rgba(6,4,3,0.94);z-index:5000;align-items:center;justify-content:center;padding:24px;
@@ -3567,6 +3736,76 @@ setTimeout(function() {
     pointer-events: none !important;
 }
 </style>
+<script>document.documentElement.classList.add('dod-mf');</script>
+<style>
+/* MOBILE READABILITY: font sizes only, no layout changes */
+@media (max-height: 720px), (max-width: 980px) and (orientation: landscape) {
+  .ringseat .rname { font-size: clamp(10px, 2.4vh, 12px) !important; }
+  .seat-stats .stat-pill { font-size: clamp(9px, 2vh, 10.5px) !important; }
+  .player-title { font-size: clamp(8px, 1.9vh, 9.5px) !important; }
+  .ringseat.dense .rname { font-size: 9px !important; }
+  .ringseat.dense .seat-stats .stat-pill { font-size: 7.5px !important; }
+  .ringseat.dense .player-title { font-size: 7px !important; }
+  .minicard .act-val, .minicard .act-val-right { font-size: 10.5px !important; }
+  .minicard .tier-badge { font-size: 8.5px !important; }
+  .card .act-val, .card .act-val-right { font-size: 11px !important; }
+  .card .tier-badge { font-size: 9px !important; }
+  .log-name { font-size: 11px !important; }
+  .log-msg { font-size: 10.5px !important; line-height: 1.25 !important; }
+  .deckpile .label { font-size: 9.5px !important; }
+  .chainbox .txt { font-size: 11.5px !important; }
+  .chainbox .score { font-size: 10.5px !important; }
+  .actionbar .hint { font-size: 11px !important; }
+  .actionbar .btn { font-size: 12px !important; }
+  .hand-label { font-size: 11px !important; }
+}
+@media (max-width: 980px) and (orientation: landscape) {
+  #tutText { font-size: 13px !important; line-height: 1.45 !important; }
+  .tut-dname { font-size: 13px !important; }
+  #tutDialogue .tut-dealer-row button { font-size: 11px !important; }
+}
+</style>
+<style>
+/* Playgama readability pass (class renamed dod-pg -> dod-mf) */
+html.dod-mf .btn.small { font-size: 12px; }
+html.dod-mf .deckpile .label { font-size: 9.5px; color: rgba(242,234,216,0.8); }
+html.dod-mf .chainbox .score { font-size: 11px; color: rgba(242,234,216,0.8); }
+html.dod-mf .chainbox .txt { font-size: 12px; }
+html.dod-mf .actionbar .hint { font-size: 11px; color: rgba(242,234,216,0.8); }
+html.dod-mf .topbar .right { font-size: 12px; }
+@media (max-width: 980px), (max-height: 720px) {
+  html.dod-mf .btn { font-size: 14px !important; }
+  html.dod-mf .btn.small { font-size: 12px !important; }
+  html.dod-mf .chainbox .txt { font-size: 12px !important; }
+  html.dod-mf .chainbox .score { font-size: 11px !important; }
+  html.dod-mf .actionbar .hint { font-size: 11px !important; }
+  html.dod-mf .ringseat .rname { font-size: 10px !important; }
+  html.dod-mf .ringseat.dense .rname { font-size: 9px !important; }
+  html.dod-mf .seat-stats .stat-pill { font-size: 9px !important; }
+  html.dod-mf .ringseat.dense .seat-stats .stat-pill { font-size: 8px !important; }
+  html.dod-mf .player-title { font-size: 8px !important; }
+  html.dod-mf .ringseat.dense .player-title { font-size: 7px !important; }
+  html.dod-mf .minicard .act-val, html.dod-mf .minicard .act-val-right { font-size: 10px !important; }
+  html.dod-mf .minicard .tier-badge { font-size: 8.5px !important; }
+  html.dod-mf .log-name { font-size: 10.5px !important; }
+  html.dod-mf .log-msg { font-size: 10px !important; }
+  html.dod-mf .settings-row { font-size: 12px !important; }
+  html.dod-mf #screen-settings .section-label, html.dod-mf #screen-training .section-label { font-size: 11px !important; }
+  html.dod-mf #settingsAccountArea p { font-size: 10.5px !important; }
+  html.dod-mf #settingsAccountArea button { font-size: 12px !important; }
+  html.dod-mf .shop-tabs-container .squad-subtab-btn { font-size: 11px !important; }
+  html.dod-mf .rules-box { font-size: 11px !important; }
+  html.dod-mf .opt-row { font-size: 10.5px !important; }
+  html.dod-mf #countRow select { font-size: 11px !important; }
+  html.dod-mf .p.blurb, html.dod-mf p.blurb { font-size: 11.5px !important; }
+  html.dod-mf .ls-tip-label { font-size: 9px !important; }
+  html.dod-mf .ls-tip-text { font-size: 11px !important; }
+  html.dod-mf .finale-stats { font-size: 10.5px !important; }
+  html.dod-mf .rank-item .r-reward, html.dod-mf .rank-item .reward-coin-badge { font-size: 8.5px !important; }
+  html.dod-mf .rank-item.current .r-req { font-size: 9px !important; }
+  html.dod-mf .countbtn { font-size: 12px !important; }
+}
+</style>
 <div id="tutOverlay"></div>
 <div id="tutShowcase"></div>
 <div id="tutSpotlight"></div>
@@ -3580,11 +3819,291 @@ setTimeout(function() {
       <div class="tut-dname">The Dealer</div>
       <div class="tut-prog"><div id="tutProgressFill" style="height:100%; width:0%; background:var(--brass-bright); transition:width 0.3s ease;"></div></div>
     </div>
-    <button onclick="endInteractiveTutorial()" style="background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:0; flex-shrink:0;">SKIP ✕</button>
+    <button id="tutVoiceBtn" onclick="dodTutVoiceToggle()" title="Voice on/off" style="background:none; border:none; color:var(--paper); cursor:pointer; font-size:14px; padding:0 6px;">🔊</button>
+<button onclick="tutSkipConfirm(this)" style="background:none; border:none; color:rgba(255,255,255,0.3); cursor:pointer; font-family:'IBM Plex Mono',monospace; font-size:9px; text-transform:uppercase; letter-spacing:1px; padding:0; flex-shrink:0;">SKIP ✕</button>
   </div>
   <div id="tutText" style="font-family:'Inter',sans-serif; font-size:13.5px; line-height:1.55; color:rgba(242,234,216,0.92);"></div>
   <button id="tutBtn" class="btn small" style="padding:9px 0; font-size:12px; letter-spacing:1px;" onclick="tutNext()">Continue →</button>
 </div>
+
+<style>
+.tut-coach{position:fixed;z-index:10001;pointer-events:none;display:none;flex-direction:column;align-items:center;width:max-content;font-family:'IBM Plex Mono',monospace;}
+.tut-coach.dn{transform:translate(-50%,-100%);}
+.tut-coach.up{transform:translate(-50%,0);flex-direction:column-reverse;}
+.tut-coach .tc-cap{background:rgba(0,0,0,.78);color:var(--brass-bright);font-size:11px;font-weight:700;letter-spacing:.5px;padding:2px 7px;border-radius:6px;border:1px solid var(--brass-bright);white-space:nowrap;}
+.tut-coach .tc-g{font-size:26px;line-height:1;color:var(--brass-bright);filter:drop-shadow(0 0 5px rgba(0,0,0,.9));will-change:transform;}
+.tut-coach.dn .tc-g{animation:tcDown .7s ease-in-out infinite;}
+.tut-coach.up .tc-g{animation:tcUp .7s ease-in-out infinite;}
+@keyframes tcDown{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+@keyframes tcUp{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+</style>
+<script>
+(function () {
+  'use strict';
+  var ss = window.speechSynthesis;
+
+  /* ===================== TUTORIAL VOICE ===================== */
+  var KEY = 'dod_tut_voice', voice = null, warmed = false, pend = 0, lastTxt = '', lastAt = 0, keep = null;
+  function voiceOn() { return localStorage.getItem(KEY) !== 'off'; }
+  function pickVoice() {
+    if (!ss) return;
+    var vs = ss.getVoices() || [];
+    if (!vs.length) return;
+    var nav = (navigator.language || 'en-US').toLowerCase();
+    var en = vs.filter(function (v) { return /^en/i.test(v.lang); });
+    var loc = en.filter(function (v) { return v.localService; });   // local voices = no network lag
+    var good = en.filter(function (v) { return /natural|neural|premium|enhanced|online/i.test(v.name); });
+    var pool = good.length ? good : (loc.length ? loc : en);
+    voice = pool.filter(function (v) { return v.lang.toLowerCase().replace('_', '-') === nav; })[0] ||
+            pool.filter(function (v) { return /^en[-_]us$/i.test(v.lang); })[0] || pool[0] || null;
+  }
+  if (ss) { pickVoice(); if (ss.addEventListener) ss.addEventListener('voiceschanged', pickVoice); }
+
+  function warm() {                                   // silent utterance wakes the engine on the first tap
+    if (warmed || !ss) return;
+    warmed = true;
+    try {
+      pickVoice();
+      try { var p0 = getPlayer(); p0.src = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQAAAAA='; var r0 = p0.play(); if (r0 && r0.catch) r0.catch(function () {}); } catch (e) {}
+      var w = new SpeechSynthesisUtterance('.');
+      w.volume = 0;
+      if (voice) { w.voice = voice; w.lang = voice.lang; } else { w.lang = 'en-US'; }
+      ss.speak(w);
+    } catch (e) {}
+  }
+  ['pointerdown', 'touchend', 'keydown'].forEach(function (ev) {
+    document.addEventListener(ev, warm, { once: true, passive: true });
+  });
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stopVoice(); });
+
+  function clean(html) {
+    return String(html || '')
+      .replace(/<br\s*\/?>/gi, ' ').replace(/<[^>]+>/g, '').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+      .replace(/\s*\(PC\)/g, '').replace(/\bPC\b/g, 'coins')
+      .replace(/[→↗⬇⬆✕]/g, '').replace(/\+(\d+)/g, 'plus $1')
+      .replace(/\s+/g, ' ').trim();
+  }
+  function stopVoice() {
+    pend++;
+    try { if (player) player.pause(); } catch (e) {}
+    try { if (ss && (ss.speaking || ss.pending)) ss.cancel(); } catch (e) {}
+  }
+  function say(t) {
+    if (!ss || !t || !voiceOn()) return;
+    var clip = clipFor(t);
+    if (clip) { stopVoice(); playClip(clip); return; }
+    try { if (player) player.pause(); } catch (e) {}   // stop a recorded clip before the fallback voice starts
+    var tok = ++pend;
+    var go = function () {
+      if (tok !== pend) return;
+      try {
+        var u = new SpeechSynthesisUtterance(t);
+        if (voice) { u.voice = voice; u.lang = voice.lang; } else { u.lang = 'en-US'; }
+        u.rate = 1.02; u.pitch = 1; u.volume = 1;
+        keep = u;                                      // keep a reference so the browser can't garbage-collect it mid-speech
+        ss.speak(u);
+      } catch (e) {}
+    };
+    try {
+      if (ss.speaking || ss.pending) { ss.cancel(); setTimeout(go, 60); } else { go(); }
+    } catch (e) {}
+  }
+  var player = null;
+  (function () { var sc = document.createElement('script'); sc.src = 'Audio/tutorial/manifest.js'; sc.async = true; document.head.appendChild(sc); })();
+  function h32(s) { var h = 5381; for (var i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0; return (h >>> 0).toString(36); }
+  function clipFor(txt) { var m = window.DOD_TUT_AUDIO; return (m && m[h32(txt)]) || null; }
+  function getPlayer() { if (!player) { player = new Audio(); player.preload = 'auto'; } return player; }
+  function playClip(url) {
+    try {
+      var p = getPlayer(); p.pause(); p.src = url; p.currentTime = 0; p.volume = 1;
+      var r = p.play(); if (r && r.catch) r.catch(function () {});
+      aheadWarm();
+    } catch (e) {}
+  }
+  function aheadWarm() {                               // pull the next two clips into the HTTP cache
+    try {
+      var menu = !!window.isMenuTutorialActive;
+      var arr = menu ? menuTutScript : tutScript, i = menu ? menuTutStep : tutStep;
+      for (var k = 1; k <= 2; k++) {
+        var st = arr[i + k]; if (!st || !st.text) continue;
+        var u = clipFor(clean(st.text)); if (u) fetch(u, { cache: 'force-cache' }).catch(function () {});
+      }
+    } catch (e) {}
+  }
+  window.dodTutDump = function () {                    // run once in the browser console to list every line to record
+    var out = {};
+    function add(arr) { (arr || []).forEach(function (st) { var t = st && st.text; if (t) { var c = clean(t); out[h32(c)] = c; } }); }
+    var r0 = window.tutDecRealVote, c0 = window.tutDecClaimVote;
+    window.tutDecRealVote = 5; window.tutDecClaimVote = 5; add(tutScript);
+    window.tutDecRealVote = 1; window.tutDecClaimVote = 4; add(tutScript);
+    window.tutDecRealVote = r0; window.tutDecClaimVote = c0;
+    add(menuTutScript);
+    console.log(JSON.stringify(out, null, 1));
+    return out;
+  };
+  function dlgShown() {
+    var d = document.getElementById('tutDialogue');
+    return !!d && d.style.display !== 'none' && d.style.display !== '';
+  }
+  function onText() {
+    var tt = document.getElementById('tutText');
+    if (!tt || !dlgShown()) return;
+    var txt = clean(tt.innerHTML);
+    if (!txt) { stopVoice(); return; }
+    var now = Date.now();
+    if (txt === lastTxt && now - lastAt < 2500) return;   // ignore accidental re-renders of the same step
+    lastTxt = txt; lastAt = now;
+    say(txt);
+  }
+  var dlgWas = false;
+function onDlg() {
+    var s = dlgShown();
+    if (!s) { stopVoice(); lastTxt = ''; }
+    else if (!dlgWas) { onText(); }   // box just appeared: read its text
+    dlgWas = s;
+    schedule();
+}
+  function paintBtn() {
+    var b = document.getElementById('tutVoiceBtn');
+    if (b) b.textContent = voiceOn() ? '🔊' : '🔇';
+  }
+  window.dodTutVoiceToggle = function () {
+    var wasOn = voiceOn();
+    localStorage.setItem(KEY, wasOn ? 'off' : 'on');
+    if (wasOn) { stopVoice(); } else { warm(); var tt = document.getElementById('tutText'); if (tt) say(clean(tt.innerHTML)); }
+    paintBtn();
+  };
+
+  /* ===================== TAP-HERE ARROWS (draw phase) ===================== */
+  var pool = [], raf = 0, timer = 0, lastSig = '', readySig = '';
+  function mk() {
+    var d = document.createElement('div');
+    d.className = 'tut-coach dn';
+    d.innerHTML = '<div class="tc-cap"></div><div class="tc-g"></div>';
+    d.style.display = 'none';
+    document.body.appendChild(d);
+    return d;
+  }
+  function hideFrom(i) { for (; i < pool.length; i++) if (pool[i].style.display !== 'none') pool[i].style.display = 'none'; }
+  function place(i, t, label, preferBelow) {
+    var d = pool[i] || (pool[i] = mk());
+    var r = t.getBoundingClientRect();
+    var below = preferBelow ? (window.innerHeight - r.bottom > 56) : (r.top < 56);
+    var cls = 'tut-coach ' + (below ? 'up' : 'dn');
+    if (d.className !== cls) {
+      d.className = cls;
+      d.querySelector('.tc-g').textContent = below ? '⬆' : '⬇';
+    }
+    var cap = d.firstChild; if (cap.textContent !== label) cap.textContent = label;
+    d.style.left = (r.left + r.width / 2) + 'px';
+    d.style.top = (below ? r.bottom + 4 : r.top - 4) + 'px';
+    if (d.style.display !== 'flex') d.style.display = 'flex';
+  }
+  function inHand(el) {
+    var h = document.getElementById('hand'); if (!h) return true;
+    var r = el.getBoundingClientRect(), hr = h.getBoundingClientRect();
+    return r.bottom > hr.top + 2 && r.top < hr.bottom - 2 && r.right > hr.left && r.left < hr.right;
+  }
+  function run() {
+    raf = 0;
+    try {
+      if (!window.isInteractiveTutorial || window.isMenuTutorialActive) return hideFrom(0);
+      if (typeof state === 'undefined' || !state || state.over || state.deception) return hideFrom(0);
+      if (!isYourTurn() || window.dodTurnLocked) return hideFrom(0);
+      var ta = document.getElementById('tutArrow');
+      if (ta && ta.classList.contains('active')) return hideFrom(0);
+      if (dlgShown()) return hideFrom(0);   // a tutorial box is open: no coach arrows at all   // the tutorial's own arrow is showing
+      var ui = state.uiState;
+      if (ui !== 'IDLE' && ui !== 'RESOLVING_BUY' && ui !== 'CHOOSE_CALL') return hideFrom(0);
+      var drew = (state.drawsThisTurn || 0) > 0;
+      // (the first draw of a turn and the number pad are handled below)
+
+      // wait for the draw animation (~450ms) before pointing at anything
+      var sig = ui + ':' + (state.drawsThisTurn || 0) + ':' + state.players[0].hand.length;
+      if (sig !== readySig) {
+        hideFrom(0);
+        if (sig !== lastSig) {
+          lastSig = sig; clearTimeout(timer);
+          timer = setTimeout(function () { readySig = lastSig; schedule(); }, 480);
+        }
+        return;
+      }
+
+      var bar = document.getElementById('actionbar'), hand = document.getElementById('hand');
+      if (!bar || !hand) return hideFrom(0);
+
+      // Number pad: point at it after a card is played
+      if (ui === 'CHOOSE_CALL') {
+        var pad = bar.firstElementChild;
+        if (pad) { place(0, pad, 'PICK A NUMBER', true); hideFrom(1); } else hideFrom(0);
+        return;
+      }
+
+      // First draw of the turn: point at "No match. Forced Buy" only when nothing in hand is playable
+      if (!drew && ui === 'IDLE') {
+        var fb = null, anyPlayable = false;
+        [].forEach.call(bar.querySelectorAll('button'), function (b) {
+          if (/Forced Buy|Hand is empty/i.test(b.textContent || '')) fb = b;
+        });
+        [].forEach.call(hand.children, function (c) {
+          if (c.classList.contains('card') && !c.classList.contains('disabled') &&
+              !c.classList.contains('insurance') && inHand(c)) anyPlayable = true;
+        });
+        if (fb && !anyPlayable) { place(0, fb, 'TAP TO BUY', true); hideFrom(1); } else hideFrom(0);
+        return;
+      }
+      var tryB = null, stopB = null, optB = null;
+      [].forEach.call(bar.querySelectorAll('button'), function (b) {
+        var oc = b.getAttribute('onclick') || '', tx = b.textContent || '';
+        if (oc.indexOf('doBuyDraw') === 0) tryB = b;
+        else if (oc.indexOf('finishBuyLoopFailure') === 0) stopB = b;
+        else if (/Optional Draw/i.test(tx)) optB = b;
+      });
+      var cards = [].filter.call(hand.children, function (c) {
+        return c.classList.contains('card') && !c.classList.contains('disabled') &&
+               !c.classList.contains('insurance') && inHand(c);
+      });
+
+      var n = 0;
+      if (cards.length) {
+        var newest = hand.lastElementChild;
+        place(n++, cards.indexOf(newest) > -1 ? newest : cards[0], 'TAP TO PLAY', false);
+        if (optB) place(n++, optB, 'OR DRAW AGAIN', true);
+      } else {
+        if (tryB) place(n++, tryB, 'DRAW AGAIN', true);
+        if (stopB) place(n++, stopB, 'OR STOP', true);
+      }
+      hideFrom(n);
+    } catch (e) { hideFrom(0); }
+  }
+  function schedule() { if (!raf) raf = requestAnimationFrame(run); }
+
+  function init() {
+    var tt = document.getElementById('tutText'), dg = document.getElementById('tutDialogue');
+    if (tt) new MutationObserver(onText).observe(tt, { childList: true });
+    if (dg) new MutationObserver(onDlg).observe(dg, { attributes: true, attributeFilter: ['style'] });
+    var bar = document.getElementById('actionbar'), hand = document.getElementById('hand'), ta = document.getElementById('tutArrow');
+    if (bar) new MutationObserver(schedule).observe(bar, { childList: true });
+    if (hand) { new MutationObserver(schedule).observe(hand, { childList: true }); hand.addEventListener('scroll', schedule, { passive: true }); }
+    if (ta) new MutationObserver(schedule).observe(ta, { attributes: true, attributeFilter: ['class'] });
+    window.addEventListener('resize', schedule, { passive: true });
+    paintBtn();
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
+})();
+</script>
+<script>
+window.tutSkipConfirm = function (b) {
+  function reset() { b.dataset.armed = '0'; b.textContent = b.dataset.orig || 'SKIP ✕'; b.style.color = 'rgba(255,255,255,0.3)'; }
+  if (b.dataset.armed === '1') { clearTimeout(b._t); reset(); endInteractiveTutorial(); return; }
+  b.dataset.orig = b.textContent;
+  b.dataset.armed = '1';
+  b.textContent = 'SURE? TAP AGAIN';
+  b.style.color = '#ff6b6b';
+  clearTimeout(b._t);
+  b._t = setTimeout(reset, 3000);
+};
+</script>
 
 <!-- IOS SAFARI LIMITATION WARNING (shown once, only to iPhone/iPad Safari tab users, not standalone home-screen users) -->
 <div id="iosWarningBanner" style="display:none; position:fixed; inset:0; z-index:20000; background:rgba(6,4,3,0.96); align-items:center; justify-content:center; padding:24px;">
@@ -3716,64 +4235,7 @@ setTimeout(function() {
     <!-- Right side Events & Chests -->
     <div class="squad-events-zone" id="squadEventsZone">
       
- <!-- ADVERTISEMENT CONTAINER -->
-<div class="dod-ad-wrapper" id="dodAdWrapper">
-  <div class="dod-ad-badge" id="dodAdBadge">ADVERTISEMENT</div>
-  <!-- Banner content is injected below by dodInitBanner() -->
-  <div class="dod-ad-content" id="dodAdContent"></div>
-</div>
-<script>
-function dodInitBanner() {
-    var wrapper = document.getElementById('dodAdWrapper');
-    var content = document.getElementById('dodAdContent');
-    if (!wrapper || !content) return;
 
-    if (window.DOD_PLATFORM === 'crazygames') {
-        // CrazyGames: use their banner SDK.
-        // Replace 'YOUR_CG_BANNER_SLOT_ID' with the ID CrazyGames gives you after approval.
-        // During review they run the SDK in sandbox mode so this is safe to ship as-is.
-        content.id = 'cg-banner-slot';
-        content.style.cssText = 'width:160px;height:300px;';
-        if (window.DOD_CG_SDK_READY && window.CrazyGames && window.CrazyGames.SDK.ad) {
-            try {
-                window.CrazyGames.SDK.ad.requestBannerAd({
-                    containerId: 'cg-banner-slot'
-                    // bannerId: 'YOUR_CG_BANNER_SLOT_ID'  // ← uncomment + fill after CG approves
-                });
-            } catch(e) { wrapper.style.display = 'none'; }
-        } else {
-            // SDK not ready yet — try again in 2s (async init race on slow connections)
-            setTimeout(dodInitBanner, 2000);
-        }
-    } else {
-        // Own domain: inject third-party banner at runtime (never baked into static HTML)
-        var iframe = document.createElement('iframe');
-        iframe.setAttribute('sandbox',
-          'allow-scripts allow-same-origin allow-popups ' +
-          'allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation');
-        iframe.setAttribute('allow', 'encrypted-media');
-        iframe.srcdoc =
-          '<style>body{margin:0;padding:0;overflow:hidden;}<\/style>' +
-          '<script>atOptions={\'key\':\'fe50079a51ead851d3c89c444ba630be\',' +
-          '\'format\':\'iframe\',\'height\':300,\'width\':160,\'params\':{}};<\/script>' +
-          '<script src=\'https://www.highrevenueformat.com/' +
-          'fe50079a51ead851d3c89c444ba630be/invoke.js\'><\/script>';
-        iframe.width        = '160';
-        iframe.height       = '300';
-        iframe.frameBorder  = '0';
-        iframe.scrolling    = 'no';
-        iframe.style.cssText = 'border:none;overflow:hidden;width:160px;height:300px;';
-        content.appendChild(iframe);
-    }
-}
-
-// Wait for DOD_PLATFORM to be set (it's sync, but SDK init is async — use a small guard)
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', dodInitBanner);
-} else {
-    dodInitBanner();
-}
-</script>
 
       <div class="event-banner" onclick="openDailyDraw()">
         <div class="event-text" id="dailyDrawBannerText">DAILY DRAW</div>
@@ -4087,15 +4549,173 @@ if (document.readyState === 'loading') {
             <button class="btn small" id="submitSettingsFeedbackBtn" onclick="submitPlayerFeedback('settings')" style="width:100%; padding:10px 0;">Submit Feedback ↗</button>
           </div>
 
+
+
           <div class="section-label" style="margin-top:20px;">Legal & Policies</div>
           <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/privacy-games', '_blank')"><span>Privacy Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
           <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/terms-games', '_blank')"><span>Terms & Conditions</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
           <div class="settings-row" style="cursor:pointer;" onclick="window.open('https://pixelaks.in/refund', '_blank')"><span>Cancellation & Refund Policy</span><span style="color:var(--brass-bright); font-size:12px;">↗</span></div>
           <div class="settings-row" style="cursor:pointer;" onclick="window.location.href='mailto:pixelaks.technologies@gmail.com'"><span>Contact Us</span><span style="color:var(--brass-bright); font-size:16px;">✉</span></div>
         </div>
-        <div class="screen-footer" style="padding-top: 15px; padding-bottom: 0;">
+        <div class="screen-footer" style="padding-top: 15px; padding-bottom: 0; flex-direction:column; align-items:center; gap:10px;">
           <button class="btn ghost" style="width:100%; max-width:320px" onclick="if(currentPartyId || currentMatchId) { showSystemToast('Cannot open the guide while in a lobby.'); return; } openTutorial(true)">How To Play Guide</button>
+          <button class="btn ghost" style="width:100%; max-width:320px" onclick="showMenuScreen('cardrules')">Card Rules</button>
         </div>
+    </div>
+  </div>
+
+    <!-- INK TEXTURE FILTER (used by Card Rules headings) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <filter id="crInk" x="-2%" y="-8%" width="104%" height="116%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="5" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="1.6" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feComponentTransfer in="n" result="speck"><feFuncA type="discrete" tableValues="1 1 1 .55 1 1 .7 1"/></feComponentTransfer>
+      <feComposite in="d" in2="speck" operator="in"/>
+    </filter>
+  </svg>
+
+  <!-- CARD RULES (PARCHMENT) -->
+  <div class="menu-screen hidden" id="screen-cardrules">
+    <div class="cr-scroll">
+      <div class="cr-wrap">
+        <div class="cr-paper">
+
+          <div class="cr-title">Deck of Deception</div>
+          <p class="cr-sub">Card Guide &amp; Core Game Logic</p>
+          <hr class="cr-rule">
+
+          <h2 class="cr-h">I. The Deck at a Glance</h2>
+          <div class="cr-stats">
+            <div class="cr-stat"><b>108</b><span>Total Cards</span></div>
+            <div class="cr-stat"><b>72</b><span>Number Cards</span></div>
+            <div class="cr-stat"><b>36</b><span>Action Cards</span></div>
+            <div class="cr-stat"><b>5</b><span>Dealt Per Player</span></div>
+          </div>
+          <div class="cr-scrollx">
+            <table class="cr-table">
+              <tr><th>Card type</th><th>Copies</th><th>Share</th><th>Notes</th></tr>
+              <tr><td>Number cards (1 to 9)</td><td>72</td><td>66.7%</td><td>8 copies of each number</td></tr>
+              <tr><td>Wild</td><td>6</td><td>5.6%</td><td>Costs 2 coins, matches any called number</td></tr>
+              <tr><td>Insurance</td><td>6</td><td>5.6%</td><td>Safe pass, no penalty</td></tr>
+              <tr><td>Reverse</td><td>6</td><td>5.6%</td><td>Flips turn direction</td></tr>
+              <tr><td>Steal (3 coins)</td><td>6</td><td>5.6%</td><td>Takes 3 coins from an opponent</td></tr>
+              <tr><td>Power, tier 2</td><td>5</td><td>4.6%</td><td>Drains 2 coins from an opponent</td></tr>
+              <tr><td>Power, tier 4</td><td>4</td><td>3.7%</td><td>Drains 4 coins from an opponent</td></tr>
+              <tr><td>Power, tier 6</td><td>3</td><td>2.8%</td><td>Drains 6 coins from an opponent</td></tr>
+              <tr><td>Total</td><td>108</td><td>100%</td><td>72 number + 36 action</td></tr>
+            </table>
+          </div>
+
+
+
+          <h2 class="cr-h">II. What Each Special Card Does</h2>
+          <p>Coins are the score. Every player starts with <b>20 coins</b>. Playing any card earns <b>+1 coin</b>, then the player calls a number for the next player.</p>
+          <div class="cr-scrollx">
+                        <table class="cr-table cr-cards">
+              <tr><th>Card</th><th>Copies</th><th>What it does</th><th>Coin effect</th></tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/SwapCard.webp')"></div><span class="cr-cardname">Wild</span></div></td>
+                <td>6</td>
+                <td>Counts as a match for whatever number is currently called, so you are never stuck. Needs at least 2 coins to play. You then call the next number.</td>
+                <td>-2 to play, +1 for playing = net -1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/InsuranceCard.webp')"></div><span class="cr-cardname">Insurance</span></div></td>
+                <td>6</td>
+                <td>A safe pass. Skips your turn with no penalty, or lets you discard the useless card you just drew instead of keeping it.</td>
+                <td>No cost, no gain</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/ReverseCard.webp')"></div><span class="cr-cardname">Reverse</span></div></td>
+                <td>6</td>
+                <td>Flips the direction of play. Can be played at any time, whatever number is called.</td>
+                <td>+1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/SteelCard.webp')"><div class="tier-badge">+3</div></div><span class="cr-cardname">Steal</span></div></td>
+                <td>6</td>
+                <td>Pick an opponent and take up to 3 coins from them. They lose the coins and you receive them.</td>
+                <td>You +3 (or what they have), opponent -3, plus +1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/PowerCard.webp')"><div class="tier-badge">-2</div></div><span class="cr-cardname">Power (tier 2)</span></div></td>
+                <td>5</td>
+                <td>Pick an opponent and drain up to 2 of their coins. The coins are destroyed, not given to you.</td>
+                <td>Opponent -2, you +1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/PowerCard.webp')"><div class="tier-badge">-4</div></div><span class="cr-cardname">Power (tier 4)</span></div></td>
+                <td>4</td>
+                <td>Same as Power, but drains up to 4 coins.</td>
+                <td>Opponent -4, you +1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/PowerCard.webp')"><div class="tier-badge">-6</div></div><span class="cr-cardname">Power (tier 6)</span></div></td>
+                <td>3</td>
+                <td>Same as Power, but drains up to 6 coins. The rarest and strongest attack.</td>
+                <td>Opponent -6, you +1</td>
+              </tr>
+              <tr>
+                <td><div class="cr-cardcell"><div class="cr-card" style="background-image:url('Cards/CardPhase.webp')"><i class="l">7</i><i class="r">7</i><b>7</b></div><span class="cr-cardname">Number (1 to 9)</span></div></td>
+                <td>72</td>
+                <td>Playable only when it matches the number the previous player called. The backbone of the game.</td>
+                <td>+1</td>
+              </tr>
+            </table>
+          </div>
+          <p class="cr-note">Steal and Power can only be played while at least one other player is still in the match. If an opponent has fewer coins than the card's value, you take whatever they have left.</p>
+
+
+
+          <h2 class="cr-h">III. Core Game Logic</h2>
+          <h3 class="cr-h2">The idea in one line</h3>
+          <p>Coins are your life and your score. Play matching cards to earn coins, attack opponents to drain theirs, and avoid running out of coins with nothing to play, because that triggers the Deception showdown where a wrong guess eliminates you.</p>
+
+          <h3 class="cr-h2">A turn, step by step</h3>
+          <ol class="cr-steps">
+            <li><b>Match the call.</b> The previous player called a number (1 to 9). You must play a number card of that value. On the very first turn there is no call, so any card works.</li>
+            <li><b>Or use a special card.</b> Wild matches anything (costs 2 coins). Reverse, Steal and Power can be played regardless of the call.</li>
+            <li><b>Or draw.</b> If you cannot match, pay 2 coins to draw a card, up to 3 draws per turn. A matching draw can be played immediately. When the draw pile falls to 10 cards, the discard pile is shuffled back in automatically.</li>
+            <li><b>Or pass safely.</b> Playing Insurance passes the turn with no penalty. If a draw fails and you cannot play, the call carries over to the next player.</li>
+            <li><b>Earn and call.</b> Every card you play earns +1 coin, then you call any number from 1 to 9 for the next player.</li>
+            <li><b>Beat the clock.</b> Each turn lasts 30 seconds. Running out of time costs 2 coins.</li>
+          </ol>
+
+          <h3 class="cr-h2">Running out of coins: the Deception showdown</h3>
+          <ul>
+            <li>A player is stuck when they have fewer than 2 coins and no playable card.</li>
+            <li>First stuck turn: a warning, and the turn moves on. Second stuck turn in a row: a Deception showdown starts.</li>
+            <li>0 coins and 0 cards means instant bankruptcy and elimination.</li>
+            <li>In the showdown, players who still have coins vote on a secret "real number" and then announce a number, which may be a lie. Players without coins must decide whether to believe the announced number or doubt it.</li>
+            <li>A correct call earns +15 coins. A wrong call eliminates the player.</li>
+          </ul>
+
+          <h3 class="cr-h2">Key numbers</h3>
+          <div class="cr-scrollx">
+            <table class="cr-table">
+              <tr><th>Setting</th><th>Value</th></tr>
+              <tr><td>Players per match</td><td>2, 3, 4, 5, 6 or 8</td></tr>
+              <tr><td>Starting coins</td><td>20 per player</td></tr>
+              <tr><td>Starting hand</td><td>5 cards</td></tr>
+              <tr><td>Cost to draw a card</td><td>2 coins (max 3 draws per turn)</td></tr>
+              <tr><td>Turn timer</td><td>30 seconds</td></tr>
+              <tr><td>Match time limit</td><td>20 minutes</td></tr>
+              <tr><td>Reward for playing a card</td><td>+1 coin</td></tr>
+            </table>
+          </div>
+
+          <h3 class="cr-h2">How a match ends and who wins</h3>
+          <p>A match ends when only one player is left standing, or when the 20-minute limit is reached. Players still in the match are ranked by coins, and if coins are tied, the player with fewer cards in hand ranks higher. Eliminated players rank below everyone still in.</p>
+
+          <h3 class="cr-h2">Fair play: the server is the referee</h3>
+          <p>All rules, shuffling, coin changes and results are enforced on the game server, not on the player's device, so a modified client cannot give itself cards or coins.</p>
+
+          <div class="cr-sign">&#10022; PIXELAKS TECHNOLOGIES &#10022;</div>
+        </div>
+      </div>
+    </div>
+    <div class="screen-footer" style="padding-top:10px; padding-bottom:0;">
+      <button class="btn ghost" style="width:100%; max-width:320px" onclick="showMenuScreen('settings')">Back to Settings</button>
     </div>
   </div>
 
@@ -4920,6 +5540,12 @@ function handleGlobalBack() {
             }
         }, 4600);
     } else {
+        // Card Rules is opened from Settings, so go back to Settings
+        const crScreen = document.getElementById('screen-cardrules');
+        if (crScreen && !crScreen.classList.contains('hidden')) {
+            showMenuScreen('settings');
+            return;
+        }
         // Normal exit for all other screens
         showMenuScreen('hub');
     }
@@ -5618,6 +6244,76 @@ const sfx = {
             osc.start(now); osc.stop(now + 3.5);
         });
     },
+
+        reveal: () => {
+        sfx._init();
+        // Dealer's reveal: paper rustle, pin thunk into the desk, soft brass bell
+        const t0 = audioCtx.currentTime;
+        const out = audioCtx.destination;
+
+        // 1) paper rustle (short crinkly noise bursts while the card turns)
+        for (let i = 0; i < 6; i++) {
+            const t = t0 + i * 0.045 + Math.random() * 0.02;
+            const n = audioCtx.createBufferSource();
+            n.buffer = noiseBuffer;
+            const f = audioCtx.createBiquadFilter();
+            f.type = 'bandpass';
+            f.frequency.value = 2500 + Math.random() * 3500;
+            f.Q.value = 0.9;
+            const g = audioCtx.createGain();
+            g.gain.setValueAtTime(0, t);
+            g.gain.linearRampToValueAtTime((0.10 + Math.random() * 0.08) * sfxVolume, t + 0.01);
+            g.gain.exponentialRampToValueAtTime(0.001, t + 0.07);
+            n.connect(f); f.connect(g); g.connect(out);
+            n.start(t, Math.random() * 1.5); n.stop(t + 0.08);
+        }
+
+        // 2) pin thunk as the D seal lands (matches the 0.8s pin-drop delay)
+        const tp = t0 + 1.15;
+        const th = audioCtx.createOscillator();
+        const thg = audioCtx.createGain();
+        th.type = 'sine';
+        th.frequency.setValueAtTime(220, tp);
+        th.frequency.exponentialRampToValueAtTime(60, tp + 0.12);
+        thg.gain.setValueAtTime(0.5 * sfxVolume, tp);
+        thg.gain.exponentialRampToValueAtTime(0.001, tp + 0.16);
+        th.connect(thg); thg.connect(out);
+        th.start(tp); th.stop(tp + 0.17);
+        const ck = audioCtx.createBufferSource();
+        ck.buffer = noiseBuffer;
+        const ckf = audioCtx.createBiquadFilter();
+        ckf.type = 'highpass'; ckf.frequency.value = 1800;
+        const ckg = audioCtx.createGain();
+        ckg.gain.setValueAtTime(0.22 * sfxVolume, tp);
+        ckg.gain.exponentialRampToValueAtTime(0.001, tp + 0.035);
+        ck.connect(ckf); ckf.connect(ckg); ckg.connect(out);
+        ck.start(tp, 0.3); ck.stop(tp + 0.04);
+
+        // 3) brass bell chime (inharmonic partials) with a warm low body
+        const tb = tp + 0.03;
+        const base = 659.25; // E5
+        [[1, 0.50, 2.4], [2.756, 0.22, 1.6], [5.404, 0.10, 1.0], [1.5, 0.18, 2.0]].forEach(([r, a, d]) => {
+            const o = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            o.type = 'sine';
+            o.frequency.value = base * r;
+            g.gain.setValueAtTime(0, tb);
+            g.gain.linearRampToValueAtTime(a * 0.3 * sfxVolume, tb + 0.005);
+            g.gain.exponentialRampToValueAtTime(0.001, tb + d);
+            o.connect(g); g.connect(out);
+            o.start(tb); o.stop(tb + d + 0.05);
+        });
+        const lo = audioCtx.createOscillator();
+        const log = audioCtx.createGain();
+        lo.type = 'sine';
+        lo.frequency.value = 164.81; // E3
+        log.gain.setValueAtTime(0, tb);
+        log.gain.linearRampToValueAtTime(0.15 * sfxVolume, tb + 0.01);
+        log.gain.exponentialRampToValueAtTime(0.001, tb + 1.6);
+        lo.connect(log); log.connect(out);
+        lo.start(tb); lo.stop(tb + 1.65);
+    },
+
     lose: () => {
         sfx._init();
         // Cinematic Loss: Heavy sub-bass drop & crash
@@ -6315,11 +7011,11 @@ const tutScript = [
       } },
     {
     target: null,
-    text: "<b>Welcome to Deck of Deception.</b><br><br>An <b>online multiplayer bluffing game</b> where you play live, talk with <b>voice chat</b>, and never know who you can trust.<br><br>Play your cards, manage your coins, question the claims, and survive the deception.",
+    text: "<b>Welcome to Deck of Deception.</b><br><br>An <b>online multiplayer bluffing game</b> where you play live and never know who you can trust.<br><br><b>Your goal:</b> survive and finish with the most coins. Match the number on the table to play cards, earn coins, and outsmart everyone in the Deception showdown.",
     btn: "Enter the Game →"
 },
     { target: 'hand-wrap', action: 'rig_initial', text: "The table needs a <b>7</b>. You have one in your hand. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
-    { target: 'actionbar', text: "now you get <b>+1 Coin!</b> Now tap a number on the pad. That is the number the next player must match.", wait: 'called_number', arrow: 'top' },
+    { target: 'actionbar', text: "Nice! <b>+1 Coin!</b> Now tap a number on the pad. That is the number the next player must match.", wait: 'called_number', arrow: 'top', deferTurn: true },
     { target: 'ringCenter', text: "The card you played is on the left. The number you called is on the right.", btn: "Got it" },
     { target: 'seat-0', text: "This is you! Your <b>Coins (PC)</b> and your card count are shown here. If you have no matching card, you can buy one for 2 coins. <b>Running out of coins means big trouble!</b>", btn: "Next" },
     { target: 'deckpile', text: "This is the <b>Market Deck</b>. If you don't have a matching card, you must buy one from here.", btn: "Next" },
@@ -6330,11 +7026,10 @@ const tutScript = [
 
 { target: 'log', text: "This is the <b>match activity box</b>. It shows everything happening at the table, like players playing cards, calling numbers, buying from the market, and Deception events.", btn: "Next" },
 
-{ target: 'turnIndicator', text: "This is the <b>turn timer</b>. Every player normally gets <b>30 seconds</b> to finish their turn. If the timer hits 0, that player loses <b>2 coins</b> and their turn is skipped.<br><br><b>This timer is paused during the tutorial</b>, so take your time.", btn: "Next" },
+{ target: 'turnIndicator', text: "This is the <b>turn timer</b>. You get <b>30 seconds</b> per turn, or you lose <b>2 coins</b> and your turn is skipped. This timer is paused during the tutorial.", btn: "Next" },
 
-{ target: 'timerDisplay', text: "This is the <b>match timer</b>. A normal match lasts up to <b>20 minutes</b>. When time runs out, the match ends and the winner is decided by final scores.<br><br><b>This timer is also paused during the tutorial.</b>", btn: "Next" },
-
-{ target: 'chainBox', text: "This is your <b>score</b>. Your score is simply the <b>Pixel Coins (PC) you have left</b>. Playing cards can earn you coins. Buying cards or using abilities can cost coins. Manage your coins carefully!", btn: "Next" },
+{ target: 'timerDisplay', text: "This is the <b>match timer</b>. A normal match lasts up to <span style='color:var(--brass-bright); font-weight:800; font-size:1.2em;'>20 minutes</span>.<br><br>When the clock hits zero, the match ends and the winner is decided by final scores.<br><br><b>This timer is also paused during the tutorial.</b>", btn: "Next" },
+{ target: 'chainBox', text: "This is your <b>score</b>. Your score is simply the <b>Pixel Coins (PC) you have left</b>. Playing cards can earn you coins. Buying cards or using abilities can cost coins. Manage your coins carefully!<br><br>Now it's the <b>other players' turn</b>. Watch what they play!", btn: "Okay" },
 
 { hidden: true, action: 'rig_number_bots', wait: 'player_turn', unfreeze: true },
     
@@ -6344,12 +7039,12 @@ const tutScript = [
     { hidden: true, wait: 'player_turn' },
     
     { target: 'hand-wrap', action: 'rig_power', text: "<b>Power Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
-    { target: 'tableRing', text: "Now <b>tap any bot</b> at the table to drain their coins!", wait: 'played_power', highlightBots: true },
+    { target: 'tableRing', text: "Now <b>tap any player</b> at the table to drain their coins!", wait: 'played_power', highlightBots: true },
     { target: 'actionbar', text: "Power used! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
     
     { target: 'hand-wrap', action: 'rig_steal', text: "<b>Steal Card!</b> It's free and matches any number. Tap it to play!", wait: 'opened_targeting', arrow: 'bottom' },
-    { target: 'tableRing', text: "Now <b>tap any bot</b> to steal their coins straight into your own pocket!", wait: 'played_steal', highlightBots: true },
+    { target: 'tableRing', text: "Now <b>tap any player</b> to steal their coins straight into your own pocket!", wait: 'played_steal', highlightBots: true },
     { target: 'actionbar', text: "Coins stolen! Now call your next number.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'player_turn' },
 
@@ -6367,10 +7062,10 @@ const tutScript = [
     { hidden: true, wait: 'player_turn' },
 
     // Deception Pre-amble (Demonstrating Broke bots)
-    { target: null, text: "<b>Deception Showdown!</b> When a player has 0 coins and no matching card, their turn is skipped. If they are still stuck on their <i>next</i> turn too, Deception begins!", btn: "Next" },
-    { target: null, action: 'rig_bots_0_coins', text: "I'm going to set every bot's coins to 0. Watch their turns get skipped!<br><br>Then <b>play a card</b>. If you don't have a match, buy one from the market.", btn: "Let's Go!" },
+    { target: null, text: "<b>Deception Showdown!</b> Broke players are in the danger zone. If a player has <b>0 coins</b> and no matching card, their turn is skipped. Still stuck next turn? <b>Deception begins</b>: players with coins set a trap, and broke players must guess it.", btn: "Next" },
+    { target: null, action: 'rig_bots_0_coins', text: "I'm going to set every player's coins to 0. Watch their turns get skipped!<br><br>Then <b>play a card</b>. If you don't have a match, buy one from the market.", btn: "Let's Go!" },
     { hidden: true, wait: 'player_turn', unfreeze: true }, // Bots skip turn 1.
-    { target: 'hand-wrap', action: 'rig_dynamic_match', text: "The bots skipped their turns. I gave you a matching card. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
+    { target: 'hand-wrap', action: 'rig_dynamic_match', text: "The other players skipped their turns. I gave you a matching card. Tap it to play!", wait: 'played_card', arrow: 'bottom' },
     { target: 'actionbar', text: "Now tap a number. That is what the next player must match.", wait: 'called_number', arrow: 'top' },
     { hidden: true, wait: 'deception_rich_start', unfreeze: true }, // Bots try to play -> Deception naturally triggers!
     
@@ -6378,7 +7073,7 @@ const tutScript = [
     { target: null, text: "Deception triggered! <b>You have coins, so you set the trap.</b>", btn: "Start →" },
     { target: 'deceptionContent', action: 'unlock_voting', text: "Welcome to the <b>Rich Player View</b>. <b>Pick a secret Real Number</b> from 1 to 9. Only players with coins get to know this number. Broke players must guess it. A wrong guess means <b>elimination!</b>", wait: 'voted_real' },
     { target: 'deceptionContent', action: 'advance_to_claim', text: "Real number locked in! Now pick the <b>Claim</b>, the number you tell the broke players. You can be honest or bluff, it's your choice!", wait: 'voted_claim' },
-    { target: 'deceptionContent', action: 'setup_bots_mock', text: "Bots are guessing. <b>2 believe your claim</b> and gain +15 coins each. <b>1 calls your bluff</b>, guesses wrong, and gets <b>ELIMINATED!</b>", btn: "Watch →" },
+    { target: 'deceptionContent', action: 'setup_bots_mock', get text() { return (window.tutDecRealVote && window.tutDecClaimVote && window.tutDecRealVote !== window.tutDecClaimVote) ? "The other players are guessing. <b>1 believes your bluff</b>, guesses wrong, and gets <b>ELIMINATED!</b> <b>2 see through it</b> and gain +15 coins each." : "The other players are guessing. <b>2 believe your claim</b> and gain +15 coins each. <b>1 doubts you</b>, but you told the truth, so they guess wrong and get <b>ELIMINATED!</b>"; }, btn: "Watch →" },
     { hidden: true, action: 'release_bots_mock', wait: 'broke_demo_player_turn' },
 
     // After the rich-side Deception and elimination cinematic,
@@ -6393,7 +7088,7 @@ const tutScript = [
     // This is now the REAL broke-player Deception UI.
     { target: 'deceptionContent', action: 'unlock_broke', text: "<b>Who do you believe?</b><br><br>Rich players may make different claims. Each button shows <b>who made the claim</b> and <b>what number they claimed</b>.<br><br>You can also pick <b>I don't believe any of them</b>.", wait: 'clicked_believe', arrow: 'top' },
 
-    { target: null, action: 'force_wrong_elimination', text: "<b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk and high reward. Guess right and you gain +15 coins. Guess wrong and you're eliminated instantly.<br><br>If the match reaches the <b>20 minute limit</b>, the winner is the player with <b>more coins and fewer cards</b>.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
+    { target: null, action: 'force_wrong_elimination', text: "<b>WRONG GUESS!</b> You have been eliminated!<br><br>Deception is high risk and high reward. Guess right and you gain +15 coins. Guess wrong and you're eliminated instantly.<br><br>If the match reaches the <b>20 minute limit</b>, the winner is the player with <b>more coins and fewer cards</b>.<br><br>Don't worry, this was just practice. Real matches are yours to win.<br><br><b>Tutorial Complete!</b>", btn: "Leave to Main Menu ↗" },
     { target: null, action: 'tutorial_end_leave_game', text: "", btn: "" }
 ];
 
@@ -6433,7 +7128,13 @@ function applyTutStep() {
     const decModal = document.getElementById('deceptionModal');
 
     if (typeof renderActionBar === 'function') renderActionBar();
-    if (step.unfreeze) window.networkSyncPaused = false;
+    if (step.unfreeze) {
+        window.networkSyncPaused = false;
+        if (window.dodTutDeferTurn) {
+            window.dodTutDeferTurn = false;
+            setTimeout(() => advanceTurn(), 300);
+        }
+    }
 
     // ── HIDDEN STEPS: hide ALL tutorial UI — game must be fully visible ────────
     if (step.hidden) {
@@ -6636,7 +7337,13 @@ if (step.wait === 'broke_demo_deception') {
         // Only after it completely disappears do we show
         // the "Tutorial Complete!" dialogue.
         showEliminationCinematic(
-            [{ name: "You", guess: "Wrong" }],
+            (function () {
+                const c = window.tutBrokeChoice || { believe: false };
+                if (state.deception && c.guess !== undefined && c.guess === state.deception.realNumber) {
+                    state.deception.realNumber = (state.deception.realNumber % 9) + 1;
+                }
+                return [Object.assign({ name: "You", guess: "Wrong" }, c)];
+            })(),
             state.deception ? state.deception.realNumber : 4,
             false,
             () => {
@@ -6692,12 +7399,13 @@ if (step.wait === 'broke_demo_deception') {
         if (state.deception) {
             const cNum = window.tutDecClaimVote || window.tutDecRealVote || 5;
             state.deception.claimNumber = cNum;
-            state.deception.realNumber  = cNum;
+            state.deception.realNumber  = window.tutDecRealVote || cNum;
+            const _tutBluff = state.deception.realNumber !== cNum;
             state.deception.phase       = 'ANSWER';
             state.deception.responses   = {};
             const bUids = state.deception.brokeUids.slice();
             bUids.forEach((uid, i) => {
-                if (i < bUids.length - 1) {
+                if ((i < bUids.length - 1) !== _tutBluff) {
                     state.deception.responses[uid] = { believe:true, guess:null };
                 } else {
                     state.deception.responses[uid] = {
@@ -8549,6 +9257,21 @@ function dodMergePrivate(rawDoc, myUid) {
 
 function listenToGameState() {
     if (currentMatchId) localStorage.setItem('dod_active_match', currentMatchId);
+    // Wipe leftovers from the previous match so they can't swallow or freeze this one
+    window.dodJustPlayedLocally = false;
+    window._dodGuardSince = 0;
+    clearTimeout(window._dodGuardRetry);
+    window.dodTurnLocked = false;
+    window.dodCenterIsLocked = false;
+    window.dodCalloutPending = false;
+    window.pendingTurnArc = null;
+    window.pendingHostTurnLogic = null;
+    window.animatingRemoteCoins = null;
+    window.dodPendingRawDoc = null;
+    window.dodForcePrivProcess = false;
+    window.dodNudgedAt = 0;
+    localLastTurnUid = null;
+    localLastActionId = null;
     const db = firebase.firestore();
     const myUid = DoDAuth.getProfile().uid;
 
@@ -8658,7 +9381,7 @@ function listenToGameState() {
         // tappable before the server actually confirmed the play — letting a second tap
         // submit the same card again. Hold our local uiState until playNetworkedAnimation
         // sees our own confirmed action come back and clears this flag.
-        if (window.dodJustPlayedLocally && typeof state !== 'undefined' && state && serverState.turnUid === myUid) {
+        if (window.dodJustPlayedLocally && initialDealDone && typeof state !== 'undefined' && state && serverState.turnUid === myUid) {
             mappedUiState = state.uiState;
         }
 
@@ -11385,6 +12108,10 @@ function decBotAnswer(dec){
   return { believe: Math.random() < 0.5, guess: null };
 }
 async function submitDeceptionTrust(i){
+  if (window.isInteractiveTutorial && state.deception && decClaimGroups(state.deception)[i]) {
+      const _g = decClaimGroups(state.deception)[i];
+      window.tutBrokeChoice = { trusted: _g.uids, guess: _g.num };
+  }
   if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'clicked_believe') {
       setTimeout(tutNext, 400);
       return;
@@ -11475,6 +12202,7 @@ async function submitDeceptionCounter(n){
 async function submitDeceptionBelieve(believe){
   // --- TUTORIAL Note: Intercept the click during the tutorial! ---
   if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'clicked_believe') {
+      window.tutBrokeChoice = { believe: false };
       setTimeout(tutNext, 400); // Advance regardless of what they click to trigger the final phase
       return; // Stop the real game logic from firing
   }
@@ -12214,6 +12942,9 @@ async function confirmGuess(v) {
     window.dodCalloutFailsafe = setTimeout(() => { window.dodCalloutPending = false; }, 2500);
 
     // --- TUTORIAL TRIGGER ---
+    if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].deferTurn) {
+        window.dodTutDeferTurn = true;
+    }
     if (window.isInteractiveTutorial && tutScript[tutStep] && tutScript[tutStep].wait === 'called_number') {
         setTimeout(tutNext, 600);
     }
@@ -12599,6 +13330,7 @@ function executeStandardNetworkAnimation(action, actorSeatIndex, actorColor) {
 // ---------------- TURN FLOW & BANKRUPT RULE ----------------
 // Restored for Offline/Bot Training mode
 async function advanceTurn() {
+    if (window.dodTutDeferTurn && window.isInteractiveTutorial) return;
 
     // ── TUTORIAL: NEVER let the game continue while a tutorial
     // dialogue is waiting for the player to click its button.
@@ -12890,7 +13622,7 @@ if (
     }
 
     // Trigger the next bot's turn
-    if(!cur.isHuman) setTimeout(syncRemoteTurn, 1400);
+    if(!cur.isHuman) setTimeout(syncRemoteTurn, !currentMatchId ? 700 : 1400);
 }
 
 // ---------------- BOT AI ----------------
@@ -12911,7 +13643,7 @@ function syncRemoteTurn(){
   // Standard human hesitation: 1s to 3.5s
   const baseDelay = Math.floor(Math.random() * 2500) + 1000;
   // 25% chance the bot "snap plays" instantly (300ms - 700ms) for high tension!
-  const thinkDelay = Math.random() < 0.25 ? Math.floor(Math.random() * 400) + 300 : baseDelay;
+  const thinkDelay = !currentMatchId ? (500 + Math.floor(Math.random() * 400)) : (Math.random() < 0.25 ? Math.floor(Math.random() * 400) + 300 : baseDelay);
 
   setTimeout(async ()=>{
     // Re-verify it is STILL the bot's turn after the thinking delay!
@@ -13023,7 +13755,7 @@ function syncRemoteTurn(){
             renderAll(); 
             flyCard(getSeatOrPanelRect(bot.id), centerRect(), card.value, PLAYER_COLORS[bot.id], 15, card.value);
         }
-        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 650); return;
       }
       
       // BOTS NEVER PLAY SPECIAL OR WILD CARDS IN TUTORIAL
@@ -13052,7 +13784,7 @@ function syncRemoteTurn(){
                   renderAll();
                   flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'STL', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
               }
-              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 650); return;
           }
       }
       
@@ -13078,7 +13810,7 @@ function syncRemoteTurn(){
                   renderAll();
                   flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'PWR', '#b23c3c', 20, card.value, null, getSeatOrPanelRect(target.id));
               }
-              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+              setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 650); return;
           }
       }
       
@@ -13096,7 +13828,7 @@ function syncRemoteTurn(){
               renderAll();
               flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'REV', '#d16b24', 20, card.value);
           }
-          setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+          setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 650); return;
       }
       
       playIdx = actCheck('wild');
@@ -13114,7 +13846,7 @@ function syncRemoteTurn(){
             renderAll();
             flyCard(getSeatOrPanelRect(bot.id), centerRect(), 'W', PLAYER_COLORS[bot.id], 18, card.value);
         }
-        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 1200); return;
+        setTimeout(()=>botDeclare(bot), currentMatchId ? 50 : 650); return;
       }
       
       if(state.deck.length===0){ if(!currentMatchId) log(`${bot.name} has no match and the market is empty — turn passes.`); advanceTurn(); return; }
@@ -13178,7 +13910,7 @@ async function resolveRemoteDraw(buyer){
         flyCard(bankRect(), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value);
     }
     sweepEliminations();
-    setTimeout(()=>botDeclare(buyer), currentMatchId ? 50 : 600);
+    setTimeout(()=>botDeclare(buyer), currentMatchId ? 50 : 500);
   } else {
         buyer.hand.push(card);
         const msg = `${buyer.name} draws a dud (${card.value}) — turn skips.`;
@@ -13287,7 +14019,7 @@ if (!card) break;
           if (!currentMatchId) {
               log(`Try ${tries}: drew a card.`, '', buyer.uid, true);
               flyCard(bankRect(), getSeatOrPanelRect(buyer.id), '?', PLAYER_COLORS[buyer.id], 5, '', buyer.deckSkin);
-              await new Promise(res => setTimeout(res, Math.floor(Math.random() * 800) + 1200));
+              await new Promise(res => setTimeout(res, 550));
               if (!state || state.over) return;
           }
           if (card.type === 'wild') buyer.shop -= 2;
@@ -13346,7 +14078,7 @@ if (!card) break;
           flyCard(getSeatOrPanelRect(buyer.id), centerRect(), label, PLAYER_COLORS[buyer.id], 15, card.value, null, actionTargetRect);
       }
       
-      setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : 1200);
+      setTimeout(() => botDeclare(buyer), currentMatchId ? 50 : 650);
       return; // END LOOP!
     } else {
       // --- DUD DRAWN ---
@@ -13367,7 +14099,7 @@ if (!card) break;
       
       // 2. FORCE THE PAUSE: The bot literally waits ~1.5 seconds staring at its hand before drawing again!
       if (i < maxPulls - 1 && buyer.shop >= BUY_COST && state.deck.length > 0) {
-          const pullDelay = Math.floor(Math.random() * 800) + 1200;
+          const pullDelay = 600;
           await new Promise(res => setTimeout(res, pullDelay)); 
       }
     }
@@ -13408,7 +14140,7 @@ if (!card) break;
 
 async function botDeclare(bot) {
     // Human-like thinking time before calling a number (offline bots; online bots are timed in the animation)
-    if (!currentMatchId) await new Promise(res => setTimeout(res, Math.floor(Math.random() * 1800)));
+    if (!currentMatchId) await new Promise(res => setTimeout(res, 300 + Math.floor(Math.random() * 600)));
     if(!state || state.over) return;
 
     let chosen;
@@ -14161,9 +14893,12 @@ function returnToMenuFromEndgame() {
             // right after the game tutorial + Season intro cinematic
             // finish and the hub is actually on screen.
             const _mtProfile = window.DoDAuth ? DoDAuth.getProfile() : null;
+            /* MENU TUTORIAL DISABLED
             if (!localStorage.getItem('dod_seen_menu_tutorial') && !(_mtProfile && _mtProfile.seenMenuTutorial) && !currentPartyId) {
                 setTimeout(startMenuTutorial, 600);
             }
+            */
+            try { localStorage.setItem('dod_seen_menu_tutorial', '1'); } catch(e) {}
         };
 
         // Trap them with the Season 1 cinematic if they haven't seen it yet!
@@ -16377,7 +17112,73 @@ function renderEventsHub(profile) {
     }
 }
 
+function ddPaperReveal() {
+    try {
+        // confetti() fires 3x per reveal, so only spawn once
+        if (Date.now() - (window._ddLastScrap || 0) < 1500) return;
+        window._ddLastScrap = Date.now();
+        const dd = document.getElementById('dailyDrawModalOverlay');
+        const rc = document.getElementById('rewardCardModalOverlay');
+        const ov = (rc && rc.classList.contains('show')) ? rc : dd;
+        const host = ov && ov.firstElementChild;
+        if (!host) return;
+        let cols = ['#f4ecd6', '#e6d6a8', '#d9c48a', '#c9553f', '#fbf6e6'];
+        if (ov === rc && typeof currentRewardTier !== 'undefined') {
+            if (currentRewardTier === 'mythic') cols = ['#f4ecd6', '#d6c3f2', '#b38be0', '#8b5cf6', '#fbf6e6'];
+            else if (currentRewardTier === 'legendary') cols = ['#fff3c4', '#f3d77a', '#e0b13c', '#f4ecd6', '#c9553f'];
+        }
+        const layer = document.createElement('section');
+        layer.className = 'dd-scrap-layer';
+        const _pc = ov.querySelector('.dd-particles'); if (_pc) _pc.style.display = 'none'; // stop the embers while scraps fall
+        const n = document.body.classList.contains('low-power-mode') ? 8 : 16;
+        for (let i = 0; i < n; i++) {
+            const s = document.createElement('i');
+            s.className = 'dd-scrap';
+            const w = 6 + Math.random() * 10;
+            s.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + w + 'px;height:' + (w * (0.6 + Math.random() * 0.8)) + 'px;background:' + cols[i % cols.length] +
+                ';animation-duration:' + (2.2 + Math.random() * 2) + 's;animation-delay:' + (Math.random() * 0.5) + 's;--sway:' + ((Math.random() * 160 - 80) | 0) + 'px;--rot:' + ((Math.random() * 720 - 360) | 0) +
+                'deg;clip-path:polygon(0 10%,40% 0,100% 20%,90% 100%,10% 85%);';
+            layer.appendChild(s);
+        }
+        host.appendChild(layer);
+        setTimeout(() => layer.remove(), 4800);
+    } catch (e) {}
+}
+
+function _ddPaperRevealOld() {
+    try {
+        const ov = document.getElementById('dailyDrawModalOverlay');
+        const host = ov && ov.firstElementChild;
+        if (!host) return;
+        const layer = document.createElement('div');
+        layer.className = 'dd-scrap-layer';
+        const cols = ['#f4ecd6', '#e6d6a8', '#d9c48a', '#c9553f', '#fbf6e6'];
+        const n = document.body.classList.contains('low-power-mode') ? 12 : 34;
+        for (let i = 0; i < n; i++) {
+            const s = document.createElement('i');
+            s.className = 'dd-scrap';
+            const w = 6 + Math.random() * 10;
+            s.style.cssText = 'left:' + (Math.random() * 100) + '%;width:' + w + 'px;height:' + (w * (0.6 + Math.random() * 0.8)) + 'px;background:' + cols[i % cols.length] +
+                ';animation-duration:' + (2.2 + Math.random() * 2) + 's;animation-delay:' + (Math.random() * 0.5) + 's;--sway:' + ((Math.random() * 160 - 80) | 0) + 'px;--rot:' + ((Math.random() * 720 - 360) | 0) +
+                'deg;clip-path:polygon(0 10%,40% 0,100% 20%,90% 100%,10% 85%);';
+            layer.appendChild(s);
+        }
+        host.appendChild(layer);
+        setTimeout(() => layer.remove(), 4800);
+    } catch (e) {}
+}
+
 function openDailyDraw() {
+    // While the Dealer's Draw is open, swap the golden flash for paper scraps
+    if (!window._ddVfxPatched && typeof window.triggerNotificationVfx === 'function') {
+        const _origVfx = window.triggerNotificationVfx;
+        window.triggerNotificationVfx = function (type) {
+            const ov = document.getElementById('dailyDrawModalOverlay');
+            if (type === 'gold' && ov && ov.classList.contains('show')) { ddPaperReveal(); return; }
+            return _origVfx.apply(this, arguments);
+        };
+        window._ddVfxPatched = true;
+    }
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile) return;
     try { sfx.uiClick(); } catch(e){}
@@ -16386,7 +17187,8 @@ function openDailyDraw() {
     const pContainer = document.getElementById('ddParticles');
     if (pContainer) {
         pContainer.innerHTML = '';
-        for(let i=0; i<30; i++) {
+        pContainer.style.display = '';
+        for(let i=0; i<12; i++) {
             let ember = document.createElement('div');
             ember.className = 'dd-ember';
             ember.style.left = Math.random() * 100 + '%';
@@ -16521,7 +17323,7 @@ async function executeDailyDraw(selectedIndex) {
         
         // Wait a beat for suspense, then flip the card!
         setTimeout(() => {
-            try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
+            try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.reveal(); } catch(e){}
                             if (rollData.rewardType !== 'none') {
                     triggerNotificationVfx('gold');
                 }
@@ -16535,7 +17337,7 @@ async function executeDailyDraw(selectedIndex) {
             // Refresh Hub UI
             const hubCur = document.getElementById('hubCurrency');
             if (hubCur) hubCur.textContent = profile.currency || 0;
-            renderEventsHub(profile);
+            setTimeout(() => renderEventsHub(profile), 1800);
 
             // Pop up the Unlock Notification if an item was unlocked
             if (res.unlockedItemId) {
@@ -16641,7 +17443,7 @@ async function executeDailyDraw(selectedIndex) {
             selectedBack.innerHTML = `<div class="dd-reward-icon">${rollData.icon}</div><div class="dd-reward-text">${rollData.msg}</div>`;
             
             setTimeout(() => {
-                try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.win(); } catch(e){}
+                try { if (rollData.rewardType === 'none') sfx.uiBack(); else sfx.reveal(); } catch(e){}
                 if (rollData.rewardType !== 'none') triggerNotificationVfx('gold');
                 
                 selectedCard.classList.add('flipped');
@@ -16651,14 +17453,30 @@ async function executeDailyDraw(selectedIndex) {
                 
                 const hubCur = document.getElementById('hubCurrency');
                 if (hubCur) hubCur.textContent = profile.currency || 0;
-                renderEventsHub(profile);
+                setTimeout(() => renderEventsHub(profile), 1800);
             }, 600);
         }
 }
 
 let currentRewardTier = '';
 
+function ddInstallPaperFx() {
+    // While the reward card modal is open, canvas-confetti is replaced by paper scraps
+    if (!window._ddConfettiPatched && typeof window.confetti === 'function') {
+        const _origConfetti = window.confetti;
+        const wrapped = function () {
+            const ov = document.getElementById('rewardCardModalOverlay');
+            if (ov && ov.classList.contains('show')) { ddPaperReveal(); return Promise.resolve(); }
+            return _origConfetti.apply(this, arguments);
+        };
+        Object.keys(_origConfetti).forEach(k => { wrapped[k] = _origConfetti[k]; });
+        window.confetti = wrapped;
+        window._ddConfettiPatched = true;
+    }
+}
+
 function openRewardCard(tier) {
+    ddInstallPaperFx();
     const profile = window.DoDAuth ? DoDAuth.getProfile() : null;
     if (!profile || !profile.chests || profile.chests[tier] <= 0) return;
     
@@ -16685,17 +17503,17 @@ function openRewardCard(tier) {
     front.className = 'dd-face dd-front'; // reset
     if (tier === 'legendary') {
         title.textContent = "Legendary Card";
-        title.style.color = "#f5dd8a";
+        title.style.color = "#8a5500";
         front.classList.add('rc-front-legendary');
         back.style.borderColor = "#f5dd8a";
     } else if (tier === 'mythic') {
         title.textContent = "Mythic Card";
-        title.style.color = "#d094ff";
+        title.style.color = "#5b2a9e";
         front.classList.add('rc-front-mythic');
         back.style.borderColor = "#d094ff";
     } else {
         title.textContent = "Basic Card";
-        title.style.color = "#e4d8bd";
+        title.style.color = "#2a1608";
         front.classList.add('rc-front-basic');
         back.style.borderColor = "#e4d8bd";
     }
@@ -16707,7 +17525,8 @@ function openRewardCard(tier) {
     const pContainer = document.getElementById('rcParticles');
     if (pContainer) {
         pContainer.innerHTML = '';
-        for(let i=0; i<30; i++) {
+        pContainer.style.display = '';
+        for(let i=0; i<12; i++) {
             let ember = document.createElement('div');
             ember.className = 'dd-ember';
             ember.style.left = Math.random() * 100 + '%';
@@ -16763,7 +17582,7 @@ async function executeRewardCardOpen() {
 
         // Flip the card and play the success effects!
         setTimeout(() => {
-            try { sfx.win(); } catch(e){}
+            try { sfx.reveal(); } catch(e){}
 
             // Tier-aware two-sided confetti pop (replaces the heavy circle flash)
             if (typeof confetti !== 'undefined') {
@@ -16785,8 +17604,10 @@ async function executeRewardCardOpen() {
 
             const hubCur = document.getElementById('hubCurrency');
             if (hubCur) hubCur.textContent = profile.currency || 0;
-            renderEventsHub(profile);
-            if (typeof renderShopItems === 'function') renderShopItems();
+            setTimeout(() => {
+                renderEventsHub(profile);
+                if (typeof renderShopItems === 'function') renderShopItems();
+            }, 1800);
 
             // Pop up the Unlock Notification if an item was unlocked
             if (res.unlockedItemId) {
