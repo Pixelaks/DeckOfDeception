@@ -690,7 +690,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .game-right { width: 360px; flex-shrink: 0; }
   
   /* RESTORE BIG TABLE: Back to beautiful 76vh, gracefully contained! */
-  .tablering { width: min(100%, 76vh); aspect-ratio: 1/1; height: auto; margin: auto; flex-shrink: 0; }
+  .tablering { width: 100%; max-width: calc(76vh * 1.45); height: 76vh; aspect-ratio: auto; margin: auto; flex-shrink: 0; }
   .log { flex: 1; min-height: 120px; max-height: 200px; }
   
   /* DYNAMIC PANEL: Scaled back up to 0.85 for readability since we restored the space */
@@ -701,7 +701,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   .ap-cards { margin-top: 6px; margin-left: 12px; }
 }
 @media(max-width: 839px) {
-  .tablering { width: 100%; max-width: 340px; aspect-ratio: 1/1; height: auto; max-height: 32vh; margin: 0 auto; }
+  .tablering { width: 100%; max-width: 460px; aspect-ratio: auto; height: 32vh; margin: 0 auto; }
   .center-row { flex-direction: row; max-height: 85px; }
   .deckpile { width: 90px !important; overflow: visible; }
   /* Moderate scale adjustments since base size is safe again */
@@ -712,7 +712,7 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 
 .tablering{position:relative;}
 .tablefelt{
-  position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:50%;
+  position:absolute;inset:0;margin:auto;width:100%;height:100%;border-radius:clamp(18px,5vh,40px);
   /* Layers the gameplay spotlight over your texture */
   background: radial-gradient(ellipse at 50% 36%, rgba(0,0,0,0) 0%, rgba(0,0,0,0.3) 55%, rgba(0,0,0,0.7) 100%), var(--my-table);
   background-size: cover;
@@ -890,7 +890,7 @@ img[src^="Coins/"] { image-rendering: high-quality; }
 /* Scrolls internally if there are too many cards */
 .hand{flex:1 1 auto;overflow-y:auto;display:flex;gap:6px;flex-wrap:wrap;align-content:flex-start;min-height:65px;padding-right:4px;min-height:0;}
 /* --- NEW AI CARD BACKGROUNDS --- */
-.card{width:46px;height:66px;border-radius:5px;cursor:pointer;user-select:none;transition:transform .12s;
+.card{--cw:56px;width:var(--cw);height:calc(var(--cw) * 1.435);border-radius:5px;cursor:pointer;user-select:none;transition:transform .12s;
   display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0; position:relative; overflow:hidden;
   background-size: 100% 100%; background-repeat: no-repeat; background-position: center; 
   image-rendering: high-quality; border: 1px solid rgba(0,0,0,0.5);
@@ -2584,10 +2584,10 @@ html.dod-phone-portrait #loginChoiceOverlay, html.dod-phone-portrait #nameSetupO
 
   /* PERFECT CIRCLE Note: Use hard viewport limits & flex-shrink to bypass Safari aspect-ratio bugs */
   .tablering { 
-    width: calc(var(--vh, 1vh) * 76) !important; 
+    max-width: calc(var(--vh, 1vh) * 76 * 1.45) !important; /* wide rectangle cap */ 
     height: calc(var(--vh, 1vh) * 76) !important; 
     max-width: 54vw !important; /* Slightly pulled back to prevent bottom clipping */
-    max-height: 54vw !important; /* Keep it perfectly square based on width limit */
+    max-height: none !important;
     flex-shrink: 0 !important; /* FORBIDS Safari from squishing it into an oval */
     margin: 10px auto auto auto !important; /* Pushes the table higher, leaving space at the bottom */
   }
@@ -2636,7 +2636,7 @@ html.dod-phone-portrait #loginChoiceOverlay, html.dod-phone-portrait #nameSetupO
 
   /* Scale center cards so they are readable on mobile, and fix badge positioning */
   .ringcenter { gap: 12px !important; }
-  .minicard { width: 44px !important; height: 62px !important; font-size: 20px !important; border-width: 2px !important; }
+  .minicard { width: clamp(44px, 12vh, 60px) !important; height: calc(clamp(44px, 12vh, 60px) * 1.41) !important; font-size: clamp(20px, 5vh, 27px) !important; border-width: 2px !important; }
   .minicard .act-val { font-size: 9px !important; top: 2px !important; left: 3px !important; }
   .minicard .act-val-right { font-size: 9px !important; bottom: 2px !important; right: 3px !important; }
   .minicard .tier-badge { top: 12px !important; left: 3px !important; font-size: 7.5px !important; padding: 0 2px !important; }
@@ -2736,7 +2736,7 @@ html.dod-phone-portrait #loginChoiceOverlay, html.dod-phone-portrait #nameSetupO
   }
   
   /* 4. Restore Card Sizes (Bigger and readable) */
-  .card { width: 42px; height: 60px; border-radius: 4px; }
+  .card { --cw: clamp(42px, 11vh, 54px); width: var(--cw); height: calc(var(--cw) * 1.43); border-radius: 4px; }
   .card .val, .minicard .val, .ghost-card .val { font-size: 20px; }
   .card .act-val, .minicard .act-val, .ghost-card .act-val { top: 3px; left: 4px; font-size: 10px; }
   .card .act-val-right, .minicard .act-val-right, .ghost-card .act-val-right { bottom: 3px; right: 4px; font-size: 10px; }
@@ -3738,6 +3738,108 @@ setTimeout(function() {
 </style>
 <script>document.documentElement.classList.add('dod-mf');</script>
 <style>
+/* Card number scales with card size */
+.card .val { font-size: calc(var(--cw, 46px) * 0.48); }
+
+/* Table uses the full width, sits at the top, and is only as tall as the space above the active-player box */
+@media (min-width: 840px), (orientation: landscape) {
+  .game-left { align-items: flex-start !important; }
+  .tablering {
+    height: min(var(--ring-h, 9999px), calc(var(--vh, 1vh) * 76)) !important;
+    max-width: calc(var(--vh, 1vh) * 76 * 1.8) !important;
+    margin: 6px auto 0 !important;
+  }
+}
+@media (max-height: 720px), (max-width: 980px) and (orientation: landscape) {
+  .game-left { padding-left: 14px !important; padding-right: 14px !important; }
+}
+@media (min-width: 840px), (orientation: landscape) {
+  .game-left { padding-left: max(40px, var(--ap-reserve, 0px)) !important; }
+}
+
+/* Chain box: PLAYED chip → NEED number + coin score (from the playgamma version) */
+.chainbox .txt{display:flex;align-items:center;flex-wrap:nowrap;min-width:0}
+.chainbox .need-lbl{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:2px;color:rgba(242,234,216,.6)}
+.chainbox .need-num{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:34px;margin-left:10px;border-radius:8px;font-family:'Cinzel Decorative',serif;font-size:22px;line-height:1;color:#1a1208;background:linear-gradient(180deg,var(--brass-bright),var(--brass));box-shadow:0 0 12px rgba(201,162,39,.45)}
+#chainBox .score{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:13px !important;color:var(--brass-bright)}
+.sc-coin{display:inline-block;width:11px;height:11px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffe9a0,var(--brass) 70%);box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+.chainbox .pl-wrap{display:inline-flex;align-items:center;gap:6px}
+.chainbox .pl-chip{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;padding:0 6px;border-radius:6px;border:1.5px solid var(--paper-dark);background:rgba(255,255,255,.07);color:var(--paper);font-family:'Cinzel Decorative',serif;font-size:14px;line-height:1;white-space:nowrap}
+.chainbox .pl-arrow{margin:0 8px;color:rgba(242,234,216,.55);font-size:14px}
+@media (max-height:720px), (max-width:980px) and (orientation:landscape){
+  .chainbox .need-num{min-width:26px;height:26px;margin-left:8px;font-size:17px}
+  .chainbox .need-lbl{font-size:9px}
+  .chainbox .pl-chip{min-width:20px;height:20px;font-size:11px}
+  .chainbox .pl-arrow{margin:0 5px}
+}
+
+/* Room above the hand cards and market deck so the hover/tap lift isn't cropped (from the playgamma version) */
+.hand{padding-top:8px !important;margin-top:-8px !important}
+.deckpile{contain:layout style !important;overflow:visible !important}
+@media (max-height:720px), (max-width:980px) and (orientation:landscape){
+  .game-right{padding-top:18px !important;margin-top:-18px !important}
+}
+
+/* Top bar: title scales with the screen (22px on big screens), turn text scales a little too */
+.topbar .title { font-size: clamp(11px, min(1.6vw, 3.4vh), 22px); letter-spacing: .5px; }
+#turnIndicator { font-size: clamp(9.5px, 1.2vw, 12px) !important; line-height: 1.2; }
+
+/* ===== Winner list: compact in steps (set by JS) so every player fits without scrolling ===== */
+.finale.fin-c1 .finale-header { margin-bottom: 8px; }
+.finale.fin-c1 .finale-status { font-size: clamp(24px, 5.5vh, 40px) !important; letter-spacing: 3px; }
+.finale.fin-c1 .finale-list { gap: 6px; padding-bottom: 4px; }
+.finale.fin-c1 .finale-row { padding: 8px 14px !important; }
+.finale.fin-c1 .finale-rank { font-size: 18px !important; width: 36px !important; }
+.finale.fin-c1 .finale-name { font-size: 14px !important; }
+.finale.fin-c1 .finale-score { font-size: 16px !important; }
+.finale.fin-c1 .finale-list ~ div { margin-top: 10px !important; }
+
+.finale.fin-c2 .finale-header { margin-bottom: 5px; }
+.finale.fin-c2 .finale-header > div { margin-top: 2px !important; font-size: 11px !important; }
+.finale.fin-c2 .finale-status { font-size: clamp(22px, 4.6vh, 34px) !important; letter-spacing: 2px; }
+.finale.fin-c2 .finale-list { gap: 4px; padding-bottom: 2px; }
+.finale.fin-c2 .finale-row { padding: 5px 12px !important; }
+.finale.fin-c2 .finale-rank { font-size: 15px !important; width: 30px !important; }
+.finale.fin-c2 .finale-name { font-size: 13px !important; }
+.finale.fin-c2 .finale-name span:nth-child(2) { font-size: 9.5px !important; margin-top: 0 !important; }
+.finale.fin-c2 .finale-stats { font-size: 10px !important; }
+.finale.fin-c2 .finale-stats span { font-size: 9.5px !important; }
+.finale.fin-c2 .finale-score { font-size: 14px !important; width: 34px !important; }
+.finale.fin-c2 .finale-list ~ div { margin-top: 6px !important; }
+.finale.fin-c2 .btn { padding: 9px 30px !important; font-size: 14px !important; }
+
+.finale.fin-c3 .finale-header { margin-bottom: 3px; }
+.finale.fin-c3 .finale-header > div { margin-top: 1px !important; font-size: 10px !important; }
+.finale.fin-c3 .finale-status { font-size: clamp(20px, 3.8vh, 28px) !important; letter-spacing: 2px; }
+.finale.fin-c3 .finale-list { gap: 3px; padding-bottom: 0; }
+.finale.fin-c3 .finale-row { padding: 3px 10px !important; }
+.finale.fin-c3 .finale-rank { font-size: 13px !important; width: 26px !important; }
+.finale.fin-c3 .finale-name { font-size: 12px !important; }
+.finale.fin-c3 .finale-name span:nth-child(2) { font-size: 9px !important; margin-top: 0 !important; }
+.finale.fin-c3 .finale-stats { font-size: 9px !important; }
+.finale.fin-c3 .finale-stats span { font-size: 9px !important; }
+.finale.fin-c3 .finale-score { font-size: 13px !important; width: 30px !important; }
+.finale.fin-c3 .finale-list ~ div { margin-top: 4px !important; }
+.finale.fin-c3 .btn { padding: 7px 26px !important; font-size: 13px !important; }
+
+/* ===== Elimination screen: no inner scrollbar, compact in steps instead ===== */
+#elimDetails { max-height: none !important; overflow: visible !important; }
+#eliminationOverlay.elim-c1 > img { height: clamp(40px, 9vh, 64px) !important; margin-bottom: 8px !important; }
+#eliminationOverlay.elim-c1 #elimTitle { font-size: clamp(22px, 4.5vw, 40px) !important; margin-bottom: 8px !important; letter-spacing: 3px !important; }
+#eliminationOverlay.elim-c1 #elimDetails { font-size: 13px !important; line-height: 1.45 !important; }
+#eliminationOverlay.elim-c1 #elimDetails b { font-size: 15px !important; }
+#eliminationOverlay.elim-c1 #elimDetails > div[style*="height:10px"] { height: 6px !important; }
+#eliminationOverlay.elim-c2 > img { height: 32px !important; margin-bottom: 6px !important; }
+#eliminationOverlay.elim-c2 #elimTitle { font-size: clamp(18px, 3.6vw, 30px) !important; margin-bottom: 6px !important; letter-spacing: 2px !important; }
+#eliminationOverlay.elim-c2 #elimDetails { font-size: 12px !important; line-height: 1.35 !important; }
+#eliminationOverlay.elim-c2 #elimDetails b { font-size: 14px !important; }
+#eliminationOverlay.elim-c2 #elimDetails > div[style*="height:10px"] { height: 4px !important; }
+#eliminationOverlay.elim-c3 > img { display: none !important; }
+#eliminationOverlay.elim-c3 #elimTitle { font-size: 18px !important; margin-bottom: 4px !important; letter-spacing: 2px !important; }
+#eliminationOverlay.elim-c3 #elimDetails { font-size: 11.5px !important; line-height: 1.3 !important; }
+#eliminationOverlay.elim-c3 #elimDetails b { font-size: 13px !important; }
+#eliminationOverlay.elim-c3 #elimDetails > div[style*="height:10px"] { height: 2px !important; }
+
 /* MOBILE READABILITY: font sizes only, no layout changes */
 @media (max-height: 720px), (max-width: 980px) and (orientation: landscape) {
   .ringseat .rname { font-size: clamp(10px, 2.4vh, 12px) !important; }
@@ -6636,12 +6738,13 @@ function dodSetViewportHeight() {
         _vhTimer = null;
         const cur = (window.visualViewport ? window.visualViewport.height : window.innerHeight);
         if (Math.abs(cur - _vhLast) < 2) return; // ignore tiny jitter
+        if (window.dodChatPlace) setTimeout(window.dodChatPlace, 30); // keep floating chat on screen after keyboard open/close
         _vhLast = cur;
         document.documentElement.style.setProperty('--vh', `${cur * 0.01}px`);
     };
     if (!_vhLast) { apply(); return; }  // first call: apply instantly
     clearTimeout(_vhTimer);
-    _vhTimer = setTimeout(apply, 90);   // otherwise wait until the resizing settles (in-app browsers fire dozens of resizes)
+    _vhTimer = setTimeout(apply, 300);   // otherwise wait until the resizing settles (in-app browsers fire dozens of resizes)
 }
 dodSetViewportHeight();
 window.addEventListener('orientationchange', dodSetViewportHeight);
@@ -9865,7 +9968,7 @@ function tick() {
             // Pause the timer from draining while the incoming card is still flying across the screen!
             state.turnExpiresAt += 1000;
         } else {
-            state.turnTimeLeft = Math.max(0, Math.floor((state.turnExpiresAt - now) / 1000));
+            if (window.dodTurnLocked || window.dodArcHold != null) { state.turnExpiresAt += 1000; } else { state.turnTimeLeft = Math.max(0, Math.floor((state.turnExpiresAt - now) / 1000)); }
         }
         
         // Dynamically update the turn text
@@ -9881,7 +9984,7 @@ function tick() {
         }
     } 
     // OFFLINE BOT MODE FALLBACK
-    else if (!currentMatchId && state.turnTimeLeft !== undefined && !state.deception && state.uiState !== 'ANIMATING') {
+    else if (!currentMatchId && state.turnTimeLeft !== undefined && !state.deception && state.uiState !== 'ANIMATING' && !window.dodTurnLocked && window.dodArcHold == null) {
         state.turnTimeLeft--;
         const cur = state.players[state.turn];
         const turnInd = document.getElementById('turnIndicator');
@@ -10066,7 +10169,69 @@ function sweepEliminations(){
 }
 
 // ---------------- RING LAYOUT ----------------
+// Seats sit on a rectangle. t: 0 = bottom centre, then clockwise (bottom → left → top → right).
+// Spacing follows the table's real pixel shape, so wide tables get more seats on the long sides.
+function ringPoint(t, n){
+  const ring = document.getElementById('tableRing');
+  const ar = (ring && ring.clientHeight > 0) ? ring.clientWidth / ring.clientHeight : 1; // width ÷ height
+  const k = n > 8 ? 44 : 39;           // distance of seats from centre (% of the box) - tweak here
+  const A = k * ar, B = k;             // half-width / half-height in "height units"
+  const P = 4*A + 4*B;
+  let s = (((t % 1) + 1) % 1) * P, x, y;
+  if (s <= A)                  { x = -s;     y = B; }
+  else if ((s -= A)   <= 2*B)  { x = -A;     y = B - s; }
+  else if ((s -= 2*B) <= 2*A)  { x = -A + s; y = -B; }
+  else if ((s -= 2*A) <= 2*B)  { x = A;      y = -B + s; }
+  else { s -= 2*B;               x = A - s;  y = B; }
+  return { x: 50 + x / ar, y: 50 + y };
+}
+function repositionSeats(){
+  if (typeof state === 'undefined' || !state || !state.players) return;
+  const n = state.players.length;
+  state.players.forEach((p,i)=>{
+    const seat = document.getElementById('seat-'+p.id);
+    if(!seat) return;
+    const pt = ringPoint(i / n, n);
+    seat.style.left = pt.x + '%'; seat.style.top = pt.y + '%';
+  });
+}
+window.addEventListener('resize', repositionSeats);
+// Keep the table clear of the bottom-left "active player" box: reserve a gutter as wide as that box (only ever grows, so the table doesn't jitter)
+function reservePanelGutter(){
+  const ap = document.getElementById('activePlayerPanel'), gl = document.querySelector('.game-left');
+  if (!ap || !gl || !ap.offsetParent || ap.style.opacity === '0') return;
+  const r = ap.getBoundingClientRect(), g = gl.getBoundingClientRect();
+  if (!r.width) return;
+  const need = Math.ceil(r.right - g.left + 10);
+  if (need > (window._apReserve || 0)) {
+    window._apReserve = need;
+    document.documentElement.style.setProperty('--ap-reserve', need + 'px');
+    requestAnimationFrame(repositionSeats);
+  }
+}
+window.addEventListener('resize', () => { window._apReserve = 0; document.documentElement.style.removeProperty('--ap-reserve'); });
+// Fit the table ABOVE the bottom-left "active player" box instead of beside it, so the table can use the full width
+function fitTableAbovePanel(){
+  const ap = document.getElementById('activePlayerPanel'), ring = document.getElementById('tableRing');
+  if (!ap || !ring || !ap.offsetParent || !ring.offsetParent || ap.style.opacity === '0') return;
+  const a = ap.getBoundingClientRect(), r = ring.getBoundingClientRect();
+  if (!a.height || !r.height) return;
+  const room = Math.floor(a.top - r.top - 8);              // space between table top and the box
+  if (room > 140 && room < r.height - 1) {                 // only ever shrinks, so the table doesn't jitter
+    document.documentElement.style.setProperty('--ring-h', room + 'px');
+    requestAnimationFrame(repositionSeats);
+  }
+}
+window.addEventListener('resize', () => document.documentElement.style.removeProperty('--ring-h'));
+setInterval(fitTableAbovePanel, 400);
 function layoutRing(){
+  // Skip the teardown when the roster is unchanged: rebuilding every seat on each server snapshot is what made the players blink
+  {
+    const _ring = document.getElementById('tableRing');
+    const _sig = state.players.map(p => [p.id, p.uid, p.name, p.avatar, p.frame, p.title].join('~')).join('|');
+    if (_ring && _ring.dataset.rosterSig === _sig && _ring.querySelector('.ringseat')) { repositionSeats(); return; }
+    if (_ring) _ring.dataset.rosterSig = _sig;
+  }
   const ring=document.getElementById('tableRing');
   Array.from(ring.children).forEach(c => { if(c.id !== 'arrowLayer') c.remove(); });
   
@@ -10078,12 +10243,12 @@ function layoutRing(){
   const R = isDense ? 44 : 38; 
   
   state.players.forEach((p,i)=>{
-    const angle = Math.PI/2 + (2*Math.PI*i/n);
-    const left = 50 + R*Math.cos(angle);
-    const top = 50 + R*Math.sin(angle);
+    const pt = ringPoint(i / n, n);
+    const left = pt.x;
+    const top = pt.y;
     const seat=document.createElement('div');
     seat.id='seat-'+p.id;
-    seat.className='ringseat' + (isDense ? ' dense' : '');
+    seat.className='ringseat' + (n > 8 ? ' dense' : '');
     seat.style.left=left+'%'; seat.style.top=top+'%';
     // Pass the event so the popup knows where to spawn!
     seat.onclick = (e) => onSeatClick(p.id, e);
@@ -10110,6 +10275,7 @@ function layoutRing(){
       <div class="seat-stats" id="rmeta-${p.id}"></div>
     `;
     ring.appendChild(seat);
+    if (i === n - 1) requestAnimationFrame(repositionSeats); // re-space once the table has its real size
   });
 }
 
@@ -10549,13 +10715,18 @@ function dealAnimation(){
 function animateTurnArc(fromIdx, toIdx, dir) {
   try {
     const svg = document.getElementById('arrowLayer');
+    // Keep the glow on the previous player until the arrow has travelled to the next seat
+    window.dodArcHold = fromIdx;
+    clearTimeout(window.dodArcHoldTimer);
+    window.dodArcHoldTimer = setTimeout(() => { window.dodArcHold = null; if (state) renderAll(); }, 430);
+    if (window.dodArrowFx && window.dodArrowFx(svg, fromIdx, toIdx, dir)) return;
     if(!svg) return;
     const n = state.players.length;
     const isDense = n > 6; 
     const R = isDense ? 44 : 38;
 
-    let a1 = Math.PI/2 + (2*Math.PI*fromIdx/n);
-    let a2 = Math.PI/2 + (2*Math.PI*toIdx/n);
+    let a1 = fromIdx / n;
+    let a2 = toIdx / n;
     
     //With exactly 2 players, the seats sit exactly 180° apart — a degenerate
     // case for SVG arcs where both directions can render as the same curve due to
@@ -10566,9 +10737,9 @@ function animateTurnArc(fromIdx, toIdx, dir) {
     }
     
     if(dir === 1) {
-        while(a2 <= a1) a2 += 2*Math.PI;
+        while(a2 <= a1) a2 += 1;
     } else {
-        while(a2 >= a1) a2 -= 2*Math.PI;
+        while(a2 >= a1) a2 -= 1;
     }
     
     const largeArc = Math.abs(a2 - a1) > Math.PI ? 1 : 0;
@@ -10580,7 +10751,13 @@ function animateTurnArc(fromIdx, toIdx, dir) {
     const y2 = 50 + R*Math.sin(a2);
     
     const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
-    path.setAttribute("d", `M ${x1} ${y1} A ${R} ${R} 0 ${largeArc} ${sweep} ${x2} ${y2}`);
+    let d = '';
+    for (let q = 0; q <= 60; q++) {
+      const pt = ringPoint(a1 + (a2 - a1) * q / 60, n);
+      d += (q ? ' L ' : 'M ') + pt.x + ' ' + pt.y;
+    }
+    path.setAttribute("d", d);
+    path.setAttribute("stroke-linejoin", "round");
     path.setAttribute("fill", "none");
     path.setAttribute("stroke", "var(--brass-bright)");
     path.setAttribute("stroke-width", "2.5");
@@ -10631,7 +10808,8 @@ function renderAll(){
   renderDeceptionOverlay();
   
   //Force the UI to report the previous turn's text until the multi-draw animation finishes
-  const actualTurnIdx = (window.dodTurnLocked && window.pendingTurnArc) ? window.pendingTurnArc.from : state.turn;
+  let actualTurnIdx = (window.dodTurnLocked && window.pendingTurnArc) ? window.pendingTurnArc.from : state.turn;
+  if (window.dodArcHold != null && state.players[window.dodArcHold]) actualTurnIdx = window.dodArcHold; // highlight waits for the arrow
   const cur = state.players[actualTurnIdx];
   
   let turnText = cur.isHuman ? 'Your turn' : `${cur.name} is playing…`;
@@ -10839,18 +11017,233 @@ function renderAll(){
   const you=state.players[0];
   const cb=document.getElementById('chainBox');
   const reqTxt = window.dodHideCalledNumber
-    ? (window.dodHeldRequiredValue == null ? `The next number is being called...` : `Next play needs a card with <b>${window.dodHeldRequiredValue}</b>.`)
+    ? (window.dodHeldRequiredValue == null ? `<span class="need-lbl">CALLING…</span>` : `${window.dodPlayedChip ? window.dodPlayedChip() : ''}<span class="need-lbl">NEED</span><b class="need-num">${window.dodHeldRequiredValue}</b>`)
     : state.requiredValue===null
-    ? `Opening move — play any number to start.`
-    : `Next play needs a card with <b>${state.requiredValue}</b>${state.lastEffectiveValue!==null?` (total ${state.lastEffectiveValue+state.requiredValue})`:''}.`;
+    ? `<span class="need-lbl">OPEN WITH ANY NUMBER</span>`
+    : `${window.dodPlayedChip ? window.dodPlayedChip() : ''}<span class="need-lbl">NEED</span><b class="need-num">${state.requiredValue}</b>`;
  
   cb.innerHTML = you.out
     ? `<div class="txt">You're out. Watching the rest of the game.</div>`
-    : `<div class="txt">${reqTxt}</div><div class="score">Your score: <b>${score(you)} PC</b></div>`;
+    : `<div class="txt">${reqTxt}</div><div class="score" title="Your coins"><i class="sc-coin"></i><b>${score(you)}</b></div>`;
 
   renderHand();
   renderActionBar();
 }
+
+window.dodPlayedChip = function () {
+  try {
+    var s = state;
+    if (!s || !s.lastPlayedCardLabel) return '';
+    var raw = String(s.lastPlayedCardLabel);
+    var map = { W:'Wild Swap', WILD:'Wild Swap', PWR:'Power', POWER:'Power', STL:'Steal', STEAL:'Steal', REV:'Reverse', REVERSE:'Reverse', INS:'Insurance', INSURANCE:'Insurance' };
+    var isAction = !!map[raw];
+    var txt = raw;
+    if (isAction) {
+      txt = map[raw];
+      if (map[raw] === 'Power' || map[raw] === 'Steal') {
+        // Real amount from the play message (same source as the badge on the centre card), never the chain number
+        var kind = map[raw];
+        var sig = kind + '-' + s.lastPlayedBy;
+        var m = (s.lastAction && s.lastAction.msg) ? String(s.lastAction.msg).match(kind === 'Power' ? /draining (\d+)/i : /(?:taking|stealing) (\d+)/i) : null;
+        if (m) window._dodChipAmt = { sig: sig, amt: m[1] };
+        var ca = window._dodChipAmt;
+        if (ca && ca.sig === sig) txt += (kind === 'Power' ? ' -' : ' +') + ca.amt;
+      } else {
+        window._dodChipAmt = null;
+      }
+    } else {
+      window._dodChipAmt = null;
+    }
+    txt = String(txt).replace(/[<>&"']/g, '');
+    var col = (typeof PLAYER_COLORS !== 'undefined' && s.lastPlayedBy != null && PLAYER_COLORS[s.lastPlayedBy]) ? PLAYER_COLORS[s.lastPlayedBy] : '';
+    return '<span class="pl-wrap"><span class="need-lbl">PLAYED</span><b class="pl-chip"' + (col ? ' style="border-color:' + col + '"' : '') + '>' + txt + '</b></span><span class="pl-arrow">\u2192</span>';
+  } catch (e) { return ''; }
+};
+
+// Turn text: while the turn arrow / multi-draw animation is still running, keep showing the PREVIOUS player (name + their own countdown)
+// so the top bar never flips between two players. Works for every writer of #turnIndicator (1-second tick and renderAll).
+window.dodShownTurnText = function () {
+  try {
+    var idx = null;
+    if (window.dodTurnLocked && window.pendingTurnArc) idx = window.pendingTurnArc.from;
+    else if (window.dodArcHold != null) idx = window.dodArcHold;
+    if (idx == null || !state || !state.players || !state.players[idx] || state.deception) return null;
+    var p = state.players[idx], pt = window.dodPrevTurn;
+    var txt = p.isHuman ? 'Your turn' : p.name + ' is playing\u2026';
+    if (pt && pt.idx === idx) txt += ' (' + Math.max(0, Math.floor((pt.expiresAt - Date.now()) / 1000)) + 's)';
+    return txt;
+  } catch (e) { return null; }
+};
+(function () {
+  function hook() {
+    var el = document.getElementById('turnIndicator');
+    if (!el) return;
+    new MutationObserver(function () {
+      try {
+        var t = window.dodShownTurnText();
+        if (t) { if (el.textContent !== t) el.textContent = t; }       // held: put the previous player back (same task, so it never paints)
+        else if (typeof state !== 'undefined' && state && state.players) {
+          window.dodPrevTurn = { idx: state.turn, expiresAt: state.turnExpiresAt || (Date.now() + (state.turnTimeLeft || 0) * 1000) };
+        }
+      } catch (e) {}
+    }).observe(el, { childList: true, characterData: true, subtree: true });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+})();
+
+// Title auto-fit: shrink "DECK OF DECEPTION" (never grow, until the next resize) when a long player name in the turn text squeezes it
+(function () {
+  function fit(reset) {
+    var t = document.querySelector('#game .topbar .title');
+    if (!t || !t.offsetParent) return;
+    if (reset) t.style.fontSize = '';
+    var fs = parseFloat(getComputedStyle(t).fontSize);
+    while (t.scrollWidth > t.clientWidth + 1 && fs > 9) { fs -= 0.5; t.style.fontSize = fs + 'px'; }
+  }
+  window.dodFitTitle = fit;
+  window.addEventListener('resize', function () { fit(true); });
+  window.addEventListener('orientationchange', function () { setTimeout(function () { fit(true); }, 250); });
+  function hook() {
+    var el = document.getElementById('turnIndicator');
+    if (el) new MutationObserver(function () { fit(false); }).observe(el, { childList: true, characterData: true, subtree: true });
+    setTimeout(function () { fit(true); }, 300);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', hook); else hook();
+})();
+
+// Fit the winner list and the elimination screen to the screen instead of scrolling: compact in steps (text never goes below ~9-12px)
+window.dodFitFinale = function () {
+  var c = document.getElementById('finaleContent'), l = c && c.querySelector('.finale-list');
+  if (!c || !l) return;
+  for (var i = 0; i <= 3; i++) {
+    c.classList.remove('fin-c1', 'fin-c2', 'fin-c3');
+    if (i) c.classList.add('fin-c' + i);
+    if (l.scrollHeight <= l.clientHeight + 1) break;
+  }
+};
+window.dodFitElim = function () {
+  var o = document.getElementById('eliminationOverlay');
+  if (!o) return;
+  var d = document.getElementById('elimDetails'), t = document.getElementById('elimTitle');
+  for (var i = 0; i <= 3; i++) {
+    o.classList.remove('elim-c1', 'elim-c2', 'elim-c3');
+    if (i) o.classList.add('elim-c' + i);
+    var first = o.firstElementChild;
+    var top = ((first && first.offsetParent !== null) ? first : t).getBoundingClientRect().top;
+    if (top >= 4 && d.getBoundingClientRect().bottom <= window.innerHeight - 4) break;
+  }
+};
+window.addEventListener('resize', function () {
+  var m = document.getElementById('finaleModal');
+  if (m && m.classList.contains('show')) window.dodFitFinale();
+  var o = document.getElementById('eliminationOverlay');
+  if (o && o.style.display === 'flex') window.dodFitElim();
+});
+
+// Turn arrow: glowing comet with an arrow tip, running along the table edge in real pixels (no stretching), no filters
+window.dodArrowFx = function (svg, fromIdx, toIdx, dir) {
+  try {
+    if (!svg || !state || !state.players || typeof ringPoint !== 'function') return false;
+    var ring = document.getElementById('tableRing');
+    if (!ring || !ring.clientWidth || !ring.clientHeight) return false;
+    var n = state.players.length, W = ring.clientWidth, H = ring.clientHeight, NS = 'http://www.w3.org/2000/svg';
+    var GOLD = '#e8c454', PALE = '#fff3b0';
+
+    // path along the table edge, from one seat to the next, in the turn direction
+    var t1 = fromIdx / n, t2 = toIdx / n;
+    if (n === 2) t2 += (dir === 1 ? 0.001 : -0.001);
+    if (dir === 1) { while (t2 <= t1) t2 += 1; } else { while (t2 >= t1) t2 -= 1; }
+
+    // aim at the middle of the avatar (it sits above the seat's centre point)
+    var dy = 0, toSeat = document.getElementById('seat-' + state.players[toIdx].id);
+    if (toSeat) {
+      var av = toSeat.querySelector('.avatar');
+      if (av) { var sr = toSeat.getBoundingClientRect(), ar = av.getBoundingClientRect(); dy = (sr.top + sr.height / 2) - (ar.top + ar.height / 2); }
+    }
+    var pts = [], STEPS = 80;
+    for (var q = 0; q <= STEPS; q++) {
+      var pp = ringPoint(t1 + (t2 - t1) * q / STEPS, n);
+      pts.push((pp.x / 100 * W).toFixed(1) + ' ' + (pp.y / 100 * H - dy).toFixed(1));
+    }
+    var d = 'M ' + pts.join(' L ');
+
+    function mk(tag, attrs) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+    svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);   // 1 unit = 1 pixel, so the arrow tip is never squashed
+    svg.innerHTML = '';
+    var defs = mk('defs', {});
+    defs.innerHTML = '<radialGradient id="dodArrowGlow"><stop offset="0" stop-color="' + PALE + '" stop-opacity=".95"/><stop offset=".45" stop-color="' + GOLD + '" stop-opacity=".5"/><stop offset="1" stop-color="' + GOLD + '" stop-opacity="0"/></radialGradient>';
+    svg.appendChild(defs);
+
+    var common = { d: d, fill: 'none', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+    var glow = mk('path', Object.assign({ stroke: GOLD, 'stroke-width': 13, 'stroke-opacity': 0.2 }, common));
+    var mid  = mk('path', Object.assign({ stroke: GOLD, 'stroke-width': 7, 'stroke-opacity': 0.45 }, common));
+    var core = mk('path', Object.assign({ stroke: PALE, 'stroke-width': 3, 'stroke-opacity': 0.95 }, common));
+    svg.appendChild(glow); svg.appendChild(mid); svg.appendChild(core);
+
+    var sparks = [];
+    for (var s = 0; s < 3; s++) { var c = mk('circle', { r: [3.4, 2.5, 1.7][s], fill: PALE, opacity: 0 }); svg.appendChild(c); sparks.push(c); }
+    var headG = mk('g', { opacity: 0 });
+    headG.appendChild(mk('circle', { r: 17, fill: 'url(#dodArrowGlow)' }));
+    headG.appendChild(mk('polygon', { points: '14,0 -7,-10 -2.5,0 -7,10', fill: PALE, stroke: GOLD, 'stroke-width': 1.4, 'stroke-linejoin': 'round' }));
+    svg.appendChild(headG);
+
+    var len = core.getTotalLength();
+    if (!len) { svg.innerHTML = ''; return false; }
+    var endPt = core.getPointAtLength(len);
+    var trail = Math.min(len * 0.45, 170);          // comet tail length (px)
+    var T1 = 420, T2 = 380;                          // travel time, tail run-in time (ms) - travel matches the 430ms highlight hold
+    var tok = window._dodArrowTok = (window._dodArrowTok || 0) + 1;
+    var t0 = null, ang = null, pulsed = false;
+    function ease(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+
+    function frame(ts) {
+      if (tok !== window._dodArrowTok) return;       // a newer arrow replaced this one
+      if (t0 === null) t0 = ts;
+      var el = ts - t0;
+      if (el >= T1 + T2) { svg.innerHTML = ''; return; }
+
+      var head = len * ease(Math.min(1, el / T1));
+      var tail = el < T1 ? Math.max(0, head - trail) : (len - trail) + trail * ease(Math.min(1, (el - T1) / T2));
+      var vis = head - tail;
+      var dash = Math.max(0, vis) + ' ' + (len * 3);
+      [glow, mid, core].forEach(function (e) {
+        e.setAttribute('stroke-dasharray', dash);
+        e.setAttribute('stroke-dashoffset', -tail);
+        e.style.visibility = vis > 0.5 ? 'visible' : 'hidden';
+      });
+
+      // arrow tip: sits on the head, turns smoothly along the path
+      var hp = core.getPointAtLength(head);
+      var a0 = core.getPointAtLength(Math.max(0, head - 7)), a1 = core.getPointAtLength(Math.min(len, head + 7));
+      var a = Math.atan2(a1.y - a0.y, a1.x - a0.x);
+      if (ang === null) ang = a; else { var df = Math.atan2(Math.sin(a - ang), Math.cos(a - ang)); ang += df * 0.45; }
+      var fade = el < T1 ? 1 : Math.max(0, 1 - (el - T1) / 220);
+      headG.setAttribute('transform', 'translate(' + hp.x.toFixed(1) + ' ' + hp.y.toFixed(1) + ') rotate(' + (ang * 180 / Math.PI).toFixed(1) + ') scale(' + (0.85 + 0.15 * fade).toFixed(2) + ')');
+      headG.setAttribute('opacity', fade.toFixed(2));
+
+      // sparkles trailing behind the head
+      for (var k = 0; k < sparks.length; k++) {
+        var dist = head - (k + 1) * 15;
+        if (dist <= 0 || fade <= 0) { sparks[k].setAttribute('opacity', 0); continue; }
+        var sp = core.getPointAtLength(dist);
+        sparks[k].setAttribute('cx', sp.x.toFixed(1)); sparks[k].setAttribute('cy', sp.y.toFixed(1));
+        sparks[k].setAttribute('opacity', (0.8 - k * 0.22) * fade);
+      }
+
+      // arrival: ring pulse on the next player's avatar
+      if (!pulsed && el >= T1) {
+        pulsed = true;
+        var ringEl = mk('circle', { cx: endPt.x.toFixed(1), cy: endPt.y.toFixed(1), r: 20, fill: 'none', stroke: PALE, 'stroke-width': 3, opacity: 0 });
+        ringEl.style.transformBox = 'fill-box'; ringEl.style.transformOrigin = 'center';
+        svg.appendChild(ringEl);
+        if (ringEl.animate) ringEl.animate([{ transform: 'scale(0.55)', opacity: 0.95 }, { transform: 'scale(2)', opacity: 0 }], { duration: 420, easing: 'ease-out', fill: 'forwards' });
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+    return true;
+  } catch (e) { return false; }
+};
 
 function renderHand(){
   const wrap=document.getElementById('hand');
@@ -14643,6 +15036,7 @@ async function endGame(winner, byScore) {
   
   document.getElementById('finaleContent').innerHTML=html;
   openModal('finaleModal');
+  requestAnimationFrame(function () { window.dodFitFinale(); });
   renderAll();
   
   if(isMyWin && state.over) {
@@ -20475,6 +20869,11 @@ async function confirmMysteriousLogout() {
         if (e.key === 'Enter') { e.preventDefault(); sendText(); }
       });
       ['keyup', 'keypress'].forEach(function (ev) { El.input.addEventListener(ev, function (e) { e.stopPropagation(); }); });
+      // when the keyboard closes, undo any page scroll the browser added and put the chat back on screen
+      El.input.addEventListener('blur', function () {
+        setTimeout(function () { window.scrollTo(0, 0); place(); }, 120);
+        setTimeout(place, 400);
+      });
 
       // drag by the header
       var drag = null;
@@ -20533,9 +20932,12 @@ async function confirmMysteriousLogout() {
   function place() {
     if (!El.panel || !S.open) return;
     var w = El.panel.offsetWidth, h = El.panel.offsetHeight;
-    var mx = Math.max(0, window.innerWidth - w - 2 * M), my = Math.max(0, window.innerHeight - h - 2 * M);
+    var vv = window.visualViewport;
+    var visH = vv ? Math.min(window.innerHeight, vv.height) : window.innerHeight;
+    var offY = vv ? vv.offsetTop : 0;
+    var mx = Math.max(0, window.innerWidth - w - 2 * M), my = Math.max(0, visH - h - 2 * M);
     El.panel.style.left = (M + mx * clamp(P.fx, 0, 1)) + 'px';
-    El.panel.style.top = (M + my * clamp(P.fy, 0, 1)) + 'px';
+    El.panel.style.top = (offY + M + my * clamp(P.fy, 0, 1)) + 'px';
   }
 
   function openChat() {
@@ -20909,6 +21311,8 @@ async function confirmMysteriousLogout() {
     return !!(S.room && uid && uid !== S.uid && others().some(function (o) { return o.uid === uid; }));
   };
   window.dodChatClose = closeChat;
+  window.dodChatPlace = place;
+  if (window.visualViewport) window.visualViewport.addEventListener('scroll', place);
 
   // ---------- quick-chat wheel (hold a player, drag toward a message, release) ----------
   var H = null;   // pending long press
