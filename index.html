@@ -767,6 +767,21 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
 /* Force titles to shrink specifically in dense mode to stop overlap */
 .ringseat.dense .player-title { height: 11px !important; font-size: 5px !important; padding: 0 6px 0 3px !important; clip-path: polygon(0 0, 100% 0, calc(100% - 6px) 100%, 0 100%) !important; }
 
+/* RED VIGNETTE (stuck turn skipped) - opacity-only animation, GPU composited */
+#dodRedVignette {
+  position: fixed; inset: 0; pointer-events: none; z-index: 99990; opacity: 0;
+  background: radial-gradient(ellipse at center, rgba(220,30,30,0) 45%, rgba(220,30,30,.55) 80%, rgba(170,0,0,.95) 100%);
+  will-change: opacity;
+}
+#dodRedVignette.go { animation: dodRedBlink 1s ease-out 1 forwards; }
+@keyframes dodRedBlink {
+  0%   { opacity: 0; }
+  15%  { opacity: 1; }
+  35%  { opacity: .25; }
+  55%  { opacity: 1; }
+  100% { opacity: 0; }
+}
+
 @keyframes targetGlow {
   0% { box-shadow: 0 0 0 0 rgba(226, 189, 74, 0.7); }
   70% { box-shadow: 0 0 0 10px rgba(226, 189, 74, 0); }
@@ -783,6 +798,35 @@ h1,h2,h3{font-family:'Cinzel',serif;font-weight:600;margin:0}
   color: var(--felt-dark) !important;
 }
 .ringseat.targetable:active .avatar { transform: scale(0.95); }
+
+/* TARGET VFX: two staggered red sonar rings + a bobbing gold chevron.
+   Only transform/opacity are animated, so it runs on the GPU with no repaints. */
+.ringseat.targetable .avatar { position: relative; overflow: visible !important; }
+.ringseat.targetable .avatar::before,
+.ringseat.targetable .avatar::after {
+  content: ''; position: absolute; inset: -3px; border-radius: 8px;
+  border: 2px solid var(--danger-bright, #e5533d);
+  pointer-events: none; opacity: 0;
+  animation: targetSonar 1.2s ease-out infinite;
+  will-change: transform, opacity;
+}
+.ringseat.targetable .avatar::after { animation-delay: .6s; }
+.ringseat.targetable::before {
+  content: '\25BC'; position: absolute; left: 50%; top: -18px; margin-left: -8px;
+  width: 16px; text-align: center; font-size: 14px; line-height: 1;
+  color: var(--brass-bright); text-shadow: 0 1px 3px #000;
+  pointer-events: none; z-index: 5;
+  animation: targetBob .6s ease-in-out infinite;
+}
+.ringseat.dense.targetable::before { top: -12px; font-size: 10px; }
+@keyframes targetSonar {
+  0%   { transform: scale(1);   opacity: .9; }
+  100% { transform: scale(1.9); opacity: 0; }
+}
+@keyframes targetBob {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(5px); }
+}
 
 .seat-stats{display:flex;gap:3px;margin-top:1px;justify-content:center}
 .stat-pill{display:flex;align-items:center;gap:3px;background:rgba(0,0,0,0.65);border:1px solid rgba(255,255,255,0.15);
@@ -10719,6 +10763,7 @@ function animateTurnArc(fromIdx, toIdx, dir) {
     window.dodArcHold = fromIdx;
     clearTimeout(window.dodArcHoldTimer);
     window.dodArcHoldTimer = setTimeout(() => { window.dodArcHold = null; if (state) renderAll(); }, 430);
+    try { if (state && typeof renderHand === 'function') renderHand(); if (state && typeof renderActionBar === 'function') renderActionBar(); } catch (e) {} // lock hand + buy button the moment the arrow starts
     if (window.dodArrowFx && window.dodArrowFx(svg, fromIdx, toIdx, dir)) return;
     if(!svg) return;
     const n = state.players.length;
@@ -11160,12 +11205,26 @@ window.dodArrowFx = function (svg, fromIdx, toIdx, dir) {
       var av = toSeat.querySelector('.avatar');
       if (av) { var sr = toSeat.getBoundingClientRect(), ar = av.getBoundingClientRect(); dy = (sr.top + sr.height / 2) - (ar.top + ar.height / 2); }
     }
-    var pts = [], STEPS = 80;
+    var pts = [], STEPS = 200;
     for (var q = 0; q <= STEPS; q++) {
       var pp = ringPoint(t1 + (t2 - t1) * q / STEPS, n);
-      pts.push((pp.x / 100 * W).toFixed(1) + ' ' + (pp.y / 100 * H - dy).toFixed(1));
+      pts.push([pp.x / 100 * W, pp.y / 100 * H - dy]);
     }
-    var d = 'M ' + pts.join(' L ');
+    // round the corners: smooth the dense polyline (ends stay put) so the arrow glides instead of snapping around corners
+    (function () {
+      var R = 6;
+      for (var pass = 0; pass < 2; pass++) {
+        var out = [];
+        for (var i = 0; i < pts.length; i++) {
+          var sx = 0, sy = 0, c = 0;
+          for (var j = -R; j <= R; j++) { var k = Math.min(pts.length - 1, Math.max(0, i + j)); sx += pts[k][0]; sy += pts[k][1]; c++; }
+          out.push([sx / c, sy / c]);
+        }
+        out[0] = pts[0]; out[out.length - 1] = pts[pts.length - 1];
+        pts = out;
+      }
+    })();
+    var d = 'M ' + pts.map(function (p) { return p[0].toFixed(1) + ' ' + p[1].toFixed(1); }).join(' L ');
 
     function mk(tag, attrs) { var e = document.createElementNS(NS, tag); for (var k in attrs) e.setAttribute(k, attrs[k]); return e; }
     svg.setAttribute('viewBox', '0 0 ' + W + ' ' + H);   // 1 unit = 1 pixel, so the arrow tip is never squashed
@@ -11191,10 +11250,11 @@ window.dodArrowFx = function (svg, fromIdx, toIdx, dir) {
     if (!len) { svg.innerHTML = ''; return false; }
     var endPt = core.getPointAtLength(len);
     var trail = Math.min(len * 0.45, 170);          // comet tail length (px)
-    var T1 = 420, T2 = 380;                          // travel time, tail run-in time (ms) - travel matches the 430ms highlight hold
+    var T1 = Math.max(650, Math.min(1100, 450 + len * 0.55)), T2 = 420;                          // travel time, tail run-in time (ms) - travel matches the 430ms highlight hold
     var tok = window._dodArrowTok = (window._dodArrowTok || 0) + 1;
+    if (window.dodArcHold != null) { clearTimeout(window.dodArcHoldTimer); window.dodArcHoldTimer = setTimeout(function () { window.dodArcHold = null; if (state) renderAll(); }, T1 + 20); }
     var t0 = null, ang = null, pulsed = false;
-    function ease(x) { return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; }
+    function ease(x) { return 0.5 - 0.5 * Math.cos(Math.PI * x); }
 
     function frame(ts) {
       if (tok !== window._dodArrowTok) return;       // a newer arrow replaced this one
@@ -11214,9 +11274,9 @@ window.dodArrowFx = function (svg, fromIdx, toIdx, dir) {
 
       // arrow tip: sits on the head, turns smoothly along the path
       var hp = core.getPointAtLength(head);
-      var a0 = core.getPointAtLength(Math.max(0, head - 7)), a1 = core.getPointAtLength(Math.min(len, head + 7));
+      var a0 = core.getPointAtLength(Math.max(0, head - 14)), a1 = core.getPointAtLength(Math.min(len, head + 14));
       var a = Math.atan2(a1.y - a0.y, a1.x - a0.x);
-      if (ang === null) ang = a; else { var df = Math.atan2(Math.sin(a - ang), Math.cos(a - ang)); ang += df * 0.45; }
+      if (ang === null) ang = a; else { var df = Math.atan2(Math.sin(a - ang), Math.cos(a - ang)); ang += df * 0.3; }
       var fade = el < T1 ? 1 : Math.max(0, 1 - (el - T1) / 220);
       headG.setAttribute('transform', 'translate(' + hp.x.toFixed(1) + ' ' + hp.y.toFixed(1) + ') rotate(' + (ang * 180 / Math.PI).toFixed(1) + ') scale(' + (0.85 + 0.15 * fade).toFixed(2) + ')');
       headG.setAttribute('opacity', fade.toFixed(2));
@@ -11232,6 +11292,7 @@ window.dodArrowFx = function (svg, fromIdx, toIdx, dir) {
 
       // arrival: ring pulse on the next player's avatar
       if (!pulsed && el >= T1) {
+        if (toIdx === 0) window.dodStuckBlink();   // arrow just reached YOU: blink red if this turn will be skipped
         pulsed = true;
         var ringEl = mk('circle', { cx: endPt.x.toFixed(1), cy: endPt.y.toFixed(1), r: 20, fill: 'none', stroke: PALE, 'stroke-width': 3, opacity: 0 });
         ringEl.style.transformBox = 'fill-box'; ringEl.style.transformOrigin = 'center';
@@ -11250,7 +11311,7 @@ function renderHand(){
   wrap.innerHTML='';
   const you=state.players[0];
   
-  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked && !window.dodCenterIsLocked;
+  const handActive = isYourTurn() && ['IDLE', 'CHOOSE_CALL', 'RESOLVING_BUY'].includes(state.uiState) && !window.dodTurnLocked && !window.dodCenterIsLocked && window.dodArcHold == null;
 
   // AAA FEATURE: Auto-sort the hand if enabled in settings
   //Map to a visual array so we don't alter the true index required by Cloudflare!
@@ -11295,6 +11356,7 @@ function renderHand(){
           // Wrapper to block 'onclick' from firing if they just finished a long-press
           const wrapClick = (action) => {
               return (e) => {
+                  if (window.dodArcHold != null) { e.preventDefault(); return; } // arrow still travelling
                   if (window.dodIsLongPressing) {
                       e.preventDefault();
                       return;
@@ -11391,6 +11453,30 @@ function cancelTargeting() {
     renderAll();
 }
 
+window.dodStuckBlink = function () {
+  try {
+    if (!state || state.over || state.deception) return;
+    const you = state.players[0];
+    if (!you || you.out) return;
+    const key = currentMatchId || 'local';
+    if (window.dodStuckKey !== key) { window.dodStuckKey = key; window.dodStuckStreak = 0; }
+    const stuck = you.shop < BUY_COST && !computeHasMatch(you);   // no match and can't afford a forced buy
+    if (!stuck) { window.dodStuckStreak = 0; return; }
+    window.dodStuckStreak++;
+    if (window.dodStuckStreak > 1) { window.dodStuckStreak = 0; return; } // 2nd stuck turn in a row = Deception showdown, no blink
+    window.dodSkipFx();
+  } catch (e) {}
+};
+
+window.dodSkipFx = function () {
+
+  try {
+    let el = document.getElementById('dodRedVignette');
+    if (!el) { el = document.createElement('div'); el.id = 'dodRedVignette'; document.body.appendChild(el); }
+    el.classList.remove('go'); void el.offsetWidth; el.classList.add('go');
+  } catch (e) {}
+};
+
 function renderActionBar(){
   const bar=document.getElementById('actionbar');
   bar.innerHTML='';
@@ -11423,7 +11509,14 @@ function renderActionBar(){
   bar.style.visibility = 'visible';
 
   if(!isYourTurn()){
+      window.dodSkipFxDone = false; // new stuck turn can show the red effect again
       bar.innerHTML='<span class="hint">Waiting for your turn…</span>';
+      return;
+  }
+
+  // Arrow is still travelling to you: no buttons yet (the hold ends together with the seat highlight)
+  if (window.dodArcHold != null) {
+      bar.innerHTML = `<span class="hint">Resolving action...</span>`;
       return;
   }
 
