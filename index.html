@@ -9731,6 +9731,16 @@ function listenToGameState() {
                 }
             }
             window.dodJustPassedTurnLocally = false;
+            try {
+                const la = serverState.lastAction, me0 = state.players[0];
+                if (fromIdx === 0 && la && me0 && !me0.out && typeof la.msg === 'string'
+                    && la.msg.indexOf(me0.name) !== -1
+                    && /turn skipped|broke with no playable|out of coins/i.test(la.msg)) {
+                    console.log('[skipfx] stuck skip detected:', la.type, la.msg);
+                    window.dodStuckStreak = 1;   // so a 2nd stuck turn in a row (Deception) is not treated as a first skip
+                    window.dodSkipFx();
+                }
+            } catch (e) {}
             localLastTurnUid = serverState.turnUid;
 
             // WAKE UP BOTS / CHECK FOR DECEPTION (HOST ONLY)
@@ -11458,7 +11468,7 @@ window.dodStuckBlink = function () {
     if (!state || state.over || state.deception) return;
     const you = state.players[0];
     if (!you || you.out) return;
-    const key = currentMatchId || 'local';
+    const key = (typeof currentMatchId !== 'undefined' && currentMatchId) ? currentMatchId : 'local';
     if (window.dodStuckKey !== key) { window.dodStuckKey = key; window.dodStuckStreak = 0; }
     const stuck = you.shop < BUY_COST && !computeHasMatch(you);   // no match and can't afford a forced buy
     if (!stuck) { window.dodStuckStreak = 0; return; }
@@ -11469,6 +11479,9 @@ window.dodStuckBlink = function () {
 };
 
 window.dodSkipFx = function () {
+  var now = Date.now();
+  if (window.dodSkipFxAt && now - window.dodSkipFxAt < 4000) return;   // already blinked for this skip
+  window.dodSkipFxAt = now;
 
   try {
     let el = document.getElementById('dodRedVignette');
